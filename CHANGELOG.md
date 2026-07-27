@@ -48,3 +48,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 12 unit tests covering all 8A modules; full suite 84 passed (50 core + 22 integration + 12 omics)
 - `datasets/MANIFEST.md` documenting the untracked raw/reference files
 - `.gitignore` updated to exclude `datasets/raw/` and `datasets/reference/`
+
+### Layer 8B — Evidence Integration Framework (NeuralTF-directed)
+
+- `bioforge.evidence.schema` — `EvidenceRecord`, `EvidenceSource`, `ConfidenceTier` dataclasses/enums
+- `bioforge.evidence.gene_mapping` — `BridgeTable`, `load_bridge`, `build_bridge_from_names` (explicit v4↔v6 bridging; no numeric-prefix guessing)
+- `bioforge.evidence.harmonization` — `AtlasHarmonizer` aligning Fincher/Plass/King cluster labels onto 9 canonical planarian tissue classes
+- `bioforge.evidence.scoring` — `EvidenceScorer` weighted-sum of six evidence streams with renormalization for missing sources; `rank_candidates` returns sorted top-N
+- `bioforge.evidence.confidence` — `assign_tiers` (high/medium/low) via `ConfidencePolicy` (≥4 streams ∧ ≥0.6 score for HIGH; ≥3 ∧ ≥0.35 for MEDIUM)
+- `bioforge.evidence.ontology` — minimal `annotate_function` mapping known planarian TFs (soxB, pou4l-1, myoD, hnf4, …) to functional categories; stub interface for future GO mapping
+- `bioforge.evidence.readers.king` — King 2024 mmc4 (TF catalog) / mmc5 (RNAi) / mmc6 (neural TF pair correlations) / mmc7 (G0 + X1 TF atlases) xlsx readers
+- `bioforge.evidence.readers.fincher` & `bioforge.evidence.readers.plass` — load DGE matrices into `AnnData` (genes↔cells orientation corrected)
+- ADR-0002 documents the module design, scoring formula, weight defaults (summing to 1.0), confidence thresholds, and independence from NeuralTF project specifics
+- `openpyxl>=3.1,<4.0` added to `[bio]` extra
+- 31 unit tests (18 evidence core + 13 readers); all hermetic (synthetic xlsx fixtures, no dependency on git-ignored raw datasets)
+- Full test suite now **115 passing** (50 core + 9 integration + 12 omics + 31 evidence + 13 misc-refactor)
+- `docker/base/requirements.lock.txt` refreshed with 154 pinned transitive deps (now includes openpyxl 3.1.5 and et_xmlfile 2.0.0)

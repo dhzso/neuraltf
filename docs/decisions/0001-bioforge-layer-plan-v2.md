@@ -81,7 +81,7 @@ BUT organized as a reusable framework with six components:
 | 6 | AI Layer | Not started |
 | 7 | Workflow Engine | Not started |
 | 8A | Generic Omics Workflows | Completed |
-| 8B | Evidence Integration Framework | Not started |
+| 8B | Evidence Integration Framework | Completed |
 | 9 | Research Modules — NeuralTF | Not started |
 | 10 | Reporting | Not started |
 | 11 | Open-source Release | Not started |
