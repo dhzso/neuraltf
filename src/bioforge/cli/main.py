@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -150,8 +151,19 @@ def plugins_list(ctx: click.Context) -> None:
     default=None,
     help="Output directory for run artifacts (default runs/<timestamp>).",
 )
+@click.option(
+    "--input",
+    "inputs",
+    multiple=True,
+    help=(
+        "Per-run input override as key=value. Repeat for multiple inputs "
+        "(e.g. --input fincher=path/dge.txt.gz --input plass=path.h5ad). "
+        "Accessible inside the workflow as $inputs.fincher."
+    ),
+)
 @click.pass_context
-def run_cmd(ctx: click.Context, workflow_yaml: str, out_dir: str | None) -> None:
+def run_cmd(ctx: click.Context, workflow_yaml: str, out_dir: str | None,
+            inputs: tuple[str, ...]) -> None:
     """Execute a declarative YAML workflow end-to-end."""
     import datetime as dt
     import json
@@ -163,8 +175,19 @@ def run_cmd(ctx: click.Context, workflow_yaml: str, out_dir: str | None) -> None
 
     ts = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     out_path = Path(out_dir or f"runs/{ts}")
-    out_path.mkdir(parents=True, exist_ok=True)
+    artifacts_dir = out_path / "artifacts"
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
     log = logging.getLogger("bioforge.cli.run")
+
+    # Parse --input key=value overrides
+    extra_inputs: dict[str, Any] = {}
+    for kv in inputs:
+        if "=" not in kv:
+            raise click.UsageError(f"--input must be 'key=value'; got: {kv}")
+        k, v = kv.split("=", 1)
+        extra_inputs[k] = v
+    if extra_inputs:
+        log.info("per-run inputs: %s", extra_inputs)
 
     run = WorkflowRun.from_yaml(workflow_yaml)
     log.info("loaded workflow with %d steps from %s", len(run.steps), workflow_yaml)
@@ -174,7 +197,7 @@ def run_cmd(ctx: click.Context, workflow_yaml: str, out_dir: str | None) -> None
 
     executor = WorkflowExecutor(progress_cb=progress)
     try:
-        outputs = executor.execute(run)
+        outputs = executor.execute(run, extra_inputs=extra_inputs)
     except Exception as exc:  # noqa: BLE001
         click.echo(f"workflow failed: {exc}", err=True)
         sys.exit(1)
@@ -183,14 +206,23 @@ def run_cmd(ctx: click.Context, workflow_yaml: str, out_dir: str | None) -> None
     provenance_p.write_text(json.dumps(executor.provenance, indent=2), encoding="utf-8")
     log.info("wrote provenance to %s", provenance_p)
 
-    # Best-effort: persist output directories as a JSON summary so the UI
-    # can pick up the latest run.
+    # AI summary (if the workflow exposed 'summary' on the ai.summarize step)
+    summary_text = None
+    for step_id, out in outputs.items():
+        if isinstance(out, dict) and "summary" in out:
+            summary_text = out["summary"]
+            break
+    if summary_text:
+        (out_path / "ai_summary.md").write_text(f"# AI summary\n\n{summary_text}",
+                                                encoding="utf-8")
+
     summary = {
         "workflow_yaml": str(workflow_yaml),
         "out_dir": str(out_path),
         "n_steps": len(run.steps),
         "step_ids": [s.id for s in run.steps],
         "outputs": {k: list(v.keys()) for k, v in outputs.items()},
+        "inputs": extra_inputs,
     }
     (out_path / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     click.echo(f"workflow complete: {len(outputs)} steps run; artifacts in {out_path}")

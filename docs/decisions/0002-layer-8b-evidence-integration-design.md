@@ -83,13 +83,15 @@ weighted integrated score. Weights are configurable with sensible defaults:
 | Source | Default weight | Normalization |
 |--------|---------------|----------------|
 | Expression enrichment (King mmc7 log2FC, p<0.001) | 0.30 | max-normalized log2FC |
-| Cell-type specificity (1 – Shannon entropy over clusters) | 0.20 | min-max scaled |
-| Cross-dataset reproducibility (Fincher ∧ Plass ∧ King) | 0.25 | binary recoded as 0/1 per dataset (max 3) |
+| Cell-type specificity (1 – Shannon entropy over clusters) | 0.15 | min-max scaled |
+| Cross-dataset reproducibility (Fincher ∧ Plass ∧ King) | 0.25 | n_atlases / 3 in [0, 1] |
 | RNAi phenotype support (mmc5 marker loss) | 0.15 | binary |
 | Pairwise TF correlation gain G0−X1 (mmc6) | 0.10 | z-scored |
 | Functional annotation (human homolog) | 0.05 | binary (homolog present) |
 
 Integrity rule: the integrated score is `Σ wᵢ · sᵢ` with `Σ wᵢ = 1`.
+
+(The earlier draft had specificity weight 0.20, which made the table sum to 1.05; the implementation reserves 0.15 for specificity so the rule `Σ wᵢ = 1` is preserved. Both values are reasonable; the canonical values are the ones in code.)
 
 ### Confidence tiers
 

@@ -103,3 +103,31 @@ def summarize_candidates(rank_csv: str, top_n: int = 5) -> str:
         return json.dumps({"ok": False, "note": "no rows in CSV"})
     keep = rows[:top_n]
     return json.dumps({"ok": True, "top": keep, "n_total": len(rows)})
+
+
+@register_tool("inspect_anndata")
+def inspect_anndata(path: str) -> str:
+    """Return a compact description of an AnnData file (shape, obs/var columns, layers).
+
+    Loaded lazily so an LLM assistant doesn't touch h5ad/h5py unless invoked.
+    """
+    p = Path(path)
+    if not p.exists():
+        return json.dumps({"ok": False, "note": f"{path} not found"})
+    try:
+        import anndata as ad
+        adata = ad.read_h5ad(path, backed="r")
+    except Exception as exc:  # noqa: BLE001
+        return json.dumps({"ok": False, "note": f"cannot read: {exc}"})
+    out = {
+        "ok": True,
+        "path": str(path),
+        "n_obs": adata.n_obs,
+        "n_vars": adata.n_vars,
+        "obs_columns": list(adata.obs.columns),
+        "var_columns": list(adata.var.columns),
+        "layers": list(adata.layers.keys()),
+        "obsm": list(adata.obsm.keys()),
+        "uns_keys": list(adata.uns.keys()),
+    }
+    return json.dumps(out)

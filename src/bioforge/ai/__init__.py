@@ -16,9 +16,15 @@ from bioforge.ai.assistant import (
     ChatResponse,
     StubAssistant,
 )
-from bioforge.ai.errors import AIProviderNotConfiguredError
+from bioforge.ai.errors import AIError, AIProviderNotConfiguredError, AIRequestError
 from bioforge.ai.openai_compat import OpenAICompatClient
-from bioforge.ai.tools import list_tools, lookup_gene, register_tool, summarize_candidates
+from bioforge.ai.tools import (
+    inspect_anndata,
+    list_tools,
+    lookup_gene,
+    register_tool,
+    summarize_candidates,
+)
 
 __all__ = [
     "AIAssistant",
@@ -26,11 +32,14 @@ __all__ = [
     "ChatResponse",
     "StubAssistant",
     "OpenAICompatClient",
+    "AIError",
     "AIProviderNotConfiguredError",
+    "AIRequestError",
     "build_assistant",
     "lookup_gene",
     "register_tool",
     "summarize_candidates",
+    "inspect_anndata",
     "list_tools",
 ]
 

@@ -1,0 +1,114 @@
+description: >
+  NeuralTF real-data pipeline. Consumes the three bioatlas datasets (Fincher,
+  Plass, King), runs Layer 8A omics over Fincher & Plass, loads the King TF
+  catalog + RNAi + correlation tables, optionally ingests a v4<->v6 bridge
+  CSV, scores every TF candidate across six evidence streams (per-atlas loop),
+  combines scores, attaches the RNAi / correlation / function streams, ranks
+  candidates, builds EvidenceCards, and writes both a per-candidate markdown
+  report and an AI-generated one-paragraph "what to chase next" summary.
+
+  Per-run dataset paths can be injected via the CLI/UI using --input flags,
+  e.g.:
+      bioforge run workflows/real.yaml \
+        --input fincher=datasets/raw/GSE111764_*/Principal*.dge.txt.gz \
+        --input plass=datasets/processed/plass.h5ad \
+        --input bridge=projects/NeuralTF/data/bridge.csv
+
+inputs: {}
+
+steps:
+  - id: ingest_fincher
+    target: ingest.fincher
+    inputs: {path: $inputs.fincher}
+    params: {}
+
+  - id: ingest_plass
+    target: ingest.plass
+    inputs: {path: $inputs.plass}
+    params: {}
+
+  - id: ingest_king
+    target: ingest.king
+    inputs: {}
+    params:
+      catalog_path: $inputs.king_catalog
+      rnai_path: $inputs.king_rnai
+      correlations_path: $inputs.king_corr
+      atlas_path: $inputs.king_atlas
+
+  # QC + cluster for both atlases in parallel-ish (linear but looped)
+  - id: qc
+    target: qc
+    loop: $inputs.atlas_inputs
+    inputs: {adata: $item}
+    params: {}
+
+  - id: load_bridge
+    target: evidence.load_bridge_csv
+    inputs: {path: $inputs.bridge}
+    params: {}
+
+  # Per-atlas TF scoring — loop iterates over a list built from the
+  # WorkflowRun.inputs (atlas_inputs). For now, the inputs.atlas_inputs is a
+  # list of {"adata": <ref>, "atlas_name": "..."} dicts assembled by callers.
+  - id: score_per_atlas
+    target: evidence.score_per_atlas
+    loop: $inputs.atlas_scoring_inputs
+    inputs:
+      adata: $item.adata
+      tf_catalog: $ingest_king.tf_catalog
+      bridge: $load_bridge.bridge
+      atlas_name: $item.atlas_name
+    params: {}
+
+  - id: combine_scores
+    target: evidence.combine_scores
+    inputs: {records_per_atlas: $score_per_atlas.results}
+    params: {}
+
+  - id: add_rnai_stream
+    target: evidence.add_rnai_stream
+    inputs:
+      records: $combine_scores.records
+      rnai_table: $ingest_king.rnai
+      bridge: $load_bridge.bridge
+    params: {}
+
+  - id: add_correlation_stream
+    target: evidence.add_correlation_stream
+    inputs:
+      records: $add_rnai_stream.records
+      correlations: $ingest_king.correlations
+    params: {}
+
+  - id: add_function_stream
+    target: evidence.add_function_stream
+    inputs: {records: $add_correlation_stream.records}
+    params: {}
+
+  - id: assign_tiers
+    target: evidence.assign_tiers
+    inputs: {records: $add_function_stream.records}
+    params: {}
+
+  - id: build_cards
+    target: evidence.build_cards
+    inputs:
+      records: $assign_tiers.records
+    params:
+      atlas_membership: $combine_scores.atlas_membership
+
+  - id: write_rank
+    target: evidence.write_rank_csv
+    inputs: {records: $assign_tiers.records}
+    params: {path: rank.csv}
+
+  - id: write_cards
+    target: report.write_cards_md
+    inputs: {cards: $build_cards.cards}
+    params: {path: evidence_cards.md}
+
+  - id: summarise
+    target: ai.summarize_candidates
+    inputs: {cards: $build_cards.cards}
+    params: {}
