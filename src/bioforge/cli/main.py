@@ -138,6 +138,64 @@ def plugins_list(ctx: click.Context) -> None:
         click.echo(f"- {ep.name}  ({ep.value})")
 
 
+@cli.command("run")
+@click.argument(
+    "workflow_yaml",
+    type=click.Path(exists=True, dir_okay=False),
+)
+@click.option(
+    "--out",
+    "out_dir",
+    type=click.Path(),
+    default=None,
+    help="Output directory for run artifacts (default runs/<timestamp>).",
+)
+@click.pass_context
+def run_cmd(ctx: click.Context, workflow_yaml: str, out_dir: str | None) -> None:
+    """Execute a declarative YAML workflow end-to-end."""
+    import datetime as dt
+    import json
+    import logging
+
+    # Lazy import so omics deps don't have to be importable for `bioforge info`.
+    from bioforge.workflow import WorkflowExecutor, WorkflowRun
+    import bioforge.workflow.steps as _steps  # noqa: F401 — registers steps
+
+    ts = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    out_path = Path(out_dir or f"runs/{ts}")
+    out_path.mkdir(parents=True, exist_ok=True)
+    log = logging.getLogger("bioforge.cli.run")
+
+    run = WorkflowRun.from_yaml(workflow_yaml)
+    log.info("loaded workflow with %d steps from %s", len(run.steps), workflow_yaml)
+
+    def progress(step_id: str, target: str, duration: float) -> None:
+        click.echo(f"  ✓ {step_id} ({target}) in {duration:.2f}s")
+
+    executor = WorkflowExecutor(progress_cb=progress)
+    try:
+        outputs = executor.execute(run)
+    except Exception as exc:  # noqa: BLE001
+        click.echo(f"workflow failed: {exc}", err=True)
+        sys.exit(1)
+
+    provenance_p = out_path / "provenance.json"
+    provenance_p.write_text(json.dumps(executor.provenance, indent=2), encoding="utf-8")
+    log.info("wrote provenance to %s", provenance_p)
+
+    # Best-effort: persist output directories as a JSON summary so the UI
+    # can pick up the latest run.
+    summary = {
+        "workflow_yaml": str(workflow_yaml),
+        "out_dir": str(out_path),
+        "n_steps": len(run.steps),
+        "step_ids": [s.id for s in run.steps],
+        "outputs": {k: list(v.keys()) for k, v in outputs.items()},
+    }
+    (out_path / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    click.echo(f"workflow complete: {len(outputs)} steps run; artifacts in {out_path}")
+
+
 def main() -> None:
     """Entry point used by the ``bioforge`` console script."""
     cli()  # pylint: disable=no-value-for-parameter

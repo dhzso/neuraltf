@@ -38,6 +38,10 @@ datasets/cache/
 backups/
 logs/
 
+# Workflow run artifacts are reproducible from YAML; not tracked.
+runs/
+projects/*/runs/
+
 # =============================================================================
 # Docker
 # =============================================================================

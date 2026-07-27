@@ -64,3 +64,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 31 unit tests (18 evidence core + 13 readers); all hermetic (synthetic xlsx fixtures, no dependency on git-ignored raw datasets)
 - Full test suite now **115 passing** (50 core + 9 integration + 12 omics + 31 evidence + 13 misc-refactor)
 - `docker/base/requirements.lock.txt` refreshed with 154 pinned transitive deps (now includes openpyxl 3.1.5 and et_xmlfile 2.0.0)
+
+### Layer 6 — AI Layer
+
+- `bioforge.ai` — provider-agnostic AI interface (OpenAI-compatible HTTP)
+- `bioforge.ai.OpenAICompatClient` posts to `${base_url}/chat/completions`
+  (works with OpenAI, OpenRouter, Together, Groq, Anyscale, vLLM, SGLang,
+  LM Studio, Ollama's OpenAI shim) via stdlib `urllib` (zero new runtime deps)
+- `bioforge.ai.StubAssistant` deterministic fallback so workflows degrade
+  gracefully when no `BIOFORGE_AI_API_KEY` is configured
+- `bioforge.ai.tools` — `register_tool` decorator and built-in
+  `lookup_gene` + `summarize_candidates` for LLM-assistant agency
+- Config discovery: env vars (`BIOFORGE_AI_BASE_URL`, `BIOFORGE_AI_API_KEY`,
+  `BIOFORGE_AI_MODEL`) → `~/.config/bioforge/ai.yaml` → safe defaults
+
+### Layer 7 — Workflow Engine
+
+- `bioforge.workflow.engine` — declarative YAML workflows with
+  step references (`$step_id.output` or `{"$step": ..., "$output": ...}`),
+  provenance capture, and progress callbacks for CLI / UI
+- `bioforge.workflow.registry.StepRegistry` — `@register("name")` decorator
+  with input/output contract tracking for assistant introspection
+- `bioforge.workflow.steps` — builtins: `ingest`, `qc`, `normalize`,
+  `cluster`, `trajectory`, `batch_correct`, `evidence.demo_rank`,
+  `evidence.write_rank_csv`, `evidence.build_cards`, `report.write_cards_md`,
+  `ai.summarize_candidates`
+- New CLI: `bioforge run workflow.yaml --out runs/<ts>` executes workflows
+  end-to-end; writes `provenance.json` + `summary.json` per run
+
+### Layer 8C — Dataset Ingestion
+
+- `bioforge.ingest` — `ingest_dataset(source)` accepts GEO/SRA accessions,
+  URLs, or local paths and auto-detects format by **content sniffing**
+  (HDF5 magic / gzip magic / text content), not extension alone
+- Format families: `.h5ad`, `.csv[.gz]`, `.tsv[.gz]` / `.txt[.gz]` DGE,
+  10x `matrix.mtx` directories
+- Graceful `UnknownFormatError` so UI/CLI can render a friendly message
+  instead of a stack trace (per ADR-0003); accessions defer to user-side
+  geo/sra-toolkit fetch with a clear error message
+- Optional FASTQ→matrix recipe declaration in
+  `bioforge.ingest.fastq` (stub for future `[fastq]` extra)
+
+### Layer 8B Extension — Cross-Atlas Evidence Cards
+
+- `bioforge.evidence.cards` — `EvidenceCard`, `ProofStatus`,
+  `build_evidence_card`, `build_cards_for_records`, `render_card_markdown`,
+  `render_cards_markdown`
+- Proof status separates **novel candidates** (no RNAi, prior unknowns —
+  the thesis-essential class Deepanshu will validate) vs **known RNAi
+  validated** vs **prior FSTF not tested** — all three contribute to the
+  same confidence score, no evidence stream is discarded
+- Markdown rendering produces per-candidate "evidence cards" suitable for
+  both console reports and the Streamlit UI
+
+### Layer 9 — NeuralTF
+
+- `projects/NeuralTF/` directory with README, workflows, and runs/
+- `projects/NeuralTF/workflows/demo_pipeline.yaml` — synthetic-data workflow
+  that runs the full evidence → cards → AI-summary chain end-to-end
+  (verified by integration test)
+- `.gitignore` updated to exclude `runs/` and `projects/*/runs/`
+
+### Layer 10 — Streamlit UI
+
+- `bioforge.ui.app` — three pages (Run / Results / Assistant) using Streamlit
+- Delegates to Layer 7's `WorkflowExecutor` for actual execution so CLI and
+  UI behave identically
+- AI panel degrades to `StubAssistant` when unconfigured
+- `[streamlit]` optional extra added (streamlit + plotly); container now
+  includes streamlit 1.60.0
+
+### ADRs
+
+- ADR-0003 — AI Layer + Workflow Engine + Dataset Ingestion + UI design
+- ADR-0001 layer-plan table updated: Layers 6, 7, 8C, 9, 10 marked Completed
+
+### Test totals
+
+- **165 tests passing** (was 115)
+- 21 new AI Layer tests, 21 new workflow-engine tests, 18 new ingest tests,
+  7 new evidence-cards tests, 2 new UI smoke tests, 2 new NeuralTF
+  integration tests
+- `docker/base/requirements.lock.txt` now pins 172 transitive deps
+  (+streamlit 1.60.0 + altair 6.2.2 + pyarrow 24.0.0 + httptools 0.8.0 …)

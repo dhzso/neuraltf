@@ -78,12 +78,13 @@ BUT organized as a reusable framework with six components:
 | 3 | Scientific Python Foundation | Completed |
 | 4 | Bioinformatics Foundation | Completed |
 | 5 | BioForge Core Framework | Completed |
-| 6 | AI Layer | Not started |
-| 7 | Workflow Engine | Not started |
+| 6 | AI Layer | Completed |
+| 7 | Workflow Engine | Completed |
 | 8A | Generic Omics Workflows | Completed |
 | 8B | Evidence Integration Framework | Completed |
-| 9 | Research Modules — NeuralTF | Not started |
-| 10 | Reporting | Not started |
+| 8C | Dataset Ingestion | Completed |
+| 9 | Research Modules — NeuralTF | Completed (demo pipeline) |
+| 10 | Reporting (Streamlit UI) | Completed |
 | 11 | Open-source Release | Not started |
 
 ## Alternatives Considered

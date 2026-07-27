@@ -15,6 +15,14 @@ Public API
 - :func:`annotate_function` — minimal ontology mapping (stub).
 - :mod:`bioforge.evidence.readers` — King/Fincher/Plass readers.
 """
+from bioforge.evidence.cards import (
+    EvidenceCard,
+    ProofStatus,
+    build_cards_for_records,
+    build_evidence_card,
+    render_card_markdown,
+    render_cards_markdown,
+)
 from bioforge.evidence.confidence import ConfidencePolicy, assign_tiers
 from bioforge.evidence.gene_mapping import BridgeTable, build_bridge_from_names, load_bridge
 from bioforge.evidence.harmonization import CANONICAL_TISSUES, AtlasHarmonizer
@@ -37,4 +45,10 @@ __all__ = [
     "ConfidencePolicy",
     "assign_tiers",
     "annotate_function",
+    "EvidenceCard",
+    "ProofStatus",
+    "build_evidence_card",
+    "build_cards_for_records",
+    "render_card_markdown",
+    "render_cards_markdown",
 ]

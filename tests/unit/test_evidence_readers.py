@@ -186,14 +186,19 @@ def test_fincher_read_dge_returns_anndata(tmp_path: Path) -> None:
 
 
 def test_plass_read_h5ad_round_trip(tmp_path: Path) -> None:
-    # anndata 0.12 refuses to write pandas nullable StringArray unless we
-    # toggle a flag. Use non-nullable index via string dtype to stay safe.
+    # anndata 0.12 + pandas 3 + pyarrow returns ArrowStringArray for index
+    # columns, which anndata can't write without opt-in. Set string storage
+    # to plain python for the duration of this test.
     import anndata as _ad
+    import pandas as _pd
     _ad.settings.allow_write_nullable_strings = True
+    _pd.set_option("mode.string_storage", "python")
+    obs = _pd.DataFrame(index=np.array([f"c{i}" for i in range(4)], dtype=object))
+    var = _pd.DataFrame(index=np.array([f"g{i}" for i in range(4)], dtype=object))
     adata = ad.AnnData(
         X=np.eye(4, dtype=np.float32),
-        obs=pd.DataFrame(index=[f"c{i}" for i in range(4)]),
-        var=pd.DataFrame(index=[f"g{i}" for i in range(4)]),
+        obs=obs,
+        var=var,
     )
     p = tmp_path / "plass.h5ad"
     adata.write_h5ad(p)
