@@ -1,0 +1,147 @@
+"""BioForge CLI entry point.
+
+Built with Click. The CLI is intentionally minimal at Layer 5 — it exposes
+project plumbing (config, datasets, projects, plugins) but no analysis
+subcommands (those arrive with Layer 8 and beyond).
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import click
+
+from bioforge import __version__
+from bioforge.core.config import load_config
+from bioforge.core.datasets import DatasetManager
+from bioforge.core.logging import configure_logging
+from bioforge.projects.manager import ProjectManager
+
+
+def _repo_root() -> Path:
+    """Return the repo root inferred from the current working directory."""
+    cwd = Path.cwd()
+    return cwd  # BioForge is invoked from the repo root
+
+
+@click.group()
+@click.version_option(__version__, prog_name="bioforge")
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(dir_okay=False),
+    default=None,
+    help="Path to a YAML configuration file.",
+)
+@click.pass_context
+def cli(ctx: click.Context, config_path: str | None) -> None:
+    """BioForge — AI-native bioinformatics workstation."""
+    cfg = load_config(config_path)
+    configure_logging(cfg.logging)
+    ctx.ensure_object(dict)
+    ctx.obj["config"] = cfg
+    ctx.obj["repo_root"] = _repo_root()
+
+
+@cli.command()
+@click.pass_context
+def info(ctx: click.Context) -> None:
+    """Show BioForge version and resolved configuration."""
+    cfg = ctx.obj["config"]
+    click.echo(f"bioforge {__version__}")
+    click.echo(f"project: {cfg.project}")
+    click.echo(f"logging.level: {cfg.logging.level}")
+    click.echo(f"logging.file: {cfg.logging.file}")
+    click.echo(f"datasets.root: {cfg.datasets.root}")
+
+
+@cli.group()
+def datasets() -> None:
+    """Inspect the dataset layout."""
+
+
+@datasets.command("list")
+@click.option(
+    "--category",
+    type=click.Choice(["raw", "processed", "reference", "cache"]),
+    default=None,
+    help="List only one category.",
+)
+@click.pass_context
+def datasets_list(ctx: click.Context, category: str | None) -> None:
+    """List datasets in each (or one) category."""
+    cfg = ctx.obj["config"]
+    root = ctx.obj["repo_root"]
+    mgr = DatasetManager(root, cfg.datasets)
+    cats = [category] if category else ["raw", "processed", "reference", "cache"]
+    for cat in cats:
+        items = mgr.list(cat)
+        click.echo(f"{cat}/ ({len(items)} items)")
+        for name in items:
+            click.echo(f"  - {name}")
+
+
+@cli.group()
+def projects() -> None:
+    """Inspect or create research projects."""
+
+
+@projects.command("list")
+@click.pass_context
+def projects_list(ctx: click.Context) -> None:
+    """List available research projects."""
+    mgr = ProjectManager(ctx.obj["repo_root"])
+    names = mgr.list()
+    if not names:
+        click.echo("(no projects)")
+        return
+    for name in names:
+        try:
+            p = mgr.resolve(name)
+            click.echo(f"- {p.name}  ({p.root})")
+        except Exception as exc:  # noqa: BLE001 - report, don't crash listing
+            click.echo(f"- {name}  (invalid: {exc})")
+
+
+@projects.command("create")
+@click.argument("name")
+@click.pass_context
+def projects_create(ctx: click.Context, name: str) -> None:
+    """Create a new project scaffold."""
+    mgr = ProjectManager(ctx.obj["repo_root"])
+    try:
+        p = mgr.create(name)
+    except Exception as exc:  # noqa: BLE001
+        click.echo(f"Error: {exc}", err=True)
+        sys.exit(1)
+    click.echo(f"Created project '{p.name}' at {p.root}")
+
+
+@cli.group()
+def plugins() -> None:
+    """Inspect registered plugins."""
+
+
+@plugins.command("list")
+@click.pass_context
+def plugins_list(ctx: click.Context) -> None:
+    """List discovered plugins (entry points only, does not load them)."""
+    from bioforge.plugins import PluginManager
+
+    mgr = PluginManager()
+    eps = mgr.discover()
+    if not eps:
+        click.echo("(no plugins registered)")
+        return
+    for ep in eps:
+        click.echo(f"- {ep.name}  ({ep.value})")
+
+
+def main() -> None:
+    """Entry point used by the ``bioforge`` console script."""
+    cli()  # pylint: disable=no-value-for-parameter
+
+
+if __name__ == "__main__":
+    main()

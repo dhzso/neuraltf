@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bioforge"
+version = "0.1.0-alpha.1"
+description = "An open-source AI-native bioinformatics workstation."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Deepanshu", email = "placeholder@bioforge.dev"}
+]
+keywords = [
+    "bioinformatics",
+    "single-cell",
+    "RNA-seq",
+    "computational biology",
+    "transcription factors",
+]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+# =============================================================================
+# Layer 3 — Scientific Python Foundation
+# Pinned to explicit versions for reproducibility (charter requirement).
+# Versions are the latest stable supports for Python 3.11 (the container's
+# base interpreter). numpy 2.5+, scipy 1.18+ require Python 3.12+ and so
+# are intentionally excluded until the container moves to Python 3.12.
+# A proper lock file will be introduced at Layer 4 when scanpy/anndata are
+# added, since those packages may impose tighter version constraints.
+# =============================================================================
+dependencies = [
+    "numpy==2.4.6",
+    "scipy==1.17.1",
+    "pandas==3.0.5",
+    "scikit-learn==1.9.0",
+    "matplotlib==3.11.1",
+    "plotly==6.9.0",
+    "statsmodels==0.14.6",
+    # Layer 5 — Core framework runtime deps
+    "click>=8.1,<9.0",
+    "pyyaml>=6.0,<7.0",
+]
+
+# =============================================================================
+# Layer 4 — Bioinformatics Foundation
+# Defined as an optional extra so the package's core remains lightweight.
+# Versions are resolved once by pip during initial install; the exact
+# resolved set is captured in docker/base/requirements.lock.txt for
+# reproducibility.
+#
+# NOTE: scverse (scanpy/anndata/scvelo/cellrank) imposes upper bounds on
+# pandas/numpy that may differ from the Layer 3 pins above. The resolved
+# installation is the single source of truth for what actually runs.
+# =============================================================================
+[project.optional-dependencies]
+bio = [
+    "scanpy>=1.11,<2.0",
+    "anndata>=0.10",
+    "scvelo>=0.3",
+    "cellrank>=2.0",
+    "biopython>=1.83",
+    "gseapy>=1.0",
+    "igraph>=0.11",
+    "leidenalg>=0.10",
+    "harmonypy>=0.0.9",
+]
+dev = [
+    "pytest>=8.0,<9.0",
+    "pytest-cov>=5.0,<6.0",
+]
+
+# =============================================================================
+# Layer 5 — CLI entry point
+# =============================================================================
+[project.scripts]
+bioforge = "bioforge.cli.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
