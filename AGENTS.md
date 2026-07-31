@@ -79,6 +79,16 @@ Signal found in all 3 atlases -> high reproducibility. King provides the stronge
 python -m bioforge.projects.neuraltf.pipeline
 ```
 
+### Reproducible data prep (run once)
+
+```bash
+# Build v4 <-> v6 bridge CSV from Rosetta Stone + King mmc4
+python scripts/build_bridge.py
+
+# Rebuild king_atlas.tsv from raw mmc7.xlsx
+python scripts/build_king_atlas.py
+```
+
 ## Output Files
 
 All written to `projects/NeuralTF/runs/pipeline_run/`:

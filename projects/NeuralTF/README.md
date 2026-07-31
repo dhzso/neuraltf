@@ -10,7 +10,7 @@ candidates for RNAi validation.
 projects/NeuralTF/
   README.md                 # this file
   data/
-    bridge.csv              # v4<->v6<->gene_name bridge table
+    bridge.csv              # v4 <-> v6 <-> gene_name bridge table
     king_atlas.tsv          # Prebuilt King mmc7 G0 enrichment data
   scripts/
     visualize_results.py    # Generate 12 publication figures
@@ -20,12 +20,13 @@ projects/NeuralTF/
       rank.csv              # All TF candidates
       rank_neural.csv       # Neural-enriched candidates only
       evidence_cards.md     # Per-candidate evidence summary
+      ai_summary.md         # LLM summary (stub if no API key)
       pipeline_results.json # Machine-readable top 50
 ```
 
 ## Running the pipeline
 
-Requires processed h5ad files and the bridge CSV + king_atlas.tsv (already in this repo).
+Requires processed h5ad files and the bridge CSV + king_atlas.tsv (all prebuilt in this repo).
 
 ```bash
 python -m bioforge.projects.neuraltf.pipeline
@@ -41,6 +42,13 @@ python projects/NeuralTF/scripts/visualize_results.py
 
 Outputs 12 PNGs to `projects/NeuralTF/figures/`.
 
+### Rebuild the bridge or King atlas (only if raw data changes)
+
+```bash
+python scripts/build_bridge.py --out projects/NeuralTF/data/bridge.csv
+python scripts/build_king_atlas.py --out projects/NeuralTF/data/king_atlas.tsv
+```
+
 ## How it works
 
 The pipeline integrates **8 evidence streams** per TF candidate:
@@ -50,14 +58,14 @@ The pipeline integrates **8 evidence streams** per TF candidate:
 | Expression | 0.20 | Max log2FC/5 across Fincher, Plass, King atlases |
 | Specificity | 0.10 | 1 / n_clusters supporting the candidate |
 | Reproducibility | 0.15 | Fraction of 3 atlases confirming the TF |
-| RNAi | 0.15 | 1 if in King mmc5 RNAi phenotype tablember |
-| Correlation | 0.10 | Gmapped G0-X1 gain from King mmc6 |
+| RNAi | 0.15 | 1 if in King mmc5 RNAi phenotype table |
+| Correlation | 0.10 | G0-X1 correlation gain from King mmc6 |
 | Function | 0.05 | Hardcoded known neural TF list |
 | Neural Enriched | 0.15 | Binary 1.0 if TF hits a neural G0 subcluster with log2FC >= 2 |
-| Neural Specificity | 0.10 | 1 / number of unique neutral subclusters |
+| Neural Specificity | 0.10 | 1 / number of unique neural subclusters |
 
 Tier assignment:
-- **HIGH**: RNAi-validated OR (streams >= 3 AND integrated >= 0.45)
+- **HIGH**: RNAi-validated HERE builds OR (streams >= 3 AND integrated >= 0.45)
 - **MEDIUM**: streams >= 2 AND integrated >= 0.25
 - **LOW**: otherwise
 
@@ -71,6 +79,15 @@ Proof status:
 All source atlases are independent experiments:
 - Fincher 2018 (dd_Smed_v4): 50K cell Drop-seq atlas
 - Plass 2018 (dd_Smed_v6): 21K cell Drop-seq atlas, independent lab
-- King 2024 (dd_Smed_v6): FAC-sorted G0 porter TF atlas with subcluster annotations
+- King 2024 (dd_Smed_v6): FAC-sorted G0 progenitor TF atlas with subcluster annotations
 
-All anthology gene IDs bridged via Rosetta Stone mapping; no guessing by numeric prefix.
+Gene IDs bridged via Rosetta Stone mapping; no guessing by numeric prefix.
+
+## Project scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/build_bridge.py` | Build v4 <-> v6 bridge CSV from Rosetta Stone + mmc4 |
+| `scripts/build_king_atlas.py` | Build king_atlas.tsv from mmc7.xlsx |
+| `scripts/audit_king_atlas.py` | Diagnostic: print King atlas statistics |
+| `projects/NeuralTF/scripts/visualize_results.py` | Generate 12 publication figures |
