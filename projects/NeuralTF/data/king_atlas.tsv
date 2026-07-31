@@ -1,0 +1,955 @@
+v6_id	gene_name	compartment	subcluster	cell_type	fincher_cluster	log2fc	pval
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural11_0			6.35508117023059	5.10126380290324e-105
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural11_0			4.47384278414573	7.5574063047413e-68
+dd_Smed_v6_22331_0_1	dd22331	G0 Progenitor	neural11_0			3.01953360022475	4.68490928113903e-28
+dd_Smed_v6_13215_0_1	soxB	G0 Progenitor	neural11_0			5.52899707513634	5.07231923696865e-25
+dd_Smed_v6_14213_0_1	dd14213	G0 Progenitor	neural11_1	npp-4; glutamatergic; npp-22	cil 7	4.35552869613836	2.30879240657764e-33
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural11_1	npp-4; glutamatergic; npp-22	cil 7	4.78099047287692	1.14166630939282e-29
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural11_1	npp-4; glutamatergic; npp-22	cil 7	2.8585549434277	2.29648752789981e-29
+dd_Smed_v6_12010_0_1	dd12010	G0 Progenitor	neural11_1	npp-4; glutamatergic; npp-22	cil 7	3.04561865505393	1.0088981222068e-28
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural11_1	npp-4; glutamatergic; npp-22	cil 7	3.62273257071843	2.17283692802532e-24
+dd_Smed_v6_4048_0_1	dd4048	G0 Progenitor	neural11_1	npp-4; glutamatergic; npp-22	cil 7	3.8260295583047	1.38779855017498e-18
+dd_Smed_v6_22331_0_1	dd22331	G0 Progenitor	neural11_1	npp-4; glutamatergic; npp-22	cil 7	3.0536761422687	3.89143709363799e-07
+dd_Smed_v6_22331_0_1	dd22331	G0 Progenitor	neural11_2	GFI1B	cil 9	5.09531177935233	2.1612757629982e-39
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural11_2	GFI1B	cil 9	4.52751316470337	6.77653801426562e-34
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural11_2	GFI1B	cil 9	4.45855327741882	1.00568829774003e-32
+dd_Smed_v6_17534_0_1	arh	G0 Progenitor	neural11_2	GFI1B	cil 9	2.76499884386938	5.27897103224491e-19
+dd_Smed_v6_14824_0_1	dd14824	G0 Progenitor	neural11_2	GFI1B	cil 9	3.49828452838011	1.76651153199268e-11
+dd_Smed_v6_9460_0_2	dd9460	G0 Progenitor	neural11_2	GFI1B	cil 9	2.72782297347081	7.5180664706618e-10
+dd_Smed_v6_20755_0_1	dd20755	G0 Progenitor	neural11_2	GFI1B	cil 9	3.45919497909694	2.46524289687213e-07
+dd_Smed_v6_17731_0_1	sim	G0 Progenitor	neural11_3	ChAT	cil 12	6.3853850571037	1.79552022907006e-98
+dd_Smed_v6_58909_0_1	gata4/5/6-3	G0 Progenitor	neural11_3	ChAT	cil 12	4.69961366033671	1.73320596019575e-56
+dd_Smed_v6_13215_0_1	soxB	G0 Progenitor	neural11_3	ChAT	cil 12	2.73439155867194	2.57254186012348e-17
+dd_Smed_v6_6470_0_1	tbx2/3b	G0 Progenitor	neural11_3	ChAT	cil 12	3.69136373928502	3.30551499579412e-14
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural11_3	ChAT	cil 12	2.51965734649319	2.01145560580838e-12
+dd_Smed_v6_15144_0_1	lhx2/9	G0 Progenitor	neural11_3	ChAT	cil 12	3.75566586066035	2.93742280742429e-08
+dd_Smed_v6_14824_0_1	dd14824	G0 Progenitor	neural11_3	ChAT	cil 12		
+dd_Smed_v6_14213_0_1	dd14213	G0 Progenitor	neural11_4	glutamatergic; GFI1B	ncil 29	6.41448034850972	3.17162588450549e-91
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural11_4	glutamatergic; GFI1B	ncil 29	4.8198083445708	2.42113060036896e-53
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural11_4	glutamatergic; GFI1B	ncil 29	4.38813522005186	5.48675203735125e-16
+dd_Smed_v6_10219_0_1	dd10219	G0 Progenitor	neural11_4	glutamatergic; GFI1B	ncil 29	2.79507319288764	2.65654312175972e-11
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural11_4	glutamatergic; GFI1B	ncil 29	2.54560330684753	2.6785616821904e-09
+dd_Smed_v6_14824_0_1	dd14824	G0 Progenitor	neural11_4	glutamatergic; GFI1B	ncil 29	3.19574068795963	1.05693577039468e-06
+dd_Smed_v6_22331_0_1	dd22331	G0 Progenitor	neural11_4	glutamatergic; GFI1B	ncil 29		
+dd_Smed_v6_14213_0_1	dd14213	G0 Progenitor	neural11_5	npp-4; glutamatergic	cil 7	4.00242397117363	4.18893222438525e-14
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural11_5	npp-4; glutamatergic	cil 7	3.05999588430718	6.98993445397557e-14
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural11_5	npp-4; glutamatergic	cil 7	3.3098694782001	3.92652683036392e-11
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural11_5	npp-4; glutamatergic	cil 7	2.93080895364547	4.4307761275887e-11
+dd_Smed_v6_10219_0_1	dd10219	G0 Progenitor	neural11_5	npp-4; glutamatergic	cil 7	3.83037588646817	4.20726372294349e-08
+dd_Smed_v6_22331_0_1	dd22331	G0 Progenitor	neural11_6	GFI1B	cil 11	8.26178604370712	1.00833677321584e-61
+dd_Smed_v6_9460_0_2	dd9460	G0 Progenitor	neural11_6	GFI1B	cil 11	3.56103215953448	6.74274845229388e-12
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural11_6	GFI1B	cil 11	1.67448537204239	8.65342838678136e-05
+dd_Smed_v6_12170_0_1	dd12170	G0 Progenitor	neural11_6	GFI1B	cil 11	4.32829291928541	0.00020927449237616
+dd_Smed_v6_14824_0_1	dd14824	G0 Progenitor	neural11_6	GFI1B	cil 11		
+dd_Smed_v6_45275_0_1	dd45275	G0 Progenitor	neural11_6	GFI1B	cil 11		
+dd_Smed_v6_26877_0_1	dd26877	G0 Progenitor	neural11_7			4.99792088298865	1.66896169837751e-169
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural11_7			3.55097652950453	5.28444100175389e-66
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural11_7			2.84509144062224	4.0422957975729e-18
+dd_Smed_v6_22331_0_1	dd22331	G0 Progenitor	neural11_7			1.90548833697515	3.0027156778333e-14
+dd_Smed_v6_7227_0_1	dd7227	G0 Progenitor	neural11_7			1.76210023162605	2.58588159337784e-12
+dd_Smed_v6_13704_0_1	ptf-4	G0 Progenitor	neural12_0	foxA	main neural 4	3.4186246823605	5.62092387258265e-49
+dd_Smed_v6_11935_0_1	dd11935	G0 Progenitor	neural12_0	foxA	main neural 4	2.96452561079534	6.88793566194584e-18
+dd_Smed_v6_10320_0_1	dd10320	G0 Progenitor	neural12_0	foxA	main neural 4	1.77122941216841	9.76108578341717e-15
+dd_Smed_v6_11893_0_1	dd11893	G0 Progenitor	neural12_0	foxA	main neural 4	2.25899524116113	1.57892398052977e-07
+dd_Smed_v6_13704_0_1	ptf-4	G0 Progenitor	neural12_1	foxA	main neural 4	5.5773222614468	1.06445463595427e-95
+dd_Smed_v6_14362_0_1	dd14362	G0 Progenitor	neural12_1	foxA	main neural 4	4.75932760375976	2.00540258967472e-34
+dd_Smed_v6_11935_0_1	dd11935	G0 Progenitor	neural12_1	foxA	main neural 4	2.44730183120226	8.48015876810201e-32
+dd_Smed_v6_19040_0_1	dlx	G0 Progenitor	neural12_2		ncil 1, ncil 7, ncil 30	4.59388494368485	1.59376814244604e-98
+dd_Smed_v6_6470_0_1	tbx2/3b	G0 Progenitor	neural12_2		ncil 1, ncil 7, ncil 30	4.57664198656714	3.39382793183754e-89
+dd_Smed_v6_10038_0_1	Zeb-1	G0 Progenitor	neural12_2		ncil 1, ncil 7, ncil 30	4.49038337875679	3.61638857171835e-69
+dd_Smed_v6_20282_0_1	dd20282	G0 Progenitor	neural12_2		ncil 1, ncil 7, ncil 30	2.06472450124524	1.56651741256477e-17
+dd_Smed_v6_11150_0_1	dd11150	G0 Progenitor	neural12_2		ncil 1, ncil 7, ncil 30	2.75805004549422	1.00817993647483e-08
+dd_Smed_v6_13772_0_1	PROX-1	G0 Progenitor	neural12_2		ncil 1, ncil 7, ncil 30	2.19622790870362	1.31585144763871e-07
+dd_Smed_v6_7033_0_1	dd7033	G0 Progenitor	neural12_2		ncil 1, ncil 7, ncil 30		
+dd_Smed_v6_19040_0_1	dlx	G0 Progenitor	neural12_3	foxA	ncil 14, ncil 24	4.8615440039596	3.44113947173083e-87
+dd_Smed_v6_10038_0_1	Zeb-1	G0 Progenitor	neural12_3	foxA	ncil 14, ncil 24	3.82684613390737	8.92130865995326e-86
+dd_Smed_v6_11150_0_1	dd11150	G0 Progenitor	neural12_3	foxA	ncil 14, ncil 24	5.98221450814312	2.2438280761244e-42
+dd_Smed_v6_13772_0_1	PROX-1	G0 Progenitor	neural12_3	foxA	ncil 14, ncil 24	4.92979211198029	7.28479593503413e-34
+dd_Smed_v6_7033_0_1	dd7033	G0 Progenitor	neural12_3	foxA	ncil 14, ncil 24	3.02471859295029	1.17389867333994e-22
+dd_Smed_v6_19040_0_1	dlx	G0 Progenitor	neural12_4	glutamatergic	ncil 2, ncil 8, ncil 17	5.90134424677462	3.80675109797572e-123
+dd_Smed_v6_10038_0_1	Zeb-1	G0 Progenitor	neural12_4	glutamatergic	ncil 2, ncil 8, ncil 17	4.12383158726541	5.14524063279882e-67
+dd_Smed_v6_20282_0_1	dd20282	G0 Progenitor	neural12_4	glutamatergic	ncil 2, ncil 8, ncil 17	4.10832706606107	3.49455234153413e-50
+dd_Smed_v6_13772_0_1	PROX-1	G0 Progenitor	neural12_4	glutamatergic	ncil 2, ncil 8, ncil 17	4.90109713127312	3.33789712839213e-36
+dd_Smed_v6_11150_0_1	dd11150	G0 Progenitor	neural12_4	glutamatergic	ncil 2, ncil 8, ncil 17	1.68105843240455	1.17518783305727e-17
+dd_Smed_v6_14115_0_1	dd14115	G0 Progenitor	neural12_4	glutamatergic	ncil 2, ncil 8, ncil 17	2.03026374790524	6.90805157605825e-16
+dd_Smed_v6_6470_0_1	tbx2/3b	G0 Progenitor	neural12_5	1020HH-2	ncil 1, ncil 7, ncil 30	3.95058218118685	4.95961545666622e-46
+dd_Smed_v6_19040_0_1	dlx	G0 Progenitor	neural12_5	1020HH-2	ncil 1, ncil 7, ncil 30	4.70289609993762	3.37657999004103e-27
+dd_Smed_v6_10038_0_1	Zeb-1	G0 Progenitor	neural12_5	1020HH-2	ncil 1, ncil 7, ncil 30	2.57838576506748	1.0806840624443e-11
+dd_Smed_v6_13772_0_1	PROX-1	G0 Progenitor	neural12_5	1020HH-2	ncil 1, ncil 7, ncil 30	1.93213193025226	1.82470995827557e-10
+dd_Smed_v6_20282_0_1	dd20282	G0 Progenitor	neural12_5	1020HH-2	ncil 1, ncil 7, ncil 30	1.52898868207998	3.82802549133566e-09
+dd_Smed_v6_7442_0_1	dd7442	G0 Progenitor	neural12_5	1020HH-2	ncil 1, ncil 7, ncil 30	1.96666018639496	3.18432059889751e-05
+dd_Smed_v6_3565_0_1	runt-2	G0 Progenitor	neural12_5	1020HH-2	ncil 1, ncil 7, ncil 30		
+dd_Smed_v6_13704_0_1	ptf-4	G0 Progenitor	neural12_6	foxA	main neural 4	5.1532109217407	1.6834226899451e-85
+dd_Smed_v6_10320_0_1	dd10320	G0 Progenitor	neural12_6	foxA	main neural 4	5.0166652109551	2.83521981622988e-26
+dd_Smed_v6_14362_0_1	dd14362	G0 Progenitor	neural12_6	foxA	main neural 4	2.41661894921908	4.78075368135872e-12
+dd_Smed_v6_15473_0_1	dd15473	G0 Progenitor	neural12_6	foxA	main neural 4	3.72026212624456	3.94379325473614e-11
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural12_6	foxA	main neural 4	1.8494951379099	9.39741536895147e-06
+dd_Smed_v6_9287_0_1	dd9287	G0 Progenitor	neural12_7	npp-18; foxA	ncil 4, ncil 16, ncil 26, ncil 32, ncil 33		
+dd_Smed_v6_13704_0_1	ptf-4	G0 Progenitor	neural12_7	npp-18; foxA	ncil 4, ncil 16, ncil 26, ncil 32, ncil 33		
+dd_Smed_v6_9738_0_1	dd9738	G0 Progenitor	six1/2-1(17)_2	sexual somatic support cells		6.55998660795346	7.24893644008989e-08
+dd_Smed_v6_5978_0_1	dd5978	G0 Progenitor	six1/2-1(17)_3	sexual somatic support cells		2.84338070662949	2.17547500193675e-28
+dd_Smed_v6_46372_0_1	dd46372	G0 Progenitor	six1/2-1(17)_3	sexual somatic support cells		5.76887452360854	2.02139289870395e-22
+dd_Smed_v6_9738_0_1	dd9738	G0 Progenitor	six1/2-1(17)_3	sexual somatic support cells		3.97989923316701	5.91007892699376e-06
+dd_Smed_v6_209_0_1	dd209	G0 Progenitor	six1/2-1(17)_4	sexual somatic support cells		4.53655968240404	2.90895127296242e-17
+dd_Smed_v6_1032_0_1	dd1032	G0 Progenitor	six1/2-1(17)_4	sexual somatic support cells		1.70715474761296	1.15136197058517e-05
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	six1/2-1(17)_4	sexual somatic support cells			
+dd_Smed_v6_209_0_1	dd209	G0 Progenitor	six1/2-1(17)_5	sexual somatic support cells		4.18208846404152	2.62659106718652e-22
+dd_Smed_v6_5749_0_1	dd5749	G0 Progenitor	six1/2-1(17)_5	sexual somatic support cells		2.93857647310674	2.83800186671513e-13
+dd_Smed_v6_9774_0_1	Six1/2-2	G0 Progenitor	six1/2-1(17)_5	sexual somatic support cells		2.23262067793627	7.69100866087693e-06
+dd_Smed_v6_13772_0_1	PROX-1	G0 Progenitor	neural19_0	glutamatergic		5.79345666076452	3.4311420650613e-63
+dd_Smed_v6_8820_0_1	islet1	G0 Progenitor	neural19_0	glutamatergic		3.96413199850027	3.87124788080603e-32
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural19_0	glutamatergic		2.17642906007562	0.000117618702562546
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural19_0	glutamatergic			
+dd_Smed_v6_15473_0_1	dd15473	G0 Progenitor	neural19_0	glutamatergic			
+dd_Smed_v6_13772_0_1	PROX-1	G0 Progenitor	neural19_1	trpA (no ap-2 though); glutamatergic	cil 0, cil 10, cil 17	4.95364366513623	9.40692185766341e-18
+dd_Smed_v6_13772_0_1	PROX-1	G0 Progenitor	neural19_2		cil 0	1.8503706655915	3.59735418151237e-59
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural19_2		cil 0	1.50998899590752	5.52760709980937e-36
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural19_2		cil 0	1.96889102963432	6.16565248073962e-32
+dd_Smed_v6_9460_0_2	dd9460	G0 Progenitor	neural19_2		cil 0	1.53362848511311	2.06737495682828e-27
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural1_0			4.29018971847703	0.0
+dd_Smed_v6_18972_0_1	dd18972	G0 Progenitor	neural1_0			3.83795056011472	4.95832277807716e-148
+dd_Smed_v6_11935_0_1	dd11935	G0 Progenitor	neural1_0			2.56802835138876	3.87598323319115e-70
+dd_Smed_v6_13056_0_1	tcf1	G0 Progenitor	neural1_0			2.66133810778235	5.2248124926751e-68
+dd_Smed_v6_19757_0_1	dd19757	G0 Progenitor	neural1_0			2.09248365283937	2.87494801264271e-67
+dd_Smed_v6_17726_0_1	Pax6A	G0 Progenitor	neural1_0			2.24304210615239	3.10363155204222e-66
+dd_Smed_v6_13056_0_1	tcf1	G0 Progenitor	neural1_1	glutamatergic	main neural 10	2.17609090872066	5.54827283326512e-06
+dd_Smed_v6_8820_0_1	islet1	G0 Progenitor	neural1_1	glutamatergic	main neural 10	2.82462554666208	7.41475034988898e-05
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural1_1	glutamatergic	main neural 10		
+dd_Smed_v6_10320_0_1	dd10320	G0 Progenitor	neural1_1	glutamatergic	main neural 10		
+dd_Smed_v6_19757_0_1	dd19757	G0 Progenitor	neural1_1	glutamatergic	main neural 10		
+dd_Smed_v6_14753_0_1	ascl-2	G0 Progenitor	neural1_10	ChAT		5.31959493537316	0.0
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural1_10	ChAT		3.34533869720926	8.08290230876191e-84
+dd_Smed_v6_10320_0_1	dd10320	G0 Progenitor	neural1_10	ChAT		2.19008532238846	2.62958817910768e-62
+dd_Smed_v6_13704_0_1	ptf-4	G0 Progenitor	neural1_2	ChAT		2.1518112395487	5.41746186408577e-66
+dd_Smed_v6_16472_0_1	dd16472	G0 Progenitor	neural1_2	ChAT		2.42936571819726	2.72194688669433e-63
+dd_Smed_v6_16399_0_1	meis	G0 Progenitor	neural1_2	ChAT		2.24627461376257	1.82851902812185e-46
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural1_2	ChAT		2.61348465710836	4.67824136153483e-31
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural1_2	ChAT		1.69690157087575	1.01632858833927e-27
+dd_Smed_v6_17534_0_1	arh	G0 Progenitor	neural1_2	ChAT		1.93736409419678	1.14588498423292e-27
+dd_Smed_v6_8820_0_1	islet1	G0 Progenitor	neural1_2	ChAT		1.69690738965349	1.22943009900242e-27
+dd_Smed_v6_18972_0_1	dd18972	G0 Progenitor	neural1_2	ChAT		2.24284782913677	4.60917487919672e-26
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural1_3		ncil 13; main neural 10	6.50824803274164	0.0
+dd_Smed_v6_10320_0_1	dd10320	G0 Progenitor	neural1_3		ncil 13; main neural 10	4.19163142341676	7.7379571059028e-266
+dd_Smed_v6_13056_0_1	tcf1	G0 Progenitor	neural1_3		ncil 13; main neural 10	2.36883299033327	4.64299168187462e-71
+dd_Smed_v6_16399_0_1	meis	G0 Progenitor	neural1_3		ncil 13; main neural 10	2.21518383976983	2.6889462802432e-18
+dd_Smed_v6_9460_0_2	dd9460	G0 Progenitor	neural1_3		ncil 13; main neural 10	1.79503830630677	1.00737772570851e-10
+dd_Smed_v6_19757_0_1	dd19757	G0 Progenitor	neural1_3		ncil 13; main neural 10		
+dd_Smed_v6_34144_0_1	dd34144	G0 Progenitor	neural1_4		main neural 10	5.97315024540241	1.99949788517041e-140
+dd_Smed_v6_13056_0_1	tcf1	G0 Progenitor	neural1_4		main neural 10	3.89219067499915	9.78412787566718e-121
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural1_4		main neural 10	4.15661167928413	1.25928359244185e-98
+dd_Smed_v6_19757_0_1	dd19757	G0 Progenitor	neural1_4		main neural 10	2.4310380600536	2.3212557554286e-47
+dd_Smed_v6_10320_0_1	dd10320	G0 Progenitor	neural1_5	glutamatergic	main neural 10	3.7842740724344	7.26436175082959e-56
+dd_Smed_v6_13056_0_1	tcf1	G0 Progenitor	neural1_5	glutamatergic	main neural 10	2.59557640536752	1.64870976226531e-44
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural1_5	glutamatergic	main neural 10	2.08621048966064	1.18934094892481e-30
+dd_Smed_v6_8820_0_1	islet1	G0 Progenitor	neural1_5	glutamatergic	main neural 10	2.79322811577155	5.91107566952382e-28
+dd_Smed_v6_34144_0_1	dd34144	G0 Progenitor	neural1_5	glutamatergic	main neural 10	2.13749629587704	1.01609289326083e-15
+dd_Smed_v6_28804_0_1	dd28804	G0 Progenitor	neural1_6		ncil 3; main neural 10	5.82403348110488	7.99402803259111e-149
+dd_Smed_v6_10320_0_1	dd10320	G0 Progenitor	neural1_6		ncil 3; main neural 10	4.26242621285764	1.51145002090507e-40
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural1_6		ncil 3; main neural 10	3.01470262095795	6.03155565435971e-28
+dd_Smed_v6_13056_0_1	tcf1	G0 Progenitor	neural1_6		ncil 3; main neural 10	4.0353508169546	3.8604391451275e-22
+dd_Smed_v6_19757_0_1	dd19757	G0 Progenitor	neural1_6		ncil 3; main neural 10	2.11831668131368	1.49011572500646e-11
+dd_Smed_v6_17731_0_1	sim	G0 Progenitor	neural1_7	ChAT; pax6A (CNS)	main neural 59	4.15540598366681	8.00073735205161e-96
+dd_Smed_v6_15144_0_1	lhx2/9	G0 Progenitor	neural1_7	ChAT; pax6A (CNS)	main neural 59	3.41747809085092	2.47119559726068e-56
+dd_Smed_v6_19286_0_1	dd19286	G0 Progenitor	neural1_7	ChAT; pax6A (CNS)	main neural 59	3.53214386375279	2.70388755833698e-38
+dd_Smed_v6_13056_0_1	tcf1	G0 Progenitor	neural1_7	ChAT; pax6A (CNS)	main neural 59	2.11524294962504	2.28500039043445e-20
+dd_Smed_v6_34144_0_1	dd34144	G0 Progenitor	neural1_7	ChAT; pax6A (CNS)	main neural 59	2.82638215261189	1.22897291730588e-14
+dd_Smed_v6_17726_0_1	Pax6A	G0 Progenitor	neural1_7	ChAT; pax6A (CNS)	main neural 59	2.6231220507453	4.2034774087421e-09
+dd_Smed_v6_13343_0_1	dd13343	G0 Progenitor	neural1_7	ChAT; pax6A (CNS)	main neural 59	1.92073817148163	0.000209505256753431
+dd_Smed_v6_18972_0_1	dd18972	G0 Progenitor	neural1_7	ChAT; pax6A (CNS)	main neural 59		
+dd_Smed_v6_13056_0_1	tcf1	G0 Progenitor	neural1_8		main neural 10	6.8990050424605	3.02439595346538e-199
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural1_8		main neural 10	1.96084134125823	3.33090929817862e-17
+dd_Smed_v6_11652_0_1	tbx2/3c	G0 Progenitor	neural1_8		main neural 10	2.03855102823242	1.01054024185809e-13
+dd_Smed_v6_19757_0_1	dd19757	G0 Progenitor	neural1_8		main neural 10	2.35735195750484	0.000629482596886356
+dd_Smed_v6_13343_0_1	dd13343	G0 Progenitor	neural1_9			6.39519129318997	7.48727963428028e-86
+dd_Smed_v6_13215_0_1	soxB	G0 Progenitor	neural1_9			5.7332425496997	3.1041209728543e-71
+dd_Smed_v6_9774_0_1	Six1/2-2	G0 Progenitor	neural1_9			5.80042678847122	3.40738477427155e-60
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural1_9			6.55041626900969	1.10250246427049e-55
+dd_Smed_v6_18972_0_1	dd18972	G0 Progenitor	neural1_9			2.9823480823666	4.02599481941516e-16
+dd_Smed_v6_29211_0_1	dd29211	G0 Progenitor	neural21_0	GFI1B		6.03542727086789	8.66927397793554e-60
+dd_Smed_v6_22331_0_1	dd22331	G0 Progenitor	neural21_0	GFI1B		5.97654120805439	2.29255125112253e-47
+dd_Smed_v6_35379_0_1	dd35379	G0 Progenitor	neural21_0	GFI1B		6.37652304831706	2.02735554186911e-32
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural21_0	GFI1B		4.01497592774746	1.75045198006431e-20
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural21_0	GFI1B		4.70532902876351	5.14140055047933e-19
+dd_Smed_v6_14824_0_1	dd14824	G0 Progenitor	neural21_0	GFI1B		3.69706215900835	0.000200800039229476
+dd_Smed_v6_22331_0_1	dd22331	G0 Progenitor	neural21_1	GFI1B; wntA	ncil 12, ncil 25	5.76204200107219	1.4323518512035e-26
+dd_Smed_v6_29211_0_1	dd29211	G0 Progenitor	neural21_1	GFI1B; wntA	ncil 12, ncil 25	5.10973679353348	3.58516247542681e-19
+dd_Smed_v6_35379_0_1	dd35379	G0 Progenitor	neural21_1	GFI1B; wntA	ncil 12, ncil 25	5.72049115858051	6.30157076356545e-16
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural21_1	GFI1B; wntA	ncil 12, ncil 25	4.30416432169702	1.18722676928241e-08
+dd_Smed_v6_14824_0_1	dd14824	G0 Progenitor	neural21_1	GFI1B; wntA	ncil 12, ncil 25	3.1768122369613	1.21000407942718e-05
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural21_1	GFI1B; wntA	ncil 12, ncil 25	3.47325940624957	4.85187550955564e-05
+dd_Smed_v6_20755_0_1	dd20755	G0 Progenitor	neural21_1	GFI1B; wntA	ncil 12, ncil 25		
+dd_Smed_v6_29211_0_1	dd29211	G0 Progenitor	neural21_2	GFI1B; wntA	ncil 25	7.02716317973543	1.69324865461932e-52
+dd_Smed_v6_22331_0_1	dd22331	G0 Progenitor	neural21_2	GFI1B; wntA	ncil 25	3.10320525911631	2.29781259213233e-08
+dd_Smed_v6_35379_0_1	dd35379	G0 Progenitor	neural21_2	GFI1B; wntA	ncil 25	3.64100231573497	5.51719500174539e-07
+dd_Smed_v6_14824_0_1	dd14824	G0 Progenitor	neural21_2	GFI1B; wntA	ncil 25	5.28643216272245	1.84206302211134e-06
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural21_2	GFI1B; wntA	ncil 25	3.1507778662472	3.41576966780912e-06
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural21_2	GFI1B; wntA	ncil 25		
+dd_Smed_v6_30562_0_1	dd30562	G0 Progenitor	neural23_0			7.506118670533	1.09697981556342e-61
+dd_Smed_v6_13474_0_1	dd13474	G0 Progenitor	neural23_0			6.34815761864174	3.52207850171024e-23
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural23_0			6.10598731681224	1.42062171114588e-12
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural23_0			3.17153975360284	1.87296345580478e-07
+dd_Smed_v6_18719_0_1	dd18719	G0 Progenitor	neural23_0			3.49022590992785	0.000471709594540259
+dd_Smed_v6_30562_0_1	dd30562	G0 Progenitor	neural23_1	glutamatergic		7.25738854348882	9.30374666976891e-40
+dd_Smed_v6_18719_0_1	dd18719	G0 Progenitor	neural23_1	glutamatergic		5.14570494284667	3.67681088384249e-17
+dd_Smed_v6_25769_0_1	dd25769	G0 Progenitor	neural23_1	glutamatergic		4.49319797827574	4.38196972854718e-15
+dd_Smed_v6_11893_0_1	dd11893	G0 Progenitor	neural23_1	glutamatergic		4.3108576943907	2.49985590852922e-10
+dd_Smed_v6_17534_0_1	arh	G0 Progenitor	neural23_1	glutamatergic		3.21996596983461	1.15108058940206e-07
+dd_Smed_v6_30562_0_1	dd30562	G0 Progenitor	neural23_2		cil 21	7.2320990212094	5.570813026652e-37
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural23_2		cil 21	3.41503528248881	4.97885310902135e-07
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural23_2		cil 21		
+dd_Smed_v6_11893_0_1	dd11893	G0 Progenitor	neural23_2		cil 21		
+dd_Smed_v6_30562_0_1	dd30562	G0 Progenitor	neural23_3	glutamatergic	cil 21	3.89550705260497	9.0691073558982e-21
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural23_3	glutamatergic	cil 21	2.53132874414682	7.63812233329646e-17
+dd_Smed_v6_11893_0_1	dd11893	G0 Progenitor	neural23_3	glutamatergic	cil 21	2.38293440624289	1.49017999593046e-05
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural23_3	glutamatergic	cil 21		
+dd_Smed_v6_5563_0_1	p53	G0 Progenitor	pharynx24_0			1.84726086861869	0.000273959208768906
+dd_Smed_v6_8720_0_1	ZFP-1	G0 Progenitor	pharynx24_0				
+dd_Smed_v6_5563_0_1	p53	G0 Progenitor	pharynx24_1			2.46864910050581	2.61076237547408e-11
+dd_Smed_v6_5563_0_1	p53	G0 Progenitor	pharynx24_2			3.81001637055575	5.60175588210288e-12
+dd_Smed_v6_8720_0_1	ZFP-1	G0 Progenitor	pharynx24_2				
+dd_Smed_v6_9596_0_1	dd9596	G0 Progenitor	pharynx24_3			3.20668888638152	1.41346448774509e-292
+dd_Smed_v6_6910_0_1	foxF-1	G0 Progenitor	cathepsin2_0			3.42957255825138	4.40611679656459e-269
+dd_Smed_v6_8720_0_1	ZFP-1	G0 Progenitor	cathepsin2_0			3.08083700935103	1.33471452307917e-247
+dd_Smed_v6_1694_0_1	hnf4	G0 Progenitor	cathepsin2_0			2.43219637481303	2.2175016641582e-121
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	cathepsin2_0			1.76694751429401	5.32553232472328e-46
+dd_Smed_v6_9738_0_1	dd9738	G0 Progenitor	cathepsin2_0			1.51942386231103	1.54245129523339e-39
+dd_Smed_v6_6910_0_1	foxF-1	G0 Progenitor	cathepsin2_1			3.32117077690227	4.86527364900551e-288
+dd_Smed_v6_1694_0_1	hnf4	G0 Progenitor	cathepsin2_1			2.45391071040374	6.91043640677614e-226
+dd_Smed_v6_8720_0_1	ZFP-1	G0 Progenitor	cathepsin2_1			2.26175836818575	2.02263839672228e-92
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	cathepsin2_1			1.71789948742611	1.2759713451379e-65
+dd_Smed_v6_3565_0_1	runt-2	G0 Progenitor	cathepsin2_1			1.54700654990359	1.18644949121116e-57
+dd_Smed_v6_1694_0_1	hnf4	G0 Progenitor	cathepsin2_2		Cathepsin 5, 7	2.77401953937061	2.96924280746824e-173
+dd_Smed_v6_6910_0_1	foxF-1	G0 Progenitor	cathepsin2_2		Cathepsin 5, 7	3.44982463565093	5.53881439142141e-154
+dd_Smed_v6_8720_0_1	ZFP-1	G0 Progenitor	cathepsin2_2		Cathepsin 5, 7	2.55392535133207	9.6343917817583e-95
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	cathepsin2_2		Cathepsin 5, 7	2.97943889079415	1.11298339098572e-77
+dd_Smed_v6_3565_0_1	runt-2	G0 Progenitor	cathepsin2_2		Cathepsin 5, 7	2.05283326831925	6.12462266694558e-58
+dd_Smed_v6_6536_0_1	dd6536	G0 Progenitor	cathepsin2_2		Cathepsin 5, 7	1.9155560865478	8.84451945610034e-39
+dd_Smed_v6_6910_0_1	foxF-1	G0 Progenitor	cathepsin2_3	Pigment Cells	Cathepsin 9, Pigment	2.96493369391667	1.62089256917778e-138
+dd_Smed_v6_6626_0_1	dd6626	G0 Progenitor	cathepsin2_3	Pigment Cells	Cathepsin 9, Pigment	2.62045797903385	4.40463756439061e-111
+dd_Smed_v6_1694_0_1	hnf4	G0 Progenitor	cathepsin2_3	Pigment Cells	Cathepsin 9, Pigment	3.37466574877029	1.90526437284425e-73
+dd_Smed_v6_11975_0_1	dd11975	G0 Progenitor	cathepsin2_3	Pigment Cells	Cathepsin 9, Pigment	1.67380316014728	2.01223134218167e-66
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	cathepsin2_3	Pigment Cells	Cathepsin 9, Pigment	2.1263184755202	1.3265664143762e-62
+dd_Smed_v6_8720_0_1	ZFP-1	G0 Progenitor	cathepsin2_3	Pigment Cells	Cathepsin 9, Pigment	2.05752878623825	1.46659696700746e-56
+dd_Smed_v6_6910_0_1	foxF-1	G0 Progenitor	cathepsin2_4		Cathepsin 2, 4, 12, 16	2.53977200372023	1.55055445311964e-38
+dd_Smed_v6_1694_0_1	hnf4	G0 Progenitor	cathepsin2_4		Cathepsin 2, 4, 12, 16		
+dd_Smed_v6_6536_0_1	dd6536	G0 Progenitor	cathepsin2_4		Cathepsin 2, 4, 12, 16		
+dd_Smed_v6_1032_0_1	dd1032	G0 Progenitor	cathepsin2_4		Cathepsin 2, 4, 12, 16		
+dd_Smed_v6_8720_0_1	ZFP-1	G0 Progenitor	cathepsin2_4		Cathepsin 2, 4, 12, 16		
+dd_Smed_v6_3565_0_1	runt-2	G0 Progenitor	cathepsin2_4		Cathepsin 2, 4, 12, 16		
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural4_2			1.75615638418852	6.16534405236806e-14
+dd_Smed_v6_16124_0_1	runt-1	G0 Progenitor	neural4_6			5.18019541623679	3.07546505119356e-179
+dd_Smed_v6_15473_0_1	dd15473	G0 Progenitor	neural4_6			2.29555608045805	9.47449928597262e-24
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural4_6			1.75050123044619	2.60179000569348e-09
+dd_Smed_v6_16399_0_1	meis	G0 Progenitor	neural4_6				
+dd_Smed_v6_11893_0_1	dd11893	G0 Progenitor	neural4_6				
+dd_Smed_v6_13898_0_1	nkx2-like	G0 Progenitor	neural4_8			6.50853024659147	0.0
+dd_Smed_v6_2716_0_1	nkx2	G0 Progenitor	neural4_8			7.01949976984421	7.69443404046043e-287
+dd_Smed_v6_12722_0_1	dd12722	G0 Progenitor	neural5_0	ChAT; pax6A (CNS); pax3/7; DBH(ventral midline)	ncil 0	2.08480390973763	1.35379329136467e-47
+dd_Smed_v6_37276_0_1	dd37276	G0 Progenitor	neural5_0	ChAT; pax6A (CNS); pax3/7; DBH(ventral midline)	ncil 0	2.16472961355871	7.4611625248621e-36
+dd_Smed_v6_47123_0_1	dd47123	G0 Progenitor	neural5_0	ChAT; pax6A (CNS); pax3/7; DBH(ventral midline)	ncil 0	1.76640258537855	2.77376836549924e-21
+dd_Smed_v6_17726_0_1	Pax6A	G0 Progenitor	neural5_0	ChAT; pax6A (CNS); pax3/7; DBH(ventral midline)	ncil 0	2.11256916027215	3.3289001418793e-13
+dd_Smed_v6_7033_0_1	dd7033	G0 Progenitor	neural5_0	ChAT; pax6A (CNS); pax3/7; DBH(ventral midline)	ncil 0		
+dd_Smed_v6_11935_0_1	dd11935	G0 Progenitor	neural5_0	ChAT; pax6A (CNS); pax3/7; DBH(ventral midline)	ncil 0		
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural5_1			5.55711553766658	1.00638123645791e-117
+dd_Smed_v6_6114_0_1	dd6114	G0 Progenitor	neural5_1			5.23013869279297	6.37207979721074e-107
+dd_Smed_v6_9287_0_1	dd9287	G0 Progenitor	neural5_1			6.24626576709831	4.17737316667067e-53
+dd_Smed_v6_15555_0_1	pou4l-1	G0 Progenitor	neural5_1			1.59094976191975	8.52687009189291e-47
+dd_Smed_v6_22163_0_1	dd22163	G0 Progenitor	neural5_2			7.68259567058853	3.97829712612709e-275
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural5_2			6.44867900480853	1.92368424410222e-151
+dd_Smed_v6_7227_0_1	dd7227	G0 Progenitor	neural5_2			4.86419575895071	1.38318228235502e-53
+dd_Smed_v6_12722_0_1	dd12722	G0 Progenitor	neural5_2			4.30914875506304	8.76718484579068e-45
+dd_Smed_v6_19890_0_1	dd19890	G0 Progenitor	neural5_2			5.58850150577702	4.12505404411977e-35
+dd_Smed_v6_6114_0_1	dd6114	G0 Progenitor	neural5_2			2.29188166732176	2.9152600175506e-25
+dd_Smed_v6_15253_0_1	pitx	G0 Progenitor	neural5_3	serotonergic	ncil 15	5.06390713039103	3.48733470310317e-72
+dd_Smed_v6_38342_0_1	dd38342	G0 Progenitor	neural5_3	serotonergic	ncil 15	4.39593459665589	5.63919067980177e-34
+dd_Smed_v6_22163_0_1	dd22163	G0 Progenitor	neural5_3	serotonergic	ncil 15	2.71945368746687	6.60564919664161e-14
+dd_Smed_v6_11198_0_1	nkx6-like	G0 Progenitor	neural5_3	serotonergic	ncil 15		
+dd_Smed_v6_25769_0_1	dd25769	G0 Progenitor	neural5_3	serotonergic	ncil 15		
+dd_Smed_v6_15104_0_1	ap2	G0 Progenitor	neural5_4	glutamatergic; ap2; pax6A (CNS)		4.10099737958745	6.72429157937933e-47
+dd_Smed_v6_17324_0_1	dd17324	G0 Progenitor	neural5_4	glutamatergic; ap2; pax6A (CNS)		4.67731645685025	5.73349206137207e-34
+dd_Smed_v6_17726_0_1	Pax6A	G0 Progenitor	neural5_4	glutamatergic; ap2; pax6A (CNS)		2.52856873236252	5.56538567098647e-14
+dd_Smed_v6_18125_0_1	dd18125	G0 Progenitor	neural5_5	ChAT		5.26214752209799	2.65980786874872e-34
+dd_Smed_v6_17534_0_1	arh	G0 Progenitor	neural5_5	ChAT		3.54211016042963	1.44705736191132e-12
+dd_Smed_v6_29211_0_1	dd29211	G0 Progenitor	neural5_6			5.41105201672173	1.74123081276803e-103
+dd_Smed_v6_35379_0_1	dd35379	G0 Progenitor	neural5_6			3.8933566316737	1.88206722507485e-49
+dd_Smed_v6_15104_0_1	ap2	G0 Progenitor	neural5_6			4.96149599386862	2.57150263488136e-31
+dd_Smed_v6_11150_0_1	dd11150	G0 Progenitor	neural5_6			3.27910055088899	1.47312033285912e-14
+dd_Smed_v6_15473_0_1	dd15473	G0 Progenitor	neural5_6				
+dd_Smed_v6_13898_0_1	nkx2-like	G0 Progenitor	neural5_7	ChAT; npp-2; pax6A (CNS)	ncil 5; main neural 36	7.03194860883003	1.0174360506387e-102
+dd_Smed_v6_17726_0_1	Pax6A	G0 Progenitor	neural5_7	ChAT; npp-2; pax6A (CNS)	ncil 5; main neural 36	5.3235497570999	9.85784580822564e-41
+dd_Smed_v6_16466_0_1	dd16466	G0 Progenitor	neural5_7	ChAT; npp-2; pax6A (CNS)	ncil 5; main neural 36	3.76932334510892	3.32051025886807e-32
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural5_7	ChAT; npp-2; pax6A (CNS)	ncil 5; main neural 36	1.61987573361589	4.59475997948966e-14
+dd_Smed_v6_11652_0_1	tbx2/3c	G0 Progenitor	neural5_7	ChAT; npp-2; pax6A (CNS)	ncil 5; main neural 36	1.99013542820327	7.88699916053896e-14
+dd_Smed_v6_18125_0_1	dd18125	G0 Progenitor	neural5_8	ChAT; npy-4		5.23905598477883	6.56594589916578e-39
+dd_Smed_v6_17534_0_1	arh	G0 Progenitor	neural5_8	ChAT; npy-4		4.17463787365836	2.76031824092724e-26
+dd_Smed_v6_6114_0_1	dd6114	G0 Progenitor	neural5_8	ChAT; npy-4		1.64034027121416	6.15061109735939e-13
+dd_Smed_v6_58909_0_1	gata4/5/6-3	G0 Progenitor	neural5_8	ChAT; npy-4			
+dd_Smed_v6_11652_0_1	tbx2/3c	G0 Progenitor	neural5_8	ChAT; npy-4			
+dd_Smed_v6_16646_0_1	dd16646	G0 Progenitor	neural5_9	ChAT; spp-18		4.1650803817795	6.93466679951512e-287
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural5_9	ChAT; spp-18		2.48023961689168	2.31471012478275e-142
+dd_Smed_v6_7227_0_1	dd7227	G0 Progenitor	neural5_9	ChAT; spp-18		3.28353756487704	3.08105784351681e-66
+dd_Smed_v6_20755_0_1	dd20755	G0 Progenitor	neural5_9	ChAT; spp-18			
+dd_Smed_v6_8234_0_1	POU2/3	G0 Progenitor	nephridia6_0			4.53714226664599	3.85573290307737e-288
+dd_Smed_v6_9774_0_1	Six1/2-2	G0 Progenitor	nephridia6_0			4.05035020682884	2.58248851697284e-223
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	nephridia6_0			2.39698332465855	6.80623814825423e-119
+dd_Smed_v6_8234_0_1	POU2/3	G0 Progenitor	nephridia6_1	Proximal Tubules; Flame Cells		4.39205433158381	2.09600569869381e-190
+dd_Smed_v6_9774_0_1	Six1/2-2	G0 Progenitor	nephridia6_1	Proximal Tubules; Flame Cells		3.30748601194291	9.66690708773731e-95
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	nephridia6_1	Proximal Tubules; Flame Cells		2.01664781758243	2.02043816859983e-50
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	nephridia6_1	Proximal Tubules; Flame Cells			
+dd_Smed_v6_8234_0_1	POU2/3	G0 Progenitor	nephridia6_2	Proximal Tubules; Flame Cells		4.22012629718689	2.00207361001849e-135
+dd_Smed_v6_9774_0_1	Six1/2-2	G0 Progenitor	nephridia6_2	Proximal Tubules; Flame Cells		3.44902150422579	1.06012421444664e-102
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	nephridia6_2	Proximal Tubules; Flame Cells		2.18058645004073	7.63662040014858e-53
+dd_Smed_v6_8234_0_1	POU2/3	G0 Progenitor	nephridia6_3			4.18176777212988	5.54956285394507e-115
+dd_Smed_v6_9774_0_1	Six1/2-2	G0 Progenitor	nephridia6_3			3.02809724823579	2.15514071165766e-56
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	nephridia6_3			2.39818965991976	4.70445271613771e-48
+dd_Smed_v6_8234_0_1	POU2/3	G0 Progenitor	nephridia6_4			4.05565478753638	6.55038670050979e-33
+dd_Smed_v6_9774_0_1	Six1/2-2	G0 Progenitor	nephridia6_4			2.66507090353638	3.37604695273527e-08
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	nephridia6_4			1.77294821025744	3.42937243369842e-05
+dd_Smed_v6_8234_0_1	POU2/3	G0 Progenitor	nephridia6_5			6.36824898569954	8.19957632844179e-17
+dd_Smed_v6_3012_0_1	dd3012	G0 Progenitor	nephridia6_5			5.34748793964219	6.84974661001212e-06
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	nephridia6_5			2.53217675333516	0.000159501914712327
+dd_Smed_v6_9774_0_1	Six1/2-2	G0 Progenitor	nephridia6_5				
+dd_Smed_v6_10039_0_1	osr	G0 Progenitor	nephridia6_6	Flame Cells		5.79245337293518	0.0
+dd_Smed_v6_8234_0_1	POU2/3	G0 Progenitor	nephridia6_6	Flame Cells		2.9618264249461	7.40732348336519e-74
+dd_Smed_v6_17566_0_1	dd17566	G0 Progenitor	nephridia6_6	Flame Cells		3.23594256356213	5.05179283186146e-54
+dd_Smed_v6_9774_0_1	Six1/2-2	G0 Progenitor	nephridia6_6	Flame Cells		3.25478523468769	9.34058934701247e-39
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural7_0	glutamatergic		2.08376054812494	1.96420424107116e-08
+dd_Smed_v6_14633_0_1	otxA	G0 Progenitor	neural7_0	glutamatergic		2.22012650080977	3.10479170732163e-06
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural7_0	glutamatergic			
+dd_Smed_v6_11935_0_1	dd11935	G0 Progenitor	neural7_0	glutamatergic			
+dd_Smed_v6_8820_0_1	islet1	G0 Progenitor	neural7_0	glutamatergic			
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural7_1			4.80149047461182	5.73109514087855e-126
+dd_Smed_v6_19757_0_1	dd19757	G0 Progenitor	neural7_1			3.77117571512868	3.14639629934517e-37
+dd_Smed_v6_18972_0_1	dd18972	G0 Progenitor	neural7_1			3.33730403483019	1.51618643325935e-25
+dd_Smed_v6_14633_0_1	otxA	G0 Progenitor	neural7_2	glutamatergic; pax6A (CNS); npp-4		8.77101808456801	1.73097891344687e-207
+dd_Smed_v6_17726_0_1	Pax6A	G0 Progenitor	neural7_2	glutamatergic; pax6A (CNS); npp-4		5.16516593447959	1.27574132921911e-50
+dd_Smed_v6_11935_0_1	dd11935	G0 Progenitor	neural7_2	glutamatergic; pax6A (CNS); npp-4		5.46242599143581	3.86288864403753e-43
+dd_Smed_v6_13056_0_1	tcf1	G0 Progenitor	neural7_2	glutamatergic; pax6A (CNS); npp-4		3.03169677200958	2.27428167356531e-15
+dd_Smed_v6_31217_0_1	dd31217	G0 Progenitor	neural7_3			7.70655870879228	9.00561805774598e-126
+dd_Smed_v6_49988_0_1	dd49988	G0 Progenitor	neural7_3			4.85831607804966	4.46897311334082e-64
+dd_Smed_v6_37930_0_1	dd37930	G0 Progenitor	neural7_3			4.19559056051156	1.74100126168364e-57
+dd_Smed_v6_9596_0_1	dd9596	G0 Progenitor	neural7_3			6.71540248582893	2.67069418174782e-43
+dd_Smed_v6_19040_0_1	dlx	G0 Progenitor	neural7_3			3.94271779711932	4.20690713880468e-22
+dd_Smed_v6_18972_0_1	dd18972	G0 Progenitor	neural7_3			2.03200734575649	7.52004055367836e-12
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural7_3			2.55364384533483	8.25391180549589e-11
+dd_Smed_v6_33575_0_1	dd33575	G0 Progenitor	neural7_4	glutamatergic		6.49812920737119	2.49034078961638e-60
+dd_Smed_v6_14633_0_1	otxA	G0 Progenitor	neural7_4	glutamatergic		4.53312895870055	8.1617725114286e-25
+dd_Smed_v6_63520_0_1	dd63520	G0 Progenitor	neural7_4	glutamatergic		1.50518974803511	2.44874879957062e-11
+dd_Smed_v6_14712_0_1	dd14712	G0 Progenitor	neural7_4	glutamatergic		2.14047364897219	1.75885785846715e-08
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural7_4	glutamatergic			
+dd_Smed_v6_8820_0_1	islet1	G0 Progenitor	neural7_4	glutamatergic			
+dd_Smed_v6_20755_0_1	dd20755	G0 Progenitor	neural7_4	glutamatergic			
+dd_Smed_v6_52497_0_1	hmx-1	G0 Progenitor	neural7_5	glutamatergic		4.61766750759327	1.03421073841469e-77
+dd_Smed_v6_14633_0_1	otxA	G0 Progenitor	neural7_5	glutamatergic		3.51900783278897	7.16100504631113e-41
+dd_Smed_v6_20755_0_1	dd20755	G0 Progenitor	neural7_5	glutamatergic		4.49247310605366	6.83332091158675e-28
+dd_Smed_v6_11935_0_1	dd11935	G0 Progenitor	neural7_5	glutamatergic		2.15810539122201	1.13080394332558e-06
+dd_Smed_v6_14633_0_1	otxA	G0 Progenitor	neural7_6	glutamatergic; pax6A (CNS)		7.70120967610173	5.43337177003155e-140
+dd_Smed_v6_17726_0_1	Pax6A	G0 Progenitor	neural7_6	glutamatergic; pax6A (CNS)		3.50870336595707	4.0427429285774e-18
+dd_Smed_v6_20755_0_1	dd20755	G0 Progenitor	neural7_6	glutamatergic; pax6A (CNS)		2.98935885510463	5.95304261180915e-14
+dd_Smed_v6_11935_0_1	dd11935	G0 Progenitor	neural7_6	glutamatergic; pax6A (CNS)		1.97321318106386	3.44263139057948e-06
+dd_Smed_v6_37930_0_1	dd37930	G0 Progenitor	neural7_7			6.34098763120454	2.77894669806813e-68
+dd_Smed_v6_18972_0_1	dd18972	G0 Progenitor	neural7_7			5.25661796034977	1.06326883083605e-53
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	neural7_7			8.48161633205326	2.19659145254241e-53
+dd_Smed_v6_17498_0_1	dd17498	G0 Progenitor	neural7_7			4.44512377739936	7.08315753847674e-09
+dd_Smed_v6_8820_0_1	islet1	G0 Progenitor	neural7_7				
+dd_Smed_v6_76069_0_1	ovo	G0 Progenitor	neural7_8	ChAT; eyes/photoreceptors	ncil 36	3.20588042557729	4.3609898241826e-09
+dd_Smed_v6_14633_0_1	otxA	G0 Progenitor	neural7_8	ChAT; eyes/photoreceptors	ncil 36	3.07344101724987	4.10930308044709e-08
+dd_Smed_v6_36480_0_1	dd36480	G0 Progenitor	neural7_8	ChAT; eyes/photoreceptors	ncil 36	1.93110640983184	0.000687465309397033
+dd_Smed_v6_14633_0_1	otxA	G0 Progenitor	neural7_9	glutamatergic		5.61081165399377	6.17411265547704e-80
+dd_Smed_v6_8820_0_1	islet1	G0 Progenitor	neural7_9	glutamatergic		3.82676955738752	7.52264768097215e-39
+dd_Smed_v6_16007_0_1	dd16007	G0 Progenitor	neural9_0			4.88505503521498	1.142558621344e-50
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural9_0			3.27816443121159	4.46768454577266e-50
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural9_0			3.42563596921196	1.07862728074222e-39
+dd_Smed_v6_13772_0_1	PROX-1	G0 Progenitor	neural9_0			4.26890387551726	7.50264238992299e-31
+dd_Smed_v6_17324_0_1	dd17324	G0 Progenitor	neural9_1	dopaminergic; glutamatergic	cil 3	3.73098744816967	2.4940231590253e-16
+dd_Smed_v6_9460_0_2	dd9460	G0 Progenitor	neural9_1	dopaminergic; glutamatergic	cil 3	4.22144822124587	3.60285801432338e-16
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural9_1	dopaminergic; glutamatergic	cil 3	3.46991643301977	1.23486228138643e-09
+dd_Smed_v6_16007_0_1	dd16007	G0 Progenitor	neural9_1	dopaminergic; glutamatergic	cil 3		
+dd_Smed_v6_2442_0_1	dd2442	G0 Progenitor	neural9_10	glutamatergic; wntA	ncil 22	3.06857182657862	4.54292949900077e-20
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural9_10	glutamatergic; wntA	ncil 22	3.36423049894262	1.02512343436574e-11
+dd_Smed_v6_13215_0_1	soxB	G0 Progenitor	neural9_2			3.38134976089268	8.08957110955102e-39
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural9_2			3.47887713934848	1.46285427163666e-36
+dd_Smed_v6_15178_0_1	six3	G0 Progenitor	neural9_2			3.11396781770353	7.64413128713197e-09
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural9_2			2.05643961877215	6.09890974245811e-08
+dd_Smed_v6_6470_0_1	tbx2/3b	G0 Progenitor	neural9_2			3.12233660973903	6.40983353305602e-08
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural9_3			2.52171222371751	1.20415829848556e-14
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural9_3			2.92565807845419	2.91096576460877e-05
+dd_Smed_v6_11935_0_1	dd11935	G0 Progenitor	neural9_3				
+dd_Smed_v6_13215_0_1	soxB	G0 Progenitor	neural9_3				
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural9_4			2.94133789441118	4.40575329762259e-23
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural9_4			3.22793849164039	4.88425597579e-12
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural9_5	glutamatergic; wntA		3.24441020675069	1.2762724366851e-32
+dd_Smed_v6_11935_0_1	dd11935	G0 Progenitor	neural9_5	glutamatergic; wntA		4.19789407595784	3.79544053426869e-10
+dd_Smed_v6_33456_0_1	dd33456	G0 Progenitor	neural9_6			3.85379612633753	1.64238861623992e-34
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural9_6			5.34048369495322	1.36590271430598e-22
+dd_Smed_v6_18952_0_1	scratch	G0 Progenitor	neural9_6			3.33746569283232	1.13937405568114e-09
+dd_Smed_v6_6114_0_1	dd6114	G0 Progenitor	neural9_6			2.41270874371638	4.37001664232554e-09
+dd_Smed_v6_58909_0_1	gata4/5/6-3	G0 Progenitor	neural9_6			3.45812706688904	2.06671685157748e-05
+dd_Smed_v6_18125_0_1	dd18125	G0 Progenitor	neural9_7	wntA	ncil 22	3.38628881018129	1.4804326508827e-21
+dd_Smed_v6_17534_0_1	arh	G0 Progenitor	neural9_7	wntA	ncil 22	3.51876922243283	9.35515037128854e-19
+dd_Smed_v6_6114_0_1	dd6114	G0 Progenitor	neural9_7	wntA	ncil 22	3.33248633040923	1.79128883917129e-08
+dd_Smed_v6_13898_0_1	nkx2-like	G0 Progenitor	neural9_7	wntA	ncil 22		
+dd_Smed_v6_18972_0_1	dd18972	G0 Progenitor	neural9_7	wntA	ncil 22		
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural9_8		cil 8	3.46183765095272	1.19985840519052e-21
+dd_Smed_v6_16524_0_1	dd16524	G0 Progenitor	neural9_9	wntA		3.56792698453969	0.0
+dd_Smed_v6_17731_0_1	sim	G0 Progenitor	neural9_9	wntA		3.51923532512398	0.0
+dd_Smed_v6_31784_0_1	dd31784	G0 Progenitor	neural9_9	wntA		2.33412514957452	0.0
+dd_Smed_v6_8104_0_1	dd8104	G0 Progenitor	neural9_9	wntA		1.70116966826085	3.75522106331984e-197
+dd_Smed_v6_6114_0_1	dd6114	G0 Progenitor	neural9_9	wntA		2.54526551384029	2.00920051933402e-134
+dd_Smed_v6_3935_0_1	dd3935	G0 Progenitor	epidermis_0	prog-1 progenitors		3.2972182164685	0.0
+dd_Smed_v6_5942_0_1	SOXP-3	G0 Progenitor	epidermis_0	prog-1 progenitors		3.08162746319923	0.0
+dd_Smed_v6_5563_0_1	p53	G0 Progenitor	epidermis_0	prog-1 progenitors		3.02526569349172	0.0
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	epidermis_0	prog-1 progenitors		2.45006143669885	0.0
+dd_Smed_v6_4539_0_1	dd4539	G0 Progenitor	epidermis_0	prog-1 progenitors		2.51515240527053	2.42559285401783e-181
+dd_Smed_v6_7091_0_1	dd7091	G0 Progenitor	epidermis_0	prog-1 progenitors		3.51390893189758	9.11996232458003e-164
+dd_Smed_v6_6626_0_1	dd6626	G0 Progenitor	epidermis_0	prog-1 progenitors		1.62811068192188	8.22909222960811e-107
+dd_Smed_v6_10219_0_1	dd10219	G0 Progenitor	epidermis_0	prog-1 progenitors		2.67774301035195	1.53927604448656e-92
+dd_Smed_v6_3935_0_1	dd3935	G0 Progenitor	epidermis_1	smedwi-1 high		3.32235830920853	0.0
+dd_Smed_v6_5563_0_1	p53	G0 Progenitor	epidermis_1	smedwi-1 high		3.12709285971911	0.0
+dd_Smed_v6_5942_0_1	SOXP-3	G0 Progenitor	epidermis_1	smedwi-1 high		2.78984040948565	9.81239747522294e-294
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	epidermis_1	smedwi-1 high		1.59940272221289	1.44742249082463e-155
+dd_Smed_v6_8720_0_1	ZFP-1	G0 Progenitor	epidermis_1	smedwi-1 high		2.33167663849801	1.96807126466844e-77
+dd_Smed_v6_15471_0_1	dd15471	G0 Progenitor	epidermis_1	smedwi-1 high		1.79648572337671	5.75714196463478e-72
+dd_Smed_v6_4539_0_1	dd4539	G0 Progenitor	epidermis_1	smedwi-1 high		1.50336440020299	8.11380045650161e-62
+dd_Smed_v6_10219_0_1	dd10219	G0 Progenitor	epidermis_1	smedwi-1 high		2.31921833609978	1.42817719885632e-51
+dd_Smed_v6_5942_0_1	SOXP-3	G0 Progenitor	epidermis_2	prog-1 progenitors		3.26124135756853	6.39432149965235e-127
+dd_Smed_v6_5563_0_1	p53	G0 Progenitor	epidermis_2	prog-1 progenitors		2.89521026545107	4.6746981452507e-122
+dd_Smed_v6_3935_0_1	dd3935	G0 Progenitor	epidermis_2	prog-1 progenitors		2.93808186622319	1.35795046853132e-115
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	epidermis_2	prog-1 progenitors		1.97013956764352	3.61261990357748e-67
+dd_Smed_v6_11198_0_1	nkx6-like	G0 Progenitor	epidermis_2	prog-1 progenitors		1.90209780722977	2.27732065811918e-32
+dd_Smed_v6_6626_0_1	dd6626	G0 Progenitor	epidermis_2	prog-1 progenitors		1.61694226495942	5.92395209923732e-27
+dd_Smed_v6_4539_0_1	dd4539	G0 Progenitor	epidermis_2	prog-1 progenitors		2.06674385484857	1.03136637475472e-17
+dd_Smed_v6_10219_0_1	dd10219	G0 Progenitor	epidermis_2	prog-1 progenitors		2.28244441252576	2.90197564069342e-16
+dd_Smed_v6_5942_0_1	SOXP-3	G0 Progenitor	epidermis_3	prog-1 progenitors		6.7311696160434	1.41313554597216e-204
+dd_Smed_v6_5563_0_1	p53	G0 Progenitor	epidermis_3	prog-1 progenitors		2.09337801171091	1.47431699980423e-51
+dd_Smed_v6_3935_0_1	dd3935	G0 Progenitor	epidermis_3	prog-1 progenitors		1.94297448666087	2.3191208572072e-42
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	epidermis_3	prog-1 progenitors		2.53108975316641	3.76493372427455e-41
+dd_Smed_v6_6626_0_1	dd6626	G0 Progenitor	epidermis_3	prog-1 progenitors		3.56452799352548	4.11308501626286e-40
+dd_Smed_v6_4539_0_1	dd4539	G0 Progenitor	epidermis_3	prog-1 progenitors		1.72064311669912	8.23950004478504e-39
+dd_Smed_v6_11198_0_1	nkx6-like	G0 Progenitor	epidermis_3	prog-1 progenitors		4.27576792288355	6.56527613261886e-33
+dd_Smed_v6_5563_0_1	p53	G0 Progenitor	epidermis_4	DVb Epidermis		5.61064528235416	3.2575500115211e-139
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	epidermis_4	DVb Epidermis		3.52082538102636	5.65558793205318e-97
+dd_Smed_v6_15471_0_1	dd15471	G0 Progenitor	epidermis_4	DVb Epidermis		2.49372513093657	9.72463959217988e-67
+dd_Smed_v6_3935_0_1	dd3935	G0 Progenitor	epidermis_4	DVb Epidermis		4.24406943282772	1.52377096977255e-54
+dd_Smed_v6_18719_0_1	dd18719	G0 Progenitor	epidermis_4	DVb Epidermis		1.83052664995661	2.25388059329663e-31
+dd_Smed_v6_6869_0_1	dd6869	G0 Progenitor	intestine_0	Basal Cells; Goblet Cells		5.90137988819291	1.18430360449303e-90
+dd_Smed_v6_5579_0_1	dd5579	G0 Progenitor	intestine_0	Basal Cells; Goblet Cells		3.5276610940254	1.65674472288648e-47
+dd_Smed_v6_1694_0_1	hnf4	G0 Progenitor	intestine_0	Basal Cells; Goblet Cells		2.46228764569208	1.61295130323917e-37
+dd_Smed_v6_7040_0_1	dd7040	G0 Progenitor	intestine_0	Basal Cells; Goblet Cells		2.16406848932359	1.14112996167692e-28
+dd_Smed_v6_6869_0_1	dd6869	G0 Progenitor	intestine_1			4.65338685127175	1.08812331870979e-72
+dd_Smed_v6_1694_0_1	hnf4	G0 Progenitor	intestine_1			2.38216020397916	6.112096641198e-47
+dd_Smed_v6_5579_0_1	dd5579	G0 Progenitor	intestine_1			3.40152920999112	8.61279926168463e-23
+dd_Smed_v6_7033_0_1	dd7033	G0 Progenitor	intestine_1			1.7379959169836	5.90410868965433e-19
+dd_Smed_v6_2946_0_1	dd2946	G0 Progenitor	intestine_1			2.49966726594102	6.05669258759681e-17
+dd_Smed_v6_2716_0_1	nkx2.2	G0 Progenitor	intestine_2	Enterocytes		5.58363712875073	1.74576808131902e-72
+dd_Smed_v6_1694_0_1	hnf4	G0 Progenitor	intestine_2	Enterocytes		3.75361114637679	5.22942797714846e-67
+dd_Smed_v6_10039_0_1	osr	G0 Progenitor	intestine_2	Enterocytes		2.59573911030385	5.99906483822691e-31
+dd_Smed_v6_7470_0_1	dd7470	G0 Progenitor	intestine_2	Enterocytes			
+dd_Smed_v6_7040_0_1	dd7040	G0 Progenitor	intestine_2	Enterocytes			
+dd_Smed_v6_6869_0_1	dd6869	G0 Progenitor	intestine_3			4.77284099478347	1.38253314965834e-86
+dd_Smed_v6_5579_0_1	dd5579	G0 Progenitor	intestine_3			2.97004472264109	1.04029966039582e-29
+dd_Smed_v6_1694_0_1	hnf4	G0 Progenitor	intestine_3			1.90061227094944	1.3525438997889e-11
+dd_Smed_v6_6869_0_1	dd6869	G0 Progenitor	intestine_4	Goblet Cells		3.11801469744064	1.41282918728447e-97
+dd_Smed_v6_1694_0_1	hnf4	G0 Progenitor	intestine_4	Goblet Cells		2.63908684566544	2.3114832392068e-96
+dd_Smed_v6_7033_0_1	dd7033	G0 Progenitor	intestine_4	Goblet Cells		4.73001765439642	9.87898599434464e-93
+dd_Smed_v6_5579_0_1	dd5579	G0 Progenitor	intestine_4	Goblet Cells		2.29034091899772	3.05312663742853e-55
+dd_Smed_v6_16955_0_1	dd16955	G0 Progenitor	muscle_0	circular muscle		7.05131217233245	0.0
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_0	circular muscle		7.32108290767735	2.05053757461244e-227
+dd_Smed_v6_19327_0_1	nkx1-1	G0 Progenitor	muscle_0	circular muscle		4.66580391368953	1.94677480953502e-78
+dd_Smed_v6_13343_0_1	dd13343	G0 Progenitor	muscle_0	circular muscle		2.76397956143908	3.91069101418699e-65
+dd_Smed_v6_2442_0_1	dd2442	G0 Progenitor	muscle_0	circular muscle		3.49862337541567	1.26110590581733e-52
+dd_Smed_v6_31435_0_1	lbx	G0 Progenitor	muscle_1	longitudinal muscle		5.67610082408323	1.08218376320858e-44
+dd_Smed_v6_13474_0_1	dd13474	G0 Progenitor	muscle_1	longitudinal muscle		2.88057344307855	8.35186938526602e-28
+dd_Smed_v6_12873_0_1	nkx6-2	G0 Progenitor	muscle_1	longitudinal muscle		3.48169667791055	1.70218268093854e-25
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_1	longitudinal muscle		1.9358051003762	2.03435138532035e-25
+dd_Smed_v6_16955_0_1	dd16955	G0 Progenitor	muscle_1	longitudinal muscle		3.359135100447	2.52360974655985e-20
+dd_Smed_v6_9906_0_1	neuroD-2	G0 Progenitor	muscle_10	Pharynx Muscle		6.15709520659602	1.09161391696828e-126
+dd_Smed_v6_9893_0_1	coe	G0 Progenitor	muscle_10	Pharynx Muscle		3.28420360305542	1.00472096308411e-25
+dd_Smed_v6_58909_0_1	gata4/5/6-3	G0 Progenitor	muscle_10	Pharynx Muscle		3.82954305292337	4.18451321207372e-18
+dd_Smed_v6_5579_0_1	dd5579	G0 Progenitor	muscle_10	Pharynx Muscle		2.26029797899894	2.08728594571569e-17
+dd_Smed_v6_16466_0_1	dd16466	G0 Progenitor	muscle_10	Pharynx Muscle		1.92860502592011	4.31267323478422e-06
+dd_Smed_v6_22585_0_1	ZicA	G0 Progenitor	muscle_11	Anterior Pole		7.14020097558834	2.24236698920564e-126
+dd_Smed_v6_8606_0_1	prep	G0 Progenitor	muscle_11	Anterior Pole		7.63183486058666	1.32612080783223e-44
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_11	Anterior Pole		2.37883587270097	3.87158667514766e-08
+dd_Smed_v6_23249_0_1	foxd	G0 Progenitor	muscle_11	Anterior Pole			
+dd_Smed_v6_16399_0_1	meis	G0 Progenitor	muscle_11	Anterior Pole			
+dd_Smed_v6_15531_0_1	dd15531	G0 Progenitor	muscle_11	Anterior Pole			
+dd_Smed_v6_10201_0_1	dd10201	G0 Progenitor	muscle_11	Anterior Pole			
+dd_Smed_v6_17332_0_1	hesl-2	G0 Progenitor	muscle_12	Medial DV Muscle?		4.71065505157653	1.3572282417587e-26
+dd_Smed_v6_58909_0_1	gata4/5/6-3	G0 Progenitor	muscle_13	Intestinal Muscle		2.53552380352265	1.01845018805596e-13
+dd_Smed_v6_16955_0_1	dd16955	G0 Progenitor	muscle_13	Intestinal Muscle		1.64330341390838	1.56457669765598e-09
+dd_Smed_v6_3012_0_1	dd3012	G0 Progenitor	muscle_13	Intestinal Muscle		2.36501697697866	3.87571490312591e-08
+dd_Smed_v6_6910_0_1	foxF-1	G0 Progenitor	muscle_13	Intestinal Muscle		1.81994565976626	6.19936351682762e-07
+dd_Smed_v6_7470_0_1	dd7470	G0 Progenitor	muscle_13	Intestinal Muscle		1.7395113108935	3.62952701876421e-05
+dd_Smed_v6_11652_0_1	tbx2/3c	G0 Progenitor	muscle_13	Intestinal Muscle			
+dd_Smed_v6_8158_0_1	dd8158	G0 Progenitor	muscle_13	Intestinal Muscle			
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_14			6.69632657060453	8.06575355733517e-66
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	muscle_14			5.66894935280258	3.03716795548251e-53
+dd_Smed_v6_12677_0_1	dd12677	G0 Progenitor	muscle_14			5.77962206996772	1.92467525808372e-21
+dd_Smed_v6_16466_0_1	dd16466	G0 Progenitor	muscle_15	longitudinal muscle + PCGs (medial, dorsal)		4.59522286685093	4.9146176319636e-35
+dd_Smed_v6_15253_0_1	pitx	G0 Progenitor	muscle_15	longitudinal muscle + PCGs (medial, dorsal)		6.26104424210106	2.16786584170967e-26
+dd_Smed_v6_10673_0_1	dd10673	G0 Progenitor	muscle_15	longitudinal muscle + PCGs (medial, dorsal)		3.72207312257035	9.4025406720887e-11
+dd_Smed_v6_18505_0_1	dd18505	G0 Progenitor	muscle_15	longitudinal muscle + PCGs (medial, dorsal)			
+dd_Smed_v6_8820_0_1	islet1	G0 Progenitor	muscle_15	longitudinal muscle + PCGs (medial, dorsal)			
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_15	longitudinal muscle + PCGs (medial, dorsal)			
+dd_Smed_v6_18147_0_1	dd18147	G0 Progenitor	muscle_16			2.70422480797499	1.31213850142125e-33
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_16			2.23271987894118	4.6063388350949e-20
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_2			4.36729894041119	1.06521060526088e-124
+dd_Smed_v6_12677_0_1	dd12677	G0 Progenitor	muscle_2			2.20796469884329	2.42922080628807e-69
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	muscle_2			4.04681894384806	3.85329717462695e-63
+dd_Smed_v6_13283_0_1	Dmd-3	G0 Progenitor	muscle_3	Pharynx Muscle		6.26647075767454	0.0
+dd_Smed_v6_16070_0_1	musculin	G0 Progenitor	muscle_3	Pharynx Muscle		5.25229902500674	4.52007529567309e-130
+dd_Smed_v6_13474_0_1	dd13474	G0 Progenitor	muscle_3	Pharynx Muscle		3.43328236660185	6.27560829470827e-108
+dd_Smed_v6_6910_0_1	foxF-1	G0 Progenitor	muscle_3	Pharynx Muscle		2.09870441042081	2.22888783334959e-64
+dd_Smed_v6_22585_0_1	ZicA	G0 Progenitor	muscle_3	Pharynx Muscle		4.24513643767133	2.42182071606707e-40
+dd_Smed_v6_9774_0_1	Six1/2-2	G0 Progenitor	muscle_3	Pharynx Muscle		2.22994599639762	5.93761825587687e-37
+dd_Smed_v6_14362_0_1	dd14362	G0 Progenitor	muscle_3	Pharynx Muscle		2.61636792079172	3.14636854344906e-34
+dd_Smed_v6_9259_0_1	nk4	G0 Progenitor	muscle_4	DV Muscle (Lateral, Medial?)		4.20384047542959	1.05509723002514e-99
+dd_Smed_v6_6910_0_1	foxF-1	G0 Progenitor	muscle_4	DV Muscle (Lateral, Medial?)		2.86286761477688	1.74813263053553e-69
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	muscle_4	DV Muscle (Lateral, Medial?)		4.11245633045178	1.70960089874828e-47
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_4	DV Muscle (Lateral, Medial?)		3.89071838451947	1.43090782387334e-31
+dd_Smed_v6_6910_0_1	foxF-1	G0 Progenitor	muscle_5			3.60752905822017	2.5103803916362e-24
+dd_Smed_v6_9259_0_1	nk4	G0 Progenitor	muscle_5			1.81331131445596	1.24710343526924e-20
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_5			3.41533842566799	5.79181193804377e-20
+dd_Smed_v6_15865_0_1	dd15865	G0 Progenitor	muscle_6	bwm-1+ muscle		2.43331223698376	1.68448301695313e-27
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_6	bwm-1+ muscle			
+dd_Smed_v6_2442_0_1	dd2442	G0 Progenitor	muscle_6	bwm-1+ muscle			
+dd_Smed_v6_16955_0_1	dd16955	G0 Progenitor	muscle_6	bwm-1+ muscle			
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	muscle_6	bwm-1+ muscle			
+dd_Smed_v6_15144_0_1	lhx2/9	G0 Progenitor	muscle_6	bwm-1+ muscle			
+dd_Smed_v6_7470_0_1	dd7470	G0 Progenitor	muscle_6	bwm-1+ muscle			
+dd_Smed_v6_17951_0_1	twist	G0 Progenitor	muscle_8	Pharynx Muscle		5.22461396794793	9.2026511468444e-94
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	muscle_8	Pharynx Muscle		3.40402951879023	1.01948093949743e-35
+dd_Smed_v6_13474_0_1	dd13474	G0 Progenitor	muscle_8	Pharynx Muscle		3.00128381603145	2.05335342906367e-26
+dd_Smed_v6_14362_0_1	dd14362	G0 Progenitor	muscle_8	Pharynx Muscle		2.29480280775679	1.29765751311462e-18
+dd_Smed_v6_16466_0_1	dd16466	G0 Progenitor	muscle_9			6.52250153009477	0.0
+dd_Smed_v6_11975_0_1	dd11975	G0 Progenitor	muscle_9			5.24186213605307	6.76962909744121e-258
+dd_Smed_v6_12229_0_1	dd12229	G0 Progenitor	muscle_9			3.44165559568563	6.47840947380721e-116
+dd_Smed_v6_15531_0_1	dd15531	G0 Progenitor	muscle_9			1.59668345816774	9.69461391049718e-43
+dd_Smed_v6_7324_0_1	dd7324	G0 Progenitor	muscle_9			1.73079671854179	1.13009134678117e-36
+dd_Smed_v6_14115_0_1	dd14115	G0 Progenitor	parenchymal_0	NA (ascl-2)	parenchymal 7,14	7.81507799875493	0.0
+dd_Smed_v6_14753_0_1	ascl-2	G0 Progenitor	parenchymal_0	NA (ascl-2)	parenchymal 7,14	6.6575854049529	0.0
+dd_Smed_v6_14712_0_1	dd14712	G0 Progenitor	parenchymal_0	NA (ascl-2)	parenchymal 7,14	3.84306578918966	3.76448335067438e-233
+dd_Smed_v6_17534_0_1	arh	G0 Progenitor	parenchymal_0	NA (ascl-2)	parenchymal 7,14	2.85801462248405	1.33456222083561e-171
+dd_Smed_v6_8096_0_1	fer3l-1	G0 Progenitor	parenchymal_1	NA (fer3l-1)	parenchymal 0, 18?	6.50188695233858	0.0
+dd_Smed_v6_15506_0_1	dd15506	G0 Progenitor	parenchymal_1	NA (fer3l-1)	parenchymal 0, 18?	5.30574100716927	0.0
+dd_Smed_v6_14633_0_1	otxA	G0 Progenitor	parenchymal_1	NA (fer3l-1)	parenchymal 0, 18?	3.87423295542283	9.84859533506487e-294
+dd_Smed_v6_2716_0_1	nkx2	G0 Progenitor	parenchymal_1	NA (fer3l-1)	parenchymal 0, 18?	3.23715353687804	3.95786720328214e-146
+dd_Smed_v6_10320_0_1	dd10320	G0 Progenitor	parenchymal_1	NA (fer3l-1)	parenchymal 0, 18?	4.47188748637959	8.11184981583209e-72
+dd_Smed_v6_16472_0_1	dd16472	G0 Progenitor	parenchymal_1	NA (fer3l-1)	parenchymal 0, 18?	2.29000098731848	3.82244728995293e-33
+dd_Smed_v6_2716_0_1	nkx2	G0 Progenitor	parenchymal_2	NA (GCM2)	parenchymal 5, 12	3.69027253659268	3.90842768429465e-148
+dd_Smed_v6_16472_0_1	dd16472	G0 Progenitor	parenchymal_2	NA (GCM2)	parenchymal 5, 12	3.05805917167441	3.53117913306831e-67
+dd_Smed_v6_2716_0_1	nkx2	G0 Progenitor	parenchymal_3	NA (nkx2-like)	parencymal 15, 17	8.61033727368133	0.0
+dd_Smed_v6_13898_0_1	nkx2-like	G0 Progenitor	parenchymal_3	NA (nkx2-like)	parencymal 15, 17	4.32785816329835	6.42576880161002e-68
+dd_Smed_v6_16472_0_1	dd16472	G0 Progenitor	parenchymal_3	NA (nkx2-like)	parencymal 15, 17	2.15837126592007	1.51102875321548e-58
+dd_Smed_v6_10868_0_1	fer3l-2	G0 Progenitor	parenchymal_4	NA (fer3l-2)	parenchymal 13, 8?	5.53134282128001	7.00975917087838e-207
+dd_Smed_v6_14824_0_1	dd14824	G0 Progenitor	parenchymal_4	NA (fer3l-2)	parenchymal 13, 8?	3.77161574923852	2.61046073396561e-80
+dd_Smed_v6_18147_0_1	dd18147	G0 Progenitor	parenchymal_4	NA (fer3l-2)	parenchymal 13, 8?	2.36567619024442	1.92282046364289e-28
+dd_Smed_v6_16472_0_1	dd16472	G0 Progenitor	parenchymal_4	NA (fer3l-2)	parenchymal 13, 8?	3.46825970652593	3.95140729366255e-20
+dd_Smed_v6_2716_0_1	nkx2	G0 Progenitor	parenchymal_5	NA (nkx2-like)	parenchymal 15, 17	4.23476272641386	4.62635603124938e-83
+dd_Smed_v6_13898_0_1	nkx2-like	G0 Progenitor	parenchymal_5	NA (nkx2-like)	parenchymal 15, 17	4.51507434900961	1.99118779972875e-54
+dd_Smed_v6_16472_0_1	dd16472	G0 Progenitor	parenchymal_5	NA (nkx2-like)	parenchymal 15, 17	3.24118469768083	8.50286097266822e-37
+dd_Smed_v6_17726_0_1	Pax6A	G0 Progenitor	parenchymal_6	NA (gata3)	parenchymal 10		
+dd_Smed_v6_18147_0_1	dd18147	G0 Progenitor	parenchymal_6	NA (gata3)	parenchymal 10		
+dd_Smed_v6_5579_0_1	dd5579	G0 Progenitor	parenchymal_6	NA (gata3)	parenchymal 10		
+dd_Smed_v6_16124_0_1	runt-1	X1	0_0	Neural	pax6A	2.00768093714534	5.14793927980677e-180
+dd_Smed_v6_17385_0_1	sp6-9	X1	0_0	Neural	pax6A	1.84753179833913	1.60879490990504e-151
+dd_Smed_v6_13056_0_1	tcf1	X1	0_0	Neural	pax6A	1.95091497348511	7.14729079119372e-138
+dd_Smed_v6_22992_0_1	dd22992	X1	0_0	Neural	pax6A	1.73120810180429	8.98282671543054e-118
+dd_Smed_v6_13215_0_1	soxB	X1	0_0	Neural	pax6A	1.97434331729042	7.66445776110161e-114
+dd_Smed_v6_36829_0_1	dd36829	X1	0_0	Neural	pax6A	1.72841635961793	6.99046789939611e-111
+dd_Smed_v6_18952_0_1	scratch	X1	0_0	Neural	pax6A	2.73502838514728	8.49864614400721e-99
+dd_Smed_v6_17498_0_1	dd17498	X1	0_1	Neural	dd73714	4.28923530937812	0.0
+dd_Smed_v6_17385_0_1	sp6-9	X1	0_1	Neural	dd73714	4.3879618900609	0.0
+dd_Smed_v6_17726_0_1	Pax6A	X1	0_1	Neural	dd73714	3.32539182137306	3.09878721990769e-241
+dd_Smed_v6_21717_0_1	neuroD-1	X1	0_1	Neural	dd73714	3.52098619440096	5.4852847675666e-213
+dd_Smed_v6_13056_0_1	tcf1	X1	0_1	Neural	dd73714	2.92532241638022	7.41204133282242e-171
+dd_Smed_v6_52497_0_1	hmx-1	X1	0_1	Neural	dd73714	3.35743635724091	4.25740847757197e-123
+dd_Smed_v6_15107_0_1	dd15107	X1	0_2	Neural	prox-1	3.00015315682173	1.00921529514009e-85
+dd_Smed_v6_14753_0_1	ascl-2	X1	0_2	Neural	prox-1	3.36275179491297	1.21742445459232e-76
+dd_Smed_v6_14712_0_1	dd14712	X1	0_2	Neural	prox-1	2.27113708567299	5.85405380421003e-72
+dd_Smed_v6_11198_0_1	nkx6-like	X1	0_2	Neural	prox-1	2.44356921964654	7.33507212616705e-43
+dd_Smed_v6_11652_0_1	tbx2/3c	X1	0_2	Neural	prox-1	2.2058562650443	2.93930806118998e-37
+dd_Smed_v6_58909_0_1	gata4/5/6-3	X1	0_2	Neural	prox-1	2.08961193910821	2.40751079129536e-35
+dd_Smed_v6_14213_0_1	dd14213	X1	0_2	Neural	prox-1	2.09591693353361	1.08825851255395e-32
+dd_Smed_v6_73714_0_1	dd73714	X1	0_3	Neural	sp6-9	1.59956716014057	5.45156701298231e-65
+dd_Smed_v6_22992_0_1	dd22992	X1	0_3	Neural	sp6-9	1.64869112744424	7.50112073231609e-44
+dd_Smed_v6_13056_0_1	tcf1	X1	0_3	Neural	sp6-9	1.81360856915316	3.60054853887189e-42
+dd_Smed_v6_11198_0_1	nkx6-like	X1	0_4	Neural	runt-1	3.98522818667099	2.98572328738437e-267
+dd_Smed_v6_15555_0_1	pou4l-1	X1	0_4	Neural	runt-1	3.23646160592166	4.71574352354373e-177
+dd_Smed_v6_13215_0_1	soxB	X1	0_4	Neural	runt-1	3.59141601590839	1.8016883441687e-174
+dd_Smed_v6_17726_0_1	Pax6A	X1	0_4	Neural	runt-1	3.13993056132004	2.42675514019608e-110
+dd_Smed_v6_21717_0_1	neuroD-1	X1	0_5	Neural	pou4l-1	2.98861395874849	0.0
+dd_Smed_v6_13898_0_1	nkx2-like	X1	0_5	Neural	pou4l-1	2.40929284233864	0.0
+dd_Smed_v6_13215_0_1	soxB	X1	0_5	Neural	pou4l-1	2.98390582788005	0.0
+dd_Smed_v6_18505_0_1	dd18505	X1	0_5	Neural	pou4l-1	3.48792823345323	0.0
+dd_Smed_v6_14824_0_1	dd14824	X1	0_5	Neural	pou4l-1	2.96168096435326	0.0
+dd_Smed_v6_5942_0_1	SOXP-3	X1	1_0	Epidermis (dorsal and DVB)	p53	1.72879345245532	1.04882554545171e-212
+dd_Smed_v6_8720_0_1	ZFP-1	X1	1_0	Epidermis (dorsal and DVB)	p53	1.69739851256758	1.47834376297711e-189
+dd_Smed_v6_15471_0_1	dd15471	X1	1_0	Epidermis (dorsal and DVB)	p53	1.56297477104495	2.89236500181274e-97
+dd_Smed_v6_3935_0_1	dd3935	X1	1_0	Epidermis (dorsal and DVB)	p53	1.52279010987365	1.41833782463823e-40
+dd_Smed_v6_3935_0_1	dd3935	X1	1_2	Epidermis (dorsal)	zfp-1	2.2949363401779	5.70142173225976e-247
+dd_Smed_v6_5942_0_1	SOXP-3	X1	1_2	Epidermis (dorsal)	zfp-1	2.30703523743164	1.88401264374054e-243
+dd_Smed_v6_16007_0_1	dd16007	X1	1_2	Epidermis (dorsal)	zfp-1	2.07467950311163	5.57959144123924e-237
+dd_Smed_v6_6470_0_1	tbx2/3b	X1	1_2	Epidermis (dorsal)	zfp-1	1.74002714521692	1.13726605879566e-211
+dd_Smed_v6_3935_0_1	dd3935	X1	1_3	Epidermis (ventral)	zfp-1	4.95494027032773	3.8565193186e-314
+dd_Smed_v6_12317_0_1	dd12317	X1	1_3	Epidermis (ventral)	zfp-1	3.29419381633462	2.95712303700893e-300
+dd_Smed_v6_5563_0_1	p53	X1	1_3	Epidermis (ventral)	zfp-1	3.35878377037322	1.09560392961617e-119
+dd_Smed_v6_7824_0_1	Sp5	X1	1_3	Epidermis (ventral)	zfp-1	3.06894571370787	7.33820598232562e-65
+dd_Smed_v6_5942_0_1	SOXP-3	X1	1_3	Epidermis (ventral)	zfp-1	2.91149956744558	7.53573606316012e-62
+dd_Smed_v6_17397_0_1	ptf-1	X1	5_0	foxA+ Parenchymal	RREB2	5.87317028762086	0.0
+dd_Smed_v6_14712_0_1	dd14712	X1	5_0	foxA+ Parenchymal	RREB2	3.58360261819029	4.17726691535297e-206
+dd_Smed_v6_16472_0_1	dd16472	X1	5_0	foxA+ Parenchymal	RREB2	2.46537081416879	5.1848777437356e-186
+dd_Smed_v6_48508_0_1	dd48508	X1	5_0	foxA+ Parenchymal	RREB2	2.91004470270773	1.92180053886585e-145
+dd_Smed_v6_17397_0_1	ptf-1	X1	5_1	foxA+ Parenchymal (ptf-1 + fer3l-2)	RREB1	4.18018388128063	3.04721681832467e-213
+dd_Smed_v6_16472_0_1	dd16472	X1	5_1	foxA+ Parenchymal (ptf-1 + fer3l-2)	RREB1	4.05536561364079	3.05328921189429e-160
+dd_Smed_v6_10868_0_1	fer3l-2	X1	5_1	foxA+ Parenchymal (ptf-1 + fer3l-2)	RREB1	2.40038830537621	7.99991959545677e-110
+dd_Smed_v6_415_0_1	dd415	X1	5_1	foxA+ Parenchymal (ptf-1 + fer3l-2)	RREB1	2.6226249058773	3.84908849244503e-105
+dd_Smed_v6_1032_0_1	dd1032	X1	5_1	foxA+ Parenchymal (ptf-1 + fer3l-2)	RREB1	3.60499363526226	5.90743214609256e-100
+dd_Smed_v6_14712_0_1	dd14712	X1	5_2	foxA+ Parenchymal (dd_2)	RREB1	4.28471557902594	4.7419165891858e-168
+dd_Smed_v6_8820_0_1	islet1	X1	5_2	foxA+ Parenchymal (dd_2)	RREB1	4.03420126138069	2.25590154717252e-134
+dd_Smed_v6_415_0_1	dd415	X1	5_2	foxA+ Parenchymal (dd_2)	RREB1	4.54274376714352	4.28839592103556e-119
+dd_Smed_v6_14633_0_1	otxA	X1	5_3	foxA+ Parenchymal (fer3l-1)	fer3l-1	4.25852856877894	8.98222885331331e-111
+dd_Smed_v6_25321_0_1	dd25321	X1	5_3	foxA+ Parenchymal (fer3l-1)	fer3l-1	3.44655613840587	1.32854317298723e-52
+dd_Smed_v6_1032_0_1	dd1032	X1	5_3	foxA+ Parenchymal (fer3l-1)	fer3l-1	4.47664274265966	1.40373142790403e-52
+dd_Smed_v6_16472_0_1	dd16472	X1	5_3	foxA+ Parenchymal (fer3l-1)	fer3l-1	2.83039404598572	2.00374586272287e-34
+dd_Smed_v6_8820_0_1	islet1	X1	5_4	foxA+ Parenchymal	dd14712	3.15713939933761	3.27578503605505e-107
+dd_Smed_v6_9460_0_2	dd9460	X1	5_4	foxA+ Parenchymal	dd14712	2.59099824689323	2.78565917565837e-68
+dd_Smed_v6_23249_0_1	foxd	X1	6	Pharynx	foxA	4.1034965085501	1.06414812424134e-142
+dd_Smed_v6_19255_0_1	dd19255	X1	6	Pharynx	foxA	3.78784252064342	2.19868978945405e-90
+dd_Smed_v6_18719_0_1	dd18719	X1	6	Pharynx	foxA	3.3069879061249	3.841287435508e-81
+dd_Smed_v6_15107_0_1	dd15107	X1	6	Pharynx	foxA	3.31767020721812	1.04132348661711e-66
+dd_Smed_v6_22163_0_1	dd22163	X1	6	Pharynx	foxA	2.81930645840382	5.65041795463544e-51
+dd_Smed_v6_19859_0_1	dd19859	X1	6	Pharynx	foxA	2.0587985155616	1.05850552092795e-25
+dd_Smed_v6_13343_0_1	dd13343	X1	7_0	NKX2-4+ Parenchymal	NKX2-4	5.03040140988983	2.84439467121598e-210
+dd_Smed_v6_9259_0_1	nk4	X1	7_0	NKX2-4+ Parenchymal	NKX2-4	4.36226001769051	1.73068326766534e-184
+dd_Smed_v6_13341_0_1	dd13341	X1	7_0	NKX2-4+ Parenchymal	NKX2-4	3.52909222653727	1.79971063327281e-143
+dd_Smed_v6_14753_0_1	ascl-2	X1	7_0	NKX2-4+ Parenchymal	NKX2-4	5.9900473488557	3.00479984812751e-118
+dd_Smed_v6_13898_0_1	nkx2-like	X1	7_1	NKX2-4+ Parenchymal (nkx2-like + nkx6-like)	ASCL4	3.04550377265014	3.79266281377714e-47
+dd_Smed_v6_2716_0_1	nkx2	X1	7_1	NKX2-4+ Parenchymal (nkx2-like + nkx6-like)	ASCL4	3.0300083221343	1.15552668721258e-36
+dd_Smed_v6_16472_0_1	dd16472	X1	7_1	NKX2-4+ Parenchymal (nkx2-like + nkx6-like)	ASCL4	3.60297495522002	4.89069949959407e-31
+dd_Smed_v6_49794_0_1	dd49794	X1	7_1	NKX2-4+ Parenchymal (nkx2-like + nkx6-like)	ASCL4	3.47209209846123	1.14672273650113e-18
+dd_Smed_v6_16472_0_1	dd16472	X1	7_2	NKX2-4+ Parenchymal	NKX2-4	3.89454301249076	1.22497599384839e-114
+dd_Smed_v6_33575_0_1	dd33575	X1	7_2	NKX2-4+ Parenchymal	NKX2-4	3.84412820189486	7.00521828619903e-99
+dd_Smed_v6_15506_0_1	dd15506	X1	7_2	NKX2-4+ Parenchymal	NKX2-4	3.97585348942908	7.13559973076539e-65
+dd_Smed_v6_9259_0_1	nk4	X1	7_2	NKX2-4+ Parenchymal	NKX2-4	5.2222269418046	6.88606190211074e-44
+dd_Smed_v6_17566_0_1	dd17566	X1	7_2	NKX2-4+ Parenchymal	NKX2-4	3.10634882890921	1.3421931229771e-43
+dd_Smed_v6_2716_0_1	nkx2	X1	7_3	NKX2-4+ Parenchymal	ASCL4	5.9186761990088	1.90200013702412e-255
+dd_Smed_v6_15506_0_1	dd15506	X1	7_3	NKX2-4+ Parenchymal	ASCL4	5.31390353634332	7.07851943166983e-168
+dd_Smed_v6_16472_0_1	dd16472	X1	7_3	NKX2-4+ Parenchymal	ASCL4	4.12773230614916	1.43438378911472e-56
+dd_Smed_v6_49794_0_1	dd49794	X1	7_3	NKX2-4+ Parenchymal	ASCL4	3.6373082730539	5.77207508865472e-52
+dd_Smed_v6_13898_0_1	nkx2-like	X1	7_3	NKX2-4+ Parenchymal	ASCL4	3.03807693317187	2.51475231634586e-25
+dd_Smed_v6_2716_0_1	nkx2	X1	7_4	NKX2-4+ Parenchymal	ASCL4	4.37402567153806	6.02031590269245e-88
+dd_Smed_v6_16472_0_1	dd16472	X1	7_4	NKX2-4+ Parenchymal	ASCL4	3.94132992820346	5.85850667747243e-53
+dd_Smed_v6_2716_0_1	nkx2	X1	7_5	NKX2-4+ Parenchymal (GCM2 + IRX1)	GCM2	2.31541960655631	2.05338941234403e-36
+dd_Smed_v6_16472_0_1	dd16472	X1	7_5	NKX2-4+ Parenchymal (GCM2 + IRX1)	GCM2	1.66053908230766	3.0385434524476e-29
+dd_Smed_v6_8234_0_1	POU2/3	X1	8_0	Protonephridia	dd12617	5.78778862579746	0.0
+dd_Smed_v6_9774_0_1	Six1/2-2	X1	8_0	Protonephridia	dd12617	5.23945723509179	0.0
+dd_Smed_v6_2946_0_1	dd2946	X1	8_0	Protonephridia	dd12617	4.76787017638144	0.0
+dd_Smed_v6_49988_0_1	dd49988	X1	8_0	Protonephridia	dd12617	4.10525317453622	8.57920463065626e-15
+dd_Smed_v6_8234_0_1	POU2/3	X1	8_1	Protonephridia	six1/2-2	4.81391378965649	4.71299333537996e-292
+dd_Smed_v6_2946_0_1	dd2946	X1	8_1	Protonephridia	six1/2-2	3.96875175527597	3.0576072957925e-160
+dd_Smed_v6_7324_0_1	dd7324	X1	8_1	Protonephridia	six1/2-2	2.66649181742704	2.33314447163693e-21
+dd_Smed_v6_49988_0_1	dd49988	X1	8_1	Protonephridia	six1/2-2	1.58150591002427	1.11555273103849e-10
+dd_Smed_v6_9774_0_1	Six1/2-2	X1	8_2	Protonephridia	POU2/3	3.09187731360235	1.35275647190614e-288
+dd_Smed_v6_2946_0_1	dd2946	X1	8_2	Protonephridia	POU2/3	2.79597868549325	2.56749857060226e-220
+dd_Smed_v6_49988_0_1	dd49988	X1	8_2	Protonephridia	POU2/3	2.2122072503305	5.47826575996908e-216
+dd_Smed_v6_7324_0_1	dd7324	X1	8_2	Protonephridia	POU2/3		
+dd_Smed_v6_1694_0_1	hnf4	X1	intestine_0	enterocytes	gata4/5/6-1	3.41166496848475	0.0
+dd_Smed_v6_2716_0_1	nkx2.2	X1	intestine_0	enterocytes	gata4/5/6-1	3.56343736502543	0.0
+dd_Smed_v6_2946_0_1	dd2946	X1	intestine_0	enterocytes	gata4/5/6-1	2.65349182979144	1.97497968514296e-245
+dd_Smed_v6_10039_0_1	osr	X1	intestine_0	enterocytes	gata4/5/6-1	2.87281171378117	1.01945996627864e-205
+dd_Smed_v6_13772_0_1	PROX-1	X1	intestine_0	enterocytes	gata4/5/6-1	2.72916970555099	1.03180830875708e-181
+dd_Smed_v6_1694_0_1	hnf4	X1	intestine_1	enterocytes	gata4/5/6-1	3.81404278622932	0.0
+dd_Smed_v6_2716_0_1	nkx2.2	X1	intestine_1	enterocytes	gata4/5/6-1	3.78251960970708	0.0
+dd_Smed_v6_13772_0_1	PROX-1	X1	intestine_1	enterocytes	gata4/5/6-1	3.95181250512715	0.0
+dd_Smed_v6_2946_0_1	dd2946	X1	intestine_1	enterocytes	gata4/5/6-1	2.92040452354235	6.23800017477132e-174
+dd_Smed_v6_10039_0_1	osr	X1	intestine_1	enterocytes	gata4/5/6-1	2.75692518048049	7.91150075495751e-77
+dd_Smed_v6_13772_0_1	PROX-1	X1	intestine_2	basal + goblet cells	gata4/5/6-1	2.05744132686523	1.44335122449101e-90
+dd_Smed_v6_1694_0_1	hnf4	X1	intestine_2	basal + goblet cells	gata4/5/6-1	2.43016754867454	4.79368348394873e-87
+dd_Smed_v6_2716_0_1	nkx2.2	X1	intestine_2	basal + goblet cells	gata4/5/6-1	2.13107351427825	5.12247560784859e-54
+dd_Smed_v6_11652_0_1	tbx2/3c	X1	intestine_2	basal + goblet cells	gata4/5/6-1	2.91091767936899	1.72144324175486e-37
+dd_Smed_v6_50662_0_1	dd50662	X1	intestine_2	basal + goblet cells	gata4/5/6-1	1.56533181467205	3.72201551267443e-25
+dd_Smed_v6_17324_0_1	dd17324	X1	intestine_2	basal + goblet cells	gata4/5/6-1		
+dd_Smed_v6_2716_0_1	nkx2.2	X1	intestine_3	enterocytes	hnf4	2.75331879092932	3.90806785383046e-105
+dd_Smed_v6_2946_0_1	dd2946	X1	intestine_3	enterocytes	hnf4	3.50179392192466	1.35758448694851e-101
+dd_Smed_v6_10039_0_1	osr	X1	intestine_3	enterocytes	hnf4	2.02042939458029	1.75665107599811e-37
+dd_Smed_v6_2716_0_1	nkx2.2	X1	intestine_4	enterocytes	hnf4	6.54198298062317	9.4012699074656e-293
+dd_Smed_v6_2946_0_1	dd2946	X1	intestine_4	enterocytes	hnf4	6.13886446595335	1.26602832467658e-141
+dd_Smed_v6_10039_0_1	osr	X1	intestine_4	enterocytes	hnf4	5.5484676314015	4.49228691582459e-75
+dd_Smed_v6_13772_0_1	PROX-1	X1	intestine_4	enterocytes	hnf4	4.52970779060095	2.42737481967318e-73
+dd_Smed_v6_16955_0_1	dd16955	X1	intestine_4	enterocytes	hnf4	4.15205227465635	2.72062073619952e-31
+dd_Smed_v6_36829_0_1	dd36829	X1	neural2_0	sexual accessory	MECOM	5.07249583208767	5.40857194777259e-48
+dd_Smed_v6_14213_0_1	dd14213	X1	neural2_0	sexual accessory	MECOM	4.85521020331017	4.2101036553936e-35
+dd_Smed_v6_76069_0_1	ovo	X1	neural2_1	eye neoblasts	six1/2-1	6.55411504592125	3.08061742975865e-157
+dd_Smed_v6_36829_0_1	dd36829	X1	neural2_1	eye neoblasts	six1/2-1	3.40663519333024	1.15086095777979e-14
+dd_Smed_v6_19040_0_1	dlx	X1	neural2_1	eye neoblasts	six1/2-1	3.51598628859864	3.13981009711243e-06
+dd_Smed_v6_2946_0_1	dd2946	X1	neural2_2	sexual accessory	MECOM	2.25349281544816	1.89483600113116e-05
+dd_Smed_v6_19040_0_1	dlx	X1	neural2_3	eye neoblasts	ovo	1.71678131638658	1.63394819354053e-77
+dd_Smed_v6_17385_0_1	sp6-9	X1	neural2_3	eye neoblasts	ovo	1.75150300903163	2.7175477023806e-34
+dd_Smed_v6_19255_0_1	dd19255	X1	neural2_3	eye neoblasts	ovo	1.7770880628882	6.25634923539411e-34
+dd_Smed_v6_6114_0_1	dd6114	X1	neural2_3	eye neoblasts	ovo		
+dd_Smed_v6_6114_0_1	dd6114	X1	plod1_0		dd12229	2.50507553432437	8.04689017732706e-85
+dd_Smed_v6_7324_0_1	dd7324	X1	plod1_0		dd12229	1.76517776239057	1.16314964601773e-56
+dd_Smed_v6_18125_0_1	dd18125	X1	plod1_0		dd12229	1.58208678588159	3.93744481074384e-54
+dd_Smed_v6_11975_0_1	dd11975	X1	plod1_0		dd12229	1.95524541631625	3.45332365284062e-48
+dd_Smed_v6_17749_0_1	dd17749	X1	plod1_0		dd12229	2.15220435464556	6.36011390450927e-48
+dd_Smed_v6_12873_0_1	nkx6-2	X1	plod1_1		dd12229	4.83235457776859	0.0
+dd_Smed_v6_6910_0_1	foxF-1	X1	plod1_1		dd12229	3.37997980767273	2.63901110986078e-190
+dd_Smed_v6_7324_0_1	dd7324	X1	plod1_1		dd12229	3.98246052796647	1.98421792168535e-175
+dd_Smed_v6_26182_0_1	dd26182	X1	plod1_1		dd12229	3.70176184155166	6.98463990919493e-168
+dd_Smed_v6_15144_0_1	lhx2/9	X1	plod1_1		dd12229	4.18322817679165	5.43045289383536e-129
+dd_Smed_v6_16955_0_1	dd16955	X1	plod1_1		dd12229	2.70279995105728	1.00595490443676e-76
+dd_Smed_v6_17749_0_1	dd17749	X1	plod1_1		dd12229	2.27438517041464	1.98369549003442e-73
+dd_Smed_v6_9259_0_1	nk4	X1	plod1_10	Lateral DV Muscle	nk4 (cont 1)	4.13000844595558	1.41175612474156e-168
+dd_Smed_v6_18125_0_1	dd18125	X1	plod1_10	Lateral DV Muscle	nk4 (cont 1)	3.05460339425381	4.17831221961013e-76
+dd_Smed_v6_11975_0_1	dd11975	X1	plod1_10	Lateral DV Muscle	nk4 (cont 1)	3.05378510117675	2.49534532639379e-59
+dd_Smed_v6_12229_0_1	dd12229	X1	plod1_10	Lateral DV Muscle	nk4 (cont 1)	2.09170658961815	1.68185984776414e-36
+dd_Smed_v6_17951_0_1	twist	X1	plod1_11	Pharynx Muscle	foxF-1	5.65346537488964	0.0
+dd_Smed_v6_22585_0_1	ZicA	X1	plod1_11	Pharynx Muscle	foxF-1	5.05914097440543	7.55691070939637e-267
+dd_Smed_v6_13474_0_1	dd13474	X1	plod1_11	Pharynx Muscle	foxF-1	4.28138763058264	9.89665299891406e-219
+dd_Smed_v6_21347_0_1	dd21347	X1	plod1_11	Pharynx Muscle	foxF-1	3.82194950938784	1.07255156293539e-182
+dd_Smed_v6_15104_0_1	ap2	X1	plod1_11	Pharynx Muscle	foxF-1	3.65845225075437	5.05511453496284e-83
+dd_Smed_v6_16070_0_1	musculin	X1	plod1_11	Pharynx Muscle	foxF-1	2.62401755598773	2.82214758070075e-77
+dd_Smed_v6_31435_0_1	lbx	X1	plod1_12	Longitudinal Muscle	myoD	6.79793450181475	0.0
+dd_Smed_v6_20096_0_1	dd20096	X1	plod1_12	Longitudinal Muscle	myoD	4.2803015732333	0.0
+dd_Smed_v6_13474_0_1	dd13474	X1	plod1_12	Longitudinal Muscle	myoD	3.39531416611235	3.48870239398102e-157
+dd_Smed_v6_17749_0_1	dd17749	X1	plod1_12	Longitudinal Muscle	myoD	3.10418810753465	4.43096545869757e-132
+dd_Smed_v6_12229_0_1	dd12229	X1	plod1_12	Longitudinal Muscle	myoD	2.62263661362712	8.06038074313901e-123
+dd_Smed_v6_17332_0_1	hesl-2	X1	plod1_2		hesl-3	3.84599161023388	3.74371374824701e-138
+dd_Smed_v6_12873_0_1	nkx6-2	X1	plod1_2		hesl-3	2.78900478336332	6.20292145764939e-116
+dd_Smed_v6_16070_0_1	musculin	X1	plod1_2		hesl-3	1.65832246407544	3.38111481562285e-52
+dd_Smed_v6_13341_0_1	dd13341	X1	plod1_2		hesl-3	2.34576988558957	4.18793095893572e-35
+dd_Smed_v6_9259_0_1	nk4	X1	plod1_2		hesl-3	2.0858913251219	6.97675782110893e-26
+dd_Smed_v6_18147_0_1	dd18147	X1	plod1_3		dd12229	3.0012356072476	4.74439002981626e-121
+dd_Smed_v6_11975_0_1	dd11975	X1	plod1_3		dd12229	2.22625980868076	3.06770663030064e-107
+dd_Smed_v6_7324_0_1	dd7324	X1	plod1_3		dd12229	2.69900421888911	3.8253515541065e-99
+dd_Smed_v6_16955_0_1	dd16955	X1	plod1_3		dd12229	1.75662039936619	4.65461321724726e-58
+dd_Smed_v6_18125_0_1	dd18125	X1	plod1_3		dd12229	1.50269850762663	1.390302567952e-20
+dd_Smed_v6_10868_0_1	fer3l-2	X1	plod1_4	Phagocytic/Cathepsin	ets-1	5.09370945558465	0.0
+dd_Smed_v6_12229_0_1	dd12229	X1	plod1_4	Phagocytic/Cathepsin	ets-1	4.83923429854815	0.0
+dd_Smed_v6_6910_0_1	foxF-1	X1	plod1_4	Phagocytic/Cathepsin	ets-1	2.99782366717554	1.44100175830194e-250
+dd_Smed_v6_7324_0_1	dd7324	X1	plod1_4	Phagocytic/Cathepsin	ets-1	3.151200314461	6.48299447516986e-215
+dd_Smed_v6_11975_0_1	dd11975	X1	plod1_4	Phagocytic/Cathepsin	ets-1	3.83914900243108	8.81400898308838e-147
+dd_Smed_v6_19327_0_1	nkx1-1	X1	plod1_5	Circular + Intestinal Muscle (+ Neighboring Longitudinal Signal)	lhx2/9	5.23219453201325	0.0
+dd_Smed_v6_26182_0_1	dd26182	X1	plod1_5	Circular + Intestinal Muscle (+ Neighboring Longitudinal Signal)	lhx2/9	4.13868588222418	0.0
+dd_Smed_v6_12873_0_1	nkx6-2	X1	plod1_5	Circular + Intestinal Muscle (+ Neighboring Longitudinal Signal)	lhx2/9	3.89462669428073	0.0
+dd_Smed_v6_12229_0_1	dd12229	X1	plod1_5	Circular + Intestinal Muscle (+ Neighboring Longitudinal Signal)	lhx2/9	4.67066008382097	7.047915607e-315
+dd_Smed_v6_31435_0_1	lbx	X1	plod1_5	Circular + Intestinal Muscle (+ Neighboring Longitudinal Signal)	lhx2/9	3.13379078935317	1.77543718914324e-214
+dd_Smed_v6_16955_0_1	dd16955	X1	plod1_5	Circular + Intestinal Muscle (+ Neighboring Longitudinal Signal)	lhx2/9	1.95475615336282	6.3409046141441e-97
+dd_Smed_v6_16070_0_1	musculin	X1	plod1_6	Pharynx Muscle	dmd-3	5.8227612896176	0.0
+dd_Smed_v6_22585_0_1	ZicA	X1	plod1_6	Pharynx Muscle	dmd-3	4.8842307491642	0.0
+dd_Smed_v6_13474_0_1	dd13474	X1	plod1_6	Pharynx Muscle	dmd-3	4.14989155052902	0.0
+dd_Smed_v6_6910_0_1	foxF-1	X1	plod1_6	Pharynx Muscle	dmd-3	3.68078806104064	0.0
+dd_Smed_v6_15104_0_1	ap2	X1	plod1_7	Pharynx Muscle	twist	3.51938041036218	9.65708685553111e-199
+dd_Smed_v6_13474_0_1	dd13474	X1	plod1_7	Pharynx Muscle	twist	3.81092003617629	1.62371301373401e-115
+dd_Smed_v6_9893_0_1	coe	X1	plod1_7	Pharynx Muscle	twist	2.49825253072821	1.17723971986886e-57
+dd_Smed_v6_16466_0_1	dd16466	X1	plod1_7	Pharynx Muscle	twist	1.85622929427517	4.8983122360675e-47
+dd_Smed_v6_6910_0_1	foxF-1	X1	plod1_7	Pharynx Muscle	twist	1.82219494835947	7.68395643124145e-42
+dd_Smed_v6_16466_0_1	dd16466	X1	plod1_8	Medial DV Muscle	gata4/5/6-2	3.90387968700663	5.702481800827e-188
+dd_Smed_v6_10673_0_1	dd10673	X1	plod1_8	Medial DV Muscle	gata4/5/6-2	2.83799767840442	7.43784786384284e-93
+dd_Smed_v6_8820_0_1	islet1	X1	plod1_8	Medial DV Muscle	gata4/5/6-2	2.37783138111908	5.23491581887895e-82
+dd_Smed_v6_12229_0_1	dd12229	X1	plod1_8	Medial DV Muscle	gata4/5/6-2	2.81157200910316	1.07792271162696e-77
+dd_Smed_v6_7324_0_1	dd7324	X1	plod1_8	Medial DV Muscle	gata4/5/6-2	2.13789550447734	3.41944132814814e-50
+dd_Smed_v6_17951_0_1	twist	X1	plod1_9	Pharynx Muscle	sim		
+dd_Smed_v6_16070_0_1	musculin	X1	plod1_9	Pharynx Muscle	sim		
+dd_Smed_v6_9893_0_1	coe	X1	plod1_9	Pharynx Muscle	sim		
+dd_Smed_v6_17332_0_1	hesl-2	X1	plod1_9	Pharynx Muscle	sim		
+dd_Smed_v6_22585_0_1	ZicA	X1	plod1_9	Pharynx Muscle	sim		
+dd_Smed_v6_12873_0_1	nkx6-2	X1	plod1_9	Pharynx Muscle	sim		
+dd_Smed_v6_15555_0_1	pou4l-1	X1 Major Tissue	Neural			3.33813774458937	0.0
+dd_Smed_v6_22992_0_1	dd22992	X1 Major Tissue	Neural			2.98165701749118	0.0
+dd_Smed_v6_7227_0_1	dd7227	X1 Major Tissue	Neural			1.13737402097364	0.0
+dd_Smed_v6_18505_0_1	dd18505	X1 Major Tissue	Neural			1.52420893774234	0.0
+dd_Smed_v6_8483_0_1	dd8483	X1 Major Tissue	Neural			1.15063867751248	0.0
+dd_Smed_v6_11198_0_1	nkx6-like	X1 Major Tissue	Neural			2.92520152189028	1.30215003424482e-303
+dd_Smed_v6_13215_0_1	soxB	X1 Major Tissue	Neural			3.57958483381425	1.73619615454896e-258
+dd_Smed_v6_73714_0_1	dd73714	X1 Major Tissue	Neural			2.59460695784526	1.04144729441208e-252
+dd_Smed_v6_17566_0_1	dd17566	X1 Major Tissue	Neural			0.509973572358335	2.19843571959603e-240
+dd_Smed_v6_14753_0_1	ascl-2	X1 Major Tissue	Neural			2.89339002605048	6.7366584906877e-232
+dd_Smed_v6_15253_0_1	pitx	X1 Major Tissue	Neural			1.15398705705416	4.66287464978016e-198
+dd_Smed_v6_15107_0_1	dd15107	X1 Major Tissue	Neural			2.33142965918163	7.22345058631573e-181
+dd_Smed_v6_14213_0_1	dd14213	X1 Major Tissue	Neural			2.11173769992635	5.27863007304497e-109
+dd_Smed_v6_54422_0_1	dd54422	X1 Major Tissue	Neural			0.842716364629916	6.65825745401899e-100
+dd_Smed_v6_12677_0_1	dd12677	X1 Major Tissue	Neural			0.619880196012781	1.09545722614735e-86
+dd_Smed_v6_48508_0_1	dd48508	X1 Major Tissue	Neural			0.688557926854727	3.35356312289875e-85
+dd_Smed_v6_9893_0_1	coe	X1 Major Tissue	Neural			0.71954060542676	3.35888282605484e-83
+dd_Smed_v6_29462_0_1	dd29462	X1 Major Tissue	Neural			0.825598577116405	7.33555573722127e-81
+dd_Smed_v6_22585_0_1	ZicA	X1 Major Tissue	Neural			0.259008943081552	3.74227208272302e-78
+dd_Smed_v6_13341_0_1	dd13341	X1 Major Tissue	Neural			0.618864123069692	6.84161316015398e-66
+dd_Smed_v6_17324_0_1	dd17324	X1 Major Tissue	Neural			1.46372290694283	1.32841907178238e-64
+dd_Smed_v6_9287_0_1	dd9287	X1 Major Tissue	Neural			0.499855350415718	2.14951194641407e-60
+dd_Smed_v6_13898_0_1	nkx2-like	X1 Major Tissue	Neural			2.71265772948042	3.0735773112323e-60
+dd_Smed_v6_17498_0_1	dd17498	X1 Major Tissue	Neural			2.2262518752744	4.12545261663906e-54
+dd_Smed_v6_36829_0_1	dd36829	X1 Major Tissue	Neural			2.09726569694393	4.9865516656854e-54
+dd_Smed_v6_19040_0_1	dlx	X1 Major Tissue	Neural			2.04223651021822	3.11533830534151e-44
+dd_Smed_v6_18952_0_1	scratch	X1 Major Tissue	Neural			2.50478438630541	2.14754613899326e-40
+dd_Smed_v6_21717_0_1	neuroD-1	X1 Major Tissue	Neural			3.29143261887753	3.22757503014412e-37
+dd_Smed_v6_28804_0_1	dd28804	X1 Major Tissue	Neural			2.01259584176084	1.54313209652708e-36
+dd_Smed_v6_47627_0_1	dd47627	X1 Major Tissue	Neural			0.869174736776841	9.63712362053955e-35
+dd_Smed_v6_14712_0_1	dd14712	X1 Major Tissue	Neural			1.10235283582655	7.04858624977502e-31
+dd_Smed_v6_11893_0_1	dd11893	X1 Major Tissue	Neural			1.22258761742216	1.22378457599884e-30
+dd_Smed_v6_16399_0_1	meis	X1 Major Tissue	Neural			1.57436489067325	7.0638914636643e-27
+dd_Smed_v6_76069_0_1	ovo	X1 Major Tissue	Neural			0.410897105460539	7.35091300565908e-27
+dd_Smed_v6_7442_0_1	dd7442	X1 Major Tissue	Neural			0.300377505757474	1.92406454331449e-21
+dd_Smed_v6_19286_0_1	dd19286	X1 Major Tissue	Neural			1.990565586456	2.4563382022951e-21
+dd_Smed_v6_58909_0_1	gata4/5/6-3	X1 Major Tissue	Neural			1.35345030430896	5.65400288339481e-20
+dd_Smed_v6_41553_0_1	dd41553	X1 Major Tissue	Neural			1.32650321466071	1.09575064243815e-18
+dd_Smed_v6_14633_0_1	otxA	X1 Major Tissue	Neural			1.83645858593832	2.10079065819084e-18
+dd_Smed_v6_13056_0_1	tcf1	X1 Major Tissue	Neural			3.82041491023603	7.02755030221179e-18
+dd_Smed_v6_17534_0_1	arh	X1 Major Tissue	Neural			2.56434265506027	8.7912621065266e-18
+dd_Smed_v6_17385_0_1	sp6-9	X1 Major Tissue	Neural			3.24946329983028	5.98978652881426e-16
+dd_Smed_v6_13704_0_1	ptf-4	X1 Major Tissue	Neural			1.59649488375785	8.17977101622021e-11
+dd_Smed_v6_13772_0_1	PROX-1	X1 Major Tissue	Neural			0.733104910504855	1.2123832155377e-10
+dd_Smed_v6_17726_0_1	Pax6A	X1 Major Tissue	Neural			3.28108669199932	3.80394818321503e-10
+dd_Smed_v6_14824_0_1	dd14824	X1 Major Tissue	Neural			1.7837514679672	1.02720994869973e-06
+dd_Smed_v6_10320_0_1	dd10320	X1 Major Tissue	Neural			0.992910124151622	5.16115057528918e-05
+dd_Smed_v6_11652_0_1	tbx2/3c	X1 Major Tissue	Neural			0.637498202974666	0.000772492102389005
+dd_Smed_v6_52497_0_1	hmx-1	X1 Major Tissue	Neural			4.12507139300599	0.00271563784246559
+dd_Smed_v6_5828_0_1	dd5828	X1 Major Tissue	Neural			1.70437359947947	0.0474608815172301
+dd_Smed_v6_2716_0_1	nkx2	X1 Major Tissue	Epidermis			1.45901479750629	9.58150802790806e-64
+dd_Smed_v6_8720_0_1	ZFP-1	X1 Major Tissue	Epidermis			3.19424333973221	8.97066088331204e-44
+dd_Smed_v6_5563_0_1	p53	X1 Major Tissue	Epidermis			2.76679736272428	4.63327387839173e-23
+dd_Smed_v6_5942_0_1	SOXP-3	X1 Major Tissue	Epidermis			4.25531668387869	4.96607921797041e-21
+dd_Smed_v6_3935_0_1	dd3935	X1 Major Tissue	Epidermis			4.02636128688071	1.53365370879495e-19
+dd_Smed_v6_7824_0_1	Sp5	X1 Major Tissue	Epidermis			1.49389573668342	2.03964021619197e-11
+dd_Smed_v6_7033_0_1	dd7033	X1 Major Tissue	Epidermis			0.790519399979118	2.80209116850626e-10
+dd_Smed_v6_12317_0_1	dd12317	X1 Major Tissue	Epidermis			1.7873361763387	1.8601085425147e-08
+dd_Smed_v6_2789_0_1	fos-1	X1 Major Tissue	Epidermis			0.656718774116724	7.94621884548796e-07
+dd_Smed_v6_14910_0_1	dd14910	X1 Major Tissue	Epidermis			1.16267389286091	2.29207477812513e-06
+dd_Smed_v6_25769_0_1	dd25769	X1 Major Tissue	Epidermis			2.4811790629072	0.000398067765826005
+dd_Smed_v6_49988_0_1	dd49988	X1 Major Tissue	Epidermis			0.845856874843698	0.00115276579661073
+dd_Smed_v6_15471_0_1	dd15471	X1 Major Tissue	Epidermis			3.64640230736644	0.00222003375733689
+dd_Smed_v6_18719_0_1	dd18719	X1 Major Tissue	Epidermis			0.567508606305692	0.00299067540386366
+dd_Smed_v6_50662_0_1	dd50662	X1 Major Tissue	Epidermis			0.554610369559524	
+dd_Smed_v6_11118_0_1	dd11118	X1 Major Tissue	Epidermis			0.374318237308806	
+dd_Smed_v6_9189_0_1	dd9189	X1 Major Tissue	Epidermis			0.380106505037607	
+dd_Smed_v6_9282_0_1	dd9282	X1 Major Tissue	Epidermis			0.284309040656775	
+dd_Smed_v6_33575_0_1	dd33575	X1 Major Tissue	Epidermis			0.915560830047698	
+dd_Smed_v6_17749_0_1	dd17749	X1 Major Tissue	Epidermis			0.315561223862707	
+dd_Smed_v6_16007_0_1	dd16007	X1 Major Tissue	Epidermis			3.10146520835142	
+dd_Smed_v6_16124_0_1	runt-1	X1 Major Tissue	Epidermis			0.346460895370182	
+dd_Smed_v6_6470_0_1	tbx2/3b	X1 Major Tissue	Epidermis			2.80667731471141	
+dd_Smed_v6_15178_0_1	six3	X1 Major Tissue	Epidermis			2.55966465293172	
+dd_Smed_v6_19859_0_1	dd19859	X1 Major Tissue	Epidermis			0.420264183316592	
+dd_Smed_v6_60078_0_1	dd60078	X1 Major Tissue	Epidermis			1.43221783964136	
+dd_Smed_v6_32934_0_1	dd32934	X1 Major Tissue	Epidermis			2.46752083763778	
+dd_Smed_v6_8606_0_1	prep	X1 Major Tissue	Epidermis			0.819430298202844	
+dd_Smed_v6_13704_0_1	ptf-4	X1 Major Tissue	six1/2-1+			1.21521834199442	0.0
+dd_Smed_v6_14213_0_1	dd14213	X1 Major Tissue	six1/2-1+			3.40193552758827	0.0
+dd_Smed_v6_15104_0_1	ap2	X1 Major Tissue	six1/2-1+			1.34503846994285	0.0
+dd_Smed_v6_9282_0_1	dd9282	X1 Major Tissue	six1/2-1+			0.706059867698636	3.35173557900665e-275
+dd_Smed_v6_54422_0_1	dd54422	X1 Major Tissue	six1/2-1+			2.91922326916352	2.09367213444938e-251
+dd_Smed_v6_3565_0_1	runt-2	X1 Major Tissue	six1/2-1+			1.17376078529108	9.32647965062333e-187
+dd_Smed_v6_5828_0_1	dd5828	X1 Major Tissue	six1/2-1+			0.622802770367106	6.98592636992459e-157
+dd_Smed_v6_8820_0_1	islet1	X1 Major Tissue	six1/2-1+			1.06579699396433	7.26591430821657e-157
+dd_Smed_v6_2946_0_1	dd2946	X1 Major Tissue	six1/2-1+			2.02042632420591	2.02422721894921e-133
+dd_Smed_v6_16070_0_1	musculin	X1 Major Tissue	PLOD1+			5.20540609625616	0.0
+dd_Smed_v6_6114_0_1	dd6114	X1 Major Tissue	PLOD1+			1.42846853537126	0.0
+dd_Smed_v6_7324_0_1	dd7324	X1 Major Tissue	PLOD1+			4.0038752986703	0.0
+dd_Smed_v6_17332_0_1	hesl-2	X1 Major Tissue	PLOD1+			4.4498239394215	1.70924762092251e-287
+dd_Smed_v6_20096_0_1	dd20096	X1 Major Tissue	PLOD1+			1.93797040628857	3.41196679233191e-275
+dd_Smed_v6_17951_0_1	twist	X1 Major Tissue	PLOD1+			4.76180828331339	5.35273860083237e-235
+dd_Smed_v6_12229_0_1	dd12229	X1 Major Tissue	PLOD1+			3.62931597389334	6.77115047759011e-175
+dd_Smed_v6_13283_0_1	Dmd-3	X1 Major Tissue	PLOD1+			3.98300448163503	5.02176370613572e-168
+dd_Smed_v6_31435_0_1	lbx	X1 Major Tissue	PLOD1+			3.88610970104749	4.87642624279148e-162
+dd_Smed_v6_17749_0_1	dd17749	X1 Major Tissue	PLOD1+			1.3200582665499	3.82346657816046e-151
+dd_Smed_v6_37930_0_1	dd37930	X1 Major Tissue	PLOD1+			0.81847104074715	6.60160106036485e-144
+dd_Smed_v6_10673_0_1	dd10673	X1 Major Tissue	PLOD1+			1.70474463252523	8.27855769860018e-107
+dd_Smed_v6_10868_0_1	fer3l-2	X1 Major Tissue	PLOD1+			2.07880572772593	7.15324032368361e-92
+dd_Smed_v6_7442_0_1	dd7442	X1 Major Tissue	PLOD1+			0.469131525672517	5.4235792278768e-91
+dd_Smed_v6_9893_0_1	coe	X1 Major Tissue	PLOD1+			1.12331878982503	1.45204157080968e-74
+dd_Smed_v6_12873_0_1	nkx6-2	X1 Major Tissue	PLOD1+			4.039423064603	9.28347713163719e-72
+dd_Smed_v6_6910_0_1	foxF-1	X1 Major Tissue	PLOD1+			3.71606975858726	2.18668772271118e-53
+dd_Smed_v6_13341_0_1	dd13341	X1 Major Tissue	PLOD1+			1.09389108322039	7.34029424836409e-50
+dd_Smed_v6_8820_0_1	islet1	X1 Major Tissue	PLOD1+			0.849284856638121	4.75541847577044e-43
+dd_Smed_v6_47627_0_1	dd47627	X1 Major Tissue	PLOD1+			0.388986429384079	2.15148242958824e-40
+dd_Smed_v6_58909_0_1	gata4/5/6-3	X1 Major Tissue	PLOD1+			1.01816181643351	2.5507371075963e-36
+dd_Smed_v6_19327_0_1	nkx1-1	X1 Major Tissue	PLOD1+			2.92106269901359	8.24364247469203e-35
+dd_Smed_v6_18147_0_1	dd18147	X1 Major Tissue	PLOD1+			2.2971761380418	2.91187167944646e-34
+dd_Smed_v6_22585_0_1	ZicA	X1 Major Tissue	PLOD1+			2.09599495106637	8.88067631371719e-33
+dd_Smed_v6_15531_0_1	dd15531	X1 Major Tissue	PLOD1+			0.275010399466349	1.93096587095578e-27
+dd_Smed_v6_15253_0_1	pitx	X1 Major Tissue	PLOD1+			0.653164075872651	1.64524945661807e-22
+dd_Smed_v6_9259_0_1	nk4	X1 Major Tissue	PLOD1+			2.2285394487293	6.31226275377978e-22
+dd_Smed_v6_18125_0_1	dd18125	X1 Major Tissue	PLOD1+			2.67660680278756	1.15948462272397e-20
+dd_Smed_v6_3935_0_1	EGR-1	X1 Major Tissue	PLOD1+			0.253662750929412	2.01567287518108e-19
+dd_Smed_v6_13474_0_1	dd13474	X1 Major Tissue	PLOD1+			3.6843490910851	5.16207270418174e-19
+dd_Smed_v6_26182_0_1	dd26182	X1 Major Tissue	PLOD1+			2.30638041816614	6.101508058822e-15
+dd_Smed_v6_15144_0_1	lhx2/9	X1 Major Tissue	PLOD1+			1.57857615041564	9.12062776259539e-10
+dd_Smed_v6_17731_0_1	sim	X1 Major Tissue	PLOD1+			3.20659276282403	1.40831273411272e-08
+dd_Smed_v6_28216_0_1	dd28216	X1 Major Tissue	PLOD1+			0.821380081098764	4.32040935185484e-08
+dd_Smed_v6_8606_0_1	prep	X1 Major Tissue	PLOD1+			0.309007319585408	0.000211133885162083
+dd_Smed_v6_15104_0_1	ap2	X1 Major Tissue	PLOD1+			2.69758847763223	0.00174464755547073
+dd_Smed_v6_16955_0_1	dd16955	X1 Major Tissue	PLOD1+			2.21628258588135	0.0107614959910203
+dd_Smed_v6_13772_0_1	PROX-1	X1 Major Tissue	Intestine			3.40589822146597	0.0
+dd_Smed_v6_1694_0_1	hnf4	X1 Major Tissue	Intestine			4.87731423265686	0.0
+dd_Smed_v6_2716_0_1	nkx2.2	X1 Major Tissue	Intestine			5.53607249615004	0.0
+dd_Smed_v6_10039_0_1	osr	X1 Major Tissue	Intestine			2.75089711578703	0.0
+dd_Smed_v6_2946_0_1	dd2946	X1 Major Tissue	Intestine			3.56893385399635	0.0
+dd_Smed_v6_2789_0_1	fos-1	X1 Major Tissue	Intestine			0.979792785441733	1.71355000750406e-168
+dd_Smed_v6_50662_0_1	dd50662	X1 Major Tissue	Intestine			1.04441570466486	5.22860253522147e-155
+dd_Smed_v6_5563_0_1	p53	X1 Major Tissue	Intestine			0.81883777806591	7.68221204047434e-152
+dd_Smed_v6_3565_0_1	runt-2	X1 Major Tissue	Intestine			1.24730684941349	1.27066712092819e-117
+dd_Smed_v6_8720_0_1	ZFP-1	X1 Major Tissue	Intestine			0.36731893123445	2.002460002144e-75
+dd_Smed_v6_16388_0_1	dd16388	X1 Major Tissue	Intestine			0.919886784412254	6.26060072170289e-74
+dd_Smed_v6_17324_0_1	dd17324	X1 Major Tissue	Intestine			0.722523608438832	3.62080436062611e-65
+dd_Smed_v6_11118_0_1	dd11118	X1 Major Tissue	Intestine			0.730513522897441	5.76767516541268e-48
+dd_Smed_v6_7033_0_1	dd7033	X1 Major Tissue	Intestine			0.481378190245825	1.8801791352103e-35
+dd_Smed_v6_6481_0_1	dd6481	X1 Major Tissue	Intestine			0.35367395451113	1.5076127128312e-32
+dd_Smed_v6_17566_0_1	dd17566	X1 Major Tissue	Intestine			0.263819704006715	4.9503120836949e-28
+dd_Smed_v6_11652_0_1	tbx2/3c	X1 Major Tissue	Intestine			0.754996024115113	2.06499893579811e-22
+dd_Smed_v6_23249_0_1	foxd	X1 Major Tissue	Pharynx			5.09056085653632	1.52444143769805e-128
+dd_Smed_v6_15107_0_1	dd15107	X1 Major Tissue	Pharynx			1.79219945242094	1.582592203663e-94
+dd_Smed_v6_60078_0_1	dd60078	X1 Major Tissue	Pharynx			1.29445556102397	3.9648526600972e-87
+dd_Smed_v6_17731_0_1	sim	X1 Major Tissue	Pharynx			1.99749148260275	6.84334232228649e-86
+dd_Smed_v6_50662_0_1	dd50662	X1 Major Tissue	Pharynx			0.822390837116581	7.97458205376763e-67
+dd_Smed_v6_18952_0_1	scratch	X1 Major Tissue	Pharynx			1.17953197103753	2.32971533251569e-60
+dd_Smed_v6_14712_0_1	dd14712	X1 Major Tissue	Pharynx			1.22944472991215	1.83710690598937e-52
+dd_Smed_v6_18719_0_1	dd18719	X1 Major Tissue	Pharynx			3.13772037007594	1.19959884588962e-48
+dd_Smed_v6_5563_0_1	p53	X1 Major Tissue	Pharynx			0.749061561080417	3.03721508258599e-48
+dd_Smed_v6_48508_0_1	dd48508	X1 Major Tissue	Pharynx			1.32022635531861	2.98202043226328e-45
+dd_Smed_v6_8096_0_1	fer3l-1	X1 Major Tissue	Pharynx			0.737617895050761	1.5286443268491e-27
+dd_Smed_v6_19040_0_1	dlx	X1 Major Tissue	Pharynx			0.862897177583664	7.2713529711637e-26
+dd_Smed_v6_10039_0_1	osr	X1 Major Tissue	Pharynx			0.380692729507091	2.48735808364648e-20
+dd_Smed_v6_17566_0_1	dd17566	X1 Major Tissue	Pharynx			2.77609157478966	4.68326006272164e-18
+dd_Smed_v6_13704_0_1	ptf-4	X1 Major Tissue	Pharynx			2.67834007147492	1.35962267310478e-15
+dd_Smed_v6_9282_0_1	dd9282	X1 Major Tissue	Pharynx			0.305096293281617	2.95442314300373e-14
+dd_Smed_v6_41553_0_1	dd41553	X1 Major Tissue	Pharynx			0.548727100697348	1.38563521121003e-13
+dd_Smed_v6_14115_0_1	dd14115	X1 Major Tissue	Pharynx			1.18368780453302	4.461092644884e-05
+dd_Smed_v6_7442_0_1	dd7442	X1 Major Tissue	Pharynx			0.265297944012678	0.000113921123307343
+dd_Smed_v6_9259_0_1	nk4	X1 Major Tissue	Pharynx			1.00461016067056	0.000958161836683077
+dd_Smed_v6_21347_0_1	dd21347	X1 Major Tissue	Pharynx			1.21221777667154	0.00159621442265319
+dd_Smed_v6_11893_0_1	dd11893	X1 Major Tissue	Pharynx			1.47227089849064	0.0106215159241209
+dd_Smed_v6_10320_0_1	dd10320	X1 Major Tissue	Pharynx			0.534816458893224	0.0262823110537751
+dd_Smed_v6_16472_0_1	dd16472	X1 Major Tissue	Parenchymal			4.23891235832897	1.45977999670688e-227
+dd_Smed_v6_13343_0_1	dd13343	X1 Major Tissue	Parenchymal			2.16643629756459	5.03503408116358e-222
+dd_Smed_v6_17397_0_1	ptf-1	X1 Major Tissue	Parenchymal			5.56376953453195	4.68174471394963e-168
+dd_Smed_v6_14712_0_1	dd14712	X1 Major Tissue	Parenchymal			2.99714741518709	8.4261692760318e-149
+dd_Smed_v6_415_0_1	dd415	X1 Major Tissue	Parenchymal			1.71862001712455	4.65806460034557e-122
+dd_Smed_v6_1032_0_1	dd1032	X1 Major Tissue	Parenchymal			2.01396784136821	4.72007905712674e-91
+dd_Smed_v6_9259_0_1	nk4	X1 Major Tissue	Parenchymal			1.33101849357022	2.31673299587797e-89
+dd_Smed_v6_48508_0_1	dd48508	X1 Major Tissue	Parenchymal			1.20892938217003	2.88019349120351e-74
+dd_Smed_v6_8820_0_1	islet1	X1 Major Tissue	Parenchymal			2.43816012737286	3.35203788355504e-65
+dd_Smed_v6_2716_0_1	nkx2	X1 Major Tissue	Parenchymal			2.65162900824807	9.97184294390163e-44
+dd_Smed_v6_19255_0_1	dd19255	X1 Major Tissue	Parenchymal			1.41551013425539	1.46316951036267e-39
+dd_Smed_v6_13898_0_1	nkx2-like	X1 Major Tissue	Parenchymal			1.45246660849982	4.75132951486489e-32
+dd_Smed_v6_49794_0_1	dd49794	X1 Major Tissue	Parenchymal			4.03277724636388	1.61555203185078e-30
+dd_Smed_v6_9460_0_2	dd9460	X1 Major Tissue	Parenchymal			0.991022824257766	3.79536832224802e-27
+dd_Smed_v6_7442_0_1	dd7442	X1 Major Tissue	Parenchymal			0.62123363577992	7.75401070299818e-22
+dd_Smed_v6_11975_0_1	dd11975	X1 Major Tissue	Parenchymal			1.12647255112151	5.65845465968643e-18
+dd_Smed_v6_17324_0_1	dd17324	X1 Major Tissue	Parenchymal			1.05181810001061	1.40005432034908e-15
+dd_Smed_v6_14910_0_1	dd14910	X1 Major Tissue	Parenchymal			1.1592443471502	1.90032538005827e-09
+dd_Smed_v6_25321_0_1	dd25321	X1 Major Tissue	Parenchymal			1.214902885652	1.92041596444044e-08
+dd_Smed_v6_15506_0_1	dd15506	X1 Major Tissue	Parenchymal			2.65817161199236	0.000743119625043025
+dd_Smed_v6_8234_0_1	POU2/3	X1 Major Tissue	Protonephridia			7.28635666029378	7.20846551651368e-287
+dd_Smed_v6_9774_0_1	Six1/2-2	X1 Major Tissue	Protonephridia			5.83043860627104	2.38786921264869e-158
+dd_Smed_v6_2946_0_1	dd2946	X1 Major Tissue	Protonephridia			3.8998509509272	6.88231933138857e-67
+dd_Smed_v6_11893_0_1	dd11893	X1 Major Tissue	Protonephridia			0.779837763894628	4.48943753867208e-53
+dd_Smed_v6_9460_0_2	dd9460	X1 Major Tissue	Protonephridia			0.286948645730028	2.51333210135552e-30
+dd_Smed_v6_49988_0_1	dd49988	X1 Major Tissue	Protonephridia			3.78248776187005	4.59712889267733e-23
+dd_Smed_v6_7033_0_1	dd7033	X1 Major Tissue	Protonephridia			0.884570453259996	2.43447478207337e-21
+dd_Smed_v6_12677_0_1	dd12677	X1 Major Tissue	Protonephridia			0.340996499906498	1.91226146532799e-15
+dd_Smed_v6_5828_0_1	dd5828	X1 Major Tissue	Protonephridia			0.715483412050456	1.82749199605049e-10
+dd_Smed_v6_2789_0_1	fos-1	X1 Major Tissue	Protonephridia			0.75223205121917	4.72287030836058e-05
+dd_Smed_v6_6481_0_1	dd6481	X1 Major Tissue	Protonephridia			0.438309655117448	0.00118075210502073
+dd_Smed_v6_15531_0_1	dd15531	X1 Major Tissue	Protonephridia			0.921231915783408	0.0022881381255918

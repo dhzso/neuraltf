@@ -42,6 +42,12 @@ logs/
 runs/
 projects/*/runs/
 
+# Built artifacts
+src/bioforge.egg-info/
+
+# Legacy duplicate
+neuraltf-repo/
+
 # =============================================================================
 # Docker
 # =============================================================================

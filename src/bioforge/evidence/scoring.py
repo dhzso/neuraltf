@@ -20,12 +20,14 @@ logger = get_logger("evidence.scoring")
 
 
 DEFAULT_WEIGHTS: dict[EvidenceSource, float] = {
-    EvidenceSource.EXPRESSION: 0.30,
-    EvidenceSource.SPECIFICITY: 0.15,
-    EvidenceSource.REPRODUCIBILITY: 0.25,
+    EvidenceSource.EXPRESSION: 0.20,
+    EvidenceSource.SPECIFICITY: 0.10,
+    EvidenceSource.REPRODUCIBILITY: 0.15,
     EvidenceSource.RNai: 0.15,
     EvidenceSource.CORRELATION: 0.10,
     EvidenceSource.FUNCTION: 0.05,
+    EvidenceSource.NEURAL_ENRICHED: 0.15,
+    EvidenceSource.NEURAL_SPECIFICITY: 0.10,
 }
 
 

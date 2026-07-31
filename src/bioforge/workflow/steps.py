@@ -17,7 +17,7 @@ import pandas as pd
 from bioforge.core.logging import get_logger
 from bioforge.evidence.schema import EvidenceRecord, EvidenceSource
 from bioforge.ingest import ingest_dataset
-from bioforge.omics.batch import run_harmony
+# Lazy import — batch step imports run_harmony only when called
 from bioforge.omics.cluster import run_cluster
 from bioforge.omics.normalize import run_normalize
 from bioforge.omics.qc import run_qc
@@ -61,6 +61,7 @@ def trajectory(adata: ad.AnnData, **kwargs) -> dict:
 @register("batch_correct", inputs=["adata"], outputs=["adata"],
           description="Harmony batch correction.")
 def batch_correct(adata: ad.AnnData, **kwargs) -> dict:
+    from bioforge.omics.batch import run_harmony
     return {"adata": run_harmony(adata, **kwargs)}
 
 

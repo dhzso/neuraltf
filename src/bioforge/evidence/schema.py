@@ -13,7 +13,15 @@ from typing import Optional
 
 
 class EvidenceSource(str, Enum):
-    """The six evidence streams integrated by the framework."""
+    """Evidence streams integrated by the framework.
+
+    Streams prefixed ``NEURAL_`` are thesis-specific: they encode whether
+    a TF is enriched in King-atlas neural G0 progenitor subclusters, and
+    how specific that neural enrichment is (fewer subclusters = higher
+    specificity). These streams are populated only when the pipeline
+    targets neural fate. When running the general tissue-oblivious
+    pipeline they remain absent and are silently skipped by the scorer.
+    """
 
     EXPRESSION = "expression"
     SPECIFICITY = "specificity"
@@ -21,6 +29,8 @@ class EvidenceSource(str, Enum):
     RNai = "rnai"
     CORRELATION = "correlation"
     FUNCTION = "function"
+    NEURAL_ENRICHED = "neural_enriched"
+    NEURAL_SPECIFICITY = "neural_specificity"
 
 
 class ConfidenceTier(str, Enum):
@@ -55,6 +65,7 @@ class EvidenceRecord:
     gene_name: Optional[str] = None
     scores: dict[EvidenceSource, float] = field(default_factory=dict)
     notes: dict[EvidenceSource, str] = field(default_factory=dict)
+    proof_status: Optional[str] = None
 
     def add_score(self, source: EvidenceSource, score: float, note: str = "") -> None:
         """Attach or overwrite a per-source score (clipped to [0, 1])."""

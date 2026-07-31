@@ -1,6 +1,6 @@
 # BioForge User Guide
 
-BioForge is an AI-native bioinformatics workstation built for Deepanshu's
+BioForge is an AI-native bioinformatics workstation built for mine (Deepanshu's)
 MS thesis (NeuralTF — surfacing high-priority novel neural-fate candidate
 transcription factors in planarian single-cell atlases) and reusable for
 other cross-atlas TF-prioritization projects.

@@ -5,9 +5,12 @@ candidate into a single user-facing object, then renders it as a markdown
 fragment suitable for both `runs/<ts>/ai_summary.md` and the Streamlit UI.
 
 The key thesis-facing concern (per ADR-0003) is that novel *untested*
-candidates should be surfaced separately from RNAi-validated known TFs —
-so we attach a :class:`ProofStatus` to every card. The two classes feed
+candidates should be surfaced separately from RNAi-validated known TFs
+— so we attach a :class:`ProofStatus` to every card. The two classes feed
 into the same integrated confidence tier/model.
+
+Proof status is written back to ``record.proof_status`` so downstream
+serialization (JSON, rank CSV) carries it.
 """
 from __future__ import annotations
 
@@ -71,7 +74,11 @@ def build_evidence_card(
     atlases_supported: Optional[Iterable[str]] = None,
     is_prior_fstf: bool = False,
 ) -> EvidenceCard:
-    """Construct an :class:`EvidenceCard` for a single record."""
+    """Construct an :class:`EvidenceCard` for a single record.
+
+    Writes ``proof_status.value`` back to ``record.proof_status`` so
+    downstream consumers (JSON dump, rank CSV) get it.
+    """
     s = scorer or EvidenceScorer()
     score = s.integrated_score(record)
     # Determine tier via the confidence module (single-record call).
@@ -81,6 +88,7 @@ def build_evidence_card(
         record, is_prior_fstf_below_threshold=is_prior_fstf and record.scores.get(
             EvidenceSource.RNai, 0.0) == 0.0
     )
+    record.proof_status = proof_status.value
     return EvidenceCard(
         gene_id=record.gene_id,
         gene_name=record.gene_name,

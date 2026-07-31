@@ -228,6 +228,31 @@ def run_cmd(ctx: click.Context, workflow_yaml: str, out_dir: str | None,
     click.echo(f"workflow complete: {len(outputs)} steps run; artifacts in {out_path}")
 
 
+@cli.group()
+def neuraltf() -> None:
+    """NeuralTF: planarian neural TF candidate discovery."""
+
+
+@neuraltf.command("run")
+@click.option(
+    "--out", "out_dir", type=click.Path(), default=None,
+    help="Output directory (default: projects/NeuralTF/runs/pipeline_run)",
+)
+@click.option(
+    "--subsample", type=int, default=10000,
+    help="Subsample each atlas to N cells (default: 10000, 0=no subsample)",
+)
+def neuraltf_run(out_dir: str | None, subsample: int) -> None:
+    """Run the full NeuralTF pipeline (3 atlases, 7 evidence streams)."""
+    from bioforge.projects.neuraltf.pipeline import NeuralTFPipeline
+
+    pipe = NeuralTFPipeline(
+        out_dir=Path(out_dir) if out_dir else None,
+        subsample=subsample if subsample > 0 else None,
+    )
+    pipe.run()
+
+
 def main() -> None:
     """Entry point used by the ``bioforge`` console script."""
     cli()  # pylint: disable=no-value-for-parameter

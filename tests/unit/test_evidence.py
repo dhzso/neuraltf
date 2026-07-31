@@ -147,12 +147,12 @@ def test_default_weights_sum_near_one() -> None:
 
 def test_evidence_scorer_renormalizes_missing_sources() -> None:
     r = EvidenceRecord(gene_id="x")
-    r.add_score(EvidenceSource.EXPRESSION, 1.0)  # weight 0.30
+    r.add_score(EvidenceSource.EXPRESSION, 1.0)  # weight 0.20
     r.add_score(EvidenceSource.RNai, 0.0)        # weight 0.15
     s = EvidenceScorer()
-    # Renormalized weights: 0.30+0.15 = 0.45 -> expression gets 0.30/0.45 = 2/3
-    # Integrated: 1.0 * 2/3 + 0.0 * 1/3 = 2/3
-    assert abs(s.integrated_score(r) - (0.30 / 0.45)) < 1e-9
+    # Renormalized weights: 0.20+0.15 = 0.35 -> expression gets 0.20/0.35
+    # Integrated: 1.0 * (0.20/0.35) + 0.0 = 0.5714...
+    assert abs(s.integrated_score(r) - (0.20 / 0.35)) < 1e-9
 
 
 def test_evidence_scorer_no_scores_returns_zero() -> None:
@@ -213,7 +213,6 @@ def test_assign_tiers_medium_band() -> None:
     streams = [
         (EvidenceSource.EXPRESSION, 0.5),
         (EvidenceSource.SPECIFICITY, 0.5),
-        (EvidenceSource.RNai, 0.5),
     ]
     r = _record_with_streams(streams)
     res = assign_tiers([r])
