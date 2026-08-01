@@ -5,19 +5,39 @@ than using scanpy's ``sc.external.pp.harmony_integrate``, which has a shape
 transposition bug with harmonypy 2.0 (as observed during Layer 4 validation:
 scanpy 1.11.5 wraps ``ho.Z_corr`` as ``.T``, but harmonypy 2.0 already
 returns the (cells × comps) shape, so we use it directly).
+
+harmonypy is an *optional* dependency (it requires a native BLAS build
+that is painful on a fresh Windows install). The module imports cleanly
+without it; ``run_harmony()`` raises a clear ``ImportError`` if invoked
+when harmonypy isn't installed.
 """
 
 from __future__ import annotations
 
 from typing import Optional
 
-import harmonypy
 import numpy as np
 from anndata import AnnData
 
 from bioforge.core.logging import get_logger
 
 logger = get_logger("omics.batch")
+
+
+def _import_harmonypy():
+    """Import harmonypy lazily so the module loads even when the dep is
+    absent (e.g. on a slim install)."""
+    try:
+        import harmonypy
+        return harmonypy
+    except ImportError as exc:  # pragma: no cover - exercised via runtime check
+        raise ImportError(
+            "harmonypy is required for Harmony batch correction but is not "
+            "installed. It is intentionally removed from the default [bio] "
+            "extra because its native build fails on a fresh Windows install. "
+            "Install it manually if you need batch correction:\n"
+            "  pip install harmonypy"
+        ) from exc
 
 
 def run_harmony(
@@ -63,6 +83,8 @@ def run_harmony(
         )
     if batch_key not in adata.obs:
         raise KeyError(f"batch key '{batch_key}' not found in adata.obs.")
+
+    harmonypy = _import_harmonypy()
 
     logger.info(
         "running Harmony: basis=%s batch_key=%s cells=%d comps=%d",

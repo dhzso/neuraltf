@@ -253,6 +253,68 @@ def neuraltf_run(out_dir: str | None, subsample: int) -> None:
     pipe.run()
 
 
+@cli.command()
+@click.option(
+    "--port",
+    type=int,
+    default=8501,
+    help="Port to serve the Streamlit app on (default 8501).",
+)
+@click.option(
+    "--host",
+    type=str,
+    default="localhost",
+    help="Host to bind the Streamlit server to (default localhost).",
+)
+@click.option(
+    "--browser/--no-browser",
+    "open_browser",
+    default=True,
+    help="Open the app in the default browser after launch (default yes).",
+)
+def ui(port: int, host: str, open_browser: bool) -> None:
+    """Launch the Streamlit web UI for the NeuralTF pipeline."""
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    from bioforge import __file__ as pkg_file
+
+    app_path = Path(pkg_file).parent / "ui" / "app.py"
+    if not app_path.exists():
+        click.echo(f"UI app not found at {app_path}", err=True)
+        sys.exit(1)
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "streamlit",
+        "run",
+        str(app_path),
+        "--server.port",
+        str(port),
+        "--server.address",
+        host,
+        "--server.headless",
+        "false" if open_browser else "true",
+        "--browser.gatherUsageStats",
+        "false",
+    ]
+    env = os.environ.copy()
+    env["BIOFORGE_REPO_ROOT"] = str(_repo_root())
+    click.echo(f"Launching BioForge UI at http://{host}:{port} ...")
+    click.echo("  (Ctrl+C to stop)")
+    try:
+        subprocess.run(cmd, env=env, cwd=str(_repo_root()))
+    except FileNotFoundError:
+        click.echo(
+            "Streamlit is not installed. Install with: pip install -e '.[streamlit]'",
+            err=True,
+        )
+        sys.exit(1)
+
+
 def main() -> None:
     """Entry point used by the ``bioforge`` console script."""
     cli()  # pylint: disable=no-value-for-parameter

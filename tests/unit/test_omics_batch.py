@@ -9,6 +9,17 @@ from bioforge.omics.batch import run_harmony
 from bioforge.omics.cluster import neighbors, pca
 from bioforge.omics.normalize import normalize_total_log1p
 
+_harmonypy_available = True
+try:
+    import harmonypy  # noqa: F401
+except ImportError:
+    _harmonypy_available = False
+
+needs_harmonypy = pytest.mark.skipif(
+    not _harmonypy_available,
+    reason="harmonypy not installed (optional dep — requires native BLAS build)",
+)
+
 
 def _prep_batches(n_per_batch=120, n_genes=50, seed=0):
     rng = np.random.default_rng(seed)
@@ -21,6 +32,7 @@ def _prep_batches(n_per_batch=120, n_genes=50, seed=0):
     return adata
 
 
+@needs_harmonypy
 def test_run_harmony_writes_corrected_obsm() -> None:
     adata = _prep_batches()
     with warnings.catch_warnings():
@@ -48,6 +60,7 @@ def test_run_harmony_missing_batch_key_raises() -> None:
         run_harmony(adata, batch_key="not_a_column")
 
 
+@needs_harmonypy
 def test_run_harmony_custom_basis_name() -> None:
     adata = _prep_batches()
     with warnings.catch_warnings():
@@ -58,6 +71,7 @@ def test_run_harmony_custom_basis_name() -> None:
     assert "X_harmony_custom" in adata.obsm
 
 
+@needs_harmonypy
 def test_harmony_corrected_is_finite() -> None:
     adata = _prep_batches()
     with warnings.catch_warnings():

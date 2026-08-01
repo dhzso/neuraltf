@@ -3,6 +3,10 @@
 These thin wrappers expose the standard trajectory tools used in planarian
 scRNA-seq analysis (Plass et al. 2018, King et al. 2024) while shielding
 BioForge callers from differences across scverse minor versions.
+
+scvelo and cellrank are *optional* heavy dependencies (native builds, hard
+on Windows). The module imports cleanly without them; calling the
+wrapper functions raises a clear ImportError if the dep is missing.
 """
 
 from __future__ import annotations
@@ -10,12 +14,24 @@ from __future__ import annotations
 from typing import Iterable, Optional
 
 import scanpy as sc
-import scvelo as scv
 from anndata import AnnData
 
 from bioforge.core.logging import get_logger
 
 logger = get_logger("omics.trajectory")
+
+
+def _import_scvelo():
+    try:
+        import scvelo as scv
+        return scv
+    except ImportError as exc:
+        raise ImportError(
+            "scvelo is required for RNA velocity analysis but is not installed. "
+            "It is intentionally excluded from the default [bio] extra because "
+            "its native build requirements are heavy. Install it manually if "
+            "you need it:\n  pip install scvelo"
+        ) from exc
 
 
 def paga(
@@ -51,6 +67,7 @@ def velocity(
     (typically loaded via scv.read_loom or your own loader). Lookups for
     spliced/unspliced are exactly as scVelo expects them.
     """
+    scv = _import_scvelo()
     if "spliced" not in adata.layers or "unspliced" not in adata.layers:
         raise KeyError(
             "RNA velocity requires adata.layers['spliced'] and "
@@ -75,8 +92,16 @@ def cellrank_terminal_states(
     Mutates adata with CellRank outputs (``obs['terminal_states']``,
     ``obsm['macrostates']``, etc.). Returns the AnnData for chaining.
     """
-    import cellrank as cr
-    from cellrank.kernels import VelocityKernel, ConnectivityKernel
+    try:
+        import cellrank as cr
+        from cellrank.kernels import VelocityKernel, ConnectivityKernel
+    except ImportError as exc:
+        raise ImportError(
+            "cellrank is required for terminal-state analysis but is not "
+            "installed. It is intentionally excluded from the default [bio] "
+            "extra because of its heavy native build requirements. Install "
+            "it manually if you need it:\n  pip install cellrank"
+        ) from exc
     cr.settings.verbosity = 0
 
     # Prefer velocity-based transition matrix if velocity is available

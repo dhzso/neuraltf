@@ -9,6 +9,28 @@ from bioforge.omics.cluster import neighbors, pca, leiden
 from bioforge.omics.normalize import normalize_total_log1p
 from bioforge.omics.trajectory import paga, cellrank_terminal_states
 
+_cellrank_available = True
+try:
+    import cellrank  # noqa: F401
+except ImportError:
+    _cellrank_available = False
+
+needs_cellrank = pytest.mark.skipif(
+    not _cellrank_available,
+    reason="cellrank not installed (optional dep — requires native build)",
+)
+
+_scvelo_available = True
+try:
+    import scvelo  # noqa: F401
+except ImportError:
+    _scvelo_available = False
+
+needs_scvelo = pytest.mark.skipif(
+    not _scvelo_available,
+    reason="scvelo not installed (optional dep — requires native build)",
+)
+
 
 def _prep_clustered(n_cells=200, n_genes=40, seed=0):
     rng = np.random.default_rng(seed)
@@ -43,6 +65,7 @@ def test_paga_unknown_groups_raises() -> None:
         paga(adata, groups="not_a_cluster_column")
 
 
+@needs_scvelo
 def test_velocity_without_spliced_unspliced_raises() -> None:
     from bioforge.omics.trajectory import velocity
     adata = _prep_clustered()
@@ -50,6 +73,7 @@ def test_velocity_without_spliced_unspliced_raises() -> None:
         velocity(adata)
 
 
+@needs_cellrank
 def test_cellrank_terminal_states_runs() -> None:
     """CellRank GPCCA needs an embedding + cluster_key column"""
     adata = _prep_clustered()

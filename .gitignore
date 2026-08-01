@@ -32,18 +32,39 @@ Thumbs.db
 # =============================================================================
 # Large raw/reference datasets are kept locally but not tracked in git.
 # A manifest of dataset files is maintained in datasets/MANIFEST.md.
-datasets/raw/
-datasets/reference/
-datasets/cache/
+datasets/raw/*
+!datasets/raw/.gitkeep
+datasets/reference/*
+!datasets/reference/.gitkeep
+datasets/cache/*
+!datasets/cache/.gitkeep
+
+# Processed h5ad files are built by scripts/convert_fincher.py and
+# scripts/consolidate_plass.py from raw GEO downloads — do not commit
+# (each ~25-40MB). See README.md / bioforge.md for build instructions.
+datasets/processed/*.h5ad
+!datasets/processed/.gitkeep
+
+# Local logs dir is for ad-hoc run logs (legitimate run outputs live
+# under projects/<name>/runs/), but keep the subdir itself tracked.
+logs/*
+!logs/.gitkeep
 backups/
-logs/
 
 # Workflow run artifacts are reproducible from YAML; not tracked.
 runs/
-projects/*/runs/
+projects/*/runs/*
+!projects/*/runs/.gitkeep
 
 # Built artifacts
 src/bioforge.egg-info/
+
+# Stray pipeline outputs from `python -m bioforge.projects.neuraltf.pipeline`
+# (legitimate outputs live under projects/NeuralTF/runs/)
+/evidence_cards.md
+/rank.csv
+/rank_neural.csv
+/pipeline_results.json
 
 # Legacy duplicate
 neuraltf-repo/
@@ -53,3 +74,9 @@ neuraltf-repo/
 # =============================================================================
 *.pid
 *.log
+
+# =============================================================================
+# Streamlit
+# =============================================================================
+# Allow .streamlit/config.toml to be committed (suppresses email prompt).
+.streamlit/secrets.toml
