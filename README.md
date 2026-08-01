@@ -92,7 +92,7 @@ processed h5ad files locally:
 
 **Plass (GSE109226):**
 
-1. Download from <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE109226>
+1. Download from <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633>
 2. Extract `RAW.tar` to `datasets/raw/Plass_2018/`
 3. `python scripts/consolidate_plass.py`
 
