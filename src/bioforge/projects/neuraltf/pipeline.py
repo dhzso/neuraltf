@@ -72,10 +72,15 @@ class NeuralTFPipeline:
         self.king_atlas_path = self.data_dir / "king_atlas.tsv"
 
         king_dir = self.raw_dir / "Supplementary_Data_ King_2024"
-        self.mmc4 = king_dir / "1-s2.0-S2211124724001712-mmc4.xlsx"
-        self.mmc5 = king_dir / "1-s2.0-S2211124724001712-mmc5.xlsx"
-        self.mmc6 = king_dir / "1-s2.0-S2211124724001712-mmc6.xlsx"
-        self.mmc7 = king_dir / "1-s2.0-S2211124724001712-mmc7.xlsx"
+        # Try the original Cell Reports (Elsevier) filenames first. If those
+        # aren't present, auto-discover mmc4-mmc7.xlsx by suffix (users often
+        # rename downloaded supplementary files). The discovery is deterministic
+        # — only files matching exactly `mmc4.xlsx`, `mmc5.xlsx` etc. — so
+        # accidental co-located files of the same suffix don't collide.
+        self.mmc4 = self._resolve_king_xlsx(king_dir, "mmc4")
+        self.mmc5 = self._resolve_king_xlsx(king_dir, "mmc5")
+        self.mmc6 = self._resolve_king_xlsx(king_dir, "mmc6")
+        self.mmc7 = self._resolve_king_xlsx(king_dir, "mmc7")
 
         # state
         self.tf_catalog: pd.DataFrame | None = None
@@ -86,6 +91,29 @@ class NeuralTFPipeline:
         self.tf_ids_norm: set[str] = set()
         self.all_records: dict[str, EvidenceRecord] = {}
         self.atlas_membership: dict[str, set[str]] = {}
+
+    @staticmethod
+    def _resolve_king_xlsx(king_dir: Path, mmc_name: str) -> Path:
+        """Return the path to a King mmcN xlsx by trying the original
+        Elsevier filename first, then any `<anything>mmcN.xlsx` in the
+        directory, then plain `mmcN.xlsx`. Raises FileNotFoundError only
+        when the pipeline actually tries to read the file downstream."""
+        # 1) Exact original Elsevier name
+        candidate = king_dir / f"1-s2.0-S2211124724001712-{mmc_name}.xlsx"
+        if candidate.exists():
+            return candidate
+        # 2) Glob fallbacks (sorted for deterministic behaviour)
+        if king_dir.exists():
+            for p in sorted(king_dir.iterdir()):
+                # accept "mmc4.xlsx" or "...mmc4.xlsx"
+                if p.suffix.lower() == ".xlsx" and (
+                    p.stem.lower() == mmc_name
+                    or p.stem.lower().endswith(mmc_name)
+                ):
+                    return p
+        # 3) Return the original candidate (default) so the downstream
+        # error message references the documented filename.
+        return candidate
 
     # ------------------------------------------------------------------
     # Data Loading
@@ -482,6 +510,9 @@ class NeuralTFPipeline:
             srcs = rec.supporting_streams()
             print(f"  {tier.value:<12}  {score:<6.4f}  {(rec.gene_name or rec.gene_id):<20}  {st:<20}  {srcs}")
 
+        # Build a lookup from gene_id -> tier so the CSV carries tier too.
+        tier_of = {rec.gene_id: tier.value for rec, tier, _ in tiered}
+
         rank_rows = []
         for rec in records:
             row = {
@@ -490,6 +521,7 @@ class NeuralTFPipeline:
                 "integrated_score": scorer.integrated_score(rec),
                 "n_streams": rec.supporting_streams(),
                 "proof_status": rec.proof_status or "unknown",
+                "tier": tier_of.get(rec.gene_id, "low"),
             }
             for src in EvidenceSource:
                 row[src.value] = rec.scores.get(src)

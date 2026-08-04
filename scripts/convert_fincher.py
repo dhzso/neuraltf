@@ -2,11 +2,12 @@
 """Convert Fincher 2018 DGE to a subsampled h5ad (memory-efficient).
 
 The Fincher atlas (GEO GSE111764) is provided as a single tab-separated
-`PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz` file with genes as
-rows and cells as columns. This script subsamples cells to 10,000 (random
-seed 42) and writes `datasets/processed/fincher_subsample.h5ad` so the
-NeuralTF pipeline can load it without holding the full 26.5K-cell matrix
-in memory.
+`PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz` file. The file
+contains one row per cell, with the cell name in the first column followed
+by integer counts for each gene (genes are listed in the header row, one
+per column). This script subsamples cells to 10,000 (random seed 42) and
+writes `datasets/processed/fincher_subsample.h5ad` so the NeuralTF pipeline
+can load it without holding the full 26.5K-cell matrix in memory.
 
 Usage:
     python scripts/convert_fincher.py [--cells 10000] [--seed 42]
@@ -108,7 +109,25 @@ def main() -> None:
             counts = np.fromstring(
                 "\t".join(parts[1:]), dtype=np.int32, sep="\t"
             )
-            counts = counts[:n_genes]
+            # Defend against extra columns. Many DGE files have a trailing
+            # tab, producing one extra empty trailing element. We accept an
+            # over-count of <= 1 (trailing-tab artefact: trim it) and pad
+            # an under-count; any larger mismatch raises loudly so the
+            # researcher knows the raw file orientation changed.
+            if counts.size > n_genes:
+                if counts.size == n_genes + 1:
+                    # Trailing-tab artefact: trim the extra slot (np.fromstring
+                    # would have produced 0 for the trailing empty string).
+                    counts = counts[:n_genes]
+                else:
+                    raise ValueError(
+                        f"Row {i} ({cell_name}) has {counts.size} count columns "
+                        f"but the header declared {n_genes} genes. The raw file "
+                        f"orientation may have changed."
+                    )
+            elif counts.size < n_genes:
+                # Some cells may have fewer counts (pad with zeros).
+                counts = np.pad(counts, (0, n_genes - counts.size))
             nz = np.flatnonzero(counts)
             if nz.size:
                 rows.extend([row_idx] * nz.size)

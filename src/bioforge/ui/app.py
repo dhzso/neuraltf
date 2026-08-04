@@ -26,6 +26,16 @@ def _st():
     return st
 
 
+def plt_close(fig) -> None:
+    """Close a matplotlib Figure to free its memory after Streamlit renders
+    it. Safe to call even if matplotlib isn't installed at import time."""
+    try:
+        import matplotlib.pyplot as plt
+        plt.close(fig)
+    except Exception:  # noqa: BLE001 - best-effort cleanup
+        pass
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -220,9 +230,10 @@ def render_results_page() -> None:
     cards_md = run / "evidence_cards.md"
     json_path = run / "pipeline_results.json"
 
-    # Tabbed view of the two rankings + cards + run metadata
-    tab_rank, tab_neural, tab_cards, tab_meta = st.tabs(
-        ["All candidates", "Neural-filtered", "Evidence cards", "Run metadata"]
+    # Tabbed view of the two rankings + cards + run metadata + visualizations
+    tab_rank, tab_neural, tab_cards, tab_viz, tab_meta = st.tabs(
+        ["All candidates", "Neural-filtered", "Evidence cards",
+         "Visualizations", "Run metadata"]
     )
 
     with tab_rank:
@@ -260,6 +271,12 @@ def render_results_page() -> None:
         else:
             st.warning("evidence_cards.md not found in this run.")
 
+    with tab_viz:
+        if rank_csv.exists():
+            _render_visualizations(pd.read_csv(rank_csv), run_dir=run)
+        else:
+            st.warning("rank.csv not found in this run.")
+
     with tab_meta:
         if json_path.exists():
             try:
@@ -269,6 +286,115 @@ def render_results_page() -> None:
                 st.warning(f"Could not parse {json_path.name}: {exc}")
         else:
             st.info("No pipeline_results.json in this run.")
+
+
+# ---------------------------------------------------------------------------
+# Visualizations tab — reuses the figure builders from
+# projects/NeuralTF/scripts/visualize_results.py without re-saving PNGs
+# to disk. Streamlit can render a returned matplotlib Figure directly via
+# st.pyplot(fig). The script-side wrappers (the `fig_*` functions) save
+# the same figure to disk; here we use the `make_*` builders instead.
+# ---------------------------------------------------------------------------
+
+
+def _import_visualize_results():
+    """Import visualize_results.py from projects/NeuralTF/scripts/.
+
+    The file lives outside the bioforge package (it's a project tool), so
+    we import it via importlib.util.spec_from_file_location.
+    """
+    import importlib.util
+    p = _repo_root() / "projects" / "NeuralTF" / "scripts" / "visualize_results.py"
+    if not p.exists():
+        return None
+    spec = importlib.util.spec_from_file_location("visualize_results", p)
+    if spec is None or spec.loader is None:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _render_visualizations(df, *, run_dir) -> None:
+    st = _st()
+    mod = _import_visualize_results()
+    if mod is None:
+        st.warning(
+            "Could not import `projects/NeuralTF/scripts/visualize_results.py`."
+            " Make sure it exists, or run:: `bioforge neuraltf run` followed by"
+            " `python projects/NeuralTF/scripts/visualize_results.py` as a script."
+        )
+        return
+
+    # Preserve the user's matplotlib backend so re-rendering in the browser
+    # doesn't try to spawn a Tk window.
+    import matplotlib
+    previous_backend = matplotlib.get_backend()
+    try:
+        matplotlib.use("Agg", force=True)
+        # Use Streamlit's built-in column layout: Tier + Proof on a row,
+        # then everything else full-width
+        # 1) Quick summary numbers
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Candidates", len(df))
+        if "tier" in df.columns:
+            c2.metric("HIGH tier",
+                      int((df["tier"].str.lower() == "high").sum()))
+            c3.metric("RNAi-validated",
+                      int((df.get("rnai", pd.Series([])) > 0).sum())
+                      if "rnai" in df.columns else 0)
+        st.caption(
+            "*These figures are derived solely from this run's `rank.csv` — "
+            "no hardcoded meta-data, no external lookup tables. Save PNGs via "
+            "*`python projects/NeuralTF/scripts/visualize_results.py`*."
+        )
+
+        # Build the list of figures (none is mandatory)
+        builders = [
+            ("Tier distribution", mod.make_tier_distribution, [df]),
+            ("Proof status", mod.make_proof_status, [df]),
+            ("Top 20 candidates", mod.make_top_candidates, [df]),
+            ("Score vs reproducibility", mod.make_score_vs_reproducibility, [df]),
+            ("Expression vs specificity (by tier)",
+             mod.make_expression_vs_specificity, [df]),
+            ("Evidence composition (top 15)",
+             mod.make_evidence_composition, [df],
+             {"n": 15}),
+            ("Score by proof status", mod.make_score_by_proof_status, [df]),
+            ("Stream coverage", mod.make_stream_coverage, [df]),
+            ("Per-stream neural contribution",
+             mod.make_per_stream_neural_contribution, [df]),
+            ("All vs neural-filtered (histogram)",
+             mod.make_all_vs_neural_scores, [run_dir]),
+            ("Score distributions (all streams)",
+             mod.make_score_distributions, [df]),
+            ("Evidence heatmap (top 30)",
+             mod.make_evidence_heatmap, [df],
+             {"n": 30}),
+        ]
+        # Render as a 2-column grid for compactness
+        half = (len(builders) + 1) // 2
+        left, right = st.columns(2)
+        for i, entry in enumerate(builders):
+            col = left if i % 2 == 0 else right
+            title = entry[0]
+            fn = entry[1]
+            args = entry[2]
+            kwargs = entry[3] if len(entry) > 3 else {}
+            with col:
+                st.markdown(f"**{title}**")
+                try:
+                    fig = fn(*args, **kwargs)
+                except Exception as exc:  # noqa: BLE001
+                    st.warning(f"Could not build `{title}`: {exc}")
+                    continue
+                if fig is None:
+                    st.caption("_(skipped — required columns missing)_")
+                else:
+                    st.pyplot(fig)
+                    plt_close(fig)
+    finally:
+        matplotlib.use(previous_backend, force=True)
 
 
 def _render_rank_table(df, *, key_prefix: str = "rank") -> None:
