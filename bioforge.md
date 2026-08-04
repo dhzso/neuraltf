@@ -90,7 +90,7 @@ python scripts/build_king_atlas.py \
 | Plass 2018 | GSE103633 | `GSE103633_RAW.tar` + `*contigs.fasta.bz2` |
 | King 2024 | Cell Reports | 8 supplementary xlsx: mmc2 through mmc8 |
 
-The preprocessed h5ad files in `datasets/processed/` were built from the raw DGE files using one-time conversion scripts. The h5ad files are tracked in git for reproducibility.
+The preprocessed h5ad files in `datasets/processed/` were built from the raw DGE files using one-time conversion scripts.
 
 ---
 
