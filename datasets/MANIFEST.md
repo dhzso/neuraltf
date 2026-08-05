@@ -14,9 +14,7 @@ datasets/
     GSE103633_GEO_Plass_atlas/      # Plass et al., Science 2018
     GSE111764_GEO_Fincher_atlas/    # Fincher et al., Science 2018
     Supplementary_Data_King_2024/   # King et al., Cell Reports 2024
-  reference/
-    #Papers/                        # PDFs and summary of source papers
-    Deepanshu_Master_slide.pptx     # MS thesis master slide
+  references/
 ```
 
 ## Source-accession summary
