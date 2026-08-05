@@ -25,7 +25,9 @@ from bioforge.evidence.scoring import EvidenceScorer
 from bioforge.evidence.confidence import assign_tiers
 from bioforge.evidence.cards import build_cards_for_records, render_cards_markdown
 
-DATA_ROOT = Path(r"D:\Bioinformatics")
+# Default data root: infer from current working directory (the installable
+# `__file__`-based approach is fragile on editable installs across machines).
+DATA_ROOT = Path.cwd()
 
 _RE_DD_ID = re.compile(r"(dd\d+)")
 _NEURAL_FC_THRESHOLD = 2.0
