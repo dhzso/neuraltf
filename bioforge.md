@@ -338,13 +338,3 @@ That's the complete removal. No hidden daemons or background services —
 streamlit stops on Ctrl+C. No data leaks outside the repo root.
 
 ---
-
-## 8. Reproducibility guarantees
-
-- Explicit bridge table (v4 <-> v6 <-> gene_name) — no numeric-prefix gene ID guessing
-- Deterministic random seed per step (seed=42 for subsampling, seed=0 for PCA, etc.)
-- Same code + same inputs = same output IDs and same score values
-- All 170 unit tests pass on clean install; 14 more tests get skipped when optional deps absent
-- Locked wheel file via pip (auto-resolved on install)
-
----
