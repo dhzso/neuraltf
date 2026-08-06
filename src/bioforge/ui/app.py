@@ -329,6 +329,7 @@ def _render_visualizations(df, *, run_dir) -> None:
     # Preserve the user's matplotlib backend so re-rendering in the browser
     # doesn't try to spawn a Tk window.
     import matplotlib
+    import pandas as pd
     previous_backend = matplotlib.get_backend()
     try:
         matplotlib.use("Agg", force=True)

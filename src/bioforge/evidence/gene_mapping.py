@@ -48,15 +48,17 @@ class BridgeTable:
 
     def v6_to_name(self, v6_id: str) -> Optional[str]:
         sub = self.df.loc[self.df["v6_id"] == v6_id, "gene_name"]
-        if sub.empty:
+        if sub.empty or pd.isna(sub.iloc[0]):
             return None
-        return str(sub.iloc[0])
+        name = str(sub.iloc[0]).strip()
+        return name if name and name.lower() != "nan" else None
 
     def v4_to_name(self, v4_id: str) -> Optional[str]:
         sub = self.df.loc[self.df["v4_id"] == v4_id, "gene_name"]
-        if sub.empty:
+        if sub.empty or pd.isna(sub.iloc[0]):
             return None
-        return str(sub.iloc[0])
+        name = str(sub.iloc[0]).strip()
+        return name if name and name.lower() != "nan" else None
 
     def v4_to_v6(self, v4_id: str) -> Optional[str]:
         sub = self.df.loc[self.df["v4_id"] == v4_id, "v6_id"]

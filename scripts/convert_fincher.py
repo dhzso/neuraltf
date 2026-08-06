@@ -2,12 +2,12 @@
 """Convert Fincher 2018 DGE to a subsampled h5ad (memory-efficient).
 
 The Fincher atlas (GEO GSE111764) is provided as a single tab-separated
-`PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz` file. The file
-contains one row per cell, with the cell name in the first column followed
-by integer counts for each gene (genes are listed in the header row, one
-per column). This script subsamples cells to 10,000 (random seed 42) and
-writes `datasets/processed/fincher_subsample.h5ad` so the NeuralTF pipeline
-can load it without holding the full 26.5K-cell matrix in memory.
+`PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz` file. The first line
+is the list of cell barcodes (one column per cell); every following line is
+a gene ID followed by tab-separated counts (one row per gene, columns are
+cells). This script subsamples cells to 10,000 (random seed 42) and writes
+`datasets/processed/fincher_subsample.h5ad` (cells x genes) so the NeuralTF
+pipeline can load it without holding the full 50K-cell matrix in memory.
 
 Usage:
     python scripts/convert_fincher.py [--cells 10000] [--seed 42]
@@ -68,18 +68,18 @@ def main() -> None:
     print("Reading Fincher DGE header...")
     with gzip.open(DGE, "rt") as f:
         header = f.readline().rstrip("\n").split("\t")
-    gene_ids = header[1:]
-    n_genes = len(gene_ids)
-    print(f"  Genes: {n_genes}")
+    cell_names = [c.strip('"') for c in header]
+    n_cells = len(cell_names)
+    print(f"  Cells: {n_cells}")
 
-    print("Counting cells...")
-    cell_names: list[str] = []
+    print("Counting genes...")
+    gene_ids: list[str] = []
     with gzip.open(DGE, "rt") as f:
         f.readline()
         for line in f:
-            cell_names.append(line.split("\t", 1)[0].strip('"'))
-    n_cells = len(cell_names)
-    print(f"  Cells: {n_cells}")
+            gene_ids.append(line.split("\t", 1)[0].strip('"'))
+    n_genes = len(gene_ids)
+    print(f"  Genes: {n_genes}")
 
     target = args.cells if args.cells and args.cells > 0 else n_cells
     if n_cells > target:
@@ -95,53 +95,47 @@ def main() -> None:
     rows: list[int] = []
     cols: list[int] = []
     vals: list[int] = []
-    kept_cell_names: list[str] = []
+    kept_cell_names = [cell_names[i] for i in keep_idx]
+    cell_pos = {int(c): i for i, c in enumerate(keep_idx)}
 
     with gzip.open(DGE, "rt") as f:
         f.readline()
-        for i, line in enumerate(f):
-            if i not in keep_set:
-                continue
+        for gene_idx, line in enumerate(f):
             parts = line.rstrip("\n").split("\t")
-            cell_name = parts[0].strip('"')
-            kept_cell_names.append(cell_name)
-            row_idx = len(kept_cell_names) - 1
-            counts = np.fromstring(
-                "\t".join(parts[1:]), dtype=np.int32, sep="\t"
-            )
-            # Defend against extra columns. Many DGE files have a trailing
-            # tab, producing one extra empty trailing element. We accept an
-            # over-count of <= 1 (trailing-tab artefact: trim it) and pad
-            # an under-count; any larger mismatch raises loudly so the
-            # researcher knows the raw file orientation changed.
-            if counts.size > n_genes:
-                if counts.size == n_genes + 1:
-                    # Trailing-tab artefact: trim the extra slot (np.fromstring
-                    # would have produced 0 for the trailing empty string).
-                    counts = counts[:n_genes]
+            if len(parts) < 2:
+                continue
+            counts = parts[1:]
+            if len(counts) > n_cells:
+                # Trailing-tab artefact: trim the extra slot.
+                if len(counts) == n_cells + 1:
+                    counts = counts[:n_cells]
                 else:
                     raise ValueError(
-                        f"Row {i} ({cell_name}) has {counts.size} count columns "
-                        f"but the header declared {n_genes} genes. The raw file "
-                        f"orientation may have changed."
+                        f"Gene row {gene_idx} ({gene_ids[gene_idx]}) has "
+                        f"{len(counts)} count columns but the header declared "
+                        f"{n_cells} cells. The raw file orientation may have "
+                        f"changed."
                     )
-            elif counts.size < n_genes:
-                # Some cells may have fewer counts (pad with zeros).
-                counts = np.pad(counts, (0, n_genes - counts.size))
-            nz = np.flatnonzero(counts)
-            if nz.size:
-                rows.extend([row_idx] * nz.size)
-                cols.extend(nz.tolist())
-                vals.extend(counts[nz].tolist())
+            elif len(counts) < n_cells:
+                counts = counts + [0] * (n_cells - len(counts))
+            for cell_idx, tok in enumerate(counts):
+                if cell_idx not in keep_set:
+                    continue
+                v = int(tok)
+                if v > 0:
+                    rows.append(gene_idx)
+                    cols.append(cell_pos[cell_idx])
+                    vals.append(v)
 
     print(f"  Kept cells: {len(kept_cell_names)}")
     print(f"  Non-zero entries: {len(vals)}")
 
     X = sparse.csr_matrix(
         (vals, (rows, cols)),
-        shape=(len(kept_cell_names), n_genes),
+        shape=(n_genes, len(kept_cell_names)),
         dtype=np.int32,
-    )
+    ).T
+    print(f"  Matrix shape: {X.shape} (cells x genes)")
 
     import anndata as ad
 

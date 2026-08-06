@@ -28,7 +28,7 @@ from bioforge.evidence.cards import build_cards_for_records, render_cards_markdo
 
 DATA_ROOT = Path.cwd()
 
-_RE_DD_ID = re.compile(r"(dd\d+)")
+_RE_DD_ID = re.compile(r"(dd\D*?\d+)")
 _NEURAL_FC_THRESHOLD = 2.0
 
 
@@ -196,11 +196,15 @@ class NeuralTFPipeline:
 
     @staticmethod
     def _short_id(gene_id: str) -> str | None:
-        """Extract 'dd_Smed_v6_10201_0_1' -> 'dd10201'."""
+        """Extract 'dd_Smed_v6_10201_0_1' -> 'dd10201' (or 'dd11150' -> 'dd11150')."""
         if not gene_id or not isinstance(gene_id, str):
             return None
-        m = re.search(r"(dd\d+)", gene_id)
-        return m.group(1) if m else None
+        m = _RE_DD_ID.search(gene_id)
+        if not m:
+            return None
+        raw = m.group(1)
+        digits = re.sub(r"\D+", "", raw)
+        return f"dd{digits}" if digits else None
 
     def _all_ids_for_record(self, record: EvidenceRecord) -> set[str]:
         """Collect every string someone might use to name this gene."""
@@ -338,16 +342,26 @@ class NeuralTFPipeline:
         # from King 2024: neural fate is established post-mitotically and
         # those TFs are poorly resolved in whole-animal Drop-seq at 10K
         # cells). King's G0 progenitor data provides the gold standard.
+        # king gene_name is a clean symbol (e.g. "otp", "pax6B") whereas the
+        # bridge name is the long mmc4 GenBank description; prefer King's.
+        king_name_of = {}
+        for _, nr in king.iterrows():
+            g = str(nr["gene_name"]).strip()
+            if g and g.lower() != "nan" and "transcription factor" not in g.lower():
+                king_name_of[str(nr["v6_id"])] = g
+
         for _, nr in neural_df.iterrows():
             v6_id = nr["v6_id"]
             if v6_id not in self.all_records:
-                gn = self.bridge.v6_to_name(v6_id)
+                gn = king_name_of.get(v6_id) or self.bridge.v6_to_name(v6_id)
                 self.all_records[v6_id] = EvidenceRecord(
                     gene_id=v6_id, gene_name=gn,
                 )
             self.atlas_membership.setdefault(v6_id, set()).add("king")
 
         for gene_id, rec in self.all_records.items():
+            if gene_id in king_name_of and not rec.gene_name:
+                rec.gene_name = king_name_of[gene_id]
             # Gene-level push (all of King atlas)
             hits = king[king["v6_id"] == gene_id]
             if len(hits) > 0:
@@ -438,13 +452,26 @@ class NeuralTFPipeline:
         data = self.correlations.iloc[4:].copy()
         data.columns = ["tf1", "tf2", "x1_corr", "g0_corr", "g0_cluster"]
 
+        def normalize(val) -> set[str]:
+            s = str(val).strip()
+            if not s or s.lower() == "nan":
+                return set()
+            out = {s}
+            if " (" in s:
+                out.add(s.split(" (", 1)[0].strip())
+            m = _RE_DD_ID.search(s)
+            if m:
+                out.add(f"dd{re.sub(r'\\D+', '', m.group(1))}")
+            return out
+
         matched = 0
         for rec in self.all_records.values():
             ids = self._all_ids_for_record(rec)
             if not ids:
                 continue
-            mask = data["tf1"].astype(str).str.strip().isin(ids) | \
-                   data["tf2"].astype(str).str.strip().isin(ids)
+            tf1_ok = data["tf1"].map(normalize)
+            tf2_ok = data["tf2"].map(normalize)
+            mask = tf1_ok.apply(lambda c: bool(c & ids)) | tf2_ok.apply(lambda c: bool(c & ids))
             sub = data[mask]
             if len(sub) == 0:
                 continue
