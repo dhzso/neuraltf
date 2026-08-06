@@ -92,14 +92,23 @@ processed h5ad files locally:
 
 **Plass (GSE103633):**
 
-1. Download from <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633>
-2. Extract `RAW.tar` to `datasets/raw/Plass_2018/`
+1. Download the `GSE103633_RAW.tar` supplementary file from <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633>
+2. Place it anywhere under `datasets/raw/` (e.g. `datasets/raw/GSE103633_GEO_Plass_atlas/`); the script auto-locates the tar
 3. `python scripts/consolidate_plass.py`
 
 **King 2024 supplementary (Cell Reports):**
 
 1. Download mmc4-mmc7.xlsx from the Cell Reports paper supplementary
 2. Place under `datasets/raw/Supplementary_Data_ King_2024/`
+
+**Rosetta Stone gene-ID bridge (v4↔v6):**
+
+1. Download from <https://planosphere.stowers.org/pub/analysis/rosetta/smed_20140614.mapping.rosettastone.2020/smed_20140614.mapping.rosettastone.2020.txt>
+2. Place at `datasets/raw/smed_20140614.mapping.rosettastone.2020.txt`
+3. `python scripts/build_bridge.py`
+
+The SRA records for the raw reads are Plass: SRP117156 (BioProject
+PRJNA403817) and Fincher: SRP135258 (BioProject PRJNA438083).
 
 ---
 

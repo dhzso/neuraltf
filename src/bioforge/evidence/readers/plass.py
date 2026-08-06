@@ -1,9 +1,10 @@
 """Reader for Plass et al. 2018 atlas files.
 
-The Plass atlas ships as ``GSE103633_RAW.tar`` (a tarball of per-cell
-expression files) plus the series matrix and a contigs FASTA. Gene IDs
-use **dd_Smed_v6**. The reader focus here mirrors :mod:`fincher`: a thin
-loader that exposes cells × genes data to the framework.
+The Plass atlas is deposited as ``GSE103633_RAW.tar`` (a tar of 11
+per-sample DGE files, each a genes × cells matrix), plus the series matrix
+and a contigs FASTA. Gene IDs use **dd_Smed_v6**. The reader focus here
+mirrors :mod:`fincher`: a thin loader that exposes cells × genes data to
+the framework.
 
 For the thesis we expect to pre-extract one usable matrix file; the
 reader supports either an h5ad path or a gzipped DGE-style txt.

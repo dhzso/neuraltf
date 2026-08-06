@@ -32,7 +32,7 @@ locally from raw GEO downloads:
 
 ```bash
 python scripts/convert_fincher.py      # Fincher atlas (GSE111764)
-python scripts/consolidate_plass.py    # Plass atlas (GSE109226)
+python scripts/consolidate_plass.py    # Plass atlas (GSE103633)
 ```
 
 The King 2024 supplementary xlsx files (mmc4-mmc7) must be placed under
