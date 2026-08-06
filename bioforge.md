@@ -102,12 +102,13 @@ python scripts/build_king_atlas.py \
 
 | Dataset | GEO Accession | Files needed |
 |---------|--------------|--------------|
-| Fincher 2018 | GSE111278 | `PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz` |
-| Plass 2018 | GSE109226 | `RAW.tar` extracted (per-cell DGE tar archive) |
+| Fincher 2018 | GSE111764 | `PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz` |
+| Plass 2018 | GSE103633 | `RAW.tar` (per-sample DGE tar archive, named `GSE103633_RAW.tar` on GEO) |
 | King 2024 | Cell Reports | 4 supplementary xlsx: mmc4 through mmc7 |
 
-The Plass per-cell files are consolidated in-memory by
-`scripts/consolidate_plass.py` — you only need `RAW.tar` from GEO.
+The Plass per-sample DGE files are consolidated in-memory by
+`scripts/consolidate_plass.py` — you only need `RAW.tar` from GEO (accession
+GSE103633).
 
 ---
 
