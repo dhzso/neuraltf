@@ -108,7 +108,7 @@ def render_run_page() -> None:
         )
         st.caption(
             "Sources: GEO [GSE111764](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111764) "
-            "(Fincher 2018) and [GSE109226](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE109226) "
+            "(Fincher 2018) and [GSE103633](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633) "
             "(Plass 2018)."
         )
         if not status["king_dir_exists"]:

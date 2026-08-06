@@ -199,7 +199,7 @@ pip install cellrank     # bioforge.omics.trajectory.cellrank_terminal_states
 ## Reproducibility
 
 - Atlases are independent experiments from peer-reviewed papers
-- Gene IDs are bridged via a mandatory Rosetta Stone CSV (no numeric-prefix guessing)
+- Gene IDs are bridged via a mandatory Rosetta Stone CSV
 - Subsampling uses `random_state=42` everywhere
 - AI operations use a deterministic `StubAssistant` unless an API key is configured
 - All 170 unit tests pass on a clean install; 14 more skip when optional deps absent
