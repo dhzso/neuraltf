@@ -467,9 +467,10 @@ def render_prioritization_page() -> None:
     if parquet.exists():
         ann = pd.read_parquet(parquet)
         n_genes = ann["gene_id_v6"].nunique()
-        n_seq = int((ann["kind"] == "base") & ann["contig_length"].notna())
+        n_seq = int(((ann["kind"] == "base") & ann["contig_length"].notna()).sum())
         m2.metric("PlanMine annotated genes", n_genes)
         m3.metric("Sequences (FASTA)", "yes" if fasta.exists() else "no")
+        m4.metric("Sequences in parquet", n_seq)
     else:
         m2.metric("PlanMine annotated genes", 0)
         m3.metric("Sequences (FASTA)", "no")
