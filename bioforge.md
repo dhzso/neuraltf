@@ -23,6 +23,7 @@ pip install -e ".[bio,streamlit]"
 python -c "from bioforge import *; print('BioForge OK')"
 
 python -m pytest tests/unit/test_evidence.py tests/unit/test_evidence_cards.py -v -q
+python -m pytest tests/unit/test_neuraltf_prioritize.py -q   # planmine+prioritize logic
 ```
 
 ### 1.3 Build datasets from raw GEO downloads
@@ -55,18 +56,70 @@ This runs the full pipeline and writes results:
 | `evidence_cards.md` | Per-candidate markdown evidence summary |
 | `pipeline_results.json` | Machine-readable top 50 with tier metadata |
 
-### 1.5 Launch the Streamlit UI
+### 1.5 Prioritize RNAi targets (post-run: PlanMine annotation + dual-track top-10)
+
+After a successful run, two scripts turn the ranked candidates into a wet-lab
+shortlist:
+
+```bash
+python scripts/query_planmine.py             # 1. PlanMine annotations (needs internet)
+python scripts/prioritize_neural_tfs.py      # 2. dual-track top-10 -> results/
+```
+
+**Step 1 — `scripts/query_planmine.py`**: queries the PlanMine InterMine API
+(`https://planmine.mpibpc.mpg.de/planmine/service`) for every `dd_Smed_v6_*`
+candidate in `rank_neural.csv` and writes:
+
+| File | Content |
+|------|---------|
+| `datasets/processed/planmine_annotations.parquet` | Long-format rows: GO terms, protein domains (PFAM/InterPro), cross-species BLAST hits |
+| `datasets/processed/planmine_transcripts.fasta` | Transcript sequence per candidate (dsRNA/FISH design) |
+
+The client (`src/bioforge/projects/neuraltf/planmine.py`) handles retries,
+rate limiting (~0.25 s/request) and logs 400 responses. `dd_Smed_v6_*` IDs are
+*Contig* (Transcript subclass) records in PlanMine, so one query per gene per
+annotation type is used — unauthenticated InterMine IN-constraints fail past
+~400 items, per-contig queries stay well under that. Both outputs are
+committed, so **step 2 runs offline** against the cached artifacts.
+Smoke-test with `--limit 5`; use `--out`/`--fasta` to redirect outputs.
+
+**Step 2 — `scripts/prioritize_neural_tfs.py`**: pure scoring logic in
+`src/bioforge/projects/neuraltf/prioritize.py`:
+
+- merges the mmc4 TF catalog (name/ortholog/TF flag) with PlanMine annotations;
+- maps v4 aliases via `projects/NeuralTF/data/bridge.csv`, tagging
+  `unique` / `ambiguous` (multi-hit rows get a blank v4 ID — no guessing) /
+  `unmapped`;
+- additive composite bonuses, each category counted once, capped at 1.0:
+  DNA-binding TF domain `+0.05`, neural GO `+0.03`, TF GO `+0.02`, human
+  ortholog `+0.02`, RNAi-validated `+0.02`;
+- **Track A** = top-5 RNAi-validated targets; **Track B** = top-5 novel
+  targets passing a TF-identity gate (PlanMine DNA-binding-domain hit or mmc4 TF flag — no hypothetical factors without a domain);
+- cross-stage dynamics: Plass X1 neoblast mean vs G0 progenitor log2FC
+  (needs `plass_v6.h5ad`; add `--skip-x1` to omit).
+
+Outputs (committed):
+
+| File | Content |
+|------|---------|
+| `projects/NeuralTF/results/top10_neural_tfs_prioritized.csv` | 5 Track A + 5 Track B rows incl. all bonus/dynamic columns |
+| `projects/NeuralTF/results/candidate_summary_report.md` | Per-candidate evidence + wet-lab suggestion (dsRNA/FISH nt range) |
+
+Only step 1 needs internet. The `mmc4`/`mmc5` xlsx under
+`datasets/raw/Supplementary_Data_ King_2024/` are auto-discovered (see 2.2).
+
+### 1.6 Launch the Streamlit UI
 
 ```bash
 bioforge ui [--port 8501] [--host localhost]
 ```
 
-Opens http://localhost:8501. The Run page shows dataset status and runs
-the pipeline with live progress; the Results page tabs the CSVs and has a
-full Visualization panel with 12 matplotlib figures; the Assistant page
-provides an AI chatbot (see section on AI below).
+Opens http://localhost:8501. Pages: **Run** (dataset status + live pipeline
+run), **Results** (rank CSVs + full Visualization panel with 12 figures),
+**Prioritization** (coverage metrics + Track A/B tables + the full markdown
+report), **Assistant** (AI chatbot, see next section).
 
-### 1.6 Generate publication figures (as PNG)
+### 1.7 Generate publication figures (as PNG)
 
 ```bash
 python projects/NeuralTF/scripts/visualize_results.py
@@ -79,7 +132,9 @@ Outputs 12 PNGs to `projects/NeuralTF/figures/`.
 ## 2. Building data from raw sources
 
 The two h5ad files and the King atlas TSV are **prebuilt and committed**.
-Rebuild them only if the upstream raw data changes.
+Rebuild them only if the upstream raw data changes. The PlanMine
+annotation files are also committed as build artifacts; offline use only needs
+a re-run, not a re-query (see 2.4).
 
 ### 2.1 Bridge CSV (v4 <-> v6 gene IDs)
 
@@ -109,6 +164,19 @@ python scripts/build_king_atlas.py \
 The Plass per-sample DGE files are consolidated in-memory by
 `scripts/consolidate_plass.py` — you only need `RAW.tar` from GEO (accession
 GSE103633).
+
+### 2.4 PlanMine annotations (online, cached)
+
+No download needed — fetched live from the PlanMine API and then committed:
+
+```bash
+python scripts/query_planmine.py          # full run (96 candidates, ~1-2 min)
+python scripts/query_planmine.py --limit 5   # smoke test (no rate concerns)
+```
+
+Feel free to re-run any time; it only refreshes the two committed files:
+`datasets/processed/planmine_annotations.parquet` and
+`datasets/processed/planmine_transcripts.fasta`.
 
 ---
 
@@ -174,8 +242,8 @@ Layer 7     Workflow: YAML-engine with step registry + provenance
 Layer 8A    Omics: QC, normalize, cluster, trajectory, batch-correction
 Layer 8B    Evidence: schema, scoring, cards, gene_mapping, bridge
 Layer 8C    Ingest: auto-detect and load h5ad, DGE, TSV, 10X-mtx
-Layer 9     NeuralTF: pipeline.py
-Layer 10    UI: Streamlit app (Run / Results / Assistant)
+Layer 9     NeuralTF: pipeline.py + planmine.py + prioritize.py
+Layer 10    UI: Streamlit app (Run / Results / Prioritization / Assistant)
 ```
 
 ### 4.2 Evidence Integration Framework (8B)
@@ -214,6 +282,24 @@ NeuralTFPipeline.run()
   7. integrate_correlations()              -> correlate G0/X1 TF-pairs from mmc6
   8. assign_reproducibility()              -> n_atlases_supporting / 3
   9. write_outputs()                       -> CSV + JSON + cards + terminal panel
+```
+
+### 4.4 Prioritization call sequence
+
+```
+scripts/query_planmine.py                    (network, one-off; cached artifacts committed)
+  1. load_candidates(rank_neural.csv)        -> [gene_id, gene_name]
+  2. PlanMineClient.fetch_contig_annotations -> GO / domains / BLAST / sequence
+  3. write parquet (long rows) + FASTA
+
+scripts/prioritize_neural_tfs.py
+  1. prepare_candidates(rank, mmc4)          -> name/ortholog/TF flag merged
+  2. merge_annotations(parquet)              -> PlanMine wins over defaults
+  3. map_v4(bridge)                          -> unique / ambiguous / unmapped
+  4. compute_composite()                     -> additive bonuses, cap 1.0
+  5. assign_tracks()                         -> Track A (RNAi top-5) / B (novel top-5)
+  6. X1 vs G0 dynamics (Plass; --skip-x1)    -> cross-stage log2FC + X1 means
+  7. write top10 CSV + summary report MD
 ```
 
 ---
@@ -290,17 +376,21 @@ Make sure raw downloads are in `datasets/raw/` (see section 2).
 | `pyproject.toml` | Package config, deps, CLI entry points |
 | `src/bioforge/evidence/` | Scoring engine (8 streams), confidence, cards |
 | `src/bioforge/projects/neuraltf/pipeline.py` | Main pipeline |
+| `src/bioforge/projects/neuraltf/planmine.py` | PlanMine InterMine client + DBD/GO classifiers |
+| `src/bioforge/projects/neuraltf/prioritize.py` | Dual-track scoring, mapping, track assignment |
 | `src/bioforge/cli/`     | CLI commands (neuraltf, ui, info, run, etc.) |
 | `src/bioforge/ui/` | Streamlit app |
 | `src/bioforge/ai/` | AI assistant providers |
 | `src/bioforge/omics/` | ScRNA-seq operations (QC, normalize, leiden, harmony, etc.) |
 | `src/bioforge/workflow/` | Declarative YAML workflow engine |
-| `scripts/` | Utility scripts: build_bridge.py, convert_fincher.py, etc. |
+| `scripts/` | Utility scripts: build_bridge.py, convert_fincher.py, query_planmine.py, prioritize_neural_tfs.py, etc. |
 | `projects/NeuralTF/data/` | bridge.csv, king_atlas.tsv (committed) |
-| `projects/NeuralTF/figures/` | 12viz figures (committed) |
+| `projects/NeuralTF/results/` | top10_neural_tfs_prioritized.csv + candidate_summary_report.md (committed) |
+| `datasets/processed/` | h5ad (gitignored) + planmine_annotations.parquet / planmine_transcripts.fasta (committed) |
+| `projects/NeuralTF/figures/` | 12 visualization figures (committed) |
 | `projects/NeuralTF/runs/` | Pipeline output dirs (not committed) |
 | `projects/NeuralTF/scripts/visualize_results.py` | Figure generator |
-| `tests/` | Test suite (170 passing, 14 skipped when optional deps absent) |
+| `tests/` | Test suite (195 passing, 14 skipped when optional deps absent) |
 | `datasets/` | Raw + processed data (not committed) |
 | `.streamlit/config.toml` | No-email config for Streamlit |
 

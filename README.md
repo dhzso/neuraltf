@@ -25,9 +25,13 @@ python scripts/consolidate_plass.py
 # 3. Run the pipeline (CLI or Streamlit UI)
 bioforge neuraltf run                        # CLI - fastest, no UI
 bioforge ui                                  # Streamlit UI - http://localhost:8501
+
+# 4. Annotate + prioritize RNAi targets (after 3)
+python scripts/query_planmine.py             # PlanMine GO/domains/homology (needs internet)
+python scripts/prioritize_neural_tfs.py      # dual-track top-10 -> projects/NeuralTF/results/
 ```
 
-Outputs are written to `projects/NeuralTF/runs/pipeline_run/`:
+Pipeline outputs are written to `projects/NeuralTF/runs/pipeline_run/`:
 
 | File | Content |
 |------|---------|
@@ -35,6 +39,20 @@ Outputs are written to `projects/NeuralTF/runs/pipeline_run/`:
 | `rank.csv`              | All 160+ candidates |
 | `evidence_cards.md`     | Per-candidate evidence summary |
 | `pipeline_results.json` | Machine-readable top 50 |
+
+### Prioritization outputs (RNAi shortlist)
+
+Run after the pipeline (step 4 above). Committed to `projects/NeuralTF/results/`:
+
+| File | Content |
+|------|---------|
+| `top10_neural_tfs_prioritized.csv` | 5 Track A + 5 Track B shortlist |
+| `candidate_summary_report.md`      | Per-candidate evidence + wet-lab suggestion |
+
+Supporting data committed to `datasets/processed/`:
+`planmine_annotations.parquet` (long-format GO/domain/BLAST rows) and
+`planmine_transcripts.fasta` (transcript sequences, one record per candidate
+that has one). Both are outputs of `scripts/query_planmine.py`.
 
 ---
 
@@ -75,6 +93,47 @@ scores them on 8 evidence streams, then filters for neural-fate specificity.
 - `known_rnai_validated` — already tested by King et al. via RNAi
 - `novel_candidate` — not yet tested — priority for new experiments
 - `prior_fstf_not_tested` — known FSTFs from literature without RNAi data
+
+---
+
+## Dual-track prioritization (top-10 RNAi shortlist)
+
+After the pipeline ranks ~96 neural-enriched candidates, two scripts turn that
+rank list into a concrete wet-lab shortlist:
+
+```bash
+python scripts/query_planmine.py          # 1. Fetch annotations from PlanMine
+python scripts/prioritize_neural_tfs.py   # 2. Score + split into tracks
+```
+
+**Step 1 — PlanMine annotation** (`scripts/query_planmine.py`) queries the
+PlanMine InterMine API for every `dd_Smed_v6_*` candidate and stores GO terms,
+protein domains (PFAM/InterPro), cross-species BLAST hits and the transcript
+sequence in `datasets/processed/planmine_annotations.parquet` +
+`planmine_transcripts.fasta`. Internal implementation:
+`src/bioforge/projects/neuraltf/planmine.py`. Requires internet access to
+`planmine.mpibpc.mpg.de` (the committed parquet/FASTA are cached, so the
+prioritization step works offline).
+
+**Step 2 — transparent dual-track scoring** (`scripts/prioritize_neural_tfs.py`):
+
+- merges the mmc4 TF catalog (gene symbol, human ortholog, known-TF flag) and
+  the PlanMine annotations onto the 96 candidates;
+- maps each gene to its v4 alias via `projects/NeuralTF/data/bridge.csv`,
+  flagging `unique` / `ambiguous` mappings (no numeric-ID guessing);
+- applies small, additive, documented bonuses: TF domain `+0.05`, neural GO
+  `+0.03`, TF GO `+0.02`, human ortholog `+0.02`, RNAi-validated `+0.02`
+  (capped at 1.0, each category counted once);
+- **Track A** = top 5 RNAi-validated candidates; **Track B** = top-5 novel
+  candidates that pass a *tangible TF identity* filter (a DNA-binding-domain
+  hit in PlanMine or an mmc4 TF flag — no hypothetical factors without a
+  domain);
+- appends cross-stage dynamics: Plass X1 neoblast mean vs G0 progenitor
+  log2FC (requires `plass_v6.h5ad`; add `--skip-x1` to omit).
+
+Scoring rules live in `src/bioforge/projects/neuraltf/prioritize.py`, which is
+pure and unit-tested. The Streamlit UI shows the same tables under the
+**Prioritization** page (`http://localhost:8501`).
 
 ---
 
@@ -130,6 +189,8 @@ Bioinformatics/
 │   │   ├── gene_mapping.py                   v4<->v6 bridge table
 │   │   └── readers/                          Atlas dataset readers
 │   ├── projects/neuraltf/pipeline.py         Main pipeline (NeuralTFPipeline)
+│   │   ├── planmine.py                       PlanMine InterMine REST client + classifiers
+│   │   └── prioritize.py                     Dual-track scoring (pure, unit-tested)
 │   ├── omics/                                scRNA-seq operations
 │   ├── workflow/                             YAML workflow engine
 │   ├── ai/                                   AI assistant layer
@@ -138,7 +199,8 @@ Bioinformatics/
 │   └── core/                                 Config, datasets, logging, plugins
 │
 ├── datasets/
-│   ├── processed/                            Built h5ad files (gitignored)
+│   ├── processed/                            Built h5ad files (gitignored) +
+│   │                                        planmine_annotations.parquet, .fasta (committed)
 │   ├── raw/                                  Raw GEO downloads (gitignored)
 │   └── reference/                            Reference tables (gitignored)
 │
@@ -148,6 +210,7 @@ Bioinformatics/
 │   │   └── king_atlas.tsv                    Prebuilt G0 enrichment data
 │   ├── scripts/visualize_results.py          Generate published figures
 │   ├── figures/                              12 generated PNGs
+│   ├── results/                              top10_neural_tfs_prioritized.csv + summary report
 │   └── runs/                                 Pipeline output directory
 │
 ├── scripts/                                   Utility scripts
@@ -156,9 +219,11 @@ Bioinformatics/
 │   ├── build_bridge.py                        Rebuild bridge.csv
 │   ├── build_king_atlas.py                    Rebuild king_atlas.tsv from mmc7
 │   ├── audit_king_atlas.py                    Diagnostic: King atlas stats
+│   ├── query_planmine.py                      Fetch PlanMine annotation/FASTA for candidates
+│   ├── prioritize_neural_tfs.py               Build dual-track top-10 shortlist
 │   └── run.py                                Pipeline runner (alternate entry)
 │
-├── tests/                                     Test suite (170 tests passing)
+├── tests/                                     Test suite (195 tests passing)
 └── docs/                                      Architecture decisions
 ```
 
@@ -173,6 +238,7 @@ bioforge --help
 # Main commands
 bioforge neuraltf run [--subsample N] [--out DIR]   Run the NeuralTF pipeline
 bioforge ui [--port 8501] [--host localhost]       Launch the Streamlit UI
+    (pages: Run / Results / Prioritization / Assistant)
 
 # Supporting commands (kept for advanced use)
 bioforge info                                      Show build + config
@@ -211,7 +277,7 @@ pip install cellrank     # bioforge.omics.trajectory.cellrank_terminal_states
 - Gene IDs are bridged via a mandatory Rosetta Stone CSV
 - Subsampling uses `random_state=42` everywhere
 - AI operations use a deterministic `StubAssistant` unless an API key is configured
-- All 170 unit tests pass on a clean install; 14 more skip when optional deps absent
+- All 195 unit tests pass on a clean install; 14 more skip when optional deps absent
 
 ## License
 
