@@ -25,7 +25,7 @@ from scipy import sparse
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RAW = REPO_ROOT / "datasets" / "raw"
-TAR = RAW / "Plass_2018" / "RAW.tar"
+TAR = RAW / "GSE103633_GEO_Plass_atlas" / "RAW.tar"
 OUT_DIR = REPO_ROOT / "datasets" / "processed"
 
 
