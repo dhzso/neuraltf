@@ -104,18 +104,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-<<<<<<< HEAD
     tar_path = resolve_plass_tar()
     print(f"Using Plass tar: {tar_path}")
-=======
-    if not TAR.exists():
-        raise SystemExit(
-            f"Plass RAW.tar not found at:\n  {TAR}\n\n"
-            "Download from GEO (accession GSE103633):\n"
-            "  https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633\n"
-            f"and place RAW.tar at:\n  {TAR.parent}"
-        )
->>>>>>> c58eb11a279c895dcf0a9e808c8332b35d0e08d6
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
 
