@@ -131,8 +131,7 @@ prioritization step works offline).
 - appends cross-stage dynamics: Plass X1 neoblast mean vs G0 progenitor
   log2FC (requires `plass_v6.h5ad`; add `--skip-x1` to omit).
 
-Scoring rules live in `src/bioforge/projects/neuraltf/prioritize.py`, which is
-pure and unit-tested. The Streamlit UI shows the same tables under the
+Scoring rules live in `src/bioforge/projects/neuraltf/prioritize.py`, which are unit-tested. The Streamlit UI shows the same tables under the
 **Prioritization** page (`http://localhost:8501`).
 
 ---
