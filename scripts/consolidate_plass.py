@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Consolidate Plass 2018 per-cell DGE files into one subsampled h5ad.
 
-The Plass atlas (GEO GSE109226) is provided as a tar archive of one
+The Plass atlas (GEO GSE103633) is provided as a tar archive of one
 `<cell_name>.dge.txt.gz` file per cell (rows = gene ids, single count
 column). This script streams the tar, builds a single cells x genes
 sparse matrix, subsamples to 10,000 cells (random seed 42) and writes
@@ -11,7 +11,7 @@ Usage:
     python scripts/consolidate_plass.py [--cells 10000] [--seed 42]
 
 If the raw tar is not present, prints a clear message about how to download
-it from GEO (accession GSE109226).
+it from GEO (accession GSE103633).
 """
 from __future__ import annotations
 
@@ -53,8 +53,8 @@ def main() -> None:
     if not TAR.exists():
         raise SystemExit(
             f"Plass RAW.tar not found at:\n  {TAR}\n\n"
-            "Download from GEO (accession GSE109226):\n"
-            "  https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE109226\n"
+            "Download from GEO (accession GSE103633):\n"
+            "  https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633\n"
             f"and place RAW.tar at:\n  {TAR.parent}"
         )
 
@@ -111,7 +111,7 @@ def main() -> None:
     adata.var_names = gene_list
     adata.obs_names = cell_names
     adata.var["gene_id"] = gene_list
-    adata.uns["source"] = "GSE109226 (Plass 2018)"
+    adata.uns["source"] = "GSE103633 (Plass 2018)"
 
     target = args.cells if args.cells and args.cells > 0 else adata.n_obs
     if adata.n_obs > target:
