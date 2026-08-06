@@ -1,12 +1,14 @@
 """Streamlit app for the NeuralTF pipeline.
 
-Three pages:
-  - **Run**     : one-click execution of `NeuralTFPipeline` with live progress
-                  and parameters (subsample size, output directory).
-  - **Results** : browse `rank.csv` / `rank_neural.csv` from any run, filter
-                  by tier, search by gene, and read the markdown evidence
-                  cards.
-  - **Assistant**: chat with the AI assistant (StubAssistant when no API
+Four pages:
+  - **Run**          : one-click execution of `NeuralTFPipeline` with live
+                       progress and parameters (subsample size, output dir).
+  - **Results**      : browse `rank.csv` / `rank_neural.csv` from any run,
+                  filter by tier, search by gene, and read the markdown
+                  evidence cards.
+  - **Prioritization** : dual-track shortlist (`top10_neural_tfs_prioritized.csv`)
+                  + `candidate_summary_report.md`.
+  - **Assistant**   : chat with the AI assistant (StubAssistant when no API
                   key is configured) for follow-up queries about candidates.
 
 The app is importable without streamlit installed (the `_st()` indirection
@@ -431,6 +433,59 @@ def _render_rank_table(df, *, key_prefix: str = "rank") -> None:
         st.dataframe(df, use_container_width=True)
 
 
+def render_prioritization_page() -> None:
+    """Show the dual-track shortlist (top10 CSV) + summary report."""
+    st = _st()
+    import pandas as pd
+    root = _repo_root()
+    res = root / "projects" / "NeuralTF" / "results"
+    csv_path = res / "top10_neural_tfs_prioritized.csv"
+    md_path = res / "candidate_summary_report.md"
+
+    st.subheader("Prioritized neural-fate TF shortlist")
+    if not csv_path.exists():
+        st.warning(
+            "No shortlist yet. Run:\n"
+            "```\n"
+            "python scripts/query_planmine.py\n"
+            "python scripts/prioritize_neural_tfs.py\n"
+            "```"
+        )
+        return
+
+    df = pd.read_csv(csv_path)
+    st.caption(
+        f"`{csv_path.relative_to(root)}` — {len(df)} TFs "
+        "(5 Track A RNAi-validated + 5 Track B novel)"
+    )
+
+    # PlanMine coverage metrics
+    parquet = root / "datasets" / "processed" / "planmine_annotations.parquet"
+    fasta = root / "datasets" / "processed" / "planmine_transcripts.fasta"
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Shortlisted TFs", len(df))
+    if parquet.exists():
+        ann = pd.read_parquet(parquet)
+        n_genes = ann["gene_id_v6"].nunique()
+        n_seq = int((ann["kind"] == "base") & ann["contig_length"].notna())
+        m2.metric("PlanMine annotated genes", n_genes)
+        m3.metric("Sequences (FASTA)", "yes" if fasta.exists() else "no")
+    else:
+        m2.metric("PlanMine annotated genes", 0)
+        m3.metric("Sequences (FASTA)", "no")
+
+    ta = df[df["track"] == "A"]
+    tb = df[df["track"] == "B"]
+    st.markdown("**Track A — RNAi-validated benchmark TFs**")
+    st.dataframe(ta, use_container_width=True, hide_index=True)
+    st.markdown("**Track B — novel candidates for RNAi validation**")
+    st.dataframe(tb, use_container_width=True, hide_index=True)
+
+    if md_path.exists():
+        with st.expander("Candidate summary report (Markdown)", expanded=True):
+            st.markdown(md_path.read_text(encoding="utf-8"))
+
+
 def render_assistant_page() -> None:
     st = _st()
     st.subheader("AI Assistant")
@@ -498,11 +553,13 @@ def main() -> None:
         "Planarian neural-fate-specific transcription factor candidate "
         "discovery (3 atlases, 8 evidence streams)."
     )
-    page = st.sidebar.selectbox("Page", ["Run", "Results", "Assistant"])
+    page = st.sidebar.selectbox("Page", ["Run", "Results", "Prioritization", "Assistant"])
     if page == "Run":
         render_run_page()
     elif page == "Results":
         render_results_page()
+    elif page == "Prioritization":
+        render_prioritization_page()
     else:
         render_assistant_page()
 

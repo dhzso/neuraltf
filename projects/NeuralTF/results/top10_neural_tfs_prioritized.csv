@@ -1,0 +1,11 @@
+gene_id_v6,gene_id_v4,gene_name,track,rank,composite_score,proof_status,interpro_domains,human_ortholog,rnai_phenotype_notes
+dd_Smed_v6_19890_0_1,dd_Smed_v4_19890_0_1,dd19890,A,1,0.937,known_rnai_validated,TF_T-box; TF_T-box_CS; p53-like_TF_DNA-bd,T-box transcription factor TBX20 isoform 1 [Homo sapiens],"RNAi-validated (King 2024, mmc5)"
+dd_Smed_v6_2946_0_1,dd_Smed_v4_2946_0_1,dd2946,A,2,0.9226,known_rnai_validated,Znf_C2H2; Znf_C2H2-like; Znf_C2H2/integrase_DNA-bd,zinc finger protein Aiolos isoform 3 [Homo sapiens],"RNAi-validated (King 2024, mmc5)"
+dd_Smed_v6_26877_0_1,dd_Smed_v4_26877_0_1,dd26877,A,3,0.9211,known_rnai_validated,bHLH_dom,protein atonal homolog 1 [Homo sapiens],"RNAi-validated (King 2024, mmc5)"
+dd_Smed_v6_14115_0_1,dd_Smed_v4_14115_0_1,dd14115,A,4,0.9183,known_rnai_validated,Homeobox_CS; Homeobox_dom; Homeodomain-like; Znf_LIM,LIM homeobox transcription factor 1-alpha isoform X2 [Homo sapiens],"RNAi-validated (King 2024, mmc5)"
+dd_Smed_v6_38342_0_1,dd_Smed_v4_38342_0_1,dd38342,A,5,0.905,known_rnai_validated,Homeobox_CS; Homeobox_dom; Homeodomain-like; Lambda_DNA-bd_dom; POU; POU_specific,"POU domain, class 3, transcription factor 4 [Homo sapiens]","RNAi-validated (King 2024, mmc5)"
+dd_Smed_v6_31217_0_1,dd_Smed_v4_31217_0_1,dd31217,B,1,0.7973,novel_candidate,bHLH_dom,helix-loop-helix protein 1 [Homo sapiens],Not RNAi-tested in King 2024 mmc5; novel neural-fate candidate
+dd_Smed_v6_12170_0_1,dd_Smed_v4_12170_0_1,dd12170,B,2,0.7355,novel_candidate,TF_fork_head; TF_fork_head_CS; WHTH_DNA-bd_dom,forkhead box protein J2 [Homo sapiens],Not RNAi-tested in King 2024 mmc5; novel neural-fate candidate
+dd_Smed_v6_11930_0_1,dd_Smed_v4_11930_0_1,dd11930,B,3,0.7313,novel_candidate,Znf_C2H2; Znf_C2H2-like,,Not RNAi-tested in King 2024 mmc5; novel neural-fate candidate
+dd_Smed_v6_15253_0_1,dd_Smed_v4_15253_0_1,pitx,B,4,0.7119,novel_candidate,Homeobox_CS; Homeobox_dom; Homeodomain-like,pituitary homeobox 3 [Homo sapiens],Not RNAi-tested in King 2024 mmc5; novel neural-fate candidate
+dd_Smed_v6_14753_0_1,dd_Smed_v4_14753_0_1,ascl-2,B,5,0.709,novel_candidate,ASH; bHLH_dom,achaete-scute homolog 3 [Homo sapiens],Not RNAi-tested in King 2024 mmc5; novel neural-fate candidate
