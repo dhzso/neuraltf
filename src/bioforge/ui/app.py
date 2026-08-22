@@ -899,7 +899,7 @@ def _render_rank_table(df, *, key_prefix: str = "rank") -> None:
 
 
 def render_prioritization_page() -> None:
-    """Show the dual-track shortlist from Dirichlet-centered prioritization."""
+    """Show the dual-track shortlist from all three methods as tabs."""
     st = _st()
     import pandas as pd
     root = _repo_root()
@@ -907,58 +907,78 @@ def render_prioritization_page() -> None:
 
     st.subheader("Prioritized neural-fate TF shortlist")
 
-    # Try Dirichlet-centered first, fall back to fixed-weight
-    csv_path = res / "dirichlet_top10_prioritized.csv"
-    md_path = res / "dirichlet_candidate_summary_report.md"
-    method_label = "Dirichlet-centered (k=40)"
+    tab_fixed, tab_centered, tab_uniform = st.tabs([
+        "Fixed-weight (baseline)",
+        "Dirichlet-centered (k=40)",
+        "Dirichlet-uniform (alpha=1)",
+    ])
 
-    if not csv_path.exists():
-        csv_path = res / "top10_neural_tfs_prioritized.csv"
-        md_path = res / "candidate_summary_report.md"
-        method_label = "fixed-weight (legacy)"
+    # --- Fixed-weight tab ---------------------------------------------------
+    with tab_fixed:
+        csv_fixed = res / "top10_neural_tfs_prioritized.csv"
+        if csv_fixed.exists():
+            df = pd.read_csv(csv_fixed)
+            st.caption(f"{len(df)} TFs (5A + 5B) — fixed-weight baseline")
+            ta = df[df["track"] == "A"]
+            tb = df[df["track"] == "B"]
+            st.markdown("**Track A — RNAi-validated**")
+            st.dataframe(ta, use_container_width=True, hide_index=True)
+            st.markdown("**Track B — novel candidates**")
+            st.dataframe(tb, use_container_width=True, hide_index=True)
+        else:
+            st.info("Not generated yet. Run `python scripts/prioritize_neural_tfs.py`.")
 
-    if not csv_path.exists():
-        st.warning(
-            "No shortlist yet. Run:\n"
-            "```\n"
-            "python scripts/generate_all.py\n"
-            "```"
-        )
-        return
+    # --- Dirichlet-centered tab ---------------------------------------------
+    with tab_centered:
+        csv_centered = res / "dirichlet_top10_prioritized.csv"
+        overall_centered = res / "dirichlet_overall_top10.csv"
+        report_md = res / "dirichlet_candidate_summary_report.md"
 
-    df = pd.read_csv(csv_path)
-    st.caption(
-        f"`{csv_path.relative_to(root)}` — {len(df)} TFs "
-        f"(5 Track A RNAi-validated + 5 Track B novel) — "
-        f"**{method_label}**"
-    )
+        if csv_centered.exists():
+            df = pd.read_csv(csv_centered)
+            st.caption(f"{len(df)} TFs (5A + 5B) — Dirichlet-centered (k=40)")
+            ta = df[df["track"] == "A"]
+            tb = df[df["track"] == "B"]
+            st.markdown("**Track A — RNAi-validated**")
+            st.dataframe(ta, use_container_width=True, hide_index=True)
+            st.markdown("**Track B — novel candidates**")
+            st.dataframe(tb, use_container_width=True, hide_index=True)
+        else:
+            st.info("Not generated yet. Run `python projects/NeuralTF/scripts/dirichlet_prioritize.py`.")
 
-    # PlanMine coverage metrics
-    parquet = root / "datasets" / "processed" / "planmine_annotations.parquet"
-    fasta = root / "datasets" / "processed" / "planmine_transcripts.fasta"
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Shortlisted TFs", len(df))
-    if parquet.exists():
-        ann = pd.read_parquet(parquet)
-        n_genes = ann["gene_id_v6"].nunique()
-        n_seq = int(((ann["kind"] == "base") & ann["contig_length"].notna()).sum())
-        m2.metric("PlanMine annotated genes", n_genes)
-        m3.metric("Sequences (FASTA)", "yes" if fasta.exists() else "no")
-        m4.metric("Sequences in parquet", n_seq)
-    else:
-        m2.metric("PlanMine annotated genes", 0)
-        m3.metric("Sequences (FASTA)", "no")
+        if overall_centered.exists():
+            with st.expander("Overall top-10 by Dirichlet median score"):
+                st.dataframe(pd.read_csv(overall_centered), use_container_width=True, hide_index=True)
 
-    ta = df[df["track"] == "A"]
-    tb = df[df["track"] == "B"]
-    st.markdown("**Track A — RNAi-validated benchmark TFs**")
-    st.dataframe(ta, use_container_width=True, hide_index=True)
-    st.markdown("**Track B — novel candidates for RNAi validation**")
-    st.dataframe(tb, use_container_width=True, hide_index=True)
+        if report_md.exists():
+            with st.expander("Candidate summary report"):
+                st.markdown(report_md.read_text(encoding="utf-8"))
 
-    if md_path.exists():
-        with st.expander("Candidate summary report (Markdown)", expanded=True):
-            st.markdown(md_path.read_text(encoding="utf-8"))
+    # --- Dirichlet-uniform tab ----------------------------------------------
+    with tab_uniform:
+        csv_uniform = res / "dirichlet_uniform_top10.csv"
+        overall_uniform = res / "dirichlet_uniform_overall_top10.csv"
+        summary_uniform = res / "dirichlet_uniform_summary.txt"
+
+        if csv_uniform.exists():
+            df = pd.read_csv(csv_uniform)
+            st.caption(f"{len(df)} TFs (5A + 5B) — Dirichlet-uniform (alpha=1)")
+            ta = df[df["track"] == "A"]
+            tb = df[df["track"] == "B"]
+            st.markdown("**Track A — RNAi-validated**")
+            st.dataframe(ta, use_container_width=True, hide_index=True)
+            st.markdown("**Track B — novel candidates**")
+            st.dataframe(tb, use_container_width=True, hide_index=True)
+        else:
+            st.info("Not generated yet. Run `python projects/NeuralTF/scripts/dirichlet_uniform.py`.")
+
+        if overall_uniform.exists():
+            with st.expander("Overall top-10 by uniform median score"):
+                st.dataframe(pd.read_csv(overall_uniform), use_container_width=True, hide_index=True)
+
+        if summary_uniform.exists():
+            with st.expander("Summary"):
+                st.code(summary_uniform.read_text(encoding="utf-8"))
 
 
 def render_assistant_page() -> None:
