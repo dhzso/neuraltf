@@ -28,6 +28,7 @@ steps are skipped, never aborted:
  14. dirichlet_uniform_full_figures.py -> projects/NeuralTF/figures/fig_dirichlet_uniform_*_top5.png etc.
  15. dirichlet_method_comparison.py  -> projects/NeuralTF/figures/fig_dirichlet_*_{density,correlation,volatility,summary}.png
  16. dirichlet_uniform_all249.py     -> projects/NeuralTF/results/dirichlet_uniform_all249_*.csv|txt
+ 17. export_fstf_ranked.py          -> projects/NeuralTF/results/fstf_ranked_*.csv
 """
 from __future__ import annotations
 
@@ -111,6 +112,9 @@ def _ready(root: Path, step: str) -> str | None:
             and (root / "projects" / "NeuralTF" / "results"
                  / "dirichlet_uniform_top10.csv").exists(),
             "rank.csv / rank_neural.csv / dirichlet_uniform_top10.csv missing"),
+        "Export ranked FSTF": (
+            (run / "rank.csv").exists(),
+            "rank.csv missing (run the pipeline first)"),
         "Dirichlet-uniform figures": (
             (root / "projects" / "NeuralTF" / "results"
              / "dirichlet_uniform_top10.csv").exists(),
@@ -185,6 +189,10 @@ STEPS = [
       ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_overall_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_full_rank.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_summary.txt"]]),
+    ("Export ranked FSTF",
+     ["projects/NeuralTF/scripts/export_fstf_ranked.py"], [],
+     [["projects", "NeuralTF", "results", "fstf_ranked_all.csv"],
+      ["projects", "NeuralTF", "results", "fstf_ranked_neural.csv"]]),
     ("Dirichlet-uniform figures",
      ["projects/NeuralTF/scripts/dirichlet_uniform_viz.py"], [],
      [["projects", "NeuralTF", "figures", "fig_dirichlet_uniform_vs_centered.png"],
