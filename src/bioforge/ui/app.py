@@ -899,21 +899,29 @@ def _render_rank_table(df, *, key_prefix: str = "rank") -> None:
 
 
 def render_prioritization_page() -> None:
-    """Show the dual-track shortlist (top10 CSV) + summary report."""
+    """Show the dual-track shortlist from Dirichlet-centered prioritization."""
     st = _st()
     import pandas as pd
     root = _repo_root()
     res = root / "projects" / "NeuralTF" / "results"
-    csv_path = res / "top10_neural_tfs_prioritized.csv"
-    md_path = res / "candidate_summary_report.md"
 
     st.subheader("Prioritized neural-fate TF shortlist")
+
+    # Try Dirichlet-centered first, fall back to fixed-weight
+    csv_path = res / "dirichlet_top10_prioritized.csv"
+    md_path = res / "dirichlet_candidate_summary_report.md"
+    method_label = "Dirichlet-centered (k=40)"
+
+    if not csv_path.exists():
+        csv_path = res / "top10_neural_tfs_prioritized.csv"
+        md_path = res / "candidate_summary_report.md"
+        method_label = "fixed-weight (legacy)"
+
     if not csv_path.exists():
         st.warning(
             "No shortlist yet. Run:\n"
             "```\n"
-            "python scripts/query_planmine.py\n"
-            "python scripts/prioritize_neural_tfs.py\n"
+            "python scripts/generate_all.py\n"
             "```"
         )
         return
@@ -921,7 +929,8 @@ def render_prioritization_page() -> None:
     df = pd.read_csv(csv_path)
     st.caption(
         f"`{csv_path.relative_to(root)}` — {len(df)} TFs "
-        "(5 Track A RNAi-validated + 5 Track B novel)"
+        f"(5 Track A RNAi-validated + 5 Track B novel) — "
+        f"**{method_label}**"
     )
 
     # PlanMine coverage metrics
