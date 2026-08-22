@@ -1,0 +1,758 @@
+go_id,term,namespace,neural_go,tf_go,composite_bonus,n_of_97_neural_candidates,in_fig9_go_dotplot,in_fig_s1_map,in_fig_s2_top10_matrix,in_fig_s3_top15,in_fig_s4_neural_focus,is_obsolete
+GO:0007399,nervous system development,biological_process,yes,no,go_neural +0.03,12,no,yes,yes,no,yes,no
+GO:0007411,axon guidance,biological_process,yes,no,go_neural +0.03,9,no,yes,yes,no,yes,no
+GO:0007417,central nervous system development,biological_process,yes,no,go_neural +0.03,8,no,yes,yes,no,yes,no
+GO:0007420,brain development,biological_process,yes,no,go_neural +0.03,8,no,yes,yes,no,yes,no
+GO:0007605,sensory perception of sound,biological_process,yes,no,go_neural +0.03,8,no,yes,yes,no,yes,no
+GO:0045665,negative regulation of neuron differentiation,biological_process,yes,no,go_neural +0.03,8,no,yes,yes,no,yes,no
+GO:0048663,neuron fate commitment,biological_process,yes,no,go_neural +0.03,7,no,yes,no,no,yes,no
+GO:0001764,neuron migration,biological_process,yes,no,go_neural +0.03,6,yes,yes,no,no,yes,no
+GO:0008045,motor neuron axon guidance,biological_process,yes,no,go_neural +0.03,6,no,no,no,no,yes,no
+GO:0030182,neuron differentiation,biological_process,yes,no,go_neural +0.03,6,no,no,no,no,yes,no
+GO:0045664,regulation of neuron differentiation,biological_process,yes,no,go_neural +0.03,6,no,no,no,no,yes,no
+GO:0001654,eye development,biological_process,yes,no,go_neural +0.03,5,no,no,no,no,yes,no
+GO:0031290,retinal ganglion cell axon guidance,biological_process,yes,no,go_neural +0.03,5,no,no,no,no,no,no
+GO:0007422,peripheral nervous system development,biological_process,yes,no,go_neural +0.03,4,no,no,no,no,no,no
+GO:0021879,forebrain neuron differentiation,biological_process,yes,no,go_neural +0.03,4,no,no,no,no,no,no
+GO:0021915,neural tube development,biological_process,yes,no,go_neural +0.03,4,no,no,no,no,no,no
+GO:0030901,midbrain development,biological_process,yes,no,go_neural +0.03,4,no,no,no,no,no,no
+GO:0042491,inner ear auditory receptor cell differentiation,biological_process,yes,no,go_neural +0.03,4,no,no,no,no,no,no
+GO:0045666,positive regulation of neuron differentiation,biological_process,yes,no,go_neural +0.03,4,no,no,no,no,no,no
+GO:0048666,neuron development,biological_process,yes,no,go_neural +0.03,4,no,no,no,no,no,no
+GO:0048813,dendrite morphogenesis,biological_process,yes,no,go_neural +0.03,4,no,no,no,no,no,no
+GO:0097150,neuronal stem cell population maintenance,biological_process,yes,no,go_neural +0.03,4,no,no,no,no,no,no
+GO:0007601,visual perception,biological_process,yes,no,go_neural +0.03,3,no,no,no,no,no,no
+GO:0021524,visceral motor neuron differentiation,biological_process,yes,no,go_neural +0.03,3,no,no,no,no,no,no
+GO:0030900,forebrain development,biological_process,yes,no,go_neural +0.03,3,no,no,no,no,no,no
+GO:0043010,camera-type eye development,biological_process,yes,no,go_neural +0.03,3,no,no,no,no,no,no
+GO:0048699,generation of neurons,biological_process,yes,no,go_neural +0.03,3,no,no,no,no,no,no
+GO:0048749,compound eye development,biological_process,yes,no,go_neural +0.03,3,no,no,no,no,no,no
+GO:0070983,dendrite guidance,biological_process,yes,no,go_neural +0.03,3,no,no,no,no,no,no
+GO:0001754,eye photoreceptor cell differentiation,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0001755,neural crest cell migration,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0001843,neural tube closure,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0007409,axonogenesis,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0007423,sensory organ development,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0007638,mechanosensory behavior,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0010001,glial cell differentiation,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0010977,negative regulation of neuron projection development,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0021520,spinal cord motor neuron cell fate specification,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0021522,spinal cord motor neuron differentiation,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0021781,glial cell fate commitment,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0022008,neurogenesis,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0030516,regulation of axon extension,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0042676,compound eye cone cell fate commitment,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0043524,negative regulation of neuron apoptotic process,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0046619,lens placode formation involved in camera-type eye formation,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0048485,sympathetic nervous system development,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0048596,embryonic camera-type eye morphogenesis,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0048665,neuron fate specification,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0048676,axon extension,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0048935,peripheral nervous system neuron development,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0050771,negative regulation of axonogenesis,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0050909,sensory perception of taste,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0050910,detection of mechanical stimulus involved in sensory perception of sound,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0051402,neuron apoptotic process,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0060385,axonogenesis involved in innervation,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0071542,dopaminergic neuron differentiation,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:2000179,positive regulation of neural precursor cell proliferation,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:2000979,positive regulation of forebrain neuron differentiation,biological_process,yes,no,go_neural +0.03,2,no,no,no,no,no,no
+GO:0001745,compound eye morphogenesis,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0001752,compound eye photoreceptor fate commitment,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0001842,neural fold formation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0003357,noradrenergic neuron differentiation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0007380,"specification of segmental identity, head",biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0008258,head involution,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0010976,positive regulation of neuron projection development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0014032,neural crest cell development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0014033,neural crest cell differentiation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021523,somatic motor neuron differentiation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021526,medial motor column neuron differentiation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021527,spinal cord association neuron differentiation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021782,glial cell development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021797,forebrain anterior/posterior pattern specification,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021798,forebrain dorsal/ventral pattern formation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021884,forebrain neuron development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021889,olfactory bulb interneuron differentiation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021902,commitment of neuronal cell to specific neuron type in forebrain,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021905,forebrain-midbrain boundary formation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021912,obsolete regulation of transcription from RNA polymerase II promoter involved in spinal cord motor neuron fate specification,biological_process,yes,yes,go_neural +0.03 + go_tf +0.02,1,no,no,no,no,no,yes
+GO:0021913,obsolete regulation of transcription from RNA polymerase II promoter involved in ventral spinal cord interneuron specification,biological_process,yes,yes,go_neural +0.03 + go_tf +0.02,1,no,no,no,no,no,yes
+GO:0021918,obsolete regulation of transcription from RNA polymerase II promoter involved in somatic motor neuron fate commitment,biological_process,yes,yes,go_neural +0.03 + go_tf +0.02,1,no,no,no,no,no,yes
+GO:0021953,central nervous system neuron differentiation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0021954,central nervous system neuron development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0030902,hindbrain development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0042462,eye photoreceptor cell development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0042667,auditory receptor cell fate specification,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0042668,auditory receptor cell fate determination,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0043525,positive regulation of neuron apoptotic process,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0045609,positive regulation of inner ear auditory receptor cell differentiation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0045773,positive regulation of axon extension,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0045887,positive regulation of synaptic assembly at neuromuscular junction,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0048050,post-embryonic eye morphogenesis,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0048486,parasympathetic nervous system development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0048814,regulation of dendrite morphogenesis,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0048854,brain morphogenesis,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0048880,sensory system development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0048936,peripheral nervous system neuron axonogenesis,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0050768,negative regulation of neurogenesis,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0050773,regulation of dendrite development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0060040,retinal bipolar neuron differentiation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0060580,ventral spinal cord interneuron fate determination,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:2000171,negative regulation of dendrite development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
+GO:0005634,nucleus,cellular_component,no,no,,67,yes,yes,yes,yes,no,no
+GO:0003700,DNA-binding transcription factor activity,molecular_function,no,yes,go_tf +0.02,61,yes,yes,yes,yes,no,no
+GO:0006355,regulation of DNA-templated transcription,biological_process,no,no,,61,yes,yes,yes,yes,no,no
+GO:0003677,DNA binding,molecular_function,no,yes,go_tf +0.02,60,yes,yes,yes,yes,no,no
+GO:0043565,sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,50,yes,yes,yes,yes,no,no
+GO:0006351,DNA-templated transcription,biological_process,no,no,,46,yes,yes,yes,yes,no,no
+GO:0045944,positive regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,32,yes,yes,yes,yes,no,no
+GO:0005515,protein binding,molecular_function,no,no,,30,yes,yes,yes,yes,no,no
+GO:0007275,multicellular organism development,biological_process,no,no,,29,yes,yes,yes,yes,no,no
+GO:0045893,positive regulation of DNA-templated transcription,biological_process,no,no,,23,yes,yes,no,yes,no,no
+GO:0000122,negative regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,21,yes,yes,no,yes,no,no
+GO:0006357,regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,20,no,yes,no,yes,no,no
+GO:0005622,intracellular anatomical structure,cellular_component,no,no,,17,no,no,no,yes,no,no
+GO:0005667,transcription regulator complex,cellular_component,no,no,,17,no,no,no,yes,no,no
+GO:0008270,zinc ion binding,molecular_function,no,no,,16,no,no,no,yes,no,no
+GO:0005737,cytoplasm,cellular_component,no,no,,15,no,no,no,no,no,no
+GO:0044212,transcription cis-regulatory region binding,molecular_function,no,no,,13,no,no,no,no,no,no
+GO:0045892,negative regulation of DNA-templated transcription,biological_process,no,no,,13,no,no,no,no,no,no
+GO:0046872,metal ion binding,molecular_function,no,no,,13,no,no,no,no,no,no
+GO:0003682,chromatin binding,molecular_function,no,no,,11,no,no,no,no,no,no
+GO:0003705,"DNA-binding transcription factor activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,11,no,no,no,no,no,no
+GO:0005730,nucleolus,cellular_component,no,no,,11,no,no,no,no,no,no
+GO:0045165,cell fate commitment,biological_process,no,no,,11,no,no,no,no,no,no
+GO:0048839,inner ear development,biological_process,no,no,,10,no,no,no,no,no,no
+GO:0006366,transcription by RNA polymerase II,biological_process,no,no,,9,no,no,no,no,no,no
+GO:0008134,transcription factor binding,molecular_function,no,no,,9,no,no,no,no,no,no
+GO:0010468,regulation of gene expression,biological_process,no,no,,9,no,no,no,no,no,no
+GO:0030154,cell differentiation,biological_process,no,no,,9,no,no,no,no,no,no
+GO:0046983,protein dimerization activity,molecular_function,no,no,,9,no,no,no,no,no,no
+GO:0001077,"DNA-binding transcription activator activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,8,no,no,no,no,no,no
+GO:0042472,inner ear morphogenesis,biological_process,no,no,,8,no,no,no,no,no,no
+GO:0000981,"DNA-binding transcription factor activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,7,no,no,no,no,no,no
+GO:0001822,kidney development,biological_process,no,no,,7,no,no,no,no,no,no
+GO:0003676,nucleic acid binding,molecular_function,no,yes,go_tf +0.02,7,no,no,no,no,no,no
+GO:0007507,heart development,biological_process,no,no,,7,no,no,no,no,no,no
+GO:0008285,negative regulation of cell population proliferation,biological_process,no,no,,7,no,no,no,no,no,no
+GO:0031016,pancreas development,biological_process,no,no,,7,no,no,no,no,no,no
+GO:0005829,cytosol,cellular_component,no,no,,6,no,no,no,no,no,no
+GO:0007498,mesoderm development,biological_process,no,no,,6,no,no,no,no,no,no
+GO:0008283,cell population proliferation,biological_process,no,no,,6,no,no,no,no,no,no
+GO:0009953,dorsal/ventral pattern formation,biological_process,no,no,,6,no,no,no,no,no,no
+GO:0060042,retina morphogenesis in camera-type eye,biological_process,no,no,,6,no,no,no,no,no,no
+GO:0000976,transcription cis-regulatory region binding,molecular_function,no,no,,5,no,no,no,no,no,no
+GO:0001709,cell fate determination,biological_process,no,no,,5,no,no,no,no,no,no
+GO:0002089,lens morphogenesis in camera-type eye,biological_process,no,no,,5,no,no,no,no,no,no
+GO:0003714,transcription corepressor activity,molecular_function,no,no,,5,no,no,no,no,no,no
+GO:0005575,cellular_component,cellular_component,no,no,,5,no,no,no,no,no,no
+GO:0009887,animal organ morphogenesis,biological_process,no,no,,5,no,no,no,no,no,no
+GO:0021983,pituitary gland development,biological_process,no,no,,5,no,no,no,no,no,no
+GO:0046982,protein heterodimerization activity,molecular_function,no,no,,5,no,no,no,no,no,no
+GO:0048863,stem cell differentiation,biological_process,no,no,,5,no,no,no,no,no,no
+GO:0000977,RNA polymerase II transcription regulatory region sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,4,no,no,no,no,no,no
+GO:0001078,"DNA-binding transcription repressor activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,4,no,no,no,no,no,no
+GO:0001525,angiogenesis,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0001708,cell fate specification,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0001889,liver development,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0002088,lens development in camera-type eye,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0003151,outflow tract morphogenesis,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0007389,pattern specification process,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0007419,ventral cord development,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0007476,imaginal disc-derived wing morphogenesis,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0008150,biological_process,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0008284,positive regulation of cell population proliferation,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0009952,anterior/posterior pattern specification,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0030910,olfactory placode formation,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0035019,somatic stem cell population maintenance,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0043066,negative regulation of apoptotic process,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0043433,obsolete negative regulation of DNA-binding transcription factor activity,biological_process,no,yes,go_tf +0.02,4,no,no,no,no,no,yes
+GO:0045596,negative regulation of cell differentiation,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0090090,negative regulation of canonical Wnt signaling pathway,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0000790,chromatin,cellular_component,no,no,,3,no,no,no,no,no,no
+GO:0000980,RNA polymerase II cis-regulatory region sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,3,no,no,no,no,no,no
+GO:0001102,RNA polymerase II-specific DNA-binding transcription factor binding,molecular_function,no,yes,go_tf +0.02,3,no,no,no,no,no,no
+GO:0001105,transcription coactivator activity,molecular_function,no,no,,3,no,no,no,no,no,no
+GO:0001568,blood vessel development,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0002052,positive regulation of neuroblast proliferation,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0003690,double-stranded DNA binding,molecular_function,no,yes,go_tf +0.02,3,no,no,no,no,no,no
+GO:0005654,nucleoplasm,cellular_component,no,no,,3,no,no,no,no,no,no
+GO:0007050,regulation of cell cycle,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0007224,smoothened signaling pathway,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0007283,spermatogenesis,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0007400,neuroblast fate determination,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0007402,ganglion mother cell fate determination,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0007501,mesodermal cell fate specification,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0007517,muscle organ development,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0009611,response to wounding,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0009950,dorsal/ventral axis specification,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0010629,negative regulation of gene expression,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0016922,nuclear receptor binding,molecular_function,no,no,,3,no,no,no,no,no,no
+GO:0021516,dorsal spinal cord development,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0021542,dentate gyrus development,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0021987,cerebral cortex development,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0030183,B cell differentiation,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0030326,embryonic limb morphogenesis,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0030858,positive regulation of epithelial cell differentiation,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0031018,endocrine pancreas development,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0034504,protein localization to nucleus,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0042127,regulation of cell population proliferation,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0042474,middle ear morphogenesis,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0043231,intracellular membrane-bounded organelle,cellular_component,no,no,,3,no,no,no,no,no,no
+GO:0043588,skin development,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0044424,obsolete intracellular part,cellular_component,no,no,,3,no,no,no,no,no,yes
+GO:0048557,embryonic digestive tract morphogenesis,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0048646,anatomical structure formation involved in morphogenesis,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0048701,embryonic cranial skeleton morphogenesis,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0050680,negative regulation of epithelial cell proliferation,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0055010,ventricular cardiac muscle tissue morphogenesis,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0060021,roof of mouth development,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0060214,endocardium formation,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0060235,lens induction in camera-type eye,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0060325,face morphogenesis,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0090103,cochlea morphogenesis,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0000902,cell morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0000979,RNA polymerase II core promoter sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,2,no,no,no,no,no,no
+GO:0000982,"DNA-binding transcription factor activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,2,no,no,no,no,no,no
+GO:0000987,cis-regulatory region sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,2,no,no,no,no,no,no
+GO:0001085,RNA polymerase II-specific DNA-binding transcription factor binding,molecular_function,no,yes,go_tf +0.02,2,no,no,no,no,no,no
+GO:0001569,branching involved in blood vessel morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0001649,osteoblast differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0001656,metanephros development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0001657,ureteric bud development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0001658,branching involved in ureteric bud morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0001701,in utero embryonic development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0001714,endodermal cell fate specification,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0001938,positive regulation of endothelial cell proliferation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0001945,lymph vessel development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0001946,lymphangiogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0001947,heart looping,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0002062,chondrocyte differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0002194,hepatocyte cell migration,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0003007,heart morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0003148,outflow tract septum morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0003203,endocardial cushion morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0003215,cardiac right ventricle morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0003674,molecular_function,molecular_function,no,no,,2,no,no,no,no,no,no
+GO:0003680,minor groove of adenine-thymine-rich DNA binding,molecular_function,no,yes,go_tf +0.02,2,no,no,no,no,no,no
+GO:0003713,transcription coactivator activity,molecular_function,no,no,,2,no,no,no,no,no,no
+GO:0004871,obsolete signal transducer activity,molecular_function,no,no,,2,no,no,no,no,no,yes
+GO:0005813,centrosome,cellular_component,no,no,,2,no,no,no,no,no,no
+GO:0005875,microtubule associated complex,cellular_component,no,no,,2,no,no,no,no,no,no
+GO:0005886,plasma membrane,cellular_component,no,no,,2,no,no,no,no,no,no
+GO:0005938,cell cortex,cellular_component,no,no,,2,no,no,no,no,no,no
+GO:0006325,chromatin organization,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0006606,protein import into nucleus,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0006911,"phagocytosis, engulfment",biological_process,no,no,,2,no,no,no,no,no,no
+GO:0006915,apoptotic process,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0006959,humoral immune response,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0007165,signal transduction,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0007405,neuroblast proliferation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0007406,negative regulation of neuroblast proliferation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0007416,synapse assembly,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0007450,"dorsal/ventral pattern formation, imaginal disc",biological_process,no,no,,2,no,no,no,no,no,no
+GO:0007465,R7 cell fate commitment,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0007480,imaginal disc-derived leg morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0007492,endoderm development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0007619,courtship behavior,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0007626,locomotory behavior,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0008015,blood circulation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0008049,male courtship behavior,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0008104,intracellular protein localization,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0008356,asymmetric cell division,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0008406,gonad development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0009790,embryo development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0009888,tissue development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0009954,proximal/distal pattern formation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0010092,specification of animal organ identity,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0010595,positive regulation of endothelial cell migration,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0010628,positive regulation of gene expression,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0010944,obsolete negative regulation of transcription by competitive promoter binding,biological_process,no,yes,go_tf +0.02,2,no,no,no,no,no,yes
+GO:0014003,oligodendrocyte development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0016055,Wnt signaling pathway,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0016319,mushroom body development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0016604,nuclear body,cellular_component,no,no,,2,no,no,no,no,no,no
+GO:0019827,stem cell population maintenance,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0019901,protein kinase binding,molecular_function,no,no,,2,no,no,no,no,no,no
+GO:0021559,trigeminal nerve development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0021562,vestibulocochlear nerve development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0021623,oculomotor nerve formation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0021707,cerebellar granule cell differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0021984,adenohypophysis development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0023019,signal transduction involved in regulation of gene expression,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0030097,hemopoiesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0030178,negative regulation of Wnt signaling pathway,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0030240,skeletal muscle thin filament assembly,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0030308,negative regulation of cell growth,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0030324,lung development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0030335,positive regulation of cell migration,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0030509,BMP signaling pathway,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0030513,positive regulation of BMP signaling pathway,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0030538,embryonic genitalia morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0030539,male genitalia development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0032024,positive regulation of insulin secretion,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0032403,protein-containing complex binding,molecular_function,no,no,,2,no,no,no,no,no,no
+GO:0032526,response to retinoic acid,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0033600,negative regulation of mammary gland epithelial cell proliferation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0035115,embryonic forelimb morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0035162,embryonic hemopoiesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0035198,miRNA binding,molecular_function,no,no,,2,no,no,no,no,no,no
+GO:0042221,response to chemical,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0042475,odontogenesis of dentin-containing tooth,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0042593,glucose homeostasis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0042673,regulation of retinal cone cell fate specification,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0042803,protein homodimerization activity,molecular_function,no,no,,2,no,no,no,no,no,no
+GO:0042981,regulation of apoptotic process,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0043049,otic placode formation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0043065,positive regulation of apoptotic process,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0043281,obsolete regulation of cysteine-type endopeptidase activity involved in apoptotic process,biological_process,no,no,,2,no,no,no,no,no,yes
+GO:0043410,positive regulation of MAPK cascade,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0043586,tongue development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0045071,negative regulation of viral genome replication,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0045178,basal part of cell,cellular_component,no,no,,2,no,no,no,no,no,no
+GO:0045179,apical cortex,cellular_component,no,no,,2,no,no,no,no,no,no
+GO:0045180,basal cortex,cellular_component,no,no,,2,no,no,no,no,no,no
+GO:0045446,endothelial cell differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0045595,regulation of cell differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0045668,negative regulation of osteoblast differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0045676,regulation of R7 cell differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0045727,positive regulation of translation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0045737,positive regulation of cyclin-dependent protein serine/threonine kinase activity,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0045747,positive regulation of Notch signaling pathway,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0045750,obsolete positive regulation of S phase of mitotic cell cycle,biological_process,no,no,,2,no,no,no,no,no,yes
+GO:0045787,positive regulation of cell cycle,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0046148,pigment biosynthetic process,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0048286,lung alveolus development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0048514,blood vessel morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0048536,spleen development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0048542,lymph gland development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0048568,embryonic organ development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0048619,embryonic hindgut morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0048704,embryonic skeletal system morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0048708,astrocyte differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0048845,venous blood vessel morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0048852,diencephalon morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0050692,DNA binding domain binding,molecular_function,no,yes,go_tf +0.02,2,no,no,no,no,no,no
+GO:0050693,LBD domain binding,molecular_function,no,no,,2,no,no,no,no,no,no
+GO:0050885,neuromuscular process controlling balance,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0050973,detection of mechanical stimulus involved in equilibrioception,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0051216,cartilage development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0051573,obsolete negative regulation of histone H3-K9 methylation,biological_process,no,no,,2,no,no,no,no,no,yes
+GO:0055005,ventricular cardiac myofibril assembly,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0055009,atrial cardiac muscle tissue morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0055059,asymmetric neuroblast division,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0055060,asymmetric neuroblast division resulting in ganglion mother cell formation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060037,pharyngeal system development,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060059,embryonic retina morphogenesis in camera-type eye,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060113,inner ear receptor cell differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060216,definitive hemopoiesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060298,positive regulation of sarcomere organization,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060349,bone morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060412,ventricular septum morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060413,atrial septum morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060414,aorta smooth muscle tissue morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060421,positive regulation of heart growth,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060441,epithelial tube branching involved in lung morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060444,branching involved in mammary gland duct morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060762,regulation of branching involved in mammary gland duct morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060836,lymphatic endothelial cell differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0060849,obsolete regulation of transcription involved in lymphatic endothelial cell fate commitment,biological_process,no,yes,go_tf +0.02,2,no,no,no,no,no,yes
+GO:0061303,cornea development in camera-type eye,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0070309,lens fiber cell morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0070365,hepatocyte differentiation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0070412,R-SMAD binding,molecular_function,no,no,,2,no,no,no,no,no,no
+GO:0070848,response to growth factor,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0070858,negative regulation of bile acid biosynthetic process,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0071837,HMG box domain binding,molecular_function,no,no,,2,no,no,no,no,no,no
+GO:0072574,hepatocyte proliferation,biological_process,no,no,,2,no,no,no,no,no,no
+GO:2000678,negative regulation of transcription regulatory region DNA binding,biological_process,no,yes,go_tf +0.02,2,no,no,no,no,no,no
+GO:2001052,positive regulation of cell cycle checkpoint,biological_process,no,no,,2,no,no,no,no,no,no
+GO:2001054,negative regulation of mesenchymal cell apoptotic process,biological_process,no,no,,2,no,no,no,no,no,no
+GO:0000118,histone deacetylase complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0000239,pachytene,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0000978,RNA polymerase II cis-regulatory region sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,1,no,no,no,no,no,no
+GO:0000988,"obsolete transcription factor activity, protein binding",molecular_function,no,yes,go_tf +0.02,1,no,no,no,no,no,yes
+GO:0001106,transcription corepressor activity,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0001158,cis-regulatory region sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,1,no,no,no,no,no,no
+GO:0001159,cis-regulatory region sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,1,no,no,no,no,no,no
+GO:0001501,skeletal system development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001502,cartilage condensation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001541,ovarian follicle development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001558,regulation of cell growth,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001666,response to hypoxia,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001700,embryonic development via the syncytial blastoderm,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001702,gastrulation with mouth forming second,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001706,endoderm formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001710,mesodermal cell fate commitment,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001759,organ induction,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001782,B cell homeostasis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001819,positive regulation of cytokine production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001837,epithelial to mesenchymal transition,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001890,placenta development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001922,B-1 B cell homeostasis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001952,regulation of cell-matrix adhesion,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0001974,blood vessel remodeling,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0002039,p53 binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0002064,epithelial cell development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0002260,lymphocyte homeostasis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0002376,immune system process,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0002930,trabecular meshwork development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003085,negative regulation of systemic arterial blood pressure,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003139,secondary heart field specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003143,embryonic heart tube morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003175,tricuspid valve development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003176,aortic valve development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003180,aortic valve morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003193,pulmonary valve formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003198,epithelial to mesenchymal transition involved in endocardial cushion formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003207,cardiac chamber formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003214,cardiac left ventricle morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003243,circumferential growth involved in left ventricle morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003266,regulation of secondary heart field cardioblast proliferation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003272,endocardial cushion formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003279,cardiac septum development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003322,pancreatic A cell development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003323,type B pancreatic cell development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003326,pancreatic A cell fate commitment,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003327,type B pancreatic cell fate commitment,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003329,pancreatic PP cell fate commitment,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003334,keratinocyte development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003344,pericardium morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003404,optic vesicle morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0003409,optic cup structural organization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0004177,aminopeptidase activity,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0004842,ubiquitin-protein transferase activity,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0004872,signaling receptor activity,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0004874,obsolete aryl hydrocarbon receptor activity,molecular_function,no,no,,1,no,no,no,no,no,yes
+GO:0004879,nuclear receptor activity,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0005518,collagen binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0005793,endoplasmic reticulum-Golgi intermediate compartment,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0005794,Golgi apparatus,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0005887,plasma membrane,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0006006,glucose metabolic process,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0006367,transcription initiation at RNA polymerase II promoter,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0006508,proteolysis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0006725,obsolete cellular aromatic compound metabolic process,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0006805,xenobiotic metabolic process,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0006936,muscle contraction,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0006950,response to stress,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007049,cell cycle,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007179,transforming growth factor beta receptor signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007183,obsolete SMAD protein complex assembly,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0007280,obsolete pole cell migration,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0007362,terminal region determination,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007369,gastrulation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007378,amnioserosa formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007383,"specification of segmental identity, antennal segment",biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007390,germ-band shortening,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007391,dorsal closure,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007398,ectoderm development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007432,salivary gland boundary specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007435,salivary gland morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007469,antennal development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007479,leg disc proximal/distal pattern formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007485,imaginal disc-derived male genitalia development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007494,midgut development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007503,fat body development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007516,hemocyte development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007519,skeletal muscle tissue development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007520,myoblast fusion,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007521,muscle cell fate determination,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007522,visceral muscle development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007548,sex differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0008013,beta-catenin binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0008056,ocellus development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0008217,regulation of blood pressure,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0008219,cell death,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0008237,metallopeptidase activity,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0008293,torso signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0008301,"DNA binding, bending",molecular_function,no,yes,go_tf +0.02,1,no,no,no,no,no,no
+GO:0008354,primordial germ cell migration,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0008407,chaeta morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0008544,epidermis development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0009410,response to xenobiotic stimulus,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0009612,response to mechanical stimulus,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0009636,response to toxic substance,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0009653,anatomical structure morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0009749,response to glucose,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0009791,post-embryonic development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0009880,embryonic pattern specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0009897,external side of plasma membrane,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0009996,negative regulation of cell fate specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0010172,embryonic body morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0010463,mesenchymal cell proliferation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0010467,gene expression,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0010575,positive regulation of vascular endothelial growth factor production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0010717,regulation of epithelial to mesenchymal transition,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0010718,positive regulation of epithelial to mesenchymal transition,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0010837,regulation of keratinocyte proliferation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0010862,obsolete positive regulation of pathway-restricted SMAD protein phosphorylation,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0010909,positive regulation of heparan sulfate proteoglycan biosynthetic process,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0010956,obsolete negative regulation of calcidiol 1-monooxygenase activity,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0010991,obsolete negative regulation of SMAD protein complex assembly,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0012506,vesicle membrane,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0014019,neuroblast development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0014070,obsolete response to organic cyclic compound,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0016363,nuclear matrix,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0016567,protein ubiquitination,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0016605,PML body,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0016925,protein sumoylation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0017015,regulation of transforming growth factor beta receptor signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0017053,transcription repressor complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0019048,obsolete modulation by virus of host process,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0019730,antimicrobial humoral response,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0019899,enzyme binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0019904,protein domain specific binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0021506,anterior neuropore closure,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0021530,spinal cord oligodendrocyte cell fate specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0021537,telencephalon development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0021549,cerebellum development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0021587,cerebellum morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0021610,facial nerve morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0021642,trochlear nerve formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0021703,locus ceruleus development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0021778,oligodendrocyte cell fate specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0021796,cerebral cortex regionalization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0021978,telencephalon regionalization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0022416,chaeta development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030155,regulation of cell adhesion,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030199,collagen fibril organization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030216,keratinocyte differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030217,T cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030218,erythrocyte differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030219,megakaryocyte differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030220,platelet formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030221,basophil differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030262,apoptotic nuclear changes,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030282,bone mineralization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030331,nuclear estrogen receptor binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0030334,regulation of cell migration,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030501,positive regulation of bone mineralization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030511,positive regulation of transforming growth factor beta receptor signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030512,negative regulation of transforming growth factor beta receptor signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030514,negative regulation of BMP signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030522,intracellular receptor signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030616,"obsolete transforming growth factor beta receptor, common-partner cytoplasmic mediator activity",molecular_function,no,no,,1,no,no,no,no,no,yes
+GO:0030707,follicle cell of egg chamber development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030718,germ-line stem cell population maintenance,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030850,prostate gland development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030855,epithelial cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030878,thyroid gland development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0030888,regulation of B cell proliferation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0031017,exocrine pancreas development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0031334,positive regulation of protein-containing complex assembly,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0031490,chromatin DNA binding,molecular_function,no,yes,go_tf +0.02,1,no,no,no,no,no,no
+GO:0031625,ubiquitin protein ligase binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0031641,regulation of myelination,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0031983,vesicle lumen,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0032088,obsolete negative regulation of NF-kappaB transcription factor activity,biological_process,no,yes,go_tf +0.02,1,no,no,no,no,no,yes
+GO:0032092,positive regulation of protein binding,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032252,secretory granule localization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032350,regulation of hormone metabolic process,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032355,response to estradiol,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032444,activin responsive factor complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0032496,response to lipopolysaccharide,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032525,somite rostral/caudal axis specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032725,positive regulation of granulocyte macrophage colony-stimulating factor production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032729,positive regulation of type II interferon production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032730,positive regulation of interleukin-1 alpha production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032731,positive regulation of interleukin-1 beta production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032735,positive regulation of interleukin-12 production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032755,positive regulation of interleukin-6 production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032760,positive regulation of tumor necrosis factor production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032808,lacrimal gland development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032909,regulation of transforming growth factor beta2 production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0032993,protein-DNA complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0033147,negative regulation of intracellular estrogen receptor signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0033153,T cell receptor V(D)J recombination,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0033193,Lsd1/2 complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0033365,protein localization to organelle,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0034121,regulation of toll-like receptor signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0034751,aryl hydrocarbon receptor complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0034752,cytosolic aryl hydrocarbon receptor complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0034753,nuclear aryl hydrocarbon receptor complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0035035,histone acetyltransferase binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0035050,embryonic heart tube development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035108,limb morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035116,embryonic hindlimb morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035136,forelimb morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035166,post-embryonic hemopoiesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035214,eye-antennal disc development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035222,wing disc pattern formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035257,nuclear receptor binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0035265,organ growth,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035282,segmentation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035309,wing and notum subfield formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035310,notum cell fate specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035329,hippo signaling,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035411,regulation of canonical Wnt signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035726,common myeloid progenitor cell proliferation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035814,negative regulation of renal sodium excretion,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035855,megakaryocyte development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035880,embryonic nail plate morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035909,aorta morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0035922,foramen ovale closure,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0036011,imaginal disc-derived leg segmentation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0036306,embryonic heart tube elongation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0040010,positive regulation of growth rate,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0040011,locomotion,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0040034,"regulation of development, heterochronic",biological_process,no,no,,1,no,no,no,no,no,no
+GO:0040037,negative regulation of fibroblast growth factor receptor signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0040039,inductive cell migration,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042059,negative regulation of epidermal growth factor receptor signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042078,germ-line stem cell division,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042177,negative regulation of protein catabolic process,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042277,peptide binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0042384,cilium assembly,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042476,odontogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042481,regulation of odontogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042517,positive regulation of tyrosine phosphorylation of STAT protein,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042659,regulation of cell fate specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042660,positive regulation of cell fate specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042733,embryonic digit morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0042802,identical protein binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0042826,histone deacetylase binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0043029,T cell homeostasis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0043234,protein-containing complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0043249,erythrocyte maturation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0043388,positive regulation of DNA binding,biological_process,no,yes,go_tf +0.02,1,no,no,no,no,no,no
+GO:0043392,negative regulation of DNA binding,biological_process,no,yes,go_tf +0.02,1,no,no,no,no,no,no
+GO:0043425,bHLH transcription factor binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0043467,regulation of generation of precursor metabolites and energy,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0043517,"positive regulation of DNA damage response, signal transduction by p53 class mediator",biological_process,no,no,,1,no,no,no,no,no,no
+GO:0043570,maintenance of DNA repeat elements,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0043576,regulation of respiratory gaseous exchange,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0044334,obsolete canonical Wnt signaling pathway involved in positive regulation of epithelial to mesenchymal transition,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0045121,membrane raft,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0045138,nematode male tail tip morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045295,gamma-catenin binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0045317,equator specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045444,fat cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045599,negative regulation of fat cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045617,negative regulation of keratinocyte differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045648,positive regulation of erythrocyte differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045705,negative regulation of salivary gland boundary specification,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045746,negative regulation of Notch signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045766,positive regulation of angiogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045793,positive regulation of cell size,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045799,positive regulation of chromatin organization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045899,positive regulation of RNA polymerase II transcription preinitiation complex assembly,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045906,negative regulation of vasoconstriction,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0045931,positive regulation of mitotic cell cycle,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0046332,SMAD binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0046621,negative regulation of organ growth,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0046632,alpha-beta T cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0046665,amnioserosa maintenance,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0046671,negative regulation of retinal cell programmed cell death,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0046827,positive regulation of protein export from nucleus,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0046843,dorsal appendage formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048103,somatic stem cell division,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048370,lateral mesoderm formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048384,retinoic acid receptor signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048505,regulation of timing of cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048513,animal organ development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048538,thymus development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048562,embryonic organ morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048565,digestive tract development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048589,developmental growth,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048608,reproductive structure development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048625,myoblast fate commitment,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048641,regulation of skeletal muscle tissue development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048660,regulation of smooth muscle cell proliferation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048671,negative regulation of collateral sprouting,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048672,positive regulation of collateral sprouting,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048705,skeletal system morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048706,embryonic skeletal system development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048713,regulation of oligodendrocyte differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048714,positive regulation of oligodendrocyte differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048729,tissue morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048730,epidermis morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048732,gland development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048733,sebaceous gland development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048735,haltere morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048745,smooth muscle tissue development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048762,mesenchymal cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048800,antennal morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0048859,formation of anatomical boundary,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0050679,positive regulation of epithelial cell proliferation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0050728,negative regulation of inflammatory response,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0050821,protein stabilization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0050877,nervous system process,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0050880,blood vessel diameter maintenance,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0051090,obsolete regulation of DNA-binding transcription factor activity,biological_process,no,yes,go_tf +0.02,1,no,no,no,no,no,yes
+GO:0051091,obsolete positive regulation of DNA-binding transcription factor activity,biological_process,no,yes,go_tf +0.02,1,no,no,no,no,no,yes
+GO:0051098,regulation of binding,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0051154,negative regulation of striated muscle cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0051451,myoblast migration,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0051726,regulation of cell cycle,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0051781,positive regulation of cell division,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0051797,regulation of hair follicle development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0051879,Hsp90 protein binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0051897,positive regulation of phosphatidylinositol 3-kinase/protein kinase B signal transduction,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0055008,cardiac muscle tissue morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060018,astrocyte fate commitment,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060045,positive regulation of cardiac muscle cell proliferation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060070,canonical Wnt signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060217,hemangioblast cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060218,hematopoietic stem cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060347,heart trabecula formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060375,regulation of mast cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060379,cardiac muscle cell myoblast differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060384,innervation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060391,positive regulation of SMAD protein signal transduction,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060395,SMAD protein signal transduction,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060420,regulation of heart growth,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060536,cartilage morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060547,obsolete negative regulation of necrotic cell death,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0060548,obsolete negative regulation of cell death,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0060577,pulmonary vein morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060716,labyrinthine layer blood vessel development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060841,venous blood vessel development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060913,cardiac cell fate determination,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0060993,kidney morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0061009,common bile duct development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0061029,eyelid development in camera-type eye,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0061072,iris morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0061178,regulation of insulin secretion involved in cellular response to glucose stimulus,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0061180,mammary gland epithelium development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0061312,obsolete BMP signaling pathway involved in heart development,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0061321,garland nephrocyte differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0070016,armadillo repeat domain binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0070105,positive regulation of interleukin-6-mediated signaling pathway,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0070172,positive regulation of tooth mineralization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0070285,pigment cell development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0070306,lens fiber cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0070369,beta-catenin-TCF7L2 complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0070410,co-SMAD binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0070411,I-SMAD binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0070742,C2H2 zinc finger domain binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0070888,E-box binding,molecular_function,no,no,,1,no,no,no,no,no,no
+GO:0071141,SMAD protein complex,cellular_component,no,no,,1,no,no,no,no,no,no
+GO:0071281,cellular response to iron ion,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0071320,cellular response to cAMP,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0071353,cellular response to interleukin-4,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0071385,cellular response to glucocorticoid stimulus,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0071559,response to transforming growth factor beta,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0071599,otic vesicle development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0071657,positive regulation of granulocyte colony-stimulating factor production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0071711,basement membrane organization,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0072075,metanephric mesenchyme development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0072095,regulation of branch elongation involved in ureteric bud branching,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0072102,glomerulus morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0072107,positive regulation of ureteric bud formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0072133,metanephric mesenchyme morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0072134,nephrogenic mesenchyme morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0072172,mesonephric tubule formation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0072193,ureter smooth muscle cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0072513,positive regulation of secondary heart field cardioblast proliferation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0090074,obsolete negative regulation of protein homodimerization activity,biological_process,no,no,,1,no,no,no,no,no,yes
+GO:0090150,establishment of protein localization to membrane,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0090190,positive regulation of branching involved in ureteric bud morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0090191,negative regulation of branching involved in ureteric bud morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:1901258,positive regulation of macrophage colony-stimulating factor production,biological_process,no,no,,1,no,no,no,no,no,no
+GO:2000036,regulation of stem cell population maintenance,biological_process,no,no,,1,no,no,no,no,no,no
+GO:2000378,negative regulation of reactive oxygen species metabolic process,biological_process,no,no,,1,no,no,no,no,no,no
+GO:2000729,positive regulation of mesenchymal cell proliferation involved in ureter development,biological_process,no,no,,1,no,no,no,no,no,no
+GO:2000980,regulation of inner ear receptor cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
+GO:2000982,positive regulation of inner ear receptor cell differentiation,biological_process,no,no,,1,no,no,no,no,no,no
