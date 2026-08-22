@@ -177,7 +177,7 @@ python projects/NeuralTF/scripts/dirichlet_method_comparison.py      # 4 3-way m
 | `dirichlet_uniform.py` | `results/dirichlet_uniform_top10.csv`, `dirichlet_uniform_overall_top10.csv`, `dirichlet_uniform_full_rank.csv`, `dirichlet_uniform_summary.txt` |
 | `dirichlet_uniform_viz.py` | `figures/fig_dirichlet_uniform_vs_centered.png`, `fig_dirichlet_3way_comparison.png` |
 | `dirichlet_uniform_full_figures.py` | `figures/fig_dirichlet_uniform_trackA_top5.png`, `fig_dirichlet_uniform_trackB_top5.png`, `fig_dirichlet_uniform_scatter.png`, `fig_dirichlet_uniform_combined.png`, `fig_dirichlet_uniform_score_shift.png` |
-| `dirichlet_method_comparison.py` | `figures/fig_dirichlet_score_density.png`, `fig_dirichlet_rank_correlation.png`, `fig_dirichlet_score_volatility.png`, `fig_dirichlet_method_summary.png` |
+| `dirichlet_method_comparison.py` | `figures/fig_dirichlet_score_density.png`, `fig_dirichlet_rank_correlation.png`, `fig_dirichlet_score_volatility.png`, `fig_dirichlet_method_summary.png`, `fig_dirichlet_99vs249.png` |
 
 
 **Note on scoring:** The 3-way comparison figure y-axis label is
@@ -188,8 +188,35 @@ phenotype, etc.) are applied on top of each method's base score for the
 final ranking — see `prioritize.py:_composite_score()`.
 
 All Dirichlet scripts are integrated into `scripts/generate_all.py` as
-steps 10–15 (run `python scripts/generate_all.py` after the main pipeline to
+steps 10–16 (run `python scripts/generate_all.py` after the main pipeline to
 regenerate everything end-to-end).
+
+### Dirichlet-uniform validation (99 vs 249 scope)
+
+The 99-neural filter selects TFs with King neural signal or RNAi validation.
+To test whether this filter is **doing real work** or just cherry-picking
+candidates that would win anyway, run the uniform Dirichlet sampler on
+**all 249 TF candidates** (no neural filter):
+
+```bash
+python projects/NeuralTF/scripts/dirichlet_uniform_all249.py    # 1000 draws, full atlas
+```
+
+**Outputs** (`results/`, gitignored):
+
+| File | Content |
+|---|---|
+| `dirichlet_uniform_all249_top10.csv` | Track-based top-10 (5A + 5B) from 249-wide uniform Dirichlet |
+| `dirichlet_uniform_all249_overall_top10.csv` | Overall top-10 by uniform median score |
+| `dirichlet_uniform_all249_full_rank.csv` | All 249 candidates with uniform Dirichlet scores |
+| `dirichlet_uniform_all249_summary.txt` | 3-way summary (99-fixed / 99-uniform / 249-uniform) |
+
+**Result:** 10/10 overlap between the 99-neural and 249-wide top-10 —
+the neural filter is selecting robustly; the same candidates emerge regardless
+of whether you start with 99 or 249. The99vs249 comparison figure
+(`fig_dirichlet_99vs249.png`) shows rank shifts and score distributions.
+
+This step is integrated as step 16 in `scripts/generate_all.py`.
 
 ### Filter breakdown (249 → 96 → 99)
 

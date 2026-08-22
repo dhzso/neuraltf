@@ -27,6 +27,7 @@ steps are skipped, never aborted:
  13. dirichlet_uniform_viz.py        -> projects/NeuralTF/figures/fig_dirichlet_uniform_*.png
  14. dirichlet_uniform_full_figures.py -> projects/NeuralTF/figures/fig_dirichlet_uniform_*_top5.png etc.
  15. dirichlet_method_comparison.py  -> projects/NeuralTF/figures/fig_dirichlet_*_{density,correlation,volatility,summary}.png
+ 16. dirichlet_uniform_all249.py     -> projects/NeuralTF/results/dirichlet_uniform_all249_*.csv|txt
 """
 from __future__ import annotations
 
@@ -104,6 +105,12 @@ def _ready(root: Path, step: str) -> str | None:
             and any(king.glob("*mmc4*.xlsx"))
             and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
             "rank_neural.csv / PlanMine parquet / bridge.csv / King mmc4-5 xlsx missing"),
+        "Dirichlet-all249": (
+            (run / "rank.csv").exists()
+            and (run / "rank_neural.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_uniform_top10.csv").exists(),
+            "rank.csv / rank_neural.csv / dirichlet_uniform_top10.csv missing"),
         "Dirichlet-uniform figures": (
             (root / "projects" / "NeuralTF" / "results"
              / "dirichlet_uniform_top10.csv").exists(),
@@ -116,8 +123,11 @@ def _ready(root: Path, step: str) -> str | None:
             (root / "projects" / "NeuralTF" / "results"
              / "dirichlet_uniform_full_rank.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_top10_prioritized.csv").exists(),
-            "dirichlet_uniform_full_rank.csv / dirichlet_top10_prioritized.csv missing"),
+                 / "dirichlet_top10_prioritized.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_uniform_all249_full_rank.csv").exists(),
+            "dirichlet_uniform_full_rank.csv / dirichlet_top10_prioritized.csv / "
+            "dirichlet_uniform_all249_full_rank.csv missing"),
     }
     ok, why = rules[step]
     return None if ok else why
@@ -169,6 +179,12 @@ STEPS = [
       ["projects", "NeuralTF", "results", "dirichlet_uniform_overall_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_full_rank.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_summary.txt"]]),
+    ("Dirichlet-all249",
+     ["projects/NeuralTF/scripts/dirichlet_uniform_all249.py"], [],
+     [["projects", "NeuralTF", "results", "dirichlet_uniform_all249_top10.csv"],
+      ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_overall_top10.csv"],
+      ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_full_rank.csv"],
+      ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_summary.txt"]]),
     ("Dirichlet-uniform figures",
      ["projects/NeuralTF/scripts/dirichlet_uniform_viz.py"], [],
      [["projects", "NeuralTF", "figures", "fig_dirichlet_uniform_vs_centered.png"],
@@ -185,7 +201,8 @@ STEPS = [
      [["projects", "NeuralTF", "figures", "fig_dirichlet_score_density.png"],
       ["projects", "NeuralTF", "figures", "fig_dirichlet_rank_correlation.png"],
       ["projects", "NeuralTF", "figures", "fig_dirichlet_score_volatility.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_method_summary.png"]]),
+      ["projects", "NeuralTF", "figures", "fig_dirichlet_method_summary.png"],
+      ["projects", "NeuralTF", "figures", "fig_dirichlet_99vs249.png"]]),
 ]
 
 

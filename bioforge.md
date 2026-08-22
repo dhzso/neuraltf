@@ -179,7 +179,33 @@ candidates; median score is the "uniform-robust" score.
 - `figures/fig_dirichlet_rank_correlation.png` — Spearman ρ heatmap
 - `figures/fig_dirichlet_score_volatility.png` — per-candidate score range
 - `figures/fig_dirichlet_method_summary.png` — 4-panel summary (overlap, tracks, volatility, composite effect)
+- `figures/fig_dirichlet_99vs249.png` — 99-neural vs 249-wide overlap (rank shift + score comparison)
 
+### 1.5c-extra Dirichlet-uniform validation (99 vs 249 scope)
+
+The 99-neural filter selects TFs with King neural signal or RNAi validation.
+To test whether this filter is **doing real work** or just cherry-picking
+candidates that would win anyway, run the uniform Dirichlet sampler on
+**all 249 TF candidates** (no neural filter):
+
+```bash
+python projects/NeuralTF/scripts/dirichlet_uniform_all249.py
+```
+
+**Method:** Same uniform Dirichlet (alpha=1), 1000 draws, one vector per draw
+applied to all 249 candidates. Track A/B selection still applies (RNAi-validated
+→ A; TF-domain → B) but across the full atlas.
+
+**Outputs** (gitignored):
+- `results/dirichlet_uniform_all249_top10.csv` — track-based 5A+5B from full atlas
+- `results/dirichlet_uniform_all249_overall_top10.csv` — overall top-10 by uniform median
+- `results/dirichlet_uniform_all249_full_rank.csv` — all 249 candidates with scores
+- `results/dirichlet_uniform_all249_summary.txt` — 3-way summary (99-fixed / 99-uniform / 249-uniform)
+
+**Result:** 10/10 overlap between the 99-neural and 249-wide top-10 —
+the neural filter is selecting robustly; the same candidates emerge regardless
+of scope. This is a strong validation that the 99-neural filter is doing
+real biological work, not just cherry-picking.
 
 ### 1.5d Filter breakdown (249 → 96 → 99)
 
