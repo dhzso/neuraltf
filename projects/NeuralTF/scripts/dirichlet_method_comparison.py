@@ -376,13 +376,13 @@ def fig_method_summary() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Figure:99-neural vs 249-wide overlap (rank shift + score comparison)
+# Figure:99-neural vs 249-wide score comparison
 # ---------------------------------------------------------------------------
 def fig_99vs249() -> None:
-    """Compare99-neural vs 249-wide uniform Dirichlet top-10.
+    """Compare99-neural vs 249-wide uniform Dirichlet scores.
 
-    Panel A: Bar chart showing rank shift between the two scopes.
-    Panel B: Score comparison (99 scope vs 249 scope scores).
+    Scatter plot: 99 scope score vs 249 scope score for all overlapping
+    candidates, with top-10 highlighted.
     """
     # Load99-neural full rank
     unif99 = pd.read_csv(IN_DIR / "dirichlet_uniform_full_rank.csv")
@@ -407,69 +407,12 @@ def fig_99vs249() -> None:
     all99_ids = set(rank_neural["gene_id"])
     all249_ids_set = set(rank_all["gene_id"])
 
-    # Get ranks (1-indexed, higher score = rank 1)
-    rank99 = rank_neural.sort_values("integrated_score", ascending=False).reset_index(drop=True)
-    rank99["rank"] = range(1, len(rank99) + 1)
-    rank99_map = dict(zip(rank99["gene_id"], rank99["rank"]))
-
-    rank249 = rank_all.sort_values("integrated_score", ascending=False).reset_index(drop=True)
-    rank249["rank"] = range(1, len(rank249) + 1)
-    rank249_map = dict(zip(rank249["gene_id"], rank249["rank"]))
-
     # Candidates in both sets (the99-neural set is a subset of 249)
     overlap_ids = all99_ids & all249_ids_set
-    only_in_99 = all99_ids - all249_ids_set  # should be empty (99 is subset of 249)
 
-    # For the overlap candidates, compute rank shift
-    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(12, 5), dpi=150)
-    fig.subplots_adjust(wspace=0.35)
+    fig, ax = plt.subplots(1, 1, figsize=(6, 5), dpi=150)
 
-    # --- Panel A: Rank shift across all99 candidates -----------------------
-    rank_shift = []
-    for gid in overlap_ids:
-        r99 = rank99_map.get(gid, np.nan)
-        r249 = rank249_map.get(gid, np.nan)
-        if not np.isnan(r99) and not np.isnan(r249):
-            rank_shift.append({"gene_id": gid, "rank_99": r99, "rank_249": r249,
-                               "shift": r249 - r99})
-    rank_shift_df = pd.DataFrame(rank_shift)
-
-    # Color by direction of shift
-    colors = []
-    for s in rank_shift_df["shift"]:
-        if s > 0:
-            colors.append(C_B)   # rank went up (worse) in 249 = blue
-        elif s < 0:
-            colors.append(C_A)   # rank went down (better) in 249 = orange
-        else:
-            colors.append(C_GRAY) # no change
-
-    y_pos = range(len(rank_shift_df))
-    ax_a.barh(y_pos, rank_shift_df["shift"], color=colors, height=0.7,
-              edgecolor="white", linewidth=0.5)
-    ax_a.set_yticks(y_pos)
-    ax_a.set_yticklabels(
-        [rank_shift_df.iloc[i]["gene_id"].replace("dd_Smed_v6_", "dd")
-         for i in range(len(rank_shift_df))],
-        fontsize=7)
-    ax_a.axvline(x=0, color=C_BLACK, linewidth=0.8, linestyle="--")
-    ax_a.set_xlabel("Rank shift (249-wide rank − 99-neural rank)", fontsize=9)
-    ax_a.set_title("A · Rank shift (99 candidates)",
-                   fontsize=11, fontweight="bold")
-    ax_a.invert_yaxis()
-    _style_ax(ax_a)
-
-    # Add legend
-    from matplotlib.patches import Patch
-    legend_elements = [
-        Patch(facecolor=C_B, label="Rank higher (worse) in 249"),
-        Patch(facecolor=C_A, label="Rank lower (better) in 249"),
-        Patch(facecolor=C_GRAY, label="No change"),
-    ]
-    ax_a.legend(handles=legend_elements, loc="lower right", fontsize=7)
-
-    # --- Panel B: Score comparison (99 scope vs 249 scope) ------------------
-    # For all99 candidates, plot99_score vs 249_score
+    # --- Score comparison (99 scope vs 249 scope) ---------------------------
     x_scores, y_scores, labels = [], [], []
     for gid in overlap_ids:
         s99 = scores99.get(gid, np.nan)
@@ -504,25 +447,25 @@ def fig_99vs249() -> None:
             color = C_GRAY  # neither = gray
             marker = "x"
             zord = 2
-        ax_b.scatter(x_scores[i], y_scores[i], color=color, s=50,
+        ax.scatter(x_scores[i], y_scores[i], color=color, s=50,
                      marker=marker, edgecolors="white", zorder=zord)
         if is_top10_99 or is_top10_249:
-            ax_b.annotate(lbl, (x_scores[i], y_scores[i]),
+            ax.annotate(lbl, (x_scores[i], y_scores[i]),
                           textcoords="offset points", xytext=(5, 3),
                           fontsize=6, color=C_BLACK)
 
     # Diagonal (y=x line)
     lims = [min(x_scores.min(), y_scores.min()) - 0.02,
             max(x_scores.max(), y_scores.max()) + 0.02]
-    ax_b.plot(lims, lims, "--", color=C_GRAY, linewidth=1.0, zorder=1,
+    ax.plot(lims, lims, "--", color=C_GRAY, linewidth=1.0, zorder=1,
               label="y = x (no change)")
-    ax_b.set_xlim(lims)
-    ax_b.set_ylim(lims)
-    ax_b.set_xlabel("Uniform median score (99-neural scope)", fontsize=9)
-    ax_b.set_ylabel("Uniform median score (249-wide scope)", fontsize=9)
-    ax_b.set_title("B · Score comparison",
+    ax.set_xlim(lims)
+    ax.set_ylim(lims)
+    ax.set_xlabel("Uniform median score (99-neural scope)", fontsize=9)
+    ax.set_ylabel("Uniform median score (249-wide scope)", fontsize=9)
+    ax.set_title("99-neural vs 249-wide score comparison",
                    fontsize=11, fontweight="bold")
-    ax_b.legend(fontsize=7)
+    ax.legend(fontsize=7)
 
     # Legend for markers
     legend_elements2 = [
@@ -535,8 +478,8 @@ def fig_99vs249() -> None:
         Line2D([0], [0], marker="x", color=C_GRAY, markersize=8,
                label="Not in either top-10"),
     ]
-    ax_b.legend(handles=legend_elements2, loc="lower right", fontsize=7)
-    _style_ax(ax_b)
+    ax.legend(handles=legend_elements2, loc="lower right", fontsize=7)
+    _style_ax(ax)
 
     fig.suptitle("99-neural vs 249-wide Dirichlet-uniform overlap",
                  fontsize=13, fontweight="bold", y=1.00)
