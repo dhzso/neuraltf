@@ -70,7 +70,7 @@ scores them on 7 evidence streams, then filters for neural-fate specificity.
 
 | Stream | Weight | How it's computed |
 |--------|--------|-------------------|
-| Expression         | 0.211 | max log2FC/5 across all 3 atlases |
+| Expression         | 0.211 | max log2FC/5 across Fincher and Plass atlases; /8.77 (max across King atlas) |
 | Specificity        | 0.105 | 1 / n_clusters supporting the TF |
 | Reproducibility    | 0.158 | atlases_supporting / 3 |
 | RNAi               | 0.158 | 1 if gene is in King mmc5 RNAi table |
@@ -156,11 +156,6 @@ score. The same Track A/B selection logic is then applied.
 - `results/dirichlet_candidate_summary_report.md` — per-candidate evidence
 - `figures/fig_dirichlet_*.png` — 5 publication-quality figures (track A/B, scatter, combined, score-shift)
 
-**Key finding:** Track B is identical under both methods (top-5 stable). Track A
-differs by one candidate (dd14712 replaces dd13343) — dd13343 relies heavily on
-the RNAi stream (score=1.0); when the Dirichlet sampler down-weights that
-stream, dd14712 (more balanced evidence) rises above it. Score shifts across
-the top-10 are tiny (±0.006), confirming high robustness.
 
 ### Dirichlet-uniform (non-informative) prioritization
 
@@ -184,10 +179,6 @@ python projects/NeuralTF/scripts/dirichlet_method_comparison.py      # 4 3-way m
 | `dirichlet_uniform_full_figures.py` | `figures/fig_dirichlet_uniform_trackA_top5.png`, `fig_dirichlet_uniform_trackB_top5.png`, `fig_dirichlet_uniform_scatter.png`, `fig_dirichlet_uniform_combined.png`, `fig_dirichlet_uniform_score_shift.png` |
 | `dirichlet_method_comparison.py` | `figures/fig_dirichlet_score_density.png`, `fig_dirichlet_rank_correlation.png`, `fig_dirichlet_score_volatility.png`, `fig_dirichlet_method_summary.png` |
 
-**Key finding:** 8/10 overlap with fixed-weight top-10. Track A: **dd31784**
-(Homeobox, multi-subcluster) replaces dd13343. Track B: **dd33456** replaces
-dd11930. Candidates unique to uniform Dirichlet are **fundamentally robust**:
-they score high under ANY weighting, not just under the defaults.
 
 **Note on scoring:** The 3-way comparison figure y-axis label is
 "Base integrated score (before composite bonuses)" because the bars compare
@@ -382,14 +373,6 @@ pip install cellrank     # bioforge.omics.trajectory.cellrank_terminal_states
 ```
 
 ---
-
-## Reproducibility
-
-- Atlases are independent experiments from peer-reviewed papers
-- Gene IDs are bridged via a mandatory Rosetta Stone CSV
-- Subsampling uses `random_state=42` everywhere
-- AI operations use a deterministic `StubAssistant` unless an API key is configured
-- All 195 unit tests pass on a clean install; 14 more skip when optional deps absent
 
 ## License
 

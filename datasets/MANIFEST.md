@@ -1,6 +1,6 @@
 # Datasets Manifest
 
-No data files are tracked in git. Every processed artifact is **generated
+Every processed artifact is **generated
 locally** from the raw downloads listed below — with a single command:
 
 ```bash
@@ -12,8 +12,7 @@ The generated outputs live in `datasets/processed/` (fincher/plass h5ads,
 PlanMine parquet + fasta), `projects/NeuralTF/data/` (bridge.csv,
 king_atlas.tsv), `projects/NeuralTF/results/` (top10 shortlist, report),
 `projects/NeuralTF/figures/` (12 main + 4 GO supplementary figures) and
-`projects/NeuralTF/runs/pipeline_run/` (rank tables). All are gitignored
-(see `.gitignore`).
+`projects/NeuralTF/runs/pipeline_run/` (rank tables).
 
 ## Layout (download these to `datasets/raw/`)
 
@@ -84,4 +83,4 @@ Place the 67 MB table at
 
 Fincher uses **dd_Smed_v4** gene IDs; Plass and King use **dd_Smed_v6**. The
 8B Evidence Integration Framework requires an explicit v4→v6 bridge table to
-unify TF candidates across all three atlases. Do not guess by numeric prefix.
+unify TF candidates across all three atlases.

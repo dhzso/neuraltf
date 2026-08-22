@@ -142,9 +142,6 @@ NaN streams are zeroed. The **median** integrated score across draws is the
   - `fig_dirichlet_combined.png` — both tracks with composite bonus overlay
   - `fig_dirichlet_score_shift.png` — Dirichlet − fixed per candidate
 
-**Result:** Track B identical under both methods. Track A: dd14712 (Ets,
-balanced evidence) replaces dd13343 (Homeobox, RNAi-dependent) — the only
-swap. Score shifts ±0.006 confirm high robustness.
 
 ### 1.5c Dirichlet-uniform (non-informative) prioritization
 
@@ -183,10 +180,6 @@ candidates; median score is the "uniform-robust" score.
 - `figures/fig_dirichlet_score_volatility.png` — per-candidate score range
 - `figures/fig_dirichlet_method_summary.png` — 4-panel summary (overlap, tracks, volatility, composite effect)
 
-**Result:** 8/10 overlap with fixed-weight. Track A: **dd31784** (Homeobox,
-multi-subcluster evidence) replaces dd13343. Track B: **dd33456** replaces
-dd11930. Candidates unique to uniform Dirichlet are **fundamentally robust**
-— they score high under ANY weighting.
 
 ### 1.5d Filter breakdown (249 → 96 → 99)
 
@@ -438,7 +431,7 @@ scripts/prioritize_neural_tfs.py
 
 | Stream | Weight | Interpretation |
 |--------|--------|----------------|
-| Expression | 0.211 | max log2FC/5 across all 3 atlases |
+| Expression | 0.211 | max log2FC/5 across Fincher and Plass atlases; /8.77 (max across King atlas) |
 | Specificity | 0.105 | 1 / n_clusters supporting the TF in this atlas |
 | Reproducibility | 0.158 | Fraction (n_atlases_supporting / 3) |
 | RNAi | 0.158 | 1 if present in King mmc5 RNAi table |
