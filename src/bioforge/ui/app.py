@@ -481,9 +481,10 @@ def render_results_page() -> None:
     json_path = run / "pipeline_results.json"
 
     # Tabbed view of the two rankings + cards + run metadata + visualizations
-    tab_rank, tab_neural, tab_cards, tab_viz, tab_supp, tab_meta = st.tabs(
+    tab_rank, tab_neural, tab_cards, tab_viz, tab_supp, tab_meta, tab_dirichlet, tab_fstf = st.tabs(
         ["All candidates", "Neural-filtered", "Evidence cards",
-         "Visualizations", "GO supplementary", "Run metadata"]
+         "Visualizations", "GO supplementary", "Run metadata",
+         "Dirichlet sensitivity", "FSTF rankings"]
     )
 
     with tab_rank:
@@ -539,6 +540,12 @@ def render_results_page() -> None:
                 st.warning(f"Could not parse {json_path.name}: {exc}")
         else:
             st.info("No pipeline_results.json in this run.")
+
+    with tab_dirichlet:
+        _render_dirichlet_sensitivity(_repo_root())
+
+    with tab_fstf:
+        _render_fstf_rankings(_repo_root())
 
 
 # ---------------------------------------------------------------------------
@@ -665,6 +672,163 @@ def _render_visualizations(df, *, run_dir) -> None:
                     plt_close(fig)
     finally:
         matplotlib.use(previous_backend, force=True)
+
+
+def _render_dirichlet_sensitivity(root: Path) -> None:
+    """Render the Dirichlet sensitivity analysis outputs.
+
+    Shows centered/uniform/all249 CSVs and method comparison figures.
+    """
+    st = _st()
+    import pandas as pd
+    res = root / "projects" / "NeuralTF" / "results"
+    fig_dir = root / "projects" / "NeuralTF" / "figures"
+
+    st.subheader("Dirichlet sensitivity analysis")
+    st.caption(
+        "Weight-sensitivity analysis using Dirichlet sampling. "
+        "Three methods: fixed-weight baseline, centered Dirichlet (k=40), "
+        "and uniform Dirichlet (alpha=1)."
+    )
+
+    # --- Centered Dirichlet ------------------------------------------------
+    with st.expander("Centered Dirichlet (k=40, informative prior)", expanded=False):
+        centered_csv = res / "dirichlet_top10_prioritized.csv"
+        overall_csv = res / "dirichlet_overall_top10.csv"
+        report_md = res / "dirichlet_candidate_summary_report.md"
+
+        if centered_csv.exists():
+            df = pd.read_csv(centered_csv)
+            st.markdown("**Track-based top-10** (5A + 5B)")
+            st.dataframe(df, use_container_width=True, hide_index=True)
+        else:
+            st.info("dirichlet_top10_prioritized.csv not found. Run `python projects/NeuralTF/scripts/dirichlet_prioritize.py`.")
+
+        if overall_csv.exists():
+            df_overall = pd.read_csv(overall_csv)
+            st.markdown("**Overall top-10 by Dirichlet median score**")
+            st.dataframe(df_overall, use_container_width=True, hide_index=True)
+
+        if report_md.exists():
+            with st.expander("Candidate summary report"):
+                st.markdown(report_md.read_text(encoding="utf-8"))
+
+        # Centered figures
+        centered_figs = [
+            "fig_dirichlet_trackA_top5.png",
+            "fig_dirichlet_trackB_top5.png",
+            "fig_dirichlet_scatter.png",
+            "fig_dirichlet_combined.png",
+            "fig_dirichlet_score_shift.png",
+        ]
+        for fname in centered_figs:
+            fpath = fig_dir / fname
+            if fpath.exists():
+                st.image(str(fpath), use_container_width=True, caption=fname.replace(".png", "").replace("_", " "))
+
+    # --- Uniform Dirichlet -------------------------------------------------
+    with st.expander("Uniform Dirichlet (alpha=1, non-informative prior)", expanded=False):
+        unif_csv = res / "dirichlet_uniform_top10.csv"
+        unif_full = res / "dirichlet_uniform_full_rank.csv"
+        unif_summary = res / "dirichlet_uniform_summary.txt"
+
+        if unif_csv.exists():
+            df_unif = pd.read_csv(unif_csv)
+            st.markdown("**Track-based top-10** (5A + 5B, uniform prior)")
+            st.dataframe(df_unif, use_container_width=True, hide_index=True)
+        else:
+            st.info("dirichlet_uniform_top10.csv not found. Run `python projects/NeuralTF/scripts/dirichlet_uniform.py`.")
+
+        if unif_full.exists():
+            df_full = pd.read_csv(unif_full)
+            st.caption(f"Full rank: {len(df_full)} candidates with uniform scores")
+
+        if unif_summary.exists():
+            with st.expander("Summary"):
+                st.code(unif_summary.read_text(encoding="utf-8"))
+
+        # Uniform figures
+        unif_figs = [
+            "fig_dirichlet_uniform_trackA_top5.png",
+            "fig_dirichlet_uniform_trackB_top5.png",
+            "fig_dirichlet_uniform_scatter.png",
+            "fig_dirichlet_uniform_combined.png",
+            "fig_dirichlet_uniform_score_shift.png",
+        ]
+        for fname in unif_figs:
+            fpath = fig_dir / fname
+            if fpath.exists():
+                st.image(str(fpath), use_container_width=True, caption=fname.replace(".png", "").replace("_", " "))
+
+    # --- 99 vs 249 comparison ----------------------------------------------
+    with st.expander("99-neural vs 249-wide comparison", expanded=False):
+        all249_csv = res / "dirichlet_uniform_all249_top10.csv"
+        all249_summary = res / "dirichlet_uniform_all249_summary.txt"
+        fig_99vs249 = fig_dir / "fig_dirichlet_99vs249.png"
+
+        if all249_csv.exists():
+            df_249 = pd.read_csv(all249_csv)
+            st.markdown("**249-wide top-10** (uniform Dirichlet, no neural filter)")
+            st.dataframe(df_249, use_container_width=True, hide_index=True)
+        else:
+            st.info("dirichlet_uniform_all249_top10.csv not found. Run `python projects/NeuralTF/scripts/dirichlet_uniform_all249.py`.")
+
+        if all249_summary.exists():
+            st.code(all249_summary.read_text(encoding="utf-8"))
+
+        if fig_99vs249.exists():
+            st.image(str(fig_99vs249), use_container_width=True, caption="99-neural vs 249-wide rank shift + score comparison")
+
+    # --- 3-way method comparison -------------------------------------------
+    with st.expander("3-way method comparison figures", expanded=False):
+        comp_figs = [
+            "fig_dirichlet_3way_comparison.png",
+            "fig_dirichlet_uniform_vs_centered.png",
+            "fig_dirichlet_score_density.png",
+            "fig_dirichlet_rank_correlation.png",
+            "fig_dirichlet_score_volatility.png",
+            "fig_dirichlet_method_summary.png",
+        ]
+        found_any = False
+        for fname in comp_figs:
+            fpath = fig_dir / fname
+            if fpath.exists():
+                st.image(str(fpath), use_container_width=True, caption=fname.replace(".png", "").replace("_", " "))
+                found_any = True
+        if not found_any:
+            st.info("Method comparison figures not found. Run `python projects/NeuralTF/scripts/dirichlet_method_comparison.py`.")
+
+
+def _render_fstf_rankings(root: Path) -> None:
+    """Render the three FSTF ranking CSVs (19/43/74 scope)."""
+    st = _st()
+    import pandas as pd
+    res = root / "projects" / "NeuralTF" / "results"
+
+    st.subheader("FSTF (Planarian Stem Cell TF) rankings")
+    st.caption(
+        "Three scope levels from King 2024 mmc4 TF catalog (FSTF? = yes). "
+        "All sorted by composite score (descending)."
+    )
+
+    scopes = [
+        ("fstf_ranked_19_neural.csv", "19 FSTFs — neural-filtered",
+         "FSTFs with King neural signal or RNAi evidence. Most relevant to the thesis question."),
+        ("fstf_ranked_43_all.csv", "43 FSTFs — all candidates",
+         "FSTFs that passed the expression filter (p <= 0.05)."),
+        ("fstf_ranked_74_catalog.csv", "74 FSTFs — full catalog",
+         "All FSTFs from King mmc4 TF sheet, regardless of expression filter."),
+    ]
+
+    for fname, title, desc in scopes:
+        fpath = res / fname
+        with st.expander(title, expanded=(fname == "fstf_ranked_19_neural.csv")):
+            st.caption(desc)
+            if fpath.exists():
+                df = pd.read_csv(fpath)
+                st.dataframe(df, use_container_width=True, hide_index=True)
+            else:
+                st.info(f"`{fname}` not found. Run `python projects/NeuralTF/scripts/export_fstf_ranked.py`.")
 
 
 def _render_go_supplementary(root: Path) -> None:
