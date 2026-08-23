@@ -248,7 +248,7 @@ def fig_score_volatility() -> None:
 # ---------------------------------------------------------------------------
 def fig_method_summary() -> None:
     """4-panel summary: overlap Venn, track assignment, volatility, composite effect."""
-    fixed_csv = IN_DIR.parent / "top10_neural_tfs_prioritized.csv"
+    fixed_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
     centered_csv = IN_DIR / "dirichlet_top10_prioritized.csv"
     uniform_csv = IN_DIR / "dirichlet_uniform_top10.csv"
 
@@ -347,7 +347,7 @@ def fig_method_summary() -> None:
     ax = axes[1, 1]
     _add_panel_letter(ax, "D")
     uniform_top10 = pd.read_csv(IN_DIR / "dirichlet_uniform_top10.csv")
-    fixed_top10 = pd.read_csv(IN_DIR.parent / "top10_neural_tfs_prioritized.csv")
+    fixed_top10 = pd.read_csv(IN_DIR / "top10_neural_tfs_prioritized.csv")
 
     # Need base scores - use uniform_median_score vs composite
     for _, row in uniform_top10.iterrows():
