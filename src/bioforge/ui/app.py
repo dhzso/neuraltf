@@ -634,13 +634,20 @@ def _render_visualizations(df, *, run_dir) -> None:
             prioritized = pd.read_csv(prioritized_csv)
             # Merge composite_score, track, and proof_status from prioritized into neural_df
             # neural_df has 'gene_id', prioritized has 'gene_id_v6'
-            merge_cols = ["gene_id_v6", "composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes"]
+            merge_cols = ["gene_id_v6", "composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes", "gene_name"]
             neural_df = neural_df.merge(prioritized[merge_cols], left_on="gene_id", right_on="gene_id_v6", how="left", suffixes=("", "_prioritized"))
             # Fill missing values from prioritized
-            for col in ["composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes"]:
+            for col in ["composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes", "gene_name"]:
                 if f"{col}_prioritized" in neural_df.columns:
                     neural_df[col] = neural_df[col].fillna(neural_df[f"{col}_prioritized"])
                     neural_df.drop(columns=[f"{col}_prioritized"], inplace=True, errors="ignore")
+
+        # Add gene_id_v6 to neural_df for GO dot plot and radar plot
+        if neural_df is not None and "gene_id_v6" not in neural_df.columns:
+            # Get gene_id_v6 from prioritized CSV
+            if prioritized_csv.exists():
+                prioritized = pd.read_csv(prioritized_csv)
+                neural_df = neural_df.merge(prioritized[["gene_id", "gene_id_v6"]], on="gene_id", how="left")
 
         builders = [
             ("Candidate summary (tiers / proof / score / coverage)",
@@ -654,7 +661,7 @@ def _render_visualizations(df, *, run_dir) -> None:
             ("Evidence composition (top 10 shortlisted)",
              mod.make_evidence_composition, [df], {"n": 10}),
             ("Stream ablation (rank sensitivity, all 99)",
-             mod.make_stream_ablation, [df], {"n_top": 99}),
+             mod.make_stream_ablation, [df]),
             ("Top-10 radar fingerprints",
              mod.make_top10_radar, [neural_df]),
             ("GO dot plot (top-10 terms)",

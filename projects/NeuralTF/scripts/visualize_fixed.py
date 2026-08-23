@@ -570,45 +570,43 @@ def make_top10_radar(neural_df, out_path: Path):
             return
     
     top = neural_df.nlargest(10, "composite_score")
+    
+    # Compute percentile ranks for each stream across all 99 candidates
+    # This makes the radar plot show relative performance, not raw scores
+    percentile_df = neural_df.copy()
+    for s in STREAMS:
+        percentile_df[s + "_pct"] = percentile_df[s].rank(pct=True)
+    
+    top = percentile_df.nlargest(10, "composite_score")
     angles = np.linspace(0, 2 * np.pi, len(STREAMS), endpoint=False).tolist()
     angles += angles[:1]
     
-    # Calculate track means
-    track_means = {}
-    for track in ["A", "B"]:
-        track_data = neural_df[neural_df["track"] == track].nlargest(5, "composite_score")
-        if len(track_data) > 0:
-            track_means[track] = [pd.to_numeric(track_data[s], errors="coerce").mean() or 0 for s in STREAMS]
-            track_means[track] += track_means[track][:1]
-    
-    fig, ax = plt.subplots(figsize=(7, 7), subplot_kw=dict(polar=True))
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
     _add_panel_letter(ax, "F", x=-0.15, y=1.15)
     
-    # Plot track means first (thicker lines)
-    for track in ["A", "B"]:
-        if track in track_means:
-            color = C_A if track == "A" else C_B
-            label = f"Track {track} mean (n=5)"
-            ax.plot(angles, track_means[track], "o-", linewidth=3, markersize=6, 
-                    color=color, label=label, alpha=0.8, zorder=5)
-            ax.fill(angles, track_means[track], color=color, alpha=0.15, zorder=4)
-    
-    # Plot individual candidates (thinner lines)
+    # Plot each candidate with their percentile profile
     for _, row in top.iterrows():
-        vals = [pd.to_numeric(row.get(s, np.nan), errors="coerce") or 0 for s in STREAMS]
+        vals = [row.get(s + "_pct", 0.5) for s in STREAMS]
         vals += vals[:1]
         label = f"{row['gene_name']} ({row['track']})"
         color = C_A if row['track'] == "A" else C_B
-        ax.plot(angles, vals, "o-", linewidth=1, markersize=3, color=color, alpha=0.4, zorder=2)
+        ax.plot(angles, vals, "o-", linewidth=1.5, markersize=4, color=color, alpha=0.7, zorder=2)
+        ax.fill(angles, vals, color=color, alpha=0.08, zorder=1)
+    
+    # Add reference lines at 25%, 50%, 75% percentiles
+    for pct in [0.25, 0.5, 0.75]:
+        ax.plot(angles, [pct] * len(angles), '--', color=C_GRAY, linewidth=0.5, alpha=0.5)
     
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(STREAM_LABELS, fontsize=9)
     ax.set_ylim(0, 1)
-    ax.set_title("F · Top-10 stream fingerprints (radar plot)", 
+    ax.set_yticks([0.25, 0.5, 0.75])
+    ax.set_yticklabels(["25th", "50th", "75th"], fontsize=7, color=C_GRAY)
+    ax.set_title("F · Top-10 stream profiles (percentile ranks across 99 candidates)", 
                  fontsize=11, fontweight="bold", pad=20)
     ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.15), fontsize=8, ncol=1, framealpha=0.9)
     fig.tight_layout()
-    fig.savefig(out_path / "fig_fixed_top10_radar.png", bbox_inches="tight")
+    fig.savefig(out_path / "fig_fixed_top10_radar.png", bbox_inches="tight", dpi=300)
     plt.close(fig)
 
 
