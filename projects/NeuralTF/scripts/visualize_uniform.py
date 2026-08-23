@@ -194,7 +194,7 @@ def fig_trackB_top5() -> None:
 
 def fig_scatter_fixed_vs_uniform() -> None:
     uniform_csv = IN_DIR / "dirichlet_uniform_top10.csv"
-    fixed_csv = IN_DIR.parent / "top10_neural_tfs_prioritized.csv"
+    fixed_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
 
     if not uniform_csv.exists() or not fixed_csv.exists():
         return
@@ -334,7 +334,7 @@ def fig_combined_dual_track() -> None:
 
 def fig_score_shift() -> None:
     uniform_csv = IN_DIR / "dirichlet_uniform_top10.csv"
-    fixed_csv = IN_DIR.parent / "top10_neural_tfs_prioritized.csv"
+    fixed_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
 
     if not uniform_csv.exists() or not fixed_csv.exists():
         return
@@ -377,7 +377,7 @@ def fig_score_shift() -> None:
 
 def fig_three_way_comparison() -> None:
     """Grouped bar chart: fixed / centered / uniform for all top-10 candidates."""
-    fixed_csv = IN_DIR.parent / "top10_neural_tfs_prioritized.csv"
+    fixed_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
     centered_csv = IN_DIR / "dirichlet_top10_prioritized.csv"
     uniform_csv = IN_DIR / "dirichlet_uniform_top10.csv"
 
