@@ -572,20 +572,23 @@ def _import_visualize_fixed():
 
 
 def _call_make(func, *args, **kwargs):
-    """Call a make_* function and return the figure without saving."""
+    """Call a make_* function which saves PNG to disk, then load it into memory."""
     import tempfile
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from PIL import Image
     with tempfile.TemporaryDirectory() as tmpdir:
         out_path = Path(tmpdir)
-        # Call the function with out_path
-        func(*args, out_path=out_path, **kwargs)
-        # Get the figure that was created
-        figs = [plt.figure(n) for n in plt.get_fignums()]
-        if figs:
-            fig = figs[-1]  # Get the last created figure
-            return fig
+        # Call the function which saves PNG to out_path
+        func(*args, out_path, **kwargs)
+        # Find the PNG file that was created
+        pngs = list(out_path.glob("*.png"))
+        if pngs:
+            # Load image data into memory before temp dir cleanup
+            img = Image.open(pngs[0])
+            img.load()  # Force load into memory
+            return img
     return None
 
 
@@ -664,15 +667,14 @@ def _render_visualizations(df, *, run_dir) -> None:
                 with col:
                     st.markdown(f"**{title}**")
                     try:
-                        fig = _call_make(fn, *args, **kwargs)
+                        img = _call_make(fn, *args, **kwargs)
                     except Exception as exc:
                         st.warning(f"Could not build `{title}`: {exc}")
                         continue
-                    if fig is None:
+                    if img is None:
                         st.caption("_(skipped — required columns missing)_")
                     else:
-                        st.pyplot(fig)
-                        plt_close(fig)
+                        st.image(img, use_container_width=True)
         finally:
             matplotlib.use(previous_backend, force=True)
     finally:
