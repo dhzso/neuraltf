@@ -350,22 +350,48 @@ def fig_method_summary() -> None:
     centered_ids = set(centered["gene_id_v6"])
     uniform_ids = set(uniform["gene_id_v6"])
 
+def fig_method_summary() -> None:
+    """5-panel summary: overlap Venn, track assignment, volatility, composite, concordance."""
+    fixed_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
+    centered_csv = IN_DIR / "dirichlet_top10_prioritized.csv"
+    uniform_csv = IN_DIR / "dirichlet_uniform_top10.csv"
+
+    if not all(p.exists() for p in [fixed_csv, centered_csv, uniform_csv]):
+        return
+
+    fixed = pd.read_csv(fixed_csv)
+    centered = pd.read_csv(centered_csv)
+    uniform = pd.read_csv(uniform_csv)
+
+    fixed_ids = set(fixed["gene_id_v6"])
+    centered_ids = set(centered["gene_id_v6"])
+    uniform_ids = set(uniform["gene_id_v6"])
+
     fig, axes = plt.subplots(2, 3, figsize=(14, 9))
     fig.subplots_adjust(hspace=0.35, wspace=0.3)
 
     # Panel A: Venn diagram overlap
     ax = axes[0, 0]
     _add_panel_letter(ax, "A")
-    from matplotlib_venn import venn3
-    v = venn3([fixed_ids, centered_ids, uniform_ids],
-              set_labels=("Fixed", "Centered", "Uniform"),
-              set_colors=(C_FIXED, C_CENTERED, C_UNIFORM),
-              alpha=0.6)
-    for text in v.set_labels:
-        if text: text.set_fontsize(10)
-    for text in v.subset_labels:
-        if text: text.set_fontsize(11)
-    ax.set_title("A · Top-10 overlap across methods", fontsize=11, fontweight="bold")
+    try:
+        from matplotlib_venn import venn3
+        v = venn3([fixed_ids, centered_ids, uniform_ids],
+                  set_labels=("Fixed", "Centered", "Uniform"),
+                  set_colors=(C_FIXED, C_CENTERED, C_UNIFORM),
+                  alpha=0.6)
+        for text in v.set_labels:
+            if text: text.set_fontsize(10)
+        for text in v.subset_labels:
+            if text: text.set_fontsize(11)
+    except ImportError:
+        # Fallback: simple text summary if matplotlib_venn not available
+        ax.text(0.5, 0.5, "Venn diagram requires matplotlib-venn\n(pip install matplotlib-venn)",
+                ha="center", va="center", fontsize=10, color=C_GRAY,
+                transform=ax.transAxes)
+        ax.set_title("A · Top-10 overlap across methods", fontsize=11, fontweight="bold")
+        ax.axis('off')
+    else:
+        ax.set_title("A · Top-10 overlap across methods", fontsize=11, fontweight="bold")
 
     # Panel B: Track assignment consistency
     ax = axes[0, 1]

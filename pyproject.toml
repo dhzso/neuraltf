@@ -77,6 +77,8 @@ bio = [
     "leidenalg>=0.10",
     # Layer 8B — readers use openpyxl for King 2024 supplementary xlsx files.
     "openpyxl>=3.1,<4.0",
+    # Visualization: Venn diagrams for method comparison
+    "matplotlib-venn>=1.1",
 ]
 dev = [
     "pytest>=8.0,<9.0",
