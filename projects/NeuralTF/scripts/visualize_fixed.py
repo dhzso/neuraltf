@@ -466,21 +466,47 @@ def make_evidence_composition(df, out_path: Path, n: int = 10):
         # Fallback to top n by integrated score
         top = df.nlargest(n, "integrated_score")
     
+    # Handle NaN values - fill NaN with 0 for visualization
     plot = top[streams_ordered].apply(pd.to_numeric, errors="coerce").fillna(0)
     labels = [f"{r['gene_name']} ({r['track']})" for _, r in top.iterrows()]
     
+    # Check if any streams are constant (all same value) and exclude them
+    streams_to_plot = []
+    stream_labels_to_plot = []
+    for i, stream in enumerate(streams_ordered):
+        vals = pd.to_numeric(top[stream], errors="coerce").fillna(0)
+        if vals.max() > vals.min():  # Has variation
+            streams_to_plot.append(stream)
+        elif vals.max() > 0:  # Non-zero constant
+            streams_to_plot.append(stream)
+    
+    if len(streams_to_plot) < len(streams_ordered):
+        excluded = [s for s in streams_ordered if s not in streams_to_plot]
+        print(f"  Excluding constant streams: {excluded}")
+        # Rebuild labels and colors for remaining streams
+        stream_labels_ordered = [stream_labels_ordered[streams_ordered.index(s)] for s in streams_to_plot]
+    
+    if not streams_to_plot:
+        streams_to_plot = streams_ordered  # fallback
+    
+    plot = top[streams_to_plot].apply(pd.to_numeric, errors="coerce").fillna(0)
+    labels = [f"{r['gene_name']} ({r['track']})" for _, r in top.iterrows()]
+    stream_labels_to_plot = [stream_labels_ordered[streams_ordered.index(s)] for s in streams_to_plot]
+    colors = [C_A, C_SKY, C_ORANGE, C_B, C_GREEN, C_ORANGE, C_GRAY]
+    colors = [colors[streams_ordered.index(s)] for s in streams_to_plot]
+    
     fig, ax = plt.subplots(figsize=(10, 7))
     bottom = np.zeros(len(plot))
-    colors = [C_A, C_SKY, C_ORANGE, C_B, C_GREEN, C_ORANGE, C_GRAY]
+    colors_plot = colors[:len(streams_to_plot)]
     
-    for i, stream in enumerate(streams_ordered):
+    for i, stream in enumerate(streams_to_plot):
         vals = plot[stream].values
-        ax.barh(range(len(plot)), vals, left=bottom, color=colors[i],
-                edgecolor=C_GRAY, linewidth=0.3, label=stream_labels_ordered[i])
+        ax.barh(range(len(plot)), vals, left=bottom, color=colors_plot[i],
+                edgecolor=C_GRAY, linewidth=0.3, label=stream_labels_ordered[streams_ordered.index(stream)])
         bottom += vals
     
     ax.set_yticks(range(len(plot)))
-    ax.set_yticklabels(labels, fontsize=8)
+    ax.set_yticklabels([f"{r['gene_name']} ({r['track']})" for _, r in top.iterrows()], fontsize=8)
     ax.set_xlabel("Cumulative stream score (weighted sum)", fontsize=9)
     ax.set_title(f"E · Evidence composition — TOP 10 shortlisted (5A + 5B)", 
                  fontsize=11, fontweight="bold")
@@ -494,7 +520,7 @@ def make_evidence_composition(df, out_path: Path, n: int = 10):
         ax.text(1.01, i, f"{total:.3f}", va='center', fontsize=7, color=C_GRAY, transform=ax.get_yaxis_transform())
     
     fig.tight_layout()
-    fig.savefig(out_path / "fig_fixed_evidence_composition.png", bbox_inches="tight")
+    fig.savefig(out_path / "fig_fixed_evidence_composition.png", bbox_inches="tight", dpi=300)
     plt.close(fig)
 
 
