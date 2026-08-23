@@ -603,8 +603,12 @@ def fig_99vs249() -> None:
             color = C_A; marker = "s"; zord = 3
         else:
             color = C_GRAY; marker = "x"; zord = 2
-        ax_b.scatter(x_scores[i], y_scores[i], color=color, s=50,
-                     marker=marker, edgecolors="white", zorder=zord)
+        if marker == "x":
+            ax_b.scatter(x_scores[i], y_scores[i], color=color, s=50,
+                         marker=marker, zorder=zord)
+        else:
+            ax_b.scatter(x_scores[i], y_scores[i], color=color, s=50,
+                         marker=marker, edgecolors="white", zorder=zord)
         if is_top10_99 or is_top10_249:
             ax_b.annotate(lbl, (x_scores[i], y_scores[i]),
                           textcoords="offset points", xytext=(5, 3),
