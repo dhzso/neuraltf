@@ -557,17 +557,13 @@ def render_results_page() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _import_visualize_results():
-    """Import visualize_results.py from projects/NeuralTF/scripts/.
-
-    The file lives outside the bioforge package (it's a project tool), so
-    we import it via importlib.util.spec_from_file_location.
-    """
+def _import_visualize_fixed():
+    """Import visualize_fixed.py from projects/NeuralTF/scripts/."""
     import importlib.util
-    p = _repo_root() / "projects" / "NeuralTF" / "scripts" / "visualize_results.py"
+    p = _repo_root() / "projects" / "NeuralTF" / "scripts" / "visualize_fixed.py"
     if not p.exists():
         return None
-    spec = importlib.util.spec_from_file_location("visualize_results", p)
+    spec = importlib.util.spec_from_file_location("visualize_fixed", p)
     if spec is None or spec.loader is None:
         return None
     mod = importlib.util.module_from_spec(spec)
@@ -575,27 +571,39 @@ def _import_visualize_results():
     return mod
 
 
+def _call_make(func, *args, **kwargs):
+    """Call a make_* function and return the figure without saving."""
+    import tempfile
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out_path = Path(tmpdir)
+        # Call the function with out_path
+        func(*args, out_path=out_path, **kwargs)
+        # Get the figure that was created
+        figs = [plt.figure(n) for n in plt.get_fignums()]
+        if figs:
+            fig = figs[-1]  # Get the last created figure
+            return fig
+    return None
+
+
 def _render_visualizations(df, *, run_dir) -> None:
     st = _st()
-    mod = _import_visualize_results()
+    mod = _import_visualize_fixed()
     if mod is None:
         st.warning(
-            "Could not import `projects/NeuralTF/scripts/visualize_results.py`."
-            " Make sure it exists, or run:: `bioforge neuraltf run` followed by"
-            " `python projects/NeuralTF/scripts/visualize_results.py` as a script."
+            "Could not import `projects/NeuralTF/scripts/visualize_fixed.py`."
+            " Make sure it exists, or run: `python projects/NeuralTF/scripts/visualize_fixed.py` as a script."
         )
         return
 
-    # Preserve the user's matplotlib backend so re-rendering in the browser
-    # doesn't try to spawn a Tk window.
     import matplotlib
     import pandas as pd
     previous_backend = matplotlib.get_backend()
     try:
         matplotlib.use("Agg", force=True)
-        # Use Streamlit's built-in column layout: Tier + Proof on a row,
-        # then everything else full-width
-        # 1) Quick summary numbers
         c1, c2, c3 = st.columns(3)
         c1.metric("Candidates", len(df))
         if "tier" in df.columns:
@@ -608,29 +616,25 @@ def _render_visualizations(df, *, run_dir) -> None:
             "*These figures are derived from this run's `rank.csv` (and the "
             "GO-term matrix in `figures/supplementary/` for the GO panel) — "
             "no hardcoded meta-data, no external lookup tables. Save PNGs via "
-            "*`python projects/NeuralTF/scripts/visualize_results.py`*."
+            "*`python projects/NeuralTF/scripts/visualize_fixed.py`*."
         )
 
-        # Load the neural-filtered subset for the Top-10 / radar / funnel panels
         neural_df = None
         neural_csv = run_dir / "rank_neural.csv"
         if neural_csv.exists():
             neural_df = pd.read_csv(neural_csv)
 
-        # Build the list of figures (none is mandatory)
         builders = [
             ("Candidate summary (tiers / proof / score / coverage)",
              mod.make_candidate_summary, [df]),
             ("Top-10 dual track (Track A vs Track B)",
              mod.make_top10_dual_track, [neural_df]),
             ("Evidence matrix (top 30)",
-             mod.make_evidence_heatmap, [df],
-             {"n": 30}),
+             mod.make_evidence_heatmap, [df], {"n": 30}),
             ("Candidate funnel (scored → neural → final)",
              mod.make_candidate_funnel, [df, neural_df]),
             ("Evidence composition (top 15)",
-             mod.make_evidence_composition, [df],
-             {"n": 15}),
+             mod.make_evidence_composition, [df], {"n": 15}),
             ("Stream ablation (rank sensitivity)",
              mod.make_stream_ablation, [df]),
             ("Top-10 radar fingerprints",
@@ -647,29 +651,30 @@ def _render_visualizations(df, *, run_dir) -> None:
             ("Weight sensitivity (Top-10 rank bands)",
              mod.make_weight_sensitivity, [neural_df]),
             ("Integrated score vs neural filter (ECDF)",
-             mod.make_neural_filter_vs_score, [df]),
+             mod.make_integrated_vs_neural_filter, [df, neural_df]),
         ]
-        # Render as a 2-column grid for compactness
-        half = (len(builders) + 1) // 2
         left, right = st.columns(2)
-        for i, entry in enumerate(builders):
-            col = left if i % 2 == 0 else right
-            title = entry[0]
-            fn = entry[1]
-            args = entry[2]
-            kwargs = entry[3] if len(entry) > 3 else {}
-            with col:
-                st.markdown(f"**{title}**")
-                try:
-                    fig = fn(*args, **kwargs)
-                except Exception as exc:  # noqa: BLE001
-                    st.warning(f"Could not build `{title}`: {exc}")
-                    continue
-                if fig is None:
-                    st.caption("_(skipped — required columns missing)_")
-                else:
-                    st.pyplot(fig)
-                    plt_close(fig)
+        try:
+            for i, entry in enumerate(builders):
+                col = left if i % 2 == 0 else right
+                title = entry[0]
+                fn = entry[1]
+                args = entry[2]
+                kwargs = entry[3] if len(entry) > 3 else {}
+                with col:
+                    st.markdown(f"**{title}**")
+                    try:
+                        fig = _call_make(fn, *args, **kwargs)
+                    except Exception as exc:
+                        st.warning(f"Could not build `{title}`: {exc}")
+                        continue
+                    if fig is None:
+                        st.caption("_(skipped — required columns missing)_")
+                    else:
+                        st.pyplot(fig)
+                        plt_close(fig)
+        finally:
+            matplotlib.use(previous_backend, force=True)
     finally:
         matplotlib.use(previous_backend, force=True)
 
