@@ -627,6 +627,7 @@ def _render_visualizations(df, *, run_dir) -> None:
         if neural_csv.exists():
             neural_df = pd.read_csv(neural_csv)
 
+        IN_DIR = _repo_root() / "projects" / "NeuralTF" / "results"
         # Load composite scores from prioritized CSV and merge into neural_df
         prioritized_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
         if prioritized_csv.exists() and neural_df is not None:
