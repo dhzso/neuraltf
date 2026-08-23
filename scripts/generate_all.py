@@ -17,18 +17,17 @@ steps are skipped, never aborted:
   3. build_bridge.py                 -> projects/NeuralTF/data/bridge.csv
   4. build_king_atlas.py             -> projects/NeuralTF/data/king_atlas.tsv
   5. pipeline (run.py)               -> projects/NeuralTF/runs/pipeline_run/*
-  6. query_planmine.py               -> datasets/processed/planmine_annotations.parquet (network)
-  7. prioritize_neural_tfs.py        -> projects/NeuralTF/results/top10_*.csv + report.md
-  8. visualize_results.py            -> projects/NeuralTF/figures/{1..9}_*.png
-  9. make_supp_go_figures.py         -> projects/NeuralTF/figures/supplementary/*
- 10. dirichlet_prioritize.py         -> projects/NeuralTF/results/dirichlet_*.csv|md
- 11. dirichlet_visualize.py          -> projects/NeuralTF/figures/fig_dirichlet_*.png
- 12. dirichlet_uniform.py            -> projects/NeuralTF/results/dirichlet_uniform_*.csv|txt
- 13. dirichlet_uniform_viz.py        -> projects/NeuralTF/figures/fig_dirichlet_uniform_*.png
- 14. dirichlet_uniform_full_figures.py -> projects/NeuralTF/figures/fig_dirichlet_uniform_*_top5.png etc.
- 15. dirichlet_method_comparison.py  -> projects/NeuralTF/figures/fig_dirichlet_*_{density,correlation,volatility,summary}.png
- 16. dirichlet_uniform_all249.py     -> projects/NeuralTF/results/dirichlet_uniform_all249_*.csv|txt
- 17. export_fstf_ranked.py          -> projects/NeuralTF/results/fstf_ranked_*.csv
+6. query_planmine.py                  -> datasets/processed/planmine_annotations.parquet (network)
+  7. prioritize_neural_tfs.py           -> projects/NeuralTF/results/top10_*.csv + report.md
+  8. make_supp_go_figures.py            -> projects/NeuralTF/figures/supplementary/*
+  9. dirichlet_prioritize.py            -> projects/NeuralTF/results/dirichlet_*.csv|md
+  10. dirichlet_uniform.py              -> projects/NeuralTF/results/dirichlet_uniform_*.csv|txt
+  11. dirichlet_uniform_all249.py       -> projects/NeuralTF/results/dirichlet_uniform_all249_*.csv|txt
+  12. export_fstf_ranked.py             -> projects/NeuralTF/results/fstf_ranked_*.csv
+  13. visualize_fixed.py                -> projects/NeuralTF/figures/fig_fixed_*.png (13 figs)
+  14. visualize_centered.py             -> projects/NeuralTF/figures/fig_centered_*.png (5 figs)
+  15. visualize_uniform.py              -> projects/NeuralTF/figures/fig_uniform_*.png (7 figs)
+  16. visualize_method_comparison.py    -> projects/NeuralTF/figures/fig_method_*.png (5 figs)
 """
 from __future__ import annotations
 
@@ -95,10 +94,6 @@ def _ready(root: Path, step: str) -> str | None:
             and any(king.glob("*mmc4*.xlsx"))
             and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
             "rank_neural.csv / PlanMine parquet / bridge.csv / King mmc4-5 xlsx missing"),
-        "Dirichlet-centered figures": (
-            (root / "projects" / "NeuralTF" / "results"
-             / "dirichlet_top10_prioritized.csv").exists(),
-            "dirichlet_top10_prioritized.csv missing (run Dirichlet-centered first)"),
         "Dirichlet-uniform": (
             (run / "rank_neural.csv").exists()
             and (proc / "planmine_annotations.parquet").exists()
@@ -115,23 +110,37 @@ def _ready(root: Path, step: str) -> str | None:
         "Export ranked FSTF": (
             (run / "rank.csv").exists(),
             "rank.csv missing (run the pipeline first)"),
-        "Dirichlet-uniform figures": (
+        "Visualize fixed-weight": (
+            (run / "rank.csv").exists()
+            and (run / "rank_neural.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "top10_neural_tfs_prioritized.csv").exists(),
+            "rank.csv / rank_neural.csv / top10_neural_tfs_prioritized.csv missing"),
+        "Visualize Dirichlet-centered": (
             (root / "projects" / "NeuralTF" / "results"
-             / "dirichlet_uniform_top10.csv").exists(),
-            "dirichlet_uniform_top10.csv missing (run Dirichlet-uniform first)"),
-        "Uniform full figures": (
+             / "dirichlet_top10_prioritized.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "top10_neural_tfs_prioritized.csv").exists(),
+            "dirichlet_top10_prioritized.csv / top10_neural_tfs_prioritized.csv missing"),
+        "Visualize Dirichlet-uniform": (
             (root / "projects" / "NeuralTF" / "results"
-             / "dirichlet_uniform_top10.csv").exists(),
-            "dirichlet_uniform_top10.csv missing (run Dirichlet-uniform first)"),
-        "Method comparison": (
+             / "dirichlet_uniform_top10.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_top10_prioritized.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "top10_neural_tfs_prioritized.csv").exists(),
+            "dirichlet_uniform_top10.csv / dirichlet_top10_prioritized.csv / top10_neural_tfs_prioritized.csv missing"),
+        "Visualize method comparison": (
             (root / "projects" / "NeuralTF" / "results"
              / "dirichlet_uniform_full_rank.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
                  / "dirichlet_top10_prioritized.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_uniform_all249_full_rank.csv").exists(),
+                 / "dirichlet_uniform_all249_full_rank.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "top10_neural_tfs_prioritized.csv").exists(),
             "dirichlet_uniform_full_rank.csv / dirichlet_top10_prioritized.csv / "
-            "dirichlet_uniform_all249_full_rank.csv missing"),
+            "dirichlet_uniform_all249_full_rank.csv / top10_neural_tfs_prioritized.csv missing"),
     }
     ok, why = rules[step]
     return None if ok else why
@@ -171,13 +180,6 @@ STEPS = [
       ["projects", "NeuralTF", "results", "dirichlet_overall_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_overall_top10_byscore.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_candidate_summary_report.md"]]),
-    ("Dirichlet-centered figures",
-     ["projects/NeuralTF/scripts/dirichlet_visualize.py"], [],
-     [["projects", "NeuralTF", "figures", "fig_dirichlet_trackA_top5.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_trackB_top5.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_scatter.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_combined.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_score_shift.png"]]),
     ("Dirichlet-uniform", ["projects/NeuralTF/scripts/dirichlet_uniform.py"], [],
      [["projects", "NeuralTF", "results", "dirichlet_uniform_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_overall_top10.csv"],
@@ -194,24 +196,44 @@ STEPS = [
      [["projects", "NeuralTF", "results", "fstf_ranked_19_neural.csv"],
       ["projects", "NeuralTF", "results", "fstf_ranked_43_all.csv"],
       ["projects", "NeuralTF", "results", "fstf_ranked_74_catalog.csv"]]),
-    ("Dirichlet-uniform figures",
-     ["projects/NeuralTF/scripts/dirichlet_uniform_viz.py"], [],
-     [["projects", "NeuralTF", "figures", "fig_dirichlet_uniform_vs_centered.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_3way_comparison.png"]]),
-    ("Uniform full figures",
-     ["projects/NeuralTF/scripts/dirichlet_uniform_full_figures.py"], [],
-     [["projects", "NeuralTF", "figures", "fig_dirichlet_uniform_trackA_top5.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_uniform_trackB_top5.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_uniform_scatter.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_uniform_combined.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_uniform_score_shift.png"]]),
-    ("Method comparison",
-     ["projects/NeuralTF/scripts/dirichlet_method_comparison.py"], [],
-     [["projects", "NeuralTF", "figures", "fig_dirichlet_score_density.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_rank_correlation.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_score_volatility.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_method_summary.png"],
-      ["projects", "NeuralTF", "figures", "fig_dirichlet_99vs249.png"]]),
+    ("Visualize fixed-weight",
+     ["projects/NeuralTF/scripts/visualize_fixed.py"], [],
+     [["projects", "NeuralTF", "figures", "fig_fixed_score_distributions.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_candidate_summary.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_top10_dual_track.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_evidence_heatmap.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_candidate_funnel.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_evidence_composition.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_stream_ablation.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_top10_radar.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_go_dotplot.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_integrated_vs_composite.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_proof_status_violin.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_weight_sensitivity.png"],
+      ["projects", "NeuralTF", "figures", "fig_fixed_integrated_vs_neural_filter.png"]]),
+    ("Visualize Dirichlet-centered",
+     ["projects/NeuralTF/scripts/visualize_centered.py"], [],
+     [["projects", "NeuralTF", "figures", "fig_centered_trackA_top5.png"],
+      ["projects", "NeuralTF", "figures", "fig_centered_trackB_top5.png"],
+      ["projects", "NeuralTF", "figures", "fig_centered_scatter_fixed_vs_dirichlet.png"],
+      ["projects", "NeuralTF", "figures", "fig_centered_combined_dual_track.png"],
+      ["projects", "NeuralTF", "figures", "fig_centered_score_shift.png"]]),
+    ("Visualize Dirichlet-uniform",
+     ["projects/NeuralTF/scripts/visualize_uniform.py"], [],
+     [["projects", "NeuralTF", "figures", "fig_uniform_trackA_top5.png"],
+      ["projects", "NeuralTF", "figures", "fig_uniform_trackB_top5.png"],
+      ["projects", "NeuralTF", "figures", "fig_uniform_scatter_fixed_vs_uniform.png"],
+      ["projects", "NeuralTF", "figures", "fig_uniform_scatter_centered_vs_uniform.png"],
+      ["projects", "NeuralTF", "figures", "fig_uniform_combined_dual_track.png"],
+      ["projects", "NeuralTF", "figures", "fig_uniform_score_shift.png"],
+      ["projects", "NeuralTF", "figures", "fig_uniform_three_way_comparison.png"]]),
+    ("Visualize method comparison",
+     ["projects/NeuralTF/scripts/visualize_method_comparison.py"], [],
+     [["projects", "NeuralTF", "figures", "fig_method_score_density.png"],
+      ["projects", "NeuralTF", "figures", "fig_method_rank_correlation.png"],
+      ["projects", "NeuralTF", "figures", "fig_method_score_volatility.png"],
+      ["projects", "NeuralTF", "figures", "fig_method_summary.png"],
+      ["projects", "NeuralTF", "figures", "fig_method_99vs249.png"]]),
 ]
 
 
