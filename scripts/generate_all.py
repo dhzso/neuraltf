@@ -138,6 +138,18 @@ and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
                  / "top10_neural_tfs_prioritized.csv").exists(),
             "dirichlet_uniform_full_rank.csv / dirichlet_top10_prioritized.csv / "
             "dirichlet_uniform_all249_full_rank.csv / top10_neural_tfs_prioritized.csv missing"),
+        "Generate supplementary tables": (
+            (root / "projects" / "NeuralTF" / "results"
+             / "top10_neural_tfs_prioritized.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_top10_prioritized.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_uniform_top10.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_uniform_all249_full_rank.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "fstf_ranked_19_neural.csv").exists(),
+            "prioritization CSVs / FSTF CSVs missing"),
     }
     ok, why = rules[step]
     return None if ok else why
@@ -227,6 +239,17 @@ STEPS = [
       ["projects", "NeuralTF", "figures", "fig_method_score_volatility.png"],
       ["projects", "NeuralTF", "figures", "fig_method_summary.png"],
       ["projects", "NeuralTF", "figures", "fig_method_99vs249.png"]]),
+    ("Generate supplementary tables",
+     ["projects/NeuralTF/scripts/create_supplementary_tables.py"], [],
+     [["projects", "NeuralTF", "results", "supplementary_table_S1_method_comparison.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S2_fixed_all249.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S3_centered_all99.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S4_uniform_all99.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S5_uniform_all249.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S6_fstf_19_neural.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S7_fstf_43_all.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S8_fstf_74_catalog.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S9_99vs249.csv"]]),
 ]
 
 
