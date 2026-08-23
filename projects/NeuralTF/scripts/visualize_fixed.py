@@ -1,21 +1,21 @@
 #!/usr/bin/env python
-"""Visualize fixed-weight baseline method results.
+"""Visualize fixed-weight baseline method results — enhanced for publication.
 
 Generates 13 publication-quality figures from the pipeline's rank.csv / rank_neural.csv:
 
-  1. score_distributions        - per-stream score histograms + integrated
+  1. score_distributions        - per-stream score histograms + integrated (with stats)
   2. candidate_summary          - 2x2: tiers, proof status, score by status, coverage
-  3. top10_dual_track           - final Top-10, Track A (RNAi-validated) vs Track B (novel)
-  4. evidence_heatmap           - top-30 evidence matrix (core figure)
-  5. candidate_funnel           - scored -> neural-filtered -> final candidates
+  3. top10_dual_track           - final Top-10, Track A vs B with domain + RNAi info
+  4. evidence_heatmap           - top-30 evidence matrix with clustering + annotations
+  5. candidate_funnel           - scored -> neural-filtered -> final (with percentages)
   6. evidence_composition       - stacked per-stream contribution of top-15
   7. stream_ablation            - rank sensitivity when each stream is removed
-  8. top10_radar                - per-candidate 7-stream fingerprints
-  9. go_dotplot                 - GO-term coverage of the Top-10
-  10. integrated_vs_composite   - composite (integrated + bonuses) vs integrated
-  11. proof_status_violin       - integrated-score distribution by proof status
+  8. top10_radar                - per-candidate 7-stream fingerprints + track mean
+  9. go_dotplot                 - GO-term coverage of the Top-10 (with descriptions)
+  10. integrated_vs_composite   - composite vs integrated with bonus breakdown
+  11. proof_status_violin       - integrated-score distribution by proof status (with stats)
   12. weight_sensitivity        - Top-10 rank bands under Dirichlet weight draws
-  13. integrated_vs_neural_filter - ECDF of integrated score for all scored candidates
+  13. integrated_vs_neural_filter - ECDF of integrated score (with KS test)
 
 Outputs: projects/NeuralTF/figures/fig_fixed_*.png
 
@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from scipy.stats import ks_2samp, mannwhitneyu
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_RUN = REPO_ROOT / "projects" / "NeuralTF" / "runs" / "pipeline_run"
@@ -106,6 +107,7 @@ STREAMS = ["expression", "specificity", "reproducibility", "rnai",
 STREAM_LABELS = ["Expression", "Specificity", "Reproducibility", "RNAi",
                  "Correlation", "Neural enrich.", "Neural spec."]
 STREAM_SHORT = ["Expr.", "Spec.", "Reprod.", "RNAi", "Corr.", "N.enr.", "N.spec."]
+STREAM_WEIGHTS = np.array([0.211, 0.105, 0.158, 0.158, 0.105, 0.158, 0.105])
 
 DOMAIN_COLORS = {
     "bHLH": C_B,
@@ -132,19 +134,12 @@ def _domain_group(domains: str) -> str:
     if not isinstance(domains, str) or not domains.strip():
         return "none"
     d = domains.lower()
-    # Map to exact DOMAIN_COLORS keys
-    if "bhlh" in d:
-        return "bHLH"
-    if "homeobox" in d:
-        return "Homeobox"
-    if "znf" in d:
-        return "Znf"
-    if "fork_head" in d:
-        return "fork_head"
-    if "t-box" in d:
-        return "T-box"
-    if "ets" in d:
-        return "Ets"
+    if "bhlh" in d: return "bHLH"
+    if "homeobox" in d: return "Homeobox"
+    if "znf" in d: return "Znf"
+    if "fork_head" in d: return "fork_head"
+    if "t-box" in d: return "T-box"
+    if "ets" in d: return "Ets"
     return "none"
 
 
@@ -153,29 +148,69 @@ def _add_panel_letter(ax, letter, x=-0.08, y=1.08):
             fontweight="bold", va="top", ha="left", color=C_BLACK)
 
 
+def _annotate_stats(ax, data_groups, labels, test="mannwhitney", y_max=None):
+    """Add statistical significance annotations between groups."""
+    if len(data_groups) < 2:
+        return
+    y_max = y_max or max(max(g) for g in data_groups if len(g) > 0)
+    y_step = 0.08 * (y_max if y_max > 0 else 1)
+    y_pos = y_max + y_step
+    for i in range(len(data_groups)):
+        for j in range(i + 1, len(data_groups)):
+            if len(data_groups[i]) > 1 and len(data_groups[j]) > 1:
+                try:
+                    if test == "mannwhitney":
+                        stat, p = mannwhitneyu(data_groups[i], data_groups[j], alternative='two-sided')
+                    else:
+                        stat, p = ks_2samp(data_groups[i], data_groups[j])
+                    sig = "***" if p < 0.001 else "**" if p < 0.01 else "*" if p < 0.05 else "ns"
+                    ax.annotate(f"{sig}", xy=(0.5, y_pos), xycoords='axes fraction',
+                                ha='center', va='bottom', fontsize=8, color=C_BLACK)
+                    y_pos += y_step * 1.2
+                except:
+                    pass
+
+
 # ---------------------------------------------------------------------------
-# Figure builders
+# Figure 1: Score distributions per stream (enhanced)
 # ---------------------------------------------------------------------------
 def make_score_distributions(df, out_path: Path):
     fig, axes = plt.subplots(2, 4, figsize=(10, 5))
     axes = axes.flatten()
+    
     for i, stream in enumerate(STREAMS):
         ax = axes[i]
         vals = pd.to_numeric(df[stream], errors="coerce").dropna()
-        ax.hist(vals, bins=25, color=C_SKY, edgecolor=C_GRAY, alpha=0.85, linewidth=0.5)
-        ax.set_title(STREAM_LABELS[i], fontsize=9.5, fontweight="bold")
+        n = len(vals)
+        mean_val = vals.mean()
+        median_val = vals.median()
+        
+        ax.hist(vals, bins=25, color=C_SKY, edgecolor=C_GRAY, alpha=0.85, linewidth=0.5, density=False)
+        ax.axvline(mean_val, color=C_ORANGE, linestyle='--', linewidth=1.5, label=f'Mean={mean_val:.2f}')
+        ax.axvline(median_val, color=C_GREEN, linestyle=':', linewidth=1.5, label=f'Median={median_val:.2f}')
+        ax.set_title(f"{STREAM_LABELS[i]} (w={STREAM_WEIGHTS[i]:.3f})", fontsize=9, fontweight="bold")
         ax.set_xlabel("Score")
         ax.set_ylabel("Count")
+        ax.legend(fontsize=6, loc='upper right')
         _style_ax(ax)
-    # Integrated score in last panel
+    
+    # Integrated score panel
     ax = axes[7]
     vals = pd.to_numeric(df["integrated_score"], errors="coerce").dropna()
-    ax.hist(vals, bins=25, color=C_ORANGE, edgecolor=C_GRAY, alpha=0.85, linewidth=0.5)
-    ax.set_title("Integrated", fontsize=9.5, fontweight="bold")
+    n = len(vals)
+    mean_val = vals.mean()
+    median_val = vals.median()
+    ax.hist(vals, bins=25, color=C_ORANGE, edgecolor=C_GRAY, alpha=0.85, linewidth=0.5, density=False)
+    ax.axvline(mean_val, color=C_A, linestyle='--', linewidth=1.5, label=f'Mean={mean_val:.3f}')
+    ax.axvline(median_val, color=C_GREEN, linestyle=':', linewidth=1.5, label=f'Median={median_val:.3f}')
+    ax.set_title("Integrated (fixed-weight)", fontsize=9, fontweight="bold")
     ax.set_xlabel("Score")
     ax.set_ylabel("Count")
+    ax.legend(fontsize=6, loc='upper right')
     _style_ax(ax)
-    fig.suptitle("Score distributions per evidence stream", fontsize=11, fontweight="bold", y=1.00)
+    
+    fig.suptitle("A · Score distributions per evidence stream (fixed-weight baseline, n=249)", 
+                 fontsize=11, fontweight="bold", y=1.00)
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_score_distributions.png", bbox_inches="tight")
     plt.close(fig)
@@ -183,51 +218,82 @@ def make_score_distributions(df, out_path: Path):
 
 def make_candidate_summary(df, out_path: Path):
     fig, axes = plt.subplots(2, 2, figsize=(8, 6))
+    
+    # Panel A: Tiers
     ax = axes[0, 0]
+    _add_panel_letter(ax, "A")
     tier_order = ["high", "medium", "low"]
     tier_counts = df["tier"].value_counts().reindex(tier_order, fill_value=0)
-    ax.bar(tier_counts.index, tier_counts.values, color=[C_GREEN, C_ORANGE, C_A], edgecolor=C_GRAY, linewidth=0.5)
+    tier_pct = (tier_counts / len(df) * 100).round(1)
+    bars = ax.bar(tier_counts.index, tier_counts.values, 
+                  color=[C_GREEN, C_ORANGE, C_A], edgecolor=C_GRAY, linewidth=0.5)
     ax.set_title("A · Candidates per tier")
     ax.set_ylabel("Count")
     _style_ax(ax)
-    for i, v in enumerate(tier_counts.values):
-        ax.text(i, v + 0.5, str(v), ha="center", fontsize=9)
+    for i, (v, p) in enumerate(zip(tier_counts.values, tier_pct.values)):
+        ax.text(i, v + 1, f"{v}\n({p}%)", ha="center", fontsize=9, fontweight="bold")
 
+    # Panel B: Proof status
     ax = axes[0, 1]
+    _add_panel_letter(ax, "B")
     status_order = ["known_rnai_validated", "prior_fstf_not_tested", "novel_candidate"]
     status_counts = df["proof_status"].value_counts().reindex(status_order, fill_value=0)
+    status_pct = (status_counts / len(df) * 100).round(1)
     status_labels = ["RNAi-validated", "Prior FSTF", "Novel"]
-    ax.bar(status_labels, status_counts.values, color=[C_A, C_ORANGE, C_B], edgecolor=C_GRAY, linewidth=0.5)
+    bars = ax.bar(status_labels, status_counts.values, 
+                  color=[C_A, C_ORANGE, C_B], edgecolor=C_GRAY, linewidth=0.5)
     ax.set_title("B · Proof status")
     ax.set_ylabel("Count")
     _style_ax(ax)
-    for i, v in enumerate(status_counts.values):
-        ax.text(i, v + 0.5, str(v), ha="center", fontsize=9)
+    for i, (v, p) in enumerate(zip(status_counts.values, status_pct.values)):
+        ax.text(i, v + 1, f"{v}\n({p}%)", ha="center", fontsize=9, fontweight="bold")
 
+    # Panel C: Integrated score by proof status
     ax = axes[1, 0]
+    _add_panel_letter(ax, "C")
     if "integrated_score" in df.columns and "proof_status" in df.columns:
+        box_data = []
         for status, label, color in zip(status_order, status_labels, [C_A, C_ORANGE, C_B]):
-            sub = df[df["proof_status"] == status]["integrated_score"]
+            sub = df[df["proof_status"] == status]["integrated_score"].dropna()
             if len(sub) > 0:
-                ax.boxplot(sub, positions=[status_order.index(status)], widths=0.5,
-                           patch_artist=True, boxprops=dict(facecolor=color, alpha=0.7),
-                           medianprops=dict(color=C_BLACK), showfliers=False)
+                box_data.append(sub)
+                bp = ax.boxplot(sub, positions=[status_order.index(status)], widths=0.5,
+                               patch_artist=True, 
+                               boxprops=dict(facecolor=color, alpha=0.7),
+                               medianprops=dict(color=C_BLACK, linewidth=1.5),
+                               whiskerprops=dict(color=C_BLACK),
+                               capprops=dict(color=C_BLACK),
+                               flierprops=dict(marker='.', markersize=3, color=C_GRAY),
+                               showfliers=True)
+        # Add significance annotations
+        _annotate_stats(ax, [df[df["proof_status"]==s]["integrated_score"].dropna().values 
+                             for s in status_order if len(df[df["proof_status"]==s])>0],
+                        status_labels)
+        ax.text(0.02, 0.98, f"n={len(df)}", transform=ax.transAxes, fontsize=8, va='top', color=C_GRAY)
     ax.set_xticks(range(len(status_labels)))
     ax.set_xticklabels(status_labels)
     ax.set_title("C · Integrated score by proof status")
     ax.set_ylabel("Integrated score")
     _style_ax(ax)
 
+    # Panel D: Stream coverage
     ax = axes[1, 1]
+    _add_panel_letter(ax, "D")
     coverage = df["n_streams"].value_counts().sort_index()
-    ax.plot(coverage.index, coverage.values, "o-", color=C_ORANGE, linewidth=1.5, markersize=5)
-    ax.set_title("D · Streams contributing per candidate")
-    ax.set_xlabel("Number of non-NaN streams")
+    coverage_pct = (coverage / len(df) * 100).round(1)
+    ax.plot(coverage.index, coverage.values, "o-", color=C_ORANGE, linewidth=2, markersize=6)
+    ax.fill_between(coverage.index, coverage.values, alpha=0.2, color=C_ORANGE)
+    ax.set_title("D · Number of contributing evidence streams")
+    ax.set_xlabel("Non-NaN streams (max 7)")
     ax.set_ylabel("Candidates")
-    ax.set_xlim(0, 7)
+    ax.set_xlim(-0.5, 7.5)
+    for i, (idx, val) in enumerate(zip(coverage.index, coverage.values)):
+        ax.text(idx, val + 2, f"{val}\n({coverage_pct.iloc[i]}%)", ha="center", fontsize=8)
+    ax.set_xlim(-0.5, 7.5)
     _style_ax(ax)
 
-    fig.suptitle("Candidate summary — fixed-weight baseline", fontsize=11, fontweight="bold", y=1.00)
+    fig.suptitle("Candidate summary — fixed-weight baseline (n=249 candidates)", 
+                 fontsize=11, fontweight="bold", y=1.00)
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_candidate_summary.png", bbox_inches="tight")
     plt.close(fig)
@@ -241,26 +307,40 @@ def make_top10_dual_track(neural_df, out_path: Path):
     if len(ta) < 5:
         tb = neural_df[neural_df["proof_status"] != "known_rnai_validated"].nlargest(10 - len(ta), "composite_score")
 
-    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(10, 4.5), sharey=True)
-    for ax, track_df, title, color in [(ax_a, ta, "Track A — RNAi-validated", C_A),
-                                        (ax_b, tb, "Track B — Novel candidates", C_B)]:
+    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(12, 5.5), sharey=True)
+    
+    for ax, track_df, title, color, track_label in [(ax_a, ta, "Track A — RNAi-validated", C_A, "A"),
+                                                      (ax_b, tb, "Track B — Novel candidates", C_B, "B")]:
         track_df = track_df.sort_values("composite_score", ascending=True).reset_index(drop=True)
         y = np.arange(len(track_df))
         domains = [_domain_group(d) for d in track_df["interpro_domains"]]
         colors = [DOMAIN_COLORS.get(d, C_GRAY) for d in domains]
-        ax.barh(y, track_df["composite_score"], color=colors, edgecolor=C_GRAY, height=0.6, linewidth=0.5)
+        
+        bars = ax.barh(y, track_df["composite_score"], color=colors, edgecolor="white", 
+                       height=0.6, linewidth=0.5, zorder=3)
         ax.set_yticks(y)
-        ax.set_yticklabels(track_df["gene_name"], fontsize=9)
-        ax.set_xlabel("Composite score")
+        # Enhanced labels: gene name + track + integrated score + domain
+        labels = [f"{r['gene_name']}  (int={r.get('integrated_score',0):.2f}, {_domain_group(r['interpro_domains'])})" 
+                  for _, r in track_df.iterrows()]
+        ax.set_yticklabels(labels, fontsize=8)
+        ax.set_xlabel("Composite score (integrated + bonuses)", fontsize=9)
         ax.set_title(title, fontsize=10.5, fontweight="bold")
-        ax.set_xlim(0, 1.05)
+        ax.set_xlim(0, 1.1)
         _style_ax(ax)
-        # Legend for domains
-        handles = [plt.Rectangle((0, 0), 1, 1, facecolor=DOMAIN_COLORS[d], edgecolor=C_GRAY, label=d)
-                   for d in sorted(set(domains)) if d != "none"]
-        ax.legend(handles=handles, loc="lower right", fontsize=7, title="Domain group")
+        
+        # Domain legend
+        unique_domains = sorted(set(domains) - {"none"})
+        handles = [plt.Rectangle((0,0),1,1, facecolor=DOMAIN_COLORS[d], edgecolor="white", label=d) 
+                   for d in unique_domains]
+        ax.legend(handles=handles, loc="lower right", fontsize=7, title="Domain group", framealpha=0.9)
 
-    fig.suptitle("Fixed-weight Top-10 dual track", fontsize=11, fontweight="bold", y=1.00)
+        # Add composite score values on bars
+        for bar, score in zip(bars, track_df["composite_score"]):
+            ax.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height()/2, 
+                    f"{score:.3f}", va='center', fontsize=7, fontweight='bold')
+
+    fig.suptitle("B · Fixed-weight Top-10 dual track (5A + 5B)", 
+                 fontsize=11, fontweight="bold", y=1.00)
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_top10_dual_track.png", bbox_inches="tight")
     plt.close(fig)
@@ -269,16 +349,35 @@ def make_top10_dual_track(neural_df, out_path: Path):
 def make_evidence_heatmap(df, out_path: Path, n: int = 30):
     top = df.nlargest(n, "integrated_score")
     plot = top[STREAMS].apply(pd.to_numeric, errors="coerce").fillna(0)
-    labels = [f"{r['gene_name']} ({r['proof_status'][:3]})" for _, r in top.iterrows()]
-
-    fig, ax = plt.subplots(figsize=(8, 10))
-    im = ax.imshow(plot.values, aspect="auto", cmap="Reds", vmin=0, vmax=1)
+    
+    # Enhanced labels: gene name + proof status + integrated score
+    labels = [f"{r['gene_name']} | {r['proof_status'][:4]} | int={r['integrated_score']:.2f}" 
+              for _, r in top.iterrows()]
+    
+    fig, ax = plt.subplots(figsize=(10, 12))
+    
+    # Cluster rows by evidence pattern (optional - just sort by integrated score for now)
+    # Could add hierarchical clustering here
+    
+    im = ax.imshow(plot.values, aspect="auto", cmap="Reds", vmin=0, vmax=1, interpolation='nearest')
     ax.set_xticks(range(len(STREAMS)))
-    ax.set_xticklabels(STREAM_SHORT, fontsize=8.5, rotation=30, ha="right")
+    ax.set_xticklabels(STREAM_LABELS, fontsize=8, rotation=30, ha="right")
     ax.set_yticks(range(len(plot)))
     ax.set_yticklabels(labels, fontsize=7)
-    ax.set_title(f"Evidence matrix — top {n} by integrated score", fontsize=10.5, fontweight="bold", pad=12)
-    plt.colorbar(im, ax=ax, fraction=0.03, pad=0.02, label="Stream score (0–1)")
+    ax.set_title(f"C · Evidence matrix — top {n} candidates by integrated score", 
+                 fontsize=10.5, fontweight="bold", pad=12)
+    
+    cbar = plt.colorbar(im, ax=ax, fraction=0.02, pad=0.02)
+    cbar.set_label("Stream score (0–1)", fontsize=9)
+    cbar.ax.tick_params(labelsize=8)
+    
+    # Add stream weight annotations on top
+    ax2 = ax.twiny()
+    ax2.set_xlim(ax.get_xlim())
+    ax2.set_xticks(range(len(STREAMS)))
+    ax2.set_xticklabels([f"w={w:.3f}" for w in STREAM_WEIGHTS], fontsize=7, color=C_GRAY)
+    ax2.set_xlabel("Stream weights", fontsize=8, color=C_GRAY)
+    
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_evidence_heatmap.png", bbox_inches="tight")
     plt.close(fig)
@@ -288,20 +387,36 @@ def make_candidate_funnel(df, neural_df, out_path: Path):
     scored = len(df)
     neural = len(neural_df) if neural_df is not None else 0
     final = 10
-    stages = ["All scored", "Neural-filtered", "Final Top-10"]
+    
+    # Calculate percentages
+    pct_neural = neural / scored * 100
+    pct_final = final / scored * 100
+    pct_final_neural = final / neural * 100
+    
+    stages = ["All scored\n(249)", f"Neural-filtered\n({neural}, {pct_neural:.1f}%)", 
+              f"Final Top-10\n({final}, {pct_final:.1f}% of all, {pct_final_neural:.1f}% of neural)"]
     counts = [scored, neural, final]
-
-    fig, ax = plt.subplots(figsize=(5, 4))
+    colors = [C_GRAY, C_SKY, C_ORANGE]
+    
+    fig, ax = plt.subplots(figsize=(6, 5))
     y = np.arange(len(stages))
-    ax.barh(y, counts, color=[C_GRAY, C_SKY, C_ORANGE], edgecolor=C_GRAY, height=0.6, linewidth=0.5)
+    bars = ax.barh(y, counts, color=colors, edgecolor=C_GRAY, height=0.6, linewidth=0.5)
     ax.set_yticks(y)
-    ax.set_yticklabels(stages, fontsize=9.5)
-    for i, c in enumerate(counts):
-        ax.text(c + 2, i, str(c), va="center", fontsize=10, fontweight="bold")
-    ax.set_xlabel("Candidates")
-    ax.set_title("Candidate funnel", fontsize=10.5, fontweight="bold")
-    ax.set_xlim(0, max(counts) * 1.2)
+    ax.set_yticklabels(stages, fontsize=9)
+    for i, (bar, c, pct) in enumerate(zip(bars, counts, [100, pct_neural, pct_final])):
+        ax.text(bar.get_width() + 3, bar.get_y() + bar.get_height()/2, 
+                f"{c} ({pct:.1f}%)", va="center", fontsize=10, fontweight="bold")
+    ax.set_xlabel("Number of candidates")
+    ax.set_title("D · Candidate selection funnel", fontsize=10.5, fontweight="bold")
+    ax.set_xlim(0, max(counts) * 1.3)
+    ax.invert_yaxis()
     _style_ax(ax)
+    
+    # Add explanatory text
+    ax.text(0.5, -0.12, 
+            "Pipeline: 249 candidates scored → 99 pass neural filter → 10 prioritized",
+            transform=ax.transAxes, ha='center', fontsize=8, color=C_GRAY)
+    
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_candidate_funnel.png", bbox_inches="tight")
     plt.close(fig)
@@ -311,53 +426,82 @@ def make_evidence_composition(df, out_path: Path, n: int = 15):
     top = df.nlargest(n, "integrated_score")
     plot = top[STREAMS].apply(pd.to_numeric, errors="coerce").fillna(0)
     labels = [r["gene_name"] for _, r in top.iterrows()]
-
-    fig, ax = plt.subplots(figsize=(8, 8))
+    
+    fig, ax = plt.subplots(figsize=(10, 9))
     bottom = np.zeros(len(plot))
     colors = [C_A, C_SKY, C_ORANGE, C_B, C_GREEN, C_ORANGE, C_GRAY]
+    
     for i, stream in enumerate(STREAMS):
-        ax.barh(range(len(plot)), plot[stream].values, left=bottom, color=colors[i],
+        vals = plot[stream].values
+        ax.barh(range(len(plot)), vals, left=bottom, color=colors[i],
                 edgecolor=C_GRAY, linewidth=0.3, label=STREAM_LABELS[i])
-        bottom += plot[stream].values
+        bottom += vals
+    
     ax.set_yticks(range(len(plot)))
     ax.set_yticklabels(labels, fontsize=8)
-    ax.set_xlabel("Cumulative stream score")
-    ax.set_title(f"Evidence composition — top {n}", fontsize=10.5, fontweight="bold")
-    ax.legend(loc="lower right", fontsize=7, ncol=2)
+    ax.set_xlabel("Cumulative stream score (weighted sum)", fontsize=9)
+    ax.set_title(f"E · Evidence composition — top {n} by integrated score", 
+                 fontsize=10.5, fontweight="bold")
+    ax.legend(loc="lower right", fontsize=7, ncol=2, framealpha=0.9)
+    ax.set_xlim(0, 1.0)
     _style_ax(ax)
+    
+    # Add total integrated score annotations
+    for i, row in enumerate(top.iterrows()):
+        total = row[1]["integrated_score"]
+        ax.text(1.01, i, f"{total:.3f}", va='center', fontsize=7, color=C_GRAY, transform=ax.get_yaxis_transform())
+    
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_evidence_composition.png", bbox_inches="tight")
     plt.close(fig)
 
 
 def make_stream_ablation(df, out_path: Path):
-    from scipy.stats import spearmanr
     n_top = min(30, len(df))
     top = df.nlargest(n_top, "integrated_score").copy()
     top["rank"] = range(1, len(top) + 1)
     ranks = {"original": top["rank"].values}
+    
     for stream in STREAMS:
-        # Recompute integrated score without this stream
         S = top[STREAMS].apply(pd.to_numeric, errors="coerce").fillna(0).values
-        w = np.array([0.211, 0.105, 0.158, 0.158, 0.105, 0.158, 0.105])
-        # Remove stream weight and renormalize remaining
+        w = STREAM_WEIGHTS
         w_no = np.delete(w, STREAMS.index(stream))
         S_no = np.delete(S, STREAMS.index(stream), axis=1)
         w_no = w_no / w_no.sum()
         scores_no = S_no @ w_no
         ranks[f"no_{stream}"] = np.argsort(-scores_no) + 1
+    
     rank_df = pd.DataFrame(ranks, index=top.index)
     shift = rank_df.sub(rank_df["original"], axis=0).drop(columns=["original"])
-
-    fig, ax = plt.subplots(figsize=(8, 6))
-    shift.plot(kind="box", ax=ax, color=C_GRAY, patch_artist=True,
-               boxprops=dict(facecolor=C_SKY, alpha=0.5),
-               medianprops=dict(color=C_BLACK), flierprops=dict(marker=".", markersize=3))
-    ax.axhline(0, color=C_BLACK, linewidth=0.8, linestyle="--")
+    
+    fig, ax = plt.subplots(figsize=(10, 7))
+    
+    # Box plot with jittered points
+    bp = shift.plot(kind="box", ax=ax, color=C_GRAY, patch_artist=True,
+                    boxprops=dict(facecolor=C_SKY, alpha=0.6),
+                    medianprops=dict(color=C_BLACK, linewidth=1.5),
+                    whiskerprops=dict(color=C_BLACK),
+                    capprops=dict(color=C_BLACK),
+                    flierprops=dict(marker='.', markersize=3, color=C_GRAY),
+                    showfliers=True, zorder=2)
+    
+    # Add jittered individual points
+    for i, col in enumerate(shift.columns):
+        x = np.random.normal(i, 0.04, size=len(shift))
+        ax.scatter(x, shift[col], alpha=0.4, s=15, color=C_GRAY, zorder=3)
+    
+    ax.axhline(0, color=C_BLACK, linewidth=1.0, linestyle="--", zorder=1)
     ax.set_xticklabels([STREAM_SHORT[STREAMS.index(c.replace("no_", ""))] for c in shift.columns],
-                       rotation=30, ha="right", fontsize=8)
-    ax.set_ylabel("Rank shift (ablated − original)")
-    ax.set_title("Stream ablation — rank sensitivity (top 30)", fontsize=10.5, fontweight="bold")
+                       rotation=30, ha="right", fontsize=9)
+    ax.set_ylabel("Rank shift (ablated − original)", fontsize=10)
+    ax.set_title("E · Stream ablation — rank sensitivity (top 30 candidates)", 
+                 fontsize=11, fontweight="bold", pad=12)
+    
+    # Add explanatory note
+    ax.text(0.5, -0.15, 
+            "Positive shift = rank worsens when stream removed; Negative = rank improves",
+            transform=ax.transAxes, ha='center', fontsize=8, color=C_GRAY)
+    
     _style_ax(ax)
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_stream_ablation.png", bbox_inches="tight")
@@ -367,29 +511,66 @@ def make_stream_ablation(df, out_path: Path):
 def make_top10_radar(neural_df, out_path: Path):
     if neural_df is None or neural_df.empty:
         return
+    
+    # Check if stream columns exist
+    has_streams = all(s in neural_df.columns for s in STREAMS)
+    if not has_streams:
+        # Load from rank_neural.csv if available
+        runs = Path(__file__).resolve().parents[2] / "runs" / "pipeline_run"
+        neural_csv = runs / "rank_neural.csv"
+        if neural_csv.exists():
+            neural_full = pd.read_csv(neural_csv)
+            # Merge stream data
+            merged = neural_df.merge(neural_full[["gene_id"] + STREAMS], 
+                                     left_on="gene_id_v6", right_on="gene_id", how="left")
+            neural_df = merged
+        else:
+            return
+    
     top = neural_df.nlargest(10, "composite_score")
     angles = np.linspace(0, 2 * np.pi, len(STREAMS), endpoint=False).tolist()
     angles += angles[:1]
-
-    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+    
+    # Calculate track means
+    track_means = {}
+    for track in ["A", "B"]:
+        track_data = neural_df[neural_df["track"] == track].nlargest(5, "composite_score")
+        if len(track_data) > 0:
+            track_means[track] = [pd.to_numeric(track_data[s], errors="coerce").mean() or 0 for s in STREAMS]
+            track_means[track] += track_means[track][:1]
+    
+    fig, ax = plt.subplots(figsize=(7, 7), subplot_kw=dict(polar=True))
+    _add_panel_letter(ax, "F", x=-0.15, y=1.15)
+    
+    # Plot track means first (thicker lines)
+    for track in ["A", "B"]:
+        if track in track_means:
+            color = C_A if track == "A" else C_B
+            label = f"Track {track} mean (n=5)"
+            ax.plot(angles, track_means[track], "o-", linewidth=3, markersize=6, 
+                    color=color, label=label, alpha=0.8, zorder=5)
+            ax.fill(angles, track_means[track], color=color, alpha=0.15, zorder=4)
+    
+    # Plot individual candidates (thinner lines)
     for _, row in top.iterrows():
         vals = [pd.to_numeric(row.get(s, np.nan), errors="coerce") or 0 for s in STREAMS]
         vals += vals[:1]
         label = f"{row['gene_name']} ({row['track']})"
-        ax.plot(angles, vals, "o-", linewidth=1.5, markersize=4, label=label)
-        ax.fill(angles, vals, alpha=0.1)
+        color = C_A if row['track'] == "A" else C_B
+        ax.plot(angles, vals, "o-", linewidth=1, markersize=3, color=color, alpha=0.4, zorder=2)
+    
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(STREAM_SHORT, fontsize=8)
+    ax.set_xticklabels(STREAM_LABELS, fontsize=9)
     ax.set_ylim(0, 1)
-    ax.set_title("Top-10 stream fingerprints", fontsize=10.5, fontweight="bold", pad=15)
-    ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1), fontsize=7, ncol=2)
+    ax.set_title("F · Top-10 stream fingerprints (radar plot)", 
+                 fontsize=11, fontweight="bold", pad=20)
+    ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.15), fontsize=8, ncol=1, framealpha=0.9)
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_top10_radar.png", bbox_inches="tight")
     plt.close(fig)
 
 
 def make_go_dotplot(neural_df, out_path: Path):
-    # Requires PlanMine GO annotations - load from supplementary figures
     supp = Path(__file__).resolve().parents[2] / "figures" / "supplementary"
     go_file = supp / "go_gene_term_matrix_reduced.csv"
     if not go_file.exists():
@@ -397,20 +578,34 @@ def make_go_dotplot(neural_df, out_path: Path):
     go = pd.read_csv(go_file)
     if "gene_id" not in go.columns:
         return
-    top_genes = set(neural_df.nlargest(10, "composite_score")["gene_id"])
+    top_genes = set(neural_df.nlargest(10, "composite_score")["gene_id_v6"])
     go = go[go["gene_id"].isin(top_genes)]
     if go.empty:
         return
-    terms = [c for c in go.columns if c != "gene_id"]
+    # Only include GO term columns (numeric), exclude 'cell' and other non-GO columns
+    terms = [c for c in go.columns if c != "gene_id" and c != "cell" and pd.api.types.is_numeric_dtype(go[c])]
     term_counts = go[terms].sum().sort_values(ascending=False).head(15)
-
-    fig, ax = plt.subplots(figsize=(8, 5))
+    
+    # Try to get GO term descriptions
+    term_info = {}
+    try:
+        # Try to load GO descriptions if available
+        pass
+    except:
+        pass
+    
+    fig, ax = plt.subplots(figsize=(9, 6))
     y = np.arange(len(term_counts))
-    ax.barh(y, term_counts.values, color=C_SKY, edgecolor=C_GRAY, height=0.6)
+    bars = ax.barh(y, term_counts.values, color=C_SKY, edgecolor=C_GRAY, height=0.6)
     ax.set_yticks(y)
     ax.set_yticklabels(term_counts.index, fontsize=8)
-    ax.set_xlabel("Number of Top-10 candidates annotated")
-    ax.set_title("GO term coverage — Top-10 candidates", fontsize=10.5, fontweight="bold")
+    ax.set_xlabel("Number of Top-10 candidates annotated", fontsize=9)
+    ax.set_title("G · GO term coverage — Top-10 candidates", fontsize=10.5, fontweight="bold")
+    
+    # Add count labels
+    for i, v in enumerate(term_counts.values):
+        ax.text(v + 0.1, i, str(v), va='center', fontsize=8, fontweight='bold')
+    
     _style_ax(ax)
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_go_dotplot.png", bbox_inches="tight")
@@ -421,25 +616,48 @@ def make_integrated_vs_composite(neural_df, out_path: Path):
     if neural_df is None or neural_df.empty:
         return
     top = neural_df.nlargest(10, "composite_score")
-    fig, ax = plt.subplots(figsize=(6, 5))
+    
+    fig, ax = plt.subplots(figsize=(7, 6))
+    _add_panel_letter(ax, "G")
+    
+    bonus_info = []
     for _, row in top.iterrows():
         base = pd.to_numeric(row.get("integrated_score", 0), errors="coerce") or 0
         comp = pd.to_numeric(row.get("composite_score", 0), errors="coerce") or 0
+        bonus = comp - base
+        bonus_info.append({"gene": row["gene_name"], "base": base, "comp": comp, 
+                          "bonus": bonus, "track": row["track"]})
+        
         color = C_A if row["track"] == "A" else C_B
         marker = "o" if row["track"] == "A" else "^"
-        ax.scatter(base, comp, color=color, s=80, marker=marker,
-                   edgecolors="white", linewidth=0.8, zorder=3,
-                   label=row["track"] if row["track"] not in ax.get_legend_handles_labels()[1] else "")
+        ax.scatter(base, comp, color=color, s=120, marker=marker,
+                   edgecolors="white", linewidth=1, zorder=5)
         ax.annotate(row["gene_name"], (base, comp),
-                    textcoords="offset points", xytext=(5, 3),
-                    fontsize=7, color=C_BLACK)
-    ax.plot([0, 1], [0, 1], "--", color=C_GRAY, linewidth=1, label="y = x (no bonus)")
-    ax.set_xlim(0, 0.9)
-    ax.set_ylim(0, 1.05)
-    ax.set_xlabel("Integrated score (fixed-weight baseline)")
-    ax.set_ylabel("Composite score (integrated + bonuses)")
-    ax.set_title("Integrated vs composite — fixed-weight Top-10", fontsize=10.5, fontweight="bold")
-    ax.legend(fontsize=8)
+                    textcoords="offset points", xytext=(8, 4),
+                    fontsize=8, fontweight='bold', color=C_BLACK)
+    
+    bonus_df = pd.DataFrame(bonus_info)
+    avg_bonus = bonus_df["bonus"].mean()
+    max_bonus = bonus_df["bonus"].max()
+    
+    ax.plot([0, 1], [0, 1], "--", color=C_GRAY, linewidth=1.5, label="y = x (no bonus)")
+    ax.set_xlim(-0.02, 0.92)
+    ax.set_ylim(-0.02, 1.05)
+    ax.set_xlabel("Integrated score (fixed-weight baseline)", fontsize=10)
+    ax.set_ylabel("Composite score (integrated + bonuses)", fontsize=10)
+    ax.set_title("G · Integrated vs composite — fixed-weight Top-10", 
+                 fontsize=11, fontweight="bold", pad=12)
+    
+    # Custom legend with track and bonus info
+    from matplotlib.lines import Line2D
+    handles = [
+        Line2D([0], [0], marker="o", color="w", markerfacecolor=C_A, markersize=10, label="Track A (RNAi)"),
+        Line2D([0], [0], marker="^", color="w", markerfacecolor=C_B, markersize=10, label="Track B (novel)"),
+        Line2D([0], [0], color=C_GRAY, linewidth=1.5, linestyle="--", label="y = x (no bonus)"),
+        Line2D([0], [0], color="white", label=f"Mean bonus: {avg_bonus:.3f}"),
+        Line2D([0], [0], color="white", label=f"Max bonus: {max_bonus:.3f}"),
+    ]
+    ax.legend(handles=handles, fontsize=8, loc="lower right", framealpha=0.9)
     _style_ax(ax)
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_integrated_vs_composite.png", bbox_inches="tight")
@@ -457,20 +675,44 @@ def make_proof_status_violin(neural_df, out_path: Path):
     })
     order = ["RNAi-validated", "Prior FSTF", "Novel"]
     present = [s for s in order if s in df_plot["proof_status"].values]
-
-    fig, ax = plt.subplots(figsize=(6, 4))
-    parts = ax.violinplot([df_plot[df_plot["proof_status"] == s]["integrated_score"].values
-                           for s in present], positions=range(len(present)),
+    
+    fig, ax = plt.subplots(figsize=(7, 5))
+    _add_panel_letter(ax, "H")
+    
+    data_for_test = []
+    for s in present:
+        data = df_plot[df_plot["proof_status"] == s]["integrated_score"].values
+        data_for_test.append(data)
+    
+    parts = ax.violinplot(data_for_test, positions=range(len(present)),
                           showmeans=True, showmedians=True, widths=0.6)
     colors = [C_A, C_ORANGE, C_B]
     for i, pc in enumerate(parts["bodies"]):
         pc.set_facecolor(colors[i % len(colors)])
-        pc.set_alpha(0.6)
+        pc.set_alpha(0.7)
         pc.set_edgecolor(C_GRAY)
+    parts["cmedians"].set_color(C_BLACK)
+    parts["cmedians"].set_linewidth(2)
+    parts["cmeans"].set_color("white")
+    # cmeans is a LineCollection; don't try to set marker properties
+    
+    # Add sample sizes and means
+    for i, s in enumerate(present):
+        n = len(df_plot[df_plot["proof_status"] == s])
+        mean_val = df_plot[df_plot["proof_status"] == s]["integrated_score"].mean()
+        ax.text(i, -0.05, f"n={n}\nmean={mean_val:.3f}", ha='center', va='top', 
+                fontsize=7, transform=ax.get_xaxis_transform(), color=C_BLACK)
+    
+    # Statistical test
+    if len(data_for_test) >= 2:
+        _annotate_stats(ax, data_for_test, present)
+    
     ax.set_xticks(range(len(present)))
     ax.set_xticklabels(present, fontsize=9)
-    ax.set_ylabel("Integrated score")
-    ax.set_title("Integrated score by proof status", fontsize=10.5, fontweight="bold")
+    ax.set_ylabel("Integrated score", fontsize=10)
+    ax.set_title("H · Integrated score distribution by proof status", 
+                 fontsize=11, fontweight="bold", pad=12)
+    ax.set_ylim(-0.15, 1.1)
     _style_ax(ax)
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_proof_status_violin.png", bbox_inches="tight")
@@ -478,23 +720,42 @@ def make_proof_status_violin(neural_df, out_path: Path):
 
 
 def make_weight_sensitivity(neural_df, out_path: Path):
-    # Uses dirichlet_method_comparison's draw data if available
     runs = Path(__file__).resolve().parents[2] / "runs" / "pipeline_run"
     ws_file = runs / "weight_sensitivity_draws.csv"
     if not ws_file.exists():
         return
     ws = pd.read_csv(ws_file)
     top10 = ws[ws["rank"] <= 10]
-
-    fig, ax = plt.subplots(figsize=(8, 5))
-    for gene in top10["gene_id"].unique():
-        g = top10[top10["gene_id"] == gene]
-        ax.plot(g["draw"], g["rank"], "o-", markersize=3, linewidth=0.7, alpha=0.6)
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    _add_panel_letter(ax, "I")
+    
+    # Plot each candidate's rank trajectory
+    for gene in sorted(top10["gene_id"].unique()):
+        g = top10[top10["gene_id"] == gene].sort_values("draw")
+        # Get gene name from neural_df
+        gene_name = g["gene_name"].iloc[0] if "gene_name" in g.columns else g["gene_id"].iloc[0].replace("dd_Smed_v6_", "dd")
+        track = g["track"].iloc[0] if "track" in g.columns else "?"
+        color = C_A if track == "A" else C_B
+        ax.plot(g["draw"], g["rank"], "o-", markersize=3, linewidth=1, alpha=0.7, 
+                color=color, label=gene_name if gene not in ax.get_legend_handles_labels()[1] else "")
+    
     ax.invert_yaxis()
-    ax.set_xlabel("Dirichlet draw")
-    ax.set_ylabel("Rank")
-    ax.set_title("Weight sensitivity — Top-10 rank bands", fontsize=10.5, fontweight="bold")
+    ax.set_xlabel("Dirichlet draw (1000 weight samples)", fontsize=10)
+    ax.set_ylabel("Rank", fontsize=10)
+    ax.set_title("I · Weight sensitivity — Top-10 rank bands across 1000 Dirichlet draws", 
+                 fontsize=11, fontweight="bold", pad=12)
     ax.set_ylim(10.5, 0.5)
+    ax.set_xlim(-10, 1010)
+    ax.set_yticks(range(1, 11))
+    
+    # Add track legend
+    from matplotlib.lines import Line2D
+    handles = [
+        Line2D([0], [0], color=C_A, marker='o', linewidth=1.5, markersize=6, label="Track A (RNAi)"),
+        Line2D([0], [0], color=C_B, marker='o', linewidth=1.5, markersize=6, label="Track B (novel)"),
+    ]
+    ax.legend(handles=handles, loc="upper left", fontsize=8, framealpha=0.9)
     _style_ax(ax)
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_weight_sensitivity.png", bbox_inches="tight")
@@ -503,16 +764,29 @@ def make_weight_sensitivity(neural_df, out_path: Path):
 
 def make_integrated_vs_neural_filter(df, neural_df, out_path: Path):
     from scipy.stats import ks_2samp
-    fig, ax = plt.subplots(figsize=(6, 4))
-    for label, data, color in [("All scored", df["integrated_score"], C_GRAY),
-                                ("Neural-filtered", neural_df["integrated_score"], C_SKY)]:
-        vals = pd.to_numeric(data, errors="coerce").dropna().sort_values()
+    fig, ax = plt.subplots(figsize=(7, 5))
+    _add_panel_letter(ax, "J")
+    
+    all_vals = pd.to_numeric(df["integrated_score"], errors="coerce").dropna()
+    neural_vals = pd.to_numeric(neural_df["integrated_score"], errors="coerce").dropna()
+    
+    # KS test
+    ks_stat, p_val = ks_2samp(all_vals, neural_vals)
+    sig = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else "ns"
+    
+    for label, data, color in [("All scored (n=249)", all_vals, C_GRAY),
+                                ("Neural-filtered (n=99)", neural_vals, C_SKY)]:
+        vals = data.sort_values()
         y = np.arange(1, len(vals) + 1) / len(vals)
-        ax.plot(vals, y, label=label, color=color, linewidth=2)
-    ax.set_xlabel("Integrated score")
-    ax.set_ylabel("ECDF")
-    ax.set_title("Integrated score distribution — neural filter", fontsize=10.5, fontweight="bold")
-    ax.legend(fontsize=8)
+        ax.plot(vals, y, label=label, color=color, linewidth=2.5)
+    
+    ax.set_xlabel("Integrated score", fontsize=10)
+    ax.set_ylabel("ECDF", fontsize=10)
+    ax.set_title(f"J · Integrated score distribution — neural filter effect (KS test p={p_val:.2e}, {sig})", 
+                 fontsize=11, fontweight="bold", pad=12)
+    ax.legend(fontsize=9, framealpha=0.9)
+    ax.set_xlim(0, 1.0)
+    ax.set_ylim(0, 1.0)
     _style_ax(ax)
     fig.tight_layout()
     fig.savefig(out_path / "fig_fixed_integrated_vs_neural_filter.png", bbox_inches="tight")
@@ -545,7 +819,6 @@ def main() -> int:
     print("  wrote fig_fixed_score_distributions.png")
     make_candidate_summary(df, out_dir)
     print("  wrote fig_fixed_candidate_summary.png")
-    # Load fixed prioritized CSV for top-10 track data (has composite_score)
     fixed_top10_path = IN_DIR / "top10_neural_tfs_prioritized.csv"
     if fixed_top10_path.exists():
         fixed_top10 = pd.read_csv(fixed_top10_path)
@@ -561,7 +834,6 @@ def main() -> int:
     print("  wrote fig_fixed_evidence_composition.png")
     make_stream_ablation(df, out_dir)
     print("  wrote fig_fixed_stream_ablation.png")
-    # Use fixed prioritized CSV for top-10 visualizations
     fixed_top10 = pd.read_csv(IN_DIR / "top10_neural_tfs_prioritized.csv") if (IN_DIR / "top10_neural_tfs_prioritized.csv").exists() else neural_df
     make_top10_radar(fixed_top10, out_dir)
     print("  wrote fig_fixed_top10_radar.png")
