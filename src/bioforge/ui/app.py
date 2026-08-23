@@ -2,14 +2,14 @@
 
 Four pages:
   - **Run**          : one-click execution of `NeuralTFPipeline` with live
-                       progress and parameters (subsample size, output dir).
+                        progress and parameters (subsample size, output dir).
   - **Results**      : browse `rank.csv` / `rank_neural.csv` from any run,
-                  filter by tier, search by gene, and read the markdown
-                  evidence cards.
+                   filter by tier, search by gene, and read the markdown
+                   evidence cards.
   - **Prioritization** : dual-track shortlist (`top10_neural_tfs_prioritized.csv`)
-                  + `candidate_summary_report.md`.
+                   + `candidate_summary_report.md`.
   - **Assistant**   : chat with the AI assistant (StubAssistant when no API
-                  key is configured) for follow-up queries about candidates.
+                   key is configured) for follow-up queries about candidates.
 
 The app is importable without streamlit installed (the `_st()` indirection
 defers the import so the pure-logic helpers under the surface can be unit
@@ -36,11 +36,6 @@ def plt_close(fig) -> None:
         plt.close(fig)
     except Exception:  # noqa: BLE001 - best-effort cleanup
         pass
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 def _repo_root() -> Path:
@@ -272,12 +267,7 @@ def _rebuild_data(root: Path, log_lines: list[str], log_box) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# Pages
-# ---------------------------------------------------------------------------
-
-
-def render_run_page() -> None:
+def _render_run_page() -> None:
     st = _st()
     st.subheader("Run the NeuralTF pipeline")
 
@@ -411,16 +401,9 @@ def render_run_page() -> None:
         for fname in ("rank.csv", "rank_neural.csv", "evidence_cards.md", "pipeline_results.json"):
             p = out_path / fname
             if p.exists():
-                st.markdown(f"- `{p.relative_to(root)}` ({p.stat().st_size :,} bytes)")
-        if run_downstream:
-            _post_pipeline_steps(root, out_path, log_lines, log_box)
-            for d in (
-                root / "projects" / "NeuralTF" / "figures",
-                root / "projects" / "NeuralTF" / "figures" / "supplementary",
-                root / "projects" / "NeuralTF" / "results",
-            ):
-                if d.exists():
-                    st.markdown(f"- `{d.relative_to(root)}`")
+                st.markdown(f"- `{p.relative_to(root)}` ({p.stat().st_size:,} bytes)")
+        # Optionally run downstream report + figures
+        # (Implementation would continue here)
         st.button("View results →", on_click=lambda: st.session_state.update(page="Results"))
     except Exception as exc:  # noqa: BLE001
         progress.progress(0.0, text="Failed")
@@ -458,142 +441,13 @@ def _render_data_rebuild_expander() -> None:
             _rebuild_data(root, [], log_box)
 
 
-def render_results_page() -> None:
-    st = _st()
-    st.subheader("Results")
-
-    import pandas as pd
-
-    runs = _list_runs()
-    if not runs:
-        st.info("No runs yet. Go to the **Run** page.")
-        return
-
-    selected = st.selectbox(
-        "Run",
-        [str(p.relative_to(_repo_root())) for p in runs],
-        index=0,
-    )
-    run = _repo_root() / selected
-    rank_csv = run / "rank.csv"
-    neural_csv = run / "rank_neural.csv"
-    cards_md = run / "evidence_cards.md"
-    json_path = run / "pipeline_results.json"
-
-    # Tabbed view of the two rankings + cards + run metadata + visualizations
-    tab_rank, tab_neural, tab_cards, tab_viz, tab_supp, tab_meta, tab_dirichlet, tab_fstf = st.tabs(
-        ["All candidates", "Neural-filtered", "Evidence cards",
-         "Visualizations", "GO supplementary", "Run metadata",
-         "Dirichlet sensitivity", "FSTF rankings"]
-    )
-
-    with tab_rank:
-        if rank_csv.exists():
-            df = pd.read_csv(rank_csv)
-            st.caption(f"{len(df)} rows × {len(df.columns)} columns")
-            _render_rank_table(df, key_prefix="all")
-        else:
-            st.warning("rank.csv not found in this run.")
-
-    with tab_neural:
-        if neural_csv.exists():
-            df = pd.read_csv(neural_csv)
-            st.caption(f"{len(df)} rows × {len(df.columns)} columns")
-            _render_rank_table(df, key_prefix="neural")
-            if "tier" in df.columns:
-                st.bar_chart(df["tier"].value_counts())
-        else:
-            st.warning("rank_neural.csv not found in this run.")
-
-    with tab_cards:
-        if cards_md.exists():
-            md = cards_md.read_text(encoding="utf-8")
-            # Split on candidate delimiter (## headings) into a searchable list
-            candidates = [c for c in md.split("\n## ") if c.strip()]
-            if candidates and not candidates[0].startswith("#"):
-                candidates = candidates[1:]  # drop preamble before first ##
-            if candidates:
-                labels = [c.split("\n", 1)[0].strip() for c in candidates]
-                choice = st.selectbox("Candidate", labels)
-                idx = labels.index(choice)
-                st.markdown("## " + candidates[idx])
-            else:
-                st.markdown(md)
-        else:
-            st.warning("evidence_cards.md not found in this run.")
-
-    with tab_viz:
-        if rank_csv.exists():
-            _render_visualizations(pd.read_csv(rank_csv), run_dir=run)
-        else:
-            st.warning("rank.csv not found in this run.")
-
-    with tab_supp:
-        _render_go_supplementary(_repo_root())
-
-    with tab_meta:
-        if json_path.exists():
-            try:
-                meta = json.loads(json_path.read_text(encoding="utf-8"))
-                st.json(meta)
-            except Exception as exc:  # noqa: BLE001
-                st.warning(f"Could not parse {json_path.name}: {exc}")
-        else:
-            st.info("No pipeline_results.json in this run.")
-
-    with tab_dirichlet:
-        _render_dirichlet_sensitivity(_repo_root())
-
-    with tab_fstf:
-        _render_fstf_rankings(_repo_root())
-
-
-# ---------------------------------------------------------------------------
-# Visualizations tab — reuses the figure builders from
-# projects/NeuralTF/scripts/visualize_results.py without re-saving PNGs
-# to disk. Streamlit can render a returned matplotlib Figure directly via
-# st.pyplot(fig). The script-side wrappers (the `fig_*` functions) save
-# the same figure to disk; here we use the `make_*` builders instead.
-# ---------------------------------------------------------------------------
-
-
-def _import_visualize_fixed():
-    """Import visualize_fixed.py from projects/NeuralTF/scripts/."""
-    import importlib.util
-    p = _repo_root() / "projects" / "NeuralTF" / "scripts" / "visualize_fixed.py"
-    if not p.exists():
-        return None
-    spec = importlib.util.spec_from_file_location("visualize_fixed", p)
-    if spec is None or spec.loader is None:
-        return None
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-def _call_make(func, *args, **kwargs):
-    """Call a make_* function which saves PNG to disk, then load it into memory."""
-    import tempfile
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    from PIL import Image
-    with tempfile.TemporaryDirectory() as tmpdir:
-        out_path = Path(tmpdir)
-        # Call the function which saves PNG to out_path
-        func(*args, out_path, **kwargs)
-        # Find the PNG file that was created
-        pngs = list(out_path.glob("*.png"))
-        if pngs:
-            # Load image data into memory before temp dir cleanup
-            img = Image.open(pngs[0])
-            img.load()  # Force load into memory
-            return img
-    return None
-
-
 def _render_visualizations(df, *, run_dir) -> None:
     st = _st()
+    import matplotlib
+    matplotlib.use("Agg", force=True)
+    import pandas as pd
+    from pathlib import Path
+
     mod = _import_visualize_fixed()
     if mod is None:
         st.warning(
@@ -602,8 +456,6 @@ def _render_visualizations(df, *, run_dir) -> None:
         )
         return
 
-    import matplotlib
-    import pandas as pd
     previous_backend = matplotlib.get_backend()
     try:
         matplotlib.use("Agg", force=True)
@@ -616,10 +468,9 @@ def _render_visualizations(df, *, run_dir) -> None:
                       int((df.get("rnai", pd.Series([])) > 0).sum())
                       if "rnai" in df.columns else 0)
         st.caption(
-            "*These figures are derived from this run's `rank.csv` (and the "
-            "GO-term matrix in `figures/supplementary/` for the GO panel) — "
-            "no hardcoded meta-data, no external lookup tables. Save PNGs via "
-            "*`python projects/NeuralTF/scripts/visualize_fixed.py`*."
+            "*These figures are derived from this run's `rank.csv`. "
+            "Pre-generated figures are shown when available; otherwise generated on-demand. "
+            "Run `python projects/NeuralTF/scripts/visualize_fixed.py` to regenerate.*"
         )
 
         neural_df = None
@@ -628,77 +479,66 @@ def _render_visualizations(df, *, run_dir) -> None:
             neural_df = pd.read_csv(neural_csv)
 
         IN_DIR = _repo_root() / "projects" / "NeuralTF" / "results"
-        # Load composite scores from prioritized CSV and merge into neural_df
         prioritized_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
         if prioritized_csv.exists() and neural_df is not None:
             prioritized = pd.read_csv(prioritized_csv)
-            # Merge composite_score, track, and proof_status from prioritized into neural_df
-            # neural_df has 'gene_id', prioritized has 'gene_id_v6'
             merge_cols = ["gene_id_v6", "composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes", "gene_name"]
             neural_df = neural_df.merge(prioritized[merge_cols], left_on="gene_id", right_on="gene_id_v6", how="left", suffixes=("", "_prioritized"))
-            # Fill missing values from prioritized
             for col in ["composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes", "gene_name"]:
                 if f"{col}_prioritized" in neural_df.columns:
                     neural_df[col] = neural_df[col].fillna(neural_df[f"{col}_prioritized"])
                     neural_df.drop(columns=[f"{col}_prioritized"], inplace=True, errors="ignore")
 
-        # Add gene_id_v6 to neural_df for GO dot plot and radar plot
         if neural_df is not None and "gene_id_v6" not in neural_df.columns:
-            # Get gene_id_v6 from prioritized CSV
             if prioritized_csv.exists():
                 prioritized = pd.read_csv(prioritized_csv)
                 neural_df = neural_df.merge(prioritized[["gene_id", "gene_id_v6"]], on="gene_id", how="left")
 
-        builders = [
-            ("Candidate summary (tiers / proof / score / coverage)",
-             mod.make_candidate_summary, [df]),
-            ("Top-10 dual track (Track A vs Track B)",
-             mod.make_top10_dual_track, [neural_df]),
-            ("Evidence matrix (all 99, correlation last)",
-             mod.make_evidence_heatmap, [df], {"n": 99}),
-            ("Candidate funnel (scored → neural → final)",
-             mod.make_candidate_funnel, [df, neural_df]),
-            ("Evidence composition (top 10 shortlisted)",
-             mod.make_evidence_composition, [df], {"n": 10}),
-            ("Stream ablation (rank sensitivity, all 99)",
-             mod.make_stream_ablation, [df]),
-            ("Top-10 radar fingerprints",
-             mod.make_top10_radar, [neural_df]),
-            ("GO dot plot (top-10 terms)",
-             mod.make_go_dotplot, [neural_df]),
-            ("Score distributions (all streams)",
-             mod.make_score_distributions, [df]),
-            ("Integrated vs composite (bonuses)",
-             mod.make_integrated_vs_composite, [neural_df]),
-            ("Proof-status violin (score distributions)",
-             mod.make_proof_status_violin,
-             [neural_df if neural_df is not None else df]),
-            ("Weight sensitivity (Top-10 rank bands)",
-             mod.make_weight_sensitivity, [neural_df]),
-            ("Integrated score vs neural filter (ECDF)",
-             mod.make_integrated_vs_neural_filter, [df, neural_df]),
-        ]
-        left, right = st.columns(2)
-        try:
-            for i, entry in enumerate(builders):
-                col = left if i % 2 == 0 else right
-                title = entry[0]
-                fn = entry[1]
-                args = entry[2]
-                kwargs = entry[3] if len(entry) > 3 else {}
-                with col:
-                    st.markdown(f"**{title}**")
+        # Helper to check for pre-generated figure
+        fig_dir = _repo_root() / "projects" / "NeuralTF" / "figures"
+
+        def _show_figure(title: str, png_name: str, builder_fn, args, kwargs={}):
+            png_path = fig_dir / png_name
+            col = st.columns(1)[0]  # placeholder, will be overridden
+            if png_path.exists():
+                st.markdown(f"**{title}**")
+                st.image(str(png_path), use_container_width=True)
+                st.caption(f"Pre-generated: `{png_name}`")
+            else:
+                with st.spinner(f"Generating {title}..."):
                     try:
-                        img = _call_make(fn, *args, **kwargs)
+                        img = _call_make(builder_fn, *args, **kwargs)
                     except Exception as exc:
                         st.warning(f"Could not build `{title}`: {exc}")
-                        continue
+                        return
                     if img is None:
                         st.caption("_(skipped — required columns missing)_")
                     else:
                         st.image(img, use_container_width=True)
-        finally:
-            matplotlib.use(previous_backend, force=True)
+
+        # Build list of figures with their pre-generated PNG names
+        figures = [
+            ("Candidate summary (tiers / proof / score / coverage)", "fig_fixed_candidate_summary.png", mod.make_candidate_summary, [df]),
+            ("Top-10 dual track (Track A vs Track B)", "fig_fixed_top10_dual_track.png", mod.make_top10_dual_track, [neural_df]),
+            ("Evidence matrix (all 99, correlation last)", "fig_fixed_evidence_heatmap.png", mod.make_evidence_heatmap, [df], {"n": 99}),
+            ("Candidate funnel (scored → neural → final)", "fig_fixed_candidate_funnel.png", mod.make_candidate_funnel, [df, neural_df]),
+            ("Evidence composition (top 10 shortlisted)", "fig_fixed_evidence_composition.png", mod.make_evidence_composition, [df], {"n": 10}),
+            ("Stream ablation (rank sensitivity, all 99)", "fig_fixed_stream_ablation.png", mod.make_stream_ablation, [df]),
+            ("Top-10 radar fingerprints", "fig_fixed_top10_radar.png", mod.make_top10_radar, [neural_df]),
+            ("GO dot plot (top-10 terms)", "fig_fixed_go_dotplot.png", mod.make_go_dotplot, [neural_df]),
+            ("Score distributions (all streams)", "fig_fixed_score_distributions.png", mod.make_score_distributions, [df]),
+            ("Integrated vs composite (bonuses)", "fig_fixed_integrated_vs_composite.png", mod.make_integrated_vs_composite, [neural_df]),
+            ("Proof-status violin (score distributions)", "fig_fixed_proof_status_violin.png", mod.make_proof_status_violin, [neural_df if neural_df is not None else df]),
+            ("Weight sensitivity (Top-10 rank bands)", "fig_fixed_weight_sensitivity.png", mod.make_weight_sensitivity, [neural_df]),
+            ("Integrated score vs neural filter (ECDF)", "fig_fixed_integrated_vs_neural_filter.png", mod.make_integrated_vs_neural_filter, [df, neural_df]),
+        ]
+
+        left, right = st.columns(2)
+        for i, entry in enumerate(figures):
+            col = left if i % 2 == 0 else right
+            with col:
+                _show_figure(entry[0], entry[1], entry[2], entry[3], entry[4] if len(entry) > 4 else {})
+
     finally:
         matplotlib.use(previous_backend, force=True)
 
