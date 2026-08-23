@@ -633,8 +633,9 @@ def _render_visualizations(df, *, run_dir) -> None:
         if prioritized_csv.exists() and neural_df is not None:
             prioritized = pd.read_csv(prioritized_csv)
             # Merge composite_score, track, and proof_status from prioritized into neural_df
+            # neural_df has 'gene_id', prioritized has 'gene_id_v6'
             merge_cols = ["gene_id_v6", "composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes"]
-            neural_df = neural_df.merge(prioritized[merge_cols], on="gene_id_v6", how="left", suffixes=("", "_prioritized"))
+            neural_df = neural_df.merge(prioritized[merge_cols], left_on="gene_id", right_on="gene_id_v6", how="left", suffixes=("", "_prioritized"))
             # Fill missing values from prioritized
             for col in ["composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes"]:
                 if f"{col}_prioritized" in neural_df.columns:
