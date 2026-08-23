@@ -77,11 +77,8 @@ def _ready(root: Path, step: str) -> str | None:
             (run / "rank_neural.csv").exists()
             and (proc / "planmine_annotations.parquet").exists()
             and any(king.glob("*mmc4*.xlsx"))
-            and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
-            "rank_neural.csv / PlanMine parquet / King mmc4-5 xlsx missing"),
-        "Main figures": (
-            (run / "rank.csv").exists(),
-            "rank.csv missing (run the pipeline first)"),
+and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
+            "rank_neural.csv / PlanMine parquet / bridge.csv / King mmc4-5 xlsx missing"),
         "GO supp figures": (
             (root / "projects" / "NeuralTF" / "results"
              / "top10_neural_tfs_prioritized.csv").exists()
@@ -165,10 +162,6 @@ STEPS = [
     ("Prioritization", ["scripts", "prioritize_neural_tfs.py"], ["--repo", str(REPO)],
      [["projects", "NeuralTF", "results", "top10_neural_tfs_prioritized.csv"],
       ["projects", "NeuralTF", "results", "candidate_summary_report.md"]]),
-    ("Main figures", ["projects/NeuralTF/scripts/visualize_results.py"], [],
-     [["projects", "NeuralTF", "figures", "1_score_distributions.png"],
-      ["projects", "NeuralTF", "figures", "2_candidate_summary.png"],
-      ["projects", "NeuralTF", "figures", "9_go_dotplot.png"]]),
     ("GO supp figures", ["projects/NeuralTF/scripts/make_supp_go_figures.py"], [],
      [["projects", "NeuralTF", "figures", "supplementary", "fig_s1_go_gene_term_map.png"],
       ["projects", "NeuralTF", "figures", "supplementary", "fig_s4_go_neural_focus.png"],
