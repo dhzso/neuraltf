@@ -346,26 +346,51 @@ def make_top10_dual_track(neural_df, out_path: Path):
     plt.close(fig)
 
 
-def make_evidence_heatmap(df, out_path: Path, n: int = 30):
-    top = df.nlargest(n, "integrated_score")
-    plot = top[STREAMS].apply(pd.to_numeric, errors="coerce").fillna(0)
+def make_evidence_heatmap(df, out_path: Path, n: int = 99):
+    # Show ALL neural-filtered candidates (99), not just top 30
+    neural_csv = Path(__file__).resolve().parents[2] / "runs" / "pipeline_run" / "rank_neural.csv"
+    if neural_csv.exists():
+        neural_df = pd.read_csv(neural_csv)
+        # Merge with prioritized to get composite_score and track
+        IN_DIR = Path(__file__).resolve().parents[3] / "projects" / "NeuralTF" / "results"
+        prioritized_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
+        if prioritized_csv.exists():
+            prioritized = pd.read_csv(prioritized_csv)
+            neural_df = neural_df.merge(prioritized[["gene_id_v6", "composite_score", "track", "proof_status"]], 
+                                        on="gene_id_v6", how="left", suffixes=("", "_prioritized"))
+            for col in ["composite_score", "track", "proof_status"]:
+                if f"{col}_prioritized" in neural_df.columns:
+                    neural_df[col] = neural_df[col].fillna(neural_df[f"{col}_prioritized"])
+                    neural_df.drop(columns=[f"{col}_prioritized"], inplace=True, errors="ignore")
+    else:
+        neural_df = df
     
-    # Enhanced labels: gene name + proof status + integrated score
-    labels = [f"{r['gene_name']} | {r['proof_status'][:4]} | int={r['integrated_score']:.2f}" 
+    # Use ALL neural-filtered candidates (99), sorted by integrated score
+    top = neural_df.nlargest(99, "integrated_score")
+    
+    # Reorder streams: put correlation LAST (mostly empty/low)
+    streams_ordered = ["expression", "specificity", "reproducibility", "rnai",
+                       "neural_enriched", "neural_specificity", "correlation"]
+    stream_labels_ordered = ["Expression", "Specificity", "Reproducibility", "RNAi",
+                             "Neural enrich.", "Neural spec.", "Correlation"]
+    stream_weights_ordered = [0.211, 0.105, 0.158, 0.158, 0.158, 0.105, 0.105]
+    stream_labels_ordered = ["Expression", "Specificity", "Reproducibility", "RNAi",
+                             "Neural enrich.", "Neural spec.", "Correlation"]
+    
+    plot = top[streams_ordered].apply(pd.to_numeric, errors="coerce").fillna(0)
+    labels = [f"{r['gene_name']} | {r.get('proof_status','?')[:4]} | int={r.get('integrated_score',0):.2f} | comp={r.get('composite_score',0):.2f}" 
               for _, r in top.iterrows()]
     
-    fig, ax = plt.subplots(figsize=(10, 12))
-    
-    # Cluster rows by evidence pattern (optional - just sort by integrated score for now)
-    # Could add hierarchical clustering here
+    fig, ax = plt.subplots(figsize=(11, 14))
+    _add_panel_letter(ax, "D")
     
     im = ax.imshow(plot.values, aspect="auto", cmap="Reds", vmin=0, vmax=1, interpolation='nearest')
-    ax.set_xticks(range(len(STREAMS)))
-    ax.set_xticklabels(STREAM_LABELS, fontsize=8, rotation=30, ha="right")
+    ax.set_xticks(range(len(streams_ordered)))
+    ax.set_xticklabels(stream_labels_ordered, fontsize=8, rotation=30, ha="right")
     ax.set_yticks(range(len(plot)))
-    ax.set_yticklabels(labels, fontsize=7)
-    ax.set_title(f"C · Evidence matrix — top {n} candidates by integrated score", 
-                 fontsize=10.5, fontweight="bold", pad=12)
+    ax.set_yticklabels(labels, fontsize=6)
+    ax.set_title(f"D · Evidence matrix — ALL 99 neural-filtered candidates (correlation last)", 
+                 fontsize=11, fontweight="bold", pad=12)
     
     cbar = plt.colorbar(im, ax=ax, fraction=0.02, pad=0.02)
     cbar.set_label("Stream score (0–1)", fontsize=9)
@@ -374,12 +399,12 @@ def make_evidence_heatmap(df, out_path: Path, n: int = 30):
     # Add stream weight annotations on top
     ax2 = ax.twiny()
     ax2.set_xlim(ax.get_xlim())
-    ax2.set_xticks(range(len(STREAMS)))
-    ax2.set_xticklabels([f"w={w:.3f}" for w in STREAM_WEIGHTS], fontsize=7, color=C_GRAY)
+    ax2.set_xticks(range(len(streams_ordered)))
+    ax2.set_xticklabels([f"w={w:.3f}" for w in stream_weights_ordered], fontsize=7, color=C_GRAY)
     ax2.set_xlabel("Stream weights", fontsize=8, color=C_GRAY)
     
     fig.tight_layout()
-    fig.savefig(out_path / "fig_fixed_evidence_heatmap.png", bbox_inches="tight")
+    fig.savefig(out_path / "fig_fixed_evidence_heatmap.png", bbox_inches="tight", dpi=300)
     plt.close(fig)
 
 
@@ -422,33 +447,50 @@ def make_candidate_funnel(df, neural_df, out_path: Path):
     plt.close(fig)
 
 
-def make_evidence_composition(df, out_path: Path, n: int = 15):
-    top = df.nlargest(n, "integrated_score")
-    plot = top[STREAMS].apply(pd.to_numeric, errors="coerce").fillna(0)
-    labels = [r["gene_name"] for _, r in top.iterrows()]
+def make_evidence_composition(df, out_path: Path, n: int = 10):
+    # Use TOP 10 shortlisted (5 Track A + 5 Track B) instead of top 15
+    IN_DIR = Path(__file__).resolve().parents[3] / "projects" / "NeuralTF" / "results"
+    prioritized_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
+    streams_ordered = ["expression", "specificity", "reproducibility", "rnai",
+                       "neural_enriched", "neural_specificity", "correlation"]
+    stream_labels_ordered = ["Expression", "Specificity", "Reproducibility", "RNAi",
+                             "Neural enrich.", "Neural spec.", "Correlation"]
     
-    fig, ax = plt.subplots(figsize=(10, 9))
+    if (IN_DIR / "top10_neural_tfs_prioritized.csv").exists():
+        top_prioritized = pd.read_csv(IN_DIR / "top10_neural_tfs_prioritized.csv").sort_values("composite_score", ascending=False)
+        # Merge with df to get stream columns (prioritized has gene_id_v6, df has gene_id)
+        # Need to keep integrated_score from df
+        top = top_prioritized.merge(df[["gene_id"] + streams_ordered + ["integrated_score"]], 
+                                    left_on="gene_id_v6", right_on="gene_id", how="left")
+    else:
+        # Fallback to top n by integrated score
+        top = df.nlargest(n, "integrated_score")
+    
+    plot = top[streams_ordered].apply(pd.to_numeric, errors="coerce").fillna(0)
+    labels = [f"{r['gene_name']} ({r['track']})" for _, r in top.iterrows()]
+    
+    fig, ax = plt.subplots(figsize=(10, 7))
     bottom = np.zeros(len(plot))
     colors = [C_A, C_SKY, C_ORANGE, C_B, C_GREEN, C_ORANGE, C_GRAY]
     
-    for i, stream in enumerate(STREAMS):
+    for i, stream in enumerate(streams_ordered):
         vals = plot[stream].values
         ax.barh(range(len(plot)), vals, left=bottom, color=colors[i],
-                edgecolor=C_GRAY, linewidth=0.3, label=STREAM_LABELS[i])
+                edgecolor=C_GRAY, linewidth=0.3, label=stream_labels_ordered[i])
         bottom += vals
     
     ax.set_yticks(range(len(plot)))
     ax.set_yticklabels(labels, fontsize=8)
     ax.set_xlabel("Cumulative stream score (weighted sum)", fontsize=9)
-    ax.set_title(f"E · Evidence composition — top {n} by integrated score", 
-                 fontsize=10.5, fontweight="bold")
+    ax.set_title(f"E · Evidence composition — TOP 10 shortlisted (5A + 5B)", 
+                 fontsize=11, fontweight="bold")
     ax.legend(loc="lower right", fontsize=7, ncol=2, framealpha=0.9)
     ax.set_xlim(0, 1.0)
     _style_ax(ax)
     
     # Add total integrated score annotations
-    for i, row in enumerate(top.iterrows()):
-        total = row[1]["integrated_score"]
+    for i, (_, row) in enumerate(top.iterrows()):
+        total = row["integrated_score"]
         ax.text(1.01, i, f"{total:.3f}", va='center', fontsize=7, color=C_GRAY, transform=ax.get_yaxis_transform())
     
     fig.tight_layout()
@@ -676,7 +718,7 @@ def make_proof_status_violin(neural_df, out_path: Path):
     order = ["RNAi-validated", "Prior FSTF", "Novel"]
     present = [s for s in order if s in df_plot["proof_status"].values]
     
-    fig, ax = plt.subplots(figsize=(7, 5))
+    fig, ax = plt.subplots(figsize=(8, 6))
     _add_panel_letter(ax, "H")
     
     data_for_test = []
@@ -685,7 +727,7 @@ def make_proof_status_violin(neural_df, out_path: Path):
         data_for_test.append(data)
     
     parts = ax.violinplot(data_for_test, positions=range(len(present)),
-                          showmeans=True, showmedians=True, widths=0.6)
+                          showmeans=True, showmedians=True, widths=0.7)
     colors = [C_A, C_ORANGE, C_B]
     for i, pc in enumerate(parts["bodies"]):
         pc.set_facecolor(colors[i % len(colors)])
@@ -696,26 +738,49 @@ def make_proof_status_violin(neural_df, out_path: Path):
     parts["cmeans"].set_color("white")
     # cmeans is a LineCollection; don't try to set marker properties
     
-    # Add sample sizes and means
+    # Add sample sizes and means ON the violins (not below x-axis)
     for i, s in enumerate(present):
         n = len(df_plot[df_plot["proof_status"] == s])
         mean_val = df_plot[df_plot["proof_status"] == s]["integrated_score"].mean()
-        ax.text(i, -0.05, f"n={n}\nmean={mean_val:.3f}", ha='center', va='top', 
-                fontsize=7, transform=ax.get_xaxis_transform(), color=C_BLACK)
+        median_val = np.median(df_plot[df_plot["proof_status"] == s]["integrated_score"])
+        # Position text on the violin
+        ax.text(i, 1.02, f"n={n}\nmean={mean_val:.3f}\nmedian={median_val:.3f}", 
+                ha='center', va='bottom', fontsize=9, fontweight='bold', 
+                color=C_BLACK, transform=ax.get_xaxis_transform(),
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor=C_GRAY, alpha=0.9))
     
     # Statistical test
     if len(data_for_test) >= 2:
         _annotate_stats(ax, data_for_test, present)
     
     ax.set_xticks(range(len(present)))
-    ax.set_xticklabels(present, fontsize=9)
-    ax.set_ylabel("Integrated score", fontsize=10)
-    ax.set_title("H · Integrated score distribution by proof status", 
-                 fontsize=11, fontweight="bold", pad=12)
-    ax.set_ylim(-0.15, 1.1)
+    ax.set_xticklabels(present, fontsize=11, fontweight='bold')
+    ax.set_ylabel("Integrated score", fontsize=12)
+    ax.set_title("H · Integrated score distribution by proof status (n=99)", 
+                 fontsize=13, fontweight="bold", pad=16)
+    ax.set_ylim(-0.1, 1.15)
+    
+    # Add legend explaining the plot elements
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor=C_A, alpha=0.7, edgecolor=C_GRAY, label="RNAi-validated (Track A)"),
+        Patch(facecolor=C_ORANGE, alpha=0.7, edgecolor=C_GRAY, label="Prior FSTF (Track A/B)"),
+        Patch(facecolor=C_B, alpha=0.7, edgecolor=C_GRAY, label="Novel candidate (Track B)"),
+        Line2D([0], [0], color=C_BLACK, linewidth=2, label="Median"),
+        Line2D([0], [0], color="white", marker='D', markerfacecolor='white', 
+               markeredgecolor='black', markersize=8, linestyle='None', label="Mean"),
+    ]
+    ax.legend(handles=legend_elements, loc="upper right", fontsize=9, 
+              framealpha=0.9, title="Proof status & statistics", title_fontsize=10)
+    
     _style_ax(ax)
+    # Add frame around the plot
+    for spine in ax.spines.values():
+        spine.set_linewidth(1.5)
+        spine.set_color(C_BLACK)
     fig.tight_layout()
-    fig.savefig(out_path / "fig_fixed_proof_status_violin.png", bbox_inches="tight")
+    fig.savefig(out_path / "fig_fixed_proof_status_violin.png", bbox_inches="tight", dpi=300)
     plt.close(fig)
 
 
@@ -764,7 +829,7 @@ def make_weight_sensitivity(neural_df, out_path: Path):
 
 def make_integrated_vs_neural_filter(df, neural_df, out_path: Path):
     from scipy.stats import ks_2samp
-    fig, ax = plt.subplots(figsize=(7, 5))
+    fig, ax = plt.subplots(figsize=(8, 6))
     _add_panel_letter(ax, "J")
     
     all_vals = pd.to_numeric(df["integrated_score"], errors="coerce").dropna()
@@ -774,22 +839,48 @@ def make_integrated_vs_neural_filter(df, neural_df, out_path: Path):
     ks_stat, p_val = ks_2samp(all_vals, neural_vals)
     sig = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else "ns"
     
-    for label, data, color in [("All scored (n=249)", all_vals, C_GRAY),
-                                ("Neural-filtered (n=99)", neural_vals, C_SKY)]:
+    # Also compute Mann-Whitney U for median difference
+    from scipy.stats import mannwhitneyu
+    mw_stat, mw_p = mannwhitneyu(neural_vals, all_vals, alternative='greater')
+    
+    for label, data, color in [("All scored candidates (n=249)", all_vals, C_GRAY),
+                                ("Neural-filtered candidates (n=99)", neural_vals, C_SKY)]:
         vals = data.sort_values()
         y = np.arange(1, len(vals) + 1) / len(vals)
         ax.plot(vals, y, label=label, color=color, linewidth=2.5)
     
-    ax.set_xlabel("Integrated score", fontsize=10)
-    ax.set_ylabel("ECDF", fontsize=10)
-    ax.set_title(f"J · Integrated score distribution — neural filter effect (KS test p={p_val:.2e}, {sig})", 
-                 fontsize=11, fontweight="bold", pad=12)
-    ax.legend(fontsize=9, framealpha=0.9)
-    ax.set_xlim(0, 1.0)
-    ax.set_ylim(0, 1.0)
+    # Add median lines
+    ax.axvline(all_vals.median(), color=C_GRAY, linestyle=':', linewidth=1.5, alpha=0.7, 
+               label=f"All median = {all_vals.median():.3f}")
+    ax.axvline(neural_vals.median(), color=C_SKY, linestyle='--', linewidth=1.5, alpha=0.7,
+               label=f"Neural median = {neural_vals.median():3f}")
+    
+    # Add interpretation text
+    ax.text(0.02, 0.98, 
+            f"KS test: D={ks_stat:.3f}, p={p_val:.2e} ({sig})\n"
+            f"Mann-Whitney U: p={mw_p:.2e}\n"
+            f"Neural candidates have higher integrated scores\n"
+            f"(median: {neural_vals.median():.3f} vs {all_vals.median():.3f})",
+            transform=ax.transAxes, va='top', fontsize=8,
+            bbox=dict(boxstyle="round,pad=0.4", facecolor="white", edgecolor=C_GRAY, alpha=0.9))
+    
+    for label, data, color in [("All scored candidates (n=249)", all_vals, C_GRAY),
+                                ("Neural-filtered candidates (n=99)", neural_vals, C_SKY)]:
+        vals = data.sort_values()
+        y = np.arange(1, len(vals) + 1) / len(vals)
+        ax.plot(vals, y, label=label, color=color, linewidth=2.5)
+    
+    ax.set_xlabel("Integrated score (fixed-weight, 0-1)", fontsize=11)
+    ax.set_ylabel("ECDF (cumulative fraction)", fontsize=11)
+    ax.set_title(f"J · Neural filter enriches high-scoring candidates\n"
+                 f"(KS test: D={ks_stat:.3f}, p={p_val:.2e}, {sig}; MWU p={mw_p:.2e})", 
+                 fontsize=12, fontweight="bold", pad=16)
+    ax.legend(fontsize=10, framealpha=0.9, loc="lower right")
+    ax.set_xlim(-0.02, 1.02)
+    ax.set_ylim(-0.02, 1.02)
     _style_ax(ax)
     fig.tight_layout()
-    fig.savefig(out_path / "fig_fixed_integrated_vs_neural_filter.png", bbox_inches="tight")
+    fig.savefig(out_path / "fig_fixed_integrated_vs_neural_filter.png", bbox_inches="tight", dpi=300)
     plt.close(fig)
 
 

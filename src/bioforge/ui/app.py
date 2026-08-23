@@ -627,19 +627,32 @@ def _render_visualizations(df, *, run_dir) -> None:
         if neural_csv.exists():
             neural_df = pd.read_csv(neural_csv)
 
+        # Load composite scores from prioritized CSV and merge into neural_df
+        prioritized_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
+        if prioritized_csv.exists() and neural_df is not None:
+            prioritized = pd.read_csv(prioritized_csv)
+            # Merge composite_score, track, and proof_status from prioritized into neural_df
+            merge_cols = ["gene_id_v6", "composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes"]
+            neural_df = neural_df.merge(prioritized[merge_cols], on="gene_id_v6", how="left", suffixes=("", "_prioritized"))
+            # Fill missing values from prioritized
+            for col in ["composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes"]:
+                if f"{col}_prioritized" in neural_df.columns:
+                    neural_df[col] = neural_df[col].fillna(neural_df[f"{col}_prioritized"])
+                    neural_df.drop(columns=[f"{col}_prioritized"], inplace=True, errors="ignore")
+
         builders = [
             ("Candidate summary (tiers / proof / score / coverage)",
              mod.make_candidate_summary, [df]),
             ("Top-10 dual track (Track A vs Track B)",
              mod.make_top10_dual_track, [neural_df]),
-            ("Evidence matrix (top 30)",
-             mod.make_evidence_heatmap, [df], {"n": 30}),
+            ("Evidence matrix (all 99, correlation last)",
+             mod.make_evidence_heatmap, [df], {"n": 99}),
             ("Candidate funnel (scored → neural → final)",
              mod.make_candidate_funnel, [df, neural_df]),
-            ("Evidence composition (top 15)",
-             mod.make_evidence_composition, [df], {"n": 15}),
-            ("Stream ablation (rank sensitivity)",
-             mod.make_stream_ablation, [df]),
+            ("Evidence composition (top 10 shortlisted)",
+             mod.make_evidence_composition, [df], {"n": 10}),
+            ("Stream ablation (rank sensitivity, all 99)",
+             mod.make_stream_ablation, [df], {"n_top": 99}),
             ("Top-10 radar fingerprints",
              mod.make_top10_radar, [neural_df]),
             ("GO dot plot (top-10 terms)",
