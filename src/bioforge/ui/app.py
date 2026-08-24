@@ -588,7 +588,7 @@ def _render_run_page() -> None:
     _render_data_rebuild_expander()
 
 
-def _render_results_page() -> None:
+def __render_results_page() -> None:
     st = _st()
     st.subheader("Results")
 
@@ -1151,7 +1151,7 @@ def main() -> None:
     if page == "Run":
         render_run_page()
     elif page == "Results":
-        render_results_page()
+        _render_results_page()
     elif page == "Prioritization":
         render_prioritization_page()
     else:
