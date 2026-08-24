@@ -9,11 +9,11 @@ def build():
     scores = all249["integrated_score"].dropna().values
 
     fig, ax = plt.subplots(figsize=(7, 4.5))
-    ax.hist(scores, bins=30, color=C_ALL, edgecolor="white", lw=0.4, alpha=0.7)
+    ax.hist(scores, bins=30, color=C_A, edgecolor="white", lw=0.4, alpha=0.75)
 
     med = np.median(scores)
     q25, q75 = np.percentile(scores, [25, 75])
-    ax.axvline(med, color=C_HL, ls="--", lw=1, label=f"Median = {med:.3f}")
+    ax.axvline(med, color=C_B, ls="--", lw=1.2, label=f"Median = {med:.3f}")
     ax.axvline(q25, color="#999", ls=":", lw=0.8, label=f"Q1 = {q25:.3f}")
     ax.axvline(q75, color="#999", ls=":", lw=0.8, label=f"Q3 = {q75:.3f}")
 
