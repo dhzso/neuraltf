@@ -5,7 +5,7 @@ Four pages:
                         progress and parameters (subsample size, output dir).
   - **Results**      : browse `rank.csv` / `rank_neural.csv` from any run,
                    filter by tier, search by gene, and view pre-generated
-                   figures (or generate on-demand via visualize_fixed.py).
+                   figures (via generate_publication_figures.py).
   - **Prioritization** : dual-track shortlist from three methods (fixed-weight,
                    Dirichlet-centered, Dirichlet-uniform) as tabs.
   - **Assistant**   : chat with the AI assistant (StubAssistant when no API
@@ -153,7 +153,7 @@ def _post_pipeline_steps(root: Path, run_dir: Path, log_lines: list[str],
                          log_box) -> None:
     """Generate the downstream report + publication figures after a run.
 
-    Runs, in order: `visualize_fixed.py` (13 main figures),
+    Runs, in order: `generate_publication_figures.py` (17 single-panel figures),
     `prioritize_neural_tfs.py` (Track A/B shortlist + summary report) and
     `make_supp_go_figures.py` (4 GO supplementary figures + matrix CSV).
     Each step is gated on its inputs and runs as a subprocess so its CLI
@@ -168,9 +168,8 @@ def _post_pipeline_steps(root: Path, run_dir: Path, log_lines: list[str],
 
     _run_step(
         root, st, log_lines, log_box,
-        ["projects/NeuralTF/scripts/visualize_fixed.py",
-         "--run", str(run_dir), "--out", str(fig_out)],
-        "visualize_fixed.py (13 main figures)",
+        ["projects/NeuralTF/scripts/generate_publication_figures.py"],
+        "generate_publication_figures.py (17 publication figures)",
         (run_dir / "rank.csv").exists(),
         "rank.csv not found in the run directory",
     )
@@ -525,121 +524,50 @@ def _render_results_page() -> None:
             st.info("No pipeline_results.json in this run.")
 
 
-def _import_visualize_fixed():
-    """Import the visualize_fixed module from the scripts directory."""
-    import importlib.util
-    root = _repo_root()
-    path = root / "projects" / "NeuralTF" / "scripts" / "visualize_fixed.py"
-    if not path.exists():
-        return None
-    spec = importlib.util.spec_from_file_location("visualize_fixed", str(path))
-    if spec is None or spec.loader is None:
-        return None
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
 def _render_visualizations(df, *, run_dir) -> None:
+    """Show pre-generated publication figures from the new 17-figure system."""
     st = _st()
-    import matplotlib
-    matplotlib.use("Agg", force=True)
     import pandas as pd
-    from pathlib import Path
 
-    mod = _import_visualize_fixed()
-    if mod is None:
-        st.warning(
-            "Could not import `projects/NeuralTF/scripts/visualize_fixed.py`."
-            " Make sure it exists, or run: `python projects/NeuralTF/scripts/visualize_fixed.py` as a script."
+    fig_dir = _repo_root() / "projects" / "NeuralTF" / "figures"
+    st.caption(
+        "*Pre-generated publication figures (300dpi PNG, one graph per image). "
+        "Run `python projects/NeuralTF/scripts/generate_publication_figures.py` to regenerate.*"
+    )
+
+    # List of all 17 publication figures
+    figures = [
+        ("01 — Evidence stream coverage (249 TFs)", "01_stream_coverage_249.png"),
+        ("02 — Integrated vs composite score", "02_integrated_vs_composite.png"),
+        ("03 — Score distribution 249 vs 99", "03_score_distribution_249_vs_99.png"),
+        ("04 — Evidence heatmap (99 neural candidates)", "04_evidence_heatmap_99.png"),
+        ("05 — Top 10 candidate atlas", "05_top10_candidate_atlas.png"),
+        ("06 — Weight sensitivity rank distributions", "06_weight_sensitivity_ranks.png"),
+        ("07 — Weight sensitivity P(Top10)", "07_weight_sensitivity_ptop10.png"),
+        ("08 — Stream ablation global impact", "08_stream_ablation_global.png"),
+        ("09 — Stream ablation candidate sensitivity", "09_stream_ablation_candidate.png"),
+        ("10 — Centered Dirichlet top 10 scores", "10_centered_top10_scores.png"),
+        ("11 — Fixed vs centered Dirichlet (99)", "11_centered_scatter_99.png"),
+        ("12 — Uniform Dirichlet top 10 scores", "12_uniform_top10_scores.png"),
+        ("13 — Fixed vs uniform Dirichlet (99)", "13_uniform_scatter_99.png"),
+        ("14 — 99 vs 249 rank-rank comparison", "14_uniform_99vs249_rankrank.png"),
+        ("15 — 3-method bump chart", "15_method_bumpchart.png"),
+        ("16 — 3-method score density", "16_method_score_density.png"),
+        ("17 — 3-method rank correlation", "17_method_rank_correlation.png"),
+    ]
+
+    found_any = False
+    for title, png_name in figures:
+        png_path = fig_dir / png_name
+        if png_path.exists():
+            st.image(str(png_path), use_container_width=True, caption=title)
+            found_any = True
+
+    if not found_any:
+        st.info(
+            "Publication figures not generated yet. Run:\n"
+            "```\npython projects/NeuralTF/scripts/generate_publication_figures.py\n```"
         )
-        return
-
-    previous_backend = matplotlib.get_backend()
-    try:
-        matplotlib.use("Agg", force=True)
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Candidates", len(df))
-        if "tier" in df.columns:
-            c2.metric("HIGH tier",
-                      int((df["tier"].str.lower() == "high").sum()))
-            c3.metric("RNAi-validated",
-                      int((df.get("rnai", pd.Series([])) > 0).sum())
-                      if "rnai" in df.columns else 0)
-        st.caption(
-            "*These figures are derived from this run's `rank.csv`. "
-            "Pre-generated figures are shown when available; otherwise generated on-demand. "
-            "Run `python projects/NeuralTF/scripts/visualize_fixed.py` to regenerate.*"
-        )
-
-        neural_df = None
-        neural_csv = run_dir / "rank_neural.csv"
-        if neural_csv.exists():
-            neural_df = pd.read_csv(neural_csv)
-
-        IN_DIR = _repo_root() / "projects" / "NeuralTF" / "results"
-        prioritized_csv = IN_DIR / "top10_neural_tfs_prioritized.csv"
-        if prioritized_csv.exists() and neural_df is not None:
-            prioritized = pd.read_csv(prioritized_csv)
-            merge_cols = ["gene_id_v6", "composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes", "gene_name"]
-            neural_df = neural_df.merge(prioritized[merge_cols], left_on="gene_id", right_on="gene_id_v6", how="left", suffixes=("", "_prioritized"))
-            for col in ["composite_score", "track", "proof_status", "interpro_domains", "human_ortholog", "rnai_phenotype_notes", "gene_name"]:
-                if f"{col}_prioritized" in neural_df.columns:
-                    neural_df[col] = neural_df[col].fillna(neural_df[f"{col}_prioritized"])
-                    neural_df.drop(columns=[f"{col}_prioritized"], inplace=True, errors="ignore")
-
-        if neural_df is not None and "gene_id_v6" not in neural_df.columns:
-            if prioritized_csv.exists():
-                prioritized = pd.read_csv(prioritized_csv)
-                neural_df = neural_df.merge(prioritized[["gene_id", "gene_id_v6"]], on="gene_id", how="left")
-
-        # Helper to check for pre-generated figure
-        fig_dir = _repo_root() / "projects" / "NeuralTF" / "figures"
-
-        def _show_figure(title: str, png_name: str, builder_fn, args, kwargs={}):
-            png_path = fig_dir / png_name
-            col = st.columns(1)[0]  # placeholder, will be overridden
-            if png_path.exists():
-                st.markdown(f"**{title}**")
-                st.image(str(png_path), use_container_width=True)
-                st.caption(f"Pre-generated: `{png_name}`")
-            else:
-                with st.spinner(f"Generating {title}..."):
-                    try:
-                        img = _call_make(builder_fn, *args, **kwargs)
-                    except Exception as exc:
-                        st.warning(f"Could not build `{title}`: {exc}")
-                        return
-                    if img is None:
-                        st.caption("_(skipped — required columns missing)_")
-                    else:
-                        st.image(img, use_container_width=True)
-
-        # Build list of figures with their pre-generated PNG names
-        figures = [
-            ("Candidate summary (tiers / proof / score / coverage)", "fig_fixed_candidate_summary.png", mod.make_candidate_summary, [df]),
-            ("Top-10 dual track (Track A vs Track B)", "fig_fixed_top10_dual_track.png", mod.make_top10_dual_track, [neural_df]),
-            ("Evidence matrix (all 99, correlation last)", "fig_fixed_evidence_heatmap.png", mod.make_evidence_heatmap, [df], {"n": 99}),
-            ("Candidate funnel (scored → neural → final)", "fig_fixed_candidate_funnel.png", mod.make_candidate_funnel, [df, neural_df]),
-            ("Evidence composition (top 10 shortlisted)", "fig_fixed_evidence_composition.png", mod.make_evidence_composition, [df], {"n": 10}),
-            ("Stream ablation (rank sensitivity, all 99)", "fig_fixed_stream_ablation.png", mod.make_stream_ablation, [df]),
-            ("Top-10 radar fingerprints", "fig_fixed_top10_radar.png", mod.make_top10_radar, [neural_df]),
-            ("GO dot plot (top-10 terms)", "fig_fixed_go_dotplot.png", mod.make_go_dotplot, [neural_df]),
-            ("Score distributions (all streams)", "fig_fixed_score_distributions.png", mod.make_score_distributions, [df]),
-            ("Integrated vs composite (bonuses)", "fig_fixed_integrated_vs_composite.png", mod.make_integrated_vs_composite, [neural_df]),
-            ("Proof-status violin (score distributions)", "fig_fixed_proof_status_violin.png", mod.make_proof_status_violin, [neural_df if neural_df is not None else df]),
-            ("Weight sensitivity (Top-10 rank bands)", "fig_fixed_weight_sensitivity.png", mod.make_weight_sensitivity, [neural_df]),
-            ("Integrated score vs neural filter (ECDF)", "fig_fixed_integrated_vs_neural_filter.png", mod.make_integrated_vs_neural_filter, [df, neural_df]),
-        ]
-
-        left, right = st.columns(2)
-        for i, entry in enumerate(figures):
-            col = left if i % 2 == 0 else right
-            with col:
-                _show_figure(entry[0], entry[1], entry[2], entry[3], entry[4] if len(entry) > 4 else {})
-
-    finally:
-        matplotlib.use(previous_backend, force=True)
 
 
 def _render_dirichlet_sensitivity(root: Path) -> None:
