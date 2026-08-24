@@ -267,7 +267,7 @@ def _rebuild_data(root: Path, log_lines: list[str], log_box) -> None:
     )
 
 
-def _render_run_page() -> None:
+def __render_run_page() -> None:
     st = _st()
     st.subheader("Run the NeuralTF pipeline")
 
@@ -441,7 +441,7 @@ def _render_data_rebuild_expander() -> None:
             _rebuild_data(root, [], log_box)
 
 
-def _render_run_page() -> None:
+def __render_run_page() -> None:
     st = _st()
     st.subheader("Run the NeuralTF pipeline")
 
@@ -1149,7 +1149,7 @@ def main() -> None:
     )
     page = st.sidebar.selectbox("Page", ["Run", "Results", "Prioritization", "Assistant"])
     if page == "Run":
-        render_run_page()
+        _render_run_page()
     elif page == "Results":
         _render_results_page()
     elif page == "Prioritization":
