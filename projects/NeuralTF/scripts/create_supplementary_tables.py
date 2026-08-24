@@ -62,8 +62,8 @@ def main() -> int:
     cand.to_csv(IN_DIR / 'supplementary_table_S2_fixed_all249.csv', index=False)
     print('Created supplementary_table_S2_fixed_all249.csv')
 
-    # S3: Full centered Dirichlet ranked list
-    centered_full = pd.read_csv(IN_DIR / 'dirichlet_overall_top10_byscore.csv')
+    # S3: Full centered Dirichlet ranked list (all 99 candidates)
+    centered_full = pd.read_csv(IN_DIR / 'dirichlet_centered_full_rank.csv')
     centered_full.to_csv(IN_DIR / 'supplementary_table_S3_centered_all99.csv', index=False)
     print('Created supplementary_table_S3_centered_all99.csv')
 

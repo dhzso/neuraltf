@@ -68,6 +68,9 @@ def load_unif99():
 def load_unif249():
     return _nid(_csv(RES/"dirichlet_uniform_all249_full_rank.csv"))
 
+def load_centered99():
+    return _nid(_csv(RES/"dirichlet_centered_full_rank.csv"))
+
 def load_sens_draws():
     return _csv(FIG/"weight_sensitivity_draws.csv")
 

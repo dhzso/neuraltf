@@ -521,6 +521,18 @@ def main() -> int:
     overall_ref_csv.to_csv(overall_ref_path, index=False)
     print(f"  wrote {overall_ref_path} (overall top-10 by score)")
 
+    # --- Full-rank CSV for all 99 candidates ----------------------------------
+    full_rank_csv = pd.DataFrame({
+        "gene_id_v6": cand["gene_id"],
+        "gene_name": cand["gene_name"],
+        "dirichlet_median_score": cand["dirichlet_median_score"],
+        "fixed_weight_score": cand["fixed_score"],
+        "proof_status": cand["proof_status"],
+    })
+    full_rank_path = OUT / "dirichlet_centered_full_rank.csv"
+    full_rank_csv.to_csv(full_rank_path, index=False)
+    print(f"  wrote {full_rank_path} ({len(full_rank_csv)} rows — all 99 candidates)")
+
     # --- X1 dynamics --------------------------------------------------------
     x1: dict[str, float] = {}
     plass_path = REPO / "datasets" / "processed" / "plass_v6.h5ad"
