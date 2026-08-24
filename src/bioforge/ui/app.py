@@ -441,6 +441,236 @@ def _render_data_rebuild_expander() -> None:
             _rebuild_data(root, [], log_box)
 
 
+def _render_run_page() -> None:
+    st = _st()
+    st.subheader("Run the NeuralTF pipeline")
+
+    status = _pipeline_status()
+    ready = (
+        status["fincher_h5ad"]
+        and status["plass_h5ad"]
+        and status["king_xlsx_ready"]
+    )
+    if not ready:
+        st.warning("Required inputs are missing.")
+        st.markdown(
+            f"- `fincher_subsample.h5ad`: {'OK' if status['fincher_h5ad'] else 'MISSING'} "
+            f"({status['fincher_path']})\n"
+            f"- `plass_v6.h5ad`: {'OK' if status['plass_h5ad'] else 'MISSING'} "
+            f"({status['plass_path']})\n"
+            f"- King 2024 mmc4/mmc5/mmc6 xlsx: "
+            f"{'OK' if status['king_xlsx_ready'] else 'MISSING'} "
+            f"(`datasets/raw/Supplementary_Data_ King_2024/`)\n\n"
+            "Prebuilt files come with the repo. Only the King 2024 xlsx tables "
+            "are not committed - download mmc4-mmc7 from the Cell Reports paper "
+            "supplementary. To rebuild the h5ads from raw GEO downloads:\n"
+            "```\n"
+            "python scripts/convert_fincher.py\n"
+            "python scripts/consolidate_plass.py\n"
+            "```"
+        )
+        st.caption(
+            "Sources: GEO [GSE111764](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111764) "
+            "(Fincher 2018) and [GSE103633](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633) "
+            "(Plass 2018)."
+        )
+        return
+
+    st.success("All inputs present. Ready to run.")
+    ds = _downstream_readiness(_repo_root())
+    st.caption(
+        "Post-run generation (each step runs only if its inputs exist):\n"
+        "- 12 main figures: OK\n"
+        "- Track A/B shortlist + report: "
+        f"{'OK' if ds['prioritization'] else 'MISSING (needs King 2024 mmc4/mmc5 xlsx + PlanMine parquet)'}\n"
+        "- 4 GO supplementary figures: "
+        f"{'OK' if ds['go_figures'] else 'MISSING (needs datasets/raw/go.obo)'}"
+    )
+
+    with st.form("pipeline_params"):
+        col1, col2 = st.columns(2)
+        with col1:
+            subsample = st.number_input(
+                "Cells per atlas (subsample)",
+                min_value=0,
+                max_value=40000,
+                value=0,
+                step=1000,
+                help="0 = use the complete atlases (default); a value like "
+                     "10000 speeds up development runs.",
+            )
+        with col2:
+            out_dir = st.text_input(
+                "Output directory (relative to repo root)",
+                value="projects/NeuralTF/runs/pipeline_run",
+                help="Where rank.csv, rank_neural.csv and evidence_cards.md are written.",
+            )
+        run_downstream = st.checkbox(
+            "Also generate the report + all publication figures afterwards",
+            value=True,
+            help=("Runs prioritize_neural_tfs.py (Track A/B shortlist + candidate "
+                  "summary report), visualize_results.py (9 figures) and "
+                  "make_supp_go_figures.py (4 GO supplementary figures + matrix "
+                  "CSV). Each step runs only when its inputs are available."),
+        )
+        submitted = st.form_submit_button("Run pipeline", type="primary")
+
+    if not submitted:
+        # Show existing runs as a hint
+        runs = _list_runs()
+        if runs:
+            st.markdown(f"**{len(runs)} existing run(s)** — see the **Results** page.")
+        return
+
+    from bioforge.projects.neuraltf.pipeline import NeuralTFPipeline
+
+    root = _repo_root()
+    out_path = root / out_dir
+    st.info(f"Starting pipeline. Output: `{out_path}`")
+    progress = st.progress(0.0, text="Initializing...")
+    log_box = st.empty()
+    log_lines: list[str] = []
+
+    # Capture print() output of the pipeline by redirecting to our log box.
+    import io
+    import contextlib
+
+    class _StreamlitLog(io.StringIO):
+        def write(self, s: str) -> int:
+            log_lines.append(s.rstrip())
+            log_box.markdown(
+                "```\n" + "\n".join(log_lines[-200:]) + "\n```"
+            )
+            return len(s)
+
+    # Build pipeline. Override default paths to use the user's repo root.
+    pipe = NeuralTFPipeline(
+        data_root=root,
+        out_dir=out_path,
+        subsample=int(subsample) if subsample > 0 else None,
+    )
+
+    # Step atomically through the pipeline so we can update the progress bar.
+    steps = [
+        ("load_datasets", "1/8 Loading datasets"),
+        ("load_reference_tables", "2/8 Reference tables"),
+        ("run_qc", "4/8 QC + clustering"),
+        ("score_atlases", "5/8 Atlas DE scoring"),
+        ("integrate_king_atlas", "6/8 King neural seed"),
+        ("integrate_rnai", "7/8 RNAi evidence"),
+        ("integrate_correlations", "7.5/8 Correlations"),
+        ("assign_reproducibility", "8/8 Reproducibility"),
+        ("write_outputs", "Writing outputs"),
+    ]
+    log_buf = _StreamlitLog()
+    try:
+        with contextlib.redirect_stdout(log_buf):
+            for i, (method_name, label) in enumerate(steps, start=1):
+                progress.progress(i / len(steps), text=label)
+                getattr(pipe, method_name)()
+        progress.progress(1.0, text="Done")
+        st.success(f"Pipeline complete. Artifacts in `{out_path}`")
+        st.session_state["last_run_dir"] = str(out_path)
+        # Provide quick links
+        for fname in ("rank.csv", "rank_neural.csv", "evidence_cards.md", "pipeline_results.json"):
+            p = out_path / fname
+            if p.exists():
+                st.markdown(f"- `{p.relative_to(root)}` ({p.stat().st_size:,} bytes)")
+        if run_downstream:
+            _post_pipeline_steps(root, out_path, log_lines, log_box)
+        st.button("View results →", on_click=lambda: st.session_state.update(page="Results"))
+    except Exception as exc:  # noqa: BLE001
+        progress.progress(0.0, text="Failed")
+        st.error(f"Pipeline failed: {exc}")
+        with st.expander("Log"):
+            st.code("\n".join(log_lines[-200:]))
+
+    _render_data_rebuild_expander()
+
+
+def _render_results_page() -> None:
+    st = _st()
+    st.subheader("Results")
+
+    import pandas as pd
+
+    runs = _list_runs()
+    if not runs:
+        st.info("No runs yet. Go to the **Run** page.")
+        return
+
+    selected = st.selectbox(
+        "Run",
+        [str(p.relative_to(_repo_root())) for p in runs],
+        index=0,
+    )
+    run = _repo_root() / selected
+    rank_csv = run / "rank.csv"
+    neural_csv = run / "rank_neural.csv"
+    cards_md = run / "evidence_cards.md"
+    json_path = run / "pipeline_results.json"
+
+    # Tabbed view of the two rankings + cards + run metadata + visualizations
+    tab_rank, tab_neural, tab_cards, tab_viz, tab_supp, tab_meta = st.tabs(
+        ["All candidates", "Neural-filtered", "Evidence cards",
+         "Visualizations", "GO supplementary", "Run metadata"]
+    )
+
+    with tab_rank:
+        if rank_csv.exists():
+            df = pd.read_csv(rank_csv)
+            st.caption(f"{len(df)} rows × {len(df.columns)} columns")
+            _render_rank_table(df, key_prefix="all")
+        else:
+            st.warning("rank.csv not found in this run.")
+
+    with tab_neural:
+        if neural_csv.exists():
+            df = pd.read_csv(neural_csv)
+            st.caption(f"{len(df)} rows × {len(df.columns)} columns")
+            _render_rank_table(df, key_prefix="neural")
+            if "tier" in df.columns:
+                st.bar_chart(df["tier"].value_counts())
+        else:
+            st.warning("rank_neural.csv not found in this run.")
+
+    with tab_cards:
+        if cards_md.exists():
+            md = cards_md.read_text(encoding="utf-8")
+            # Split on candidate delimiter (## headings) into a searchable list
+            candidates = [c for c in md.split("\n## ") if c.strip()]
+            if candidates and not candidates[0].startswith("#"):
+                candidates = candidates[1:]  # drop preamble before first ##
+            if candidates:
+                labels = [c.split("\n", 1)[0].strip() for c in candidates]
+                choice = st.selectbox("Candidate", labels)
+                idx = labels.index(choice)
+                st.markdown("## " + candidates[idx])
+            else:
+                st.markdown(md)
+        else:
+            st.warning("evidence_cards.md not found in this run.")
+
+    with tab_viz:
+        if rank_csv.exists():
+            _render_visualizations(pd.read_csv(rank_csv), run_dir=run)
+        else:
+            st.warning("rank.csv not found in this run.")
+
+    with tab_supp:
+        _render_go_supplementary(_repo_root())
+
+    with tab_meta:
+        if json_path.exists():
+            try:
+                meta = json.loads(json_path.read_text(encoding="utf-8"))
+                st.json(meta)
+            except Exception as exc:  # noqa: BLE001
+                st.warning(f"Could not parse {json_path.name}: {exc}")
+        else:
+            st.info("No pipeline_results.json in this run.")
+
+
 def _render_visualizations(df, *, run_dir) -> None:
     st = _st()
     import matplotlib
