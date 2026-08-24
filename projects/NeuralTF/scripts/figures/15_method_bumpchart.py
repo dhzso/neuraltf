@@ -5,31 +5,41 @@ from style import *
 import matplotlib.pyplot as plt, numpy as np, pandas as pd
 
 def build():
-    fixed = load_top10()
-    centered = load_centered()
-    uniform = load_uniform()
+    fixed_top10 = load_top10()
+    centered_top10 = load_centered()
+    unif99 = load_unif99()
+    centered99 = load_centered99()
     neural = load_neural()
 
-    # Merge all methods
+    # Get ranks from full-rank data for ALL candidates
+    def compute_ranks(df, score_col):
+        tmp = df.copy()
+        tmp["_rank"] = tmp[score_col].rank(ascending=False, method="min")
+        return dict(zip(tmp["gene_id"], tmp["_rank"]))
+
+    all249 = load_all()
+    fixed_ranks = compute_ranks(all249, "integrated_score")
+    centered_ranks = compute_ranks(centered99, "dirichlet_median_score")
+    uniform_ranks = compute_ranks(unif99, "uniform_median_score")
+
+    # Use fixed top-10 as the candidate list
     records = []
-    for _, row in fixed.iterrows():
+    for _, row in fixed_top10.iterrows():
         gid = row["gene_id"]
         nm = label(neural, gid)
         track = row.get("track","")
-        c_row = centered[centered["gene_id"]==gid]
-        u_row = uniform[uniform["gene_id"]==gid]
         records.append({
             "name": nm, "track": track,
-            "fixed": row.get("rank", np.nan),
-            "centered": c_row.iloc[0].get("rank", np.nan) if len(c_row)>0 else np.nan,
-            "uniform": u_row.iloc[0].get("rank", np.nan) if len(u_row)>0 else np.nan,
+            "fixed": fixed_ranks.get(gid, np.nan),
+            "centered": centered_ranks.get(gid, np.nan),
+            "uniform": uniform_ranks.get(gid, np.nan),
         })
     df = pd.DataFrame(records)
     df = df.sort_values("fixed", ascending=True)
     y = np.arange(len(df))
     bw = 0.25
 
-    fig, ax = plt.subplots(figsize=(9, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
     colors = {"fixed": C_FIXED, "centered": C_CENTERED, "uniform": C_UNIFORM}
     offsets = {"fixed": -bw, "centered": 0, "uniform": bw}
     methods = ["fixed", "centered", "uniform"]
@@ -50,7 +60,6 @@ def build():
     for i, track in enumerate(df["track"]):
         ax.get_yticklabels()[i].set_color(C_A if track=="A" else C_B)
 
-    # Track legend
     from matplotlib.lines import Line2D
     track_handles = [Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=8, label="Track A (RNAi)"),
                      Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=8, label="Track B (novel)")]
@@ -67,6 +76,6 @@ def build():
     ax.set_xlim(0, 12)
     ax.invert_yaxis()
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
-    fig.tight_layout(); save(fig, "15_method_bumpchart")
+    save(fig, "15_method_bumpchart")
 
 if __name__=="__main__": build()

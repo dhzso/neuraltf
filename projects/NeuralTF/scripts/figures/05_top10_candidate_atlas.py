@@ -6,18 +6,22 @@ import matplotlib.pyplot as plt, numpy as np, pandas as pd
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 
-DOMAIN_COLORS = {
-    "Homeobox": "#0072B2", "bHLH": "#E69F00", "Zinc finger": "#009E73",
-    "Fork head": "#D55E00", "T-box": "#CC79A7", "p53": "#56B4E9",
-    "ETS": "#F0E442", "SMAD": "#999999", "Sox": "#661100",
+# TF family colors (from InterPro domain annotations)
+TF_FAMILIES = {
+    "Homeobox": "#0072B2",
+    "bHLH": "#E69F00",
+    "Zinc finger": "#009E73",
+    "Fork head": "#D55E00",
+    "T-box": "#CC79A7",
+    "p53": "#56B4E9",
 }
 
-def domain_color(domains_str):
+def tf_family_color(domains_str):
     d = str(domains_str)
-    for dom, c in DOMAIN_COLORS.items():
-        if dom.lower() in d.lower():
-            return c
-    return "#888888"
+    for fam, c in TF_FAMILIES.items():
+        if fam.lower() in d.lower():
+            return fam, c
+    return "Other", "#AAAAAA"
 
 def build():
     neural = load_neural()
@@ -33,10 +37,12 @@ def build():
         comp_fixed = row.get("composite_score", np.nan)
         proof = str(row.get("proof_status",""))
         domains = str(row.get("interpro_domains", row.get("domains_all","")))
+        fam, fam_c = tf_family_color(domains)
         records.append({
             "gene_id": gid, "name": nm, "track": track,
             "integrated": integrated, "composite": comp_fixed,
             "proof": proof, "domains": domains,
+            "family": fam, "family_color": fam_c,
         })
     df = pd.DataFrame(records)
     df = df.sort_values("composite", ascending=True)
@@ -44,8 +50,8 @@ def build():
 
     fig, ax = plt.subplots(figsize=(9, 6))
 
-    # Domain-colored bars
-    bar_colors = [domain_color(r["domains"]) for _, r in df.iterrows()]
+    # Bars colored by TF family
+    bar_colors = df["family_color"].tolist()
     ax.barh(y, df["composite"], height=0.65, color=bar_colors, alpha=0.8,
             edgecolor="white", lw=0.5)
 
@@ -65,11 +71,18 @@ def build():
         proof_short = r["proof"].replace("known_rnai_validated","RNAi validated").replace("novel_domain","novel")[:15]
         ax.text(0.005, y[i] + 0.3, proof_short, fontsize=5.5, va="bottom", color="#666", fontstyle="italic")
 
-    # Domain legend
-    legend_patches = [Patch(facecolor=c, alpha=0.8, label=d) for d, c in DOMAIN_COLORS.items()]
-    legend_patches.append(Patch(facecolor="#888", alpha=0.8, label="Other"))
-    ax.legend(handles=legend_patches, loc="lower right", fontsize=6, frameon=True,
-              title="TF domain family", title_fontsize=7)
+    # TF family legend
+    seen = []
+    legend_handles = []
+    for _, r in df.iterrows():
+        if r["family"] not in [s[0] for s in seen]:
+            seen.append((r["family"], r["family_color"]))
+    for fam, c in seen:
+        if fam != "Other":
+            legend_handles.append(Patch(facecolor=c, alpha=0.8, label=fam))
+    legend_handles.append(Patch(facecolor="#AAAAAA", alpha=0.8, label="Other TF"))
+    ax.legend(handles=legend_handles, loc="lower right", fontsize=6, frameon=True,
+              title="TF family (GO/InterPro)", title_fontsize=7)
 
     # Track legend (for gene name colors)
     track_handles = [Line2D([0],[0], marker="o", color="w", markerfacecolor=C_A, markersize=8, label="Track A (RNAi-validated)"),
@@ -81,7 +94,7 @@ def build():
     ax.set_xlabel("Composite score (fixed-weight)", fontsize=9)
     ax.set_ylabel("Candidate", fontsize=9)
     ax.set_title("Top 10 prioritized candidates — composite scores\n"
-                 "Bars colored by TF domain family; gene names colored by track",
+                 "Bars colored by TF family (GO/InterPro); gene names colored by track",
                  fontweight="bold", pad=10, fontsize=10)
     ax.set_xlim(0, max(df["composite"]) + 0.12)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
