@@ -92,6 +92,14 @@ def build():
         ax2.text(3.3, i, f"{nm}/3", fontsize=7, va="center", fontweight="bold", color=c)
 
     ax2.set_title("Candidate presence across methods", fontweight="bold", pad=8, fontsize=10, y=1.05)
+    # Legend for right panel
+    from matplotlib.lines import Line2D
+    dot_handles = [Line2D([0],[0], marker="o", color="w", markerfacecolor="#E69F00", markersize=8, label="Present in method"),
+                   Line2D([0],[0], marker="o", color="w", markerfacecolor="#DDD", markersize=8, label="Absent"),
+                   Patch(facecolor=C_A, label="3/3 (robust)"),
+                   Patch(facecolor="#CC79A7", label="2/3 (partial)"),
+                   Patch(facecolor=C_B, label="1/3 (specific)")]
+    ax2.legend(handles=dot_handles, loc="lower right", fontsize=5.5, frameon=True, ncol=2)
 
     fig.suptitle("Method consensus analysis — ranking robustness", fontweight="bold", fontsize=11, y=1.02)
     fig.tight_layout(w_pad=2)

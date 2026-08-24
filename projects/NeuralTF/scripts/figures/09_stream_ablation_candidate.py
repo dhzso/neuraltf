@@ -61,6 +61,10 @@ def build():
     ax.set_title("Candidate sensitivity — rank change per stream removed", fontweight="bold", pad=12)
     cbar = fig.colorbar(im, ax=ax, fraction=0.02, pad=0.02)
     cbar.set_label("Rank change (− = improves)", fontsize=8)
+    from matplotlib.lines import Line2D
+    track_handles = [Line2D([0],[0], marker="o", color="w", markerfacecolor=C_A, markersize=6, label="Track A (RNAi)"),
+                     Line2D([0],[0], marker="o", color="w", markerfacecolor=C_B, markersize=6, label="Track B (novel)")]
+    ax.legend(handles=track_handles, loc="upper right", fontsize=6, frameon=True, title="Gene label color", title_fontsize=7)
     fig.tight_layout(); save(fig, "09_stream_ablation_candidate")
 
 if __name__=="__main__": build()

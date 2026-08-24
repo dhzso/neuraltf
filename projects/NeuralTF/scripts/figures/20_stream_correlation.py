@@ -47,6 +47,8 @@ def build():
     ax.set_title("Spearman correlation between evidence streams (249 TFs)\n"
                  "* p<0.05  ** p<0.01  *** p<0.001",
                  fontweight="bold", pad=10, fontsize=10)
+    ax.set_xlabel("Evidence stream")
+    ax.set_ylabel("Evidence stream")
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Spearman rho", fontsize=8)
     fig.tight_layout(); save(fig, "20_stream_correlation")

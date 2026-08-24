@@ -31,6 +31,7 @@ FIGURES = {
     18: ("18_composite_bonus_waterfall.py",       "Composite bonus waterfall"),
     19: ("19_method_consensus.py",               "Method consensus"),
     20: ("20_stream_correlation.py",              "Stream correlation matrix"),
+    21: ("21_centered_vs_uniform_scatter.py",      "Centered vs uniform Dirichlet"),
 }
 
 def _load(path, name):
@@ -50,7 +51,7 @@ def main():
         if num not in FIGURES:
             print(f"  [SKIP] Figure {num}"); continue
         fname, desc = FIGURES[num]
-        print(f"\n  [{num}/20] {desc}")
+        print(f"\n  [{num}/21] {desc}")
         try:
             mod = _load(FIGURES_DIR / fname, f"fig{num}")
             mod.build()

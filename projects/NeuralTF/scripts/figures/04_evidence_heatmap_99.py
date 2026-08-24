@@ -37,6 +37,10 @@ def build():
     ax.set_title("Evidence heatmap — all 99 neural candidates", fontweight="bold", pad=12, fontsize=10)
     cbar = fig.colorbar(im, ax=ax, fraction=0.015, pad=0.02)
     cbar.set_label("Evidence strength", fontsize=8)
+    from matplotlib.lines import Line2D
+    track_handles = [Line2D([0],[0], marker="o", color="w", markerfacecolor=C_A, markersize=6, label="RNAi-validated"),
+                     Line2D([0],[0], marker="o", color="w", markerfacecolor="#333", markersize=6, label="Other")]
+    ax.legend(handles=track_handles, loc="upper right", fontsize=6, frameon=True, title="Gene label color", title_fontsize=7)
     fig.tight_layout(); save(fig, "04_evidence_heatmap_99")
 
 if __name__=="__main__": build()
