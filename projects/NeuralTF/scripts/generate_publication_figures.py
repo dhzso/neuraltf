@@ -1,106 +1,64 @@
-"""Master script to regenerate all publication figures.
+"""Master script — regenerate all publication figures (PNG only, 300dpi).
 
 Usage:
     python projects/NeuralTF/scripts/generate_publication_figures.py
-    python projects/NeuralTF/scripts/generate_publication_figures.py --figure 1 3
-
-Outputs:
-    Main figures:    projects/NeuralTF/figures/Fig{1-6}_*.png + .pdf
-    Supplementary:   projects/NeuralTF/figures/supplementary/fig_s{1-4}_*.png
+    python projects/NeuralTF/scripts/generate_publication_figures.py --figure 1 5 10
 """
 from __future__ import annotations
-
-import argparse
-import importlib.util
-import sys
-import time
+import argparse, importlib.util, sys, time, traceback
 from pathlib import Path
-import traceback
 
-REPO = Path(__file__).resolve().parents[2]
-SCRIPTS_DIR = Path(__file__).resolve().parent
-FIGURES_DIR = SCRIPTS_DIR / "figures"
-SUPP_DIR = REPO / "projects" / "NeuralTF" / "figures" / "supplementary"
-SUPP_DIR.mkdir(parents=True, exist_ok=True)
+FIGURES_DIR = Path(__file__).resolve().parent / "figures"
 
-FIGURE_MODULES = {
-    1: ("Fig 1 — Candidate landscape",          FIGURES_DIR / "Fig1_candidate_landscape.py"),
-    2: ("Fig 2 — Evidence architecture",         FIGURES_DIR / "Fig2_evidence_architecture.py"),
-    3: ("Fig 3 — Ranking robustness",            FIGURES_DIR / "Fig3_ranking_robustness.py"),
-    4: ("Fig 4 — Stream sensitivity",            FIGURES_DIR / "Fig4_stream_sensitivity.py"),
-    5: ("Fig 5 — Neural filtering scope",        FIGURES_DIR / "Fig5_neural_vs_full.py"),
-    6: ("Fig 6 — Prioritized candidate atlas",   FIGURES_DIR / "Fig6_prioritized_candidate_atlas.py"),
+FIGURES = {
+    1:  ("01_stream_coverage_249.py",            "Evidence stream coverage (249 TFs)"),
+    2:  ("02_integrated_vs_composite.py",         "Integrated vs composite score"),
+    3:  ("03_score_distribution_249_vs_99.py",    "Score distribution 249 vs 99"),
+    4:  ("04_evidence_heatmap_99.py",             "Evidence heatmap (99 neural)"),
+    5:  ("05_top10_candidate_atlas.py",           "Top 10 candidate atlas"),
+    6:  ("06_weight_sensitivity_ranks.py",        "Weight sensitivity rank distributions"),
+    7:  ("07_weight_sensitivity_ptop10.py",       "Weight sensitivity P(Top10)"),
+    8:  ("08_stream_ablation_global.py",          "Stream ablation global impact"),
+    9:  ("09_stream_ablation_candidate.py",       "Stream ablation candidate sensitivity"),
+    10: ("10_centered_top10_scores.py",           "Centered Dirichlet top 10 scores"),
+    11: ("11_centered_scatter_99.py",             "Fixed vs centered Dirichlet (99)"),
+    12: ("12_uniform_top10_scores.py",            "Uniform Dirichlet top 10 scores"),
+    13: ("13_uniform_scatter_99.py",              "Fixed vs uniform Dirichlet (99)"),
+    14: ("14_uniform_99vs249_rankrank.py",        "99 vs 249 rank-rank comparison"),
+    15: ("15_method_bumpchart.py",                "3-method bump chart"),
+    16: ("16_method_score_density.py",            "3-method score density"),
+    17: ("17_method_rank_correlation.py",         "3-method rank correlation"),
 }
 
-
-def _load_module(path: Path, name: str):
+def _load(path, name):
     spec = importlib.util.spec_from_file_location(name, str(path))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
 
-
 def main():
-    parser = argparse.ArgumentParser(description="Regenerate publication figures")
-    parser.add_argument("--figure", nargs="*", type=int,
-                        help="Specific figures to generate (default: all)")
-    args = parser.parse_args()
-
+    p = argparse.ArgumentParser()
+    p.add_argument("--figure", nargs="*", type=int)
+    args = p.parse_args()
+    nums = args.figure if args.figure else sorted(FIGURES.keys())
     t0 = time.time()
-    generated = []
-    errors = []
-
-    fig_nums = args.figure if args.figure else sorted(FIGURE_MODULES.keys())
-
-    for num in fig_nums:
-        if num not in FIGURE_MODULES:
-            print(f"  [SKIP] Figure {num} not available")
-            continue
-        label, path = FIGURE_MODULES[num]
-        print(f"\n{'='*60}")
-        print(f"  Generating {label}")
-        print(f"{'='*60}")
+    ok, fail = [], []
+    for num in nums:
+        if num not in FIGURES:
+            print(f"  [SKIP] Figure {num}"); continue
+        fname, desc = FIGURES[num]
+        print(f"\n  [{num}/17] {desc}")
         try:
-            mod = _load_module(path, f"fig{num}")
+            mod = _load(FIGURES_DIR / fname, f"fig{num}")
             mod.build()
-            generated.append(num)
-            print(f"  OK Figure {num} complete")
+            ok.append(num)
+            print(f"    OK")
         except Exception:
-            print(f"  FAILED Figure {num}:")
             traceback.print_exc()
-            errors.append(num)
-
-    # Supplementary GO figures
-    print(f"\n{'='*60}")
-    print(f"  Generating supplementary GO figures")
-    print(f"{'='*60}")
-    supp_script = SCRIPTS_DIR / "make_supp_go_figures.py"
-    if supp_script.exists():
-        try:
-            mod = _load_module(supp_script, "make_supp_go_figures")
-            if hasattr(mod, "build_all"):
-                mod.build_all()
-            elif hasattr(mod, "main"):
-                mod.main()
-            print(f"  OK Supplementary figures complete")
-        except Exception:
-            print(f"  FAILED Supplementary figures:")
-            traceback.print_exc()
-    else:
-        print(f"  SKIP make_supp_go_figures.py not found")
-
-    elapsed = time.time() - t0
-    print(f"\n{'='*60}")
-    print(f"  SUMMARY")
-    print(f"{'='*60}")
-    print(f"  Generated: {len(generated)} main figures")
-    print(f"  Errors:    {len(errors)}")
-    print(f"  Time:      {elapsed:.1f}s")
-
-    if errors:
-        print(f"\n  Failed figures: {errors}")
-        sys.exit(1)
-
+            fail.append(num)
+    print(f"\n{'='*50}")
+    print(f"  Done: {len(ok)} generated, {len(fail)} failed, {time.time()-t0:.1f}s")
+    if fail: print(f"  Failed: {fail}"); sys.exit(1)
 
 if __name__ == "__main__":
     main()
