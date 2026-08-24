@@ -25,9 +25,12 @@ FIGURES = {
     12: ("12_uniform_top10_scores.py",            "Uniform Dirichlet top 10 scores"),
     13: ("13_uniform_scatter_99.py",              "Fixed vs uniform Dirichlet (99)"),
     14: ("14_uniform_99vs249_rankrank.py",        "99 vs 249 rank-rank comparison"),
-    15: ("15_method_bumpchart.py",                "3-method bump chart"),
+    15: ("15_method_bumpchart.py",                "3-method rank comparison"),
     16: ("16_method_score_density.py",            "3-method score density"),
     17: ("17_method_rank_correlation.py",         "3-method rank correlation"),
+    18: ("18_composite_bonus_waterfall.py",       "Composite bonus waterfall"),
+    19: ("19_method_consensus.py",               "Method consensus"),
+    20: ("20_stream_correlation.py",              "Stream correlation matrix"),
 }
 
 def _load(path, name):
@@ -47,7 +50,7 @@ def main():
         if num not in FIGURES:
             print(f"  [SKIP] Figure {num}"); continue
         fname, desc = FIGURES[num]
-        print(f"\n  [{num}/17] {desc}")
+        print(f"\n  [{num}/20] {desc}")
         try:
             mod = _load(FIGURES_DIR / fname, f"fig{num}")
             mod.build()
