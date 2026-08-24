@@ -1,9 +1,8 @@
-"""3-method comparison — bump chart (rank flow across fixed/centered/uniform)."""
+"""3-method comparison — slope chart showing rank changes across methods."""
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from style import *
 import matplotlib.pyplot as plt, numpy as np, pandas as pd
-from matplotlib.lines import Line2D
 
 def build():
     fixed = load_top10()
@@ -19,35 +18,42 @@ def build():
     records = []
     for gid in all_ids:
         rec = {"gene_id":gid}
-        for name, df, sc in [("fixed",fixed,"composite_score"),("centered",centered,"composite_score"),("uniform",uniform,"composite_score")]:
+        for name, df in [("fixed",fixed),("centered",centered),("uniform",uniform)]:
             row = df[df["gene_id"]==gid]
             if len(row)>0:
                 rec[f"{name}_rank"] = row.iloc[0].get("rank", np.nan)
+                rec[f"{name}_score"] = row.iloc[0].get("composite_score", np.nan)
         records.append(rec)
-    rank_df = pd.DataFrame(records).dropna(subset=["fixed_rank","centered_rank","uniform_rank"], thresh=2)
+    rank_df = pd.DataFrame(records)
+    rank_df = rank_df.dropna(subset=["fixed_rank"], how="all")
 
-    methods = ["Fixed", "Centered", "uniform"]
-    x = np.arange(len(methods))
-    fig, ax = plt.subplots(figsize=(6, 5))
-    for _, row in rank_df.iterrows():
-        gid = row["gene_id"]
-        track = track_map.get(gid,"")
-        color = C_A if track=="A" else C_B if track=="B" else C_NEURAL
-        ranks = [row.get(f"{m.lower()}_rank", np.nan) for m in methods]
-        valid = [(i,r) for i,r in enumerate(ranks) if pd.notna(r)]
-        if len(valid)<2: continue
-        xv = [v[0] for v in valid]; yv = [v[1] for v in valid]
-        ax.plot(xv, yv, "-o", color=color, alpha=0.8, markersize=5, lw=1.2, zorder=3)
-        last_x, last_y = xv[-1], yv[-1]
-        ax.annotate(label(neural, gid), (last_x, last_y), fontsize=6, xytext=(5,0),
-                    textcoords="offset points", va="center", color=color, fontweight="bold")
-    ax.set_xticks(x); ax.set_xticklabels(["Fixed\nweight","Dirichlet\ncentered","Dirichlet\nuniform"], fontsize=8)
-    ax.set_ylabel("Rank in Top 10"); ax.invert_yaxis(); ax.set_ylim(0.5, 10.5)
-    ax.set_title("Rank stability across three weighting methods", fontweight="bold", pad=8)
-    legend_elements = [Line2D([0],[0],color=C_A,marker="o",label="Track A",lw=1),
-                       Line2D([0],[0],color=C_B,marker="o",label="Track B",lw=1)]
-    ax.legend(handles=legend_elements, frameon=False, fontsize=7, loc="lower right")
-    ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
-    fig.tight_layout(); save(fig, "15_method_bumpchart")
+    fig, axes = plt.subplots(1, 3, figsize=(10, 5), sharey=False)
+    comparisons = [
+        ("fixed_rank", "centered_rank", "Fixed", "Centered"),
+        ("fixed_rank", "uniform_rank", "Fixed", "Uniform"),
+        ("centered_rank", "uniform_rank", "Centered", "Uniform"),
+    ]
+    for ax, (col_l, col_r, lbl_l, lbl_r) in zip(axes, comparisons):
+        sub = rank_df.dropna(subset=[col_l, col_r])
+        for _, row in sub.iterrows():
+            gid = row["gene_id"]
+            track = track_map.get(gid,"")
+            color = C_A if track=="A" else C_B
+            alpha = 0.9 if gid in set(fixed["gene_id"]) else 0.4
+            lw = 1.5 if gid in set(fixed["gene_id"]) else 0.8
+            rl, rr = row[col_l], row[col_r]
+            ax.plot([0, 1], [rl, rr], "-o", color=color, alpha=alpha, lw=lw, markersize=4, zorder=3)
+            if gid in set(fixed["gene_id"]):
+                nm = label(neural, gid)
+                ax.text(1.05, rr, nm, fontsize=6, va="center", color=color, fontweight="bold")
+        ax.set_xlim(-0.1, 1.6)
+        ax.set_xticks([0, 1]); ax.set_xticklabels([lbl_l, lbl_r], fontsize=8)
+        ax.set_ylabel("Rank"); ax.invert_yaxis()
+        ax.set_ylim(10.5, 0.5)
+        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+        ax.set_title(f"{lbl_l} vs {lbl_r}", fontsize=9, fontweight="bold")
+
+    fig.suptitle("Rank changes across three weighting methods", fontweight="bold", fontsize=10, y=1.02)
+    fig.tight_layout(w_pad=1.5); save(fig, "15_method_bumpchart")
 
 if __name__=="__main__": build()
