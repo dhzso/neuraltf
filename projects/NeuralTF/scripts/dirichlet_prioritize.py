@@ -117,8 +117,54 @@ def read_mmc5(path: Path) -> pd.DataFrame:
 
 
 def integrated_scores(S: np.ndarray, W: np.ndarray) -> np.ndarray:
-    mask = ~np.isnan(S)
-    return np.where(mask, S, 0.0) @ W
+    """
+    Compute integrated scores with Dirichlet-sampled weights, renormalizing
+    over available streams for each candidate.
+
+    This preserves the fixed-weight scorer's missing-data philosophy:
+    weights are renormalized over streams available for each candidate,
+    so missing evidence does not consume weight mass.
+
+    Parameters
+    ----------
+    S : np.ndarray of shape (n_candidates, n_streams)
+        Stream scores, with NaN for missing evidence.
+    W : np.ndarray of shape (n_streams,) or (n_draws, n_streams)
+        Weight vector(s). If 2D, assumed to be (n_draws, n_streams).
+
+    Returns
+    -------
+    np.ndarray of shape (n_candidates,) or (n_draws, n_candidates)
+        Integrated scores with missing-data renormalization.
+    """
+    S = np.asarray(S, dtype=float)
+    W = np.asarray(W, dtype=float)
+
+    # Handle both single weight vector (1D) and multiple draws (2D)
+    if W.ndim == 1:
+        W = W[np.newaxis, :]  # shape (1, n_streams)
+
+    n_draws, n_streams = W.shape
+    n_candidates = S.shape[0]
+
+    # Mask of available evidence per candidate
+    mask = ~np.isnan(S)  # shape (n_candidates, n_streams)
+
+    # Numerator: sum over available streams of (score * weight)
+    # For missing streams, treat score as 0 (so they don't contribute)
+    S_filled = np.where(np.isnan(S), 0.0, S)  # shape (n_candidates, n_streams)
+    numerator = np.sum(S_filled[:, np.newaxis, :] * W, axis=2)  # shape (n_candidates, n_draws)
+
+    # Denominator: sum of weights for available streams per candidate
+    # W shape: (n_draws, n_streams), mask: (n_candidates, n_streams)
+    # We need to sum weights for available streams per candidate per draw
+    denominator = np.sum(mask[:, np.newaxis, :] * W, axis=2)  # shape (n_candidates, n_draws)
+
+    # Safe division: where denominator is 0, return 0
+    with np.errstate(divide='ignore', invalid='ignore'):
+        scores = np.where(denominator > 0, numerator / denominator, 0.0)
+
+    return scores.T  # shape (n_draws, n_candidates) -> transpose for (n_candidates, n_draws)
 
 
 def dirichlet_median_scores(S: np.ndarray, W: np.ndarray,
@@ -127,20 +173,29 @@ def dirichlet_median_scores(S: np.ndarray, W: np.ndarray,
     """Return the median integrated score for each candidate across draws.
 
     Samples ONE weight vector per draw from Dirichlet(alpha = W * k),
-    applies it to ALL candidates. NaN streams are zeroed out in the
-    dot product (handled by integrated_scores), so missing evidence
-    simply contributes zero regardless of the sampled weight.
+    applies it to ALL candidates. Missing evidence is handled by
+    renormalizing weights over available streams per candidate,
+    preserving the fixed-weight scorer's missing-data philosophy.
     """
-    n = S.shape[0]
-    all_scores = np.empty((n_draws, n), dtype=np.float32)
+    n_candidates = S.shape[0]
+    all_scores = np.empty((n_draws, n_candidates), dtype=np.float32)
     mask = ~np.isnan(S)
+
     for d in range(n_draws):
-        # Sample ONE weight vector for this draw (not per-candidate)
+        # Sample ONE weight vector for this draw
         alpha = W * k + 1e-9
-        w = rng.gamma(alpha, 1.0)
+        w = rng.gamma(W * k + 1e-9, 1.0)
         w = w / w.sum()
-        # Apply to all candidates
-        all_scores[d] = integrated_scores(S, w)
+
+        # Compute integrated scores with renormalization for this draw
+        mask = ~np.isnan(S)
+        S_filled = np.where(np.isnan(S), 0.0, S)
+        numerator = np.sum(S_filled * w, axis=1)
+        denominator = np.sum(mask * w, axis=1)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            scores = np.where(denominator > 0, numerator / denominator, 0.0)
+        all_scores[d] = scores
+
     return np.median(all_scores, axis=0)
 
 
