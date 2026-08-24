@@ -4,10 +4,10 @@ Four pages:
   - **Run**          : one-click execution of `NeuralTFPipeline` with live
                         progress and parameters (subsample size, output dir).
   - **Results**      : browse `rank.csv` / `rank_neural.csv` from any run,
-                   filter by tier, search by gene, and read the markdown
-                   evidence cards.
-  - **Prioritization** : dual-track shortlist (`top10_neural_tfs_prioritized.csv`)
-                   + `candidate_summary_report.md`.
+                   filter by tier, search by gene, and view pre-generated
+                   figures (or generate on-demand via visualize_fixed.py).
+  - **Prioritization** : dual-track shortlist from three methods (fixed-weight,
+                   Dirichlet-centered, Dirichlet-uniform) as tabs.
   - **Assistant**   : chat with the AI assistant (StubAssistant when no API
                    key is configured) for follow-up queries about candidates.
 
@@ -153,7 +153,7 @@ def _post_pipeline_steps(root: Path, run_dir: Path, log_lines: list[str],
                          log_box) -> None:
     """Generate the downstream report + publication figures after a run.
 
-    Runs, in order: `visualize_results.py` (12 main figures),
+    Runs, in order: `visualize_fixed.py` (13 main figures),
     `prioritize_neural_tfs.py` (Track A/B shortlist + summary report) and
     `make_supp_go_figures.py` (4 GO supplementary figures + matrix CSV).
     Each step is gated on its inputs and runs as a subprocess so its CLI
@@ -168,9 +168,9 @@ def _post_pipeline_steps(root: Path, run_dir: Path, log_lines: list[str],
 
     _run_step(
         root, st, log_lines, log_box,
-        ["projects/NeuralTF/scripts/visualize_results.py",
+        ["projects/NeuralTF/scripts/visualize_fixed.py",
          "--run", str(run_dir), "--out", str(fig_out)],
-        "visualize_results.py (12 main figures)",
+        "visualize_fixed.py (13 main figures)",
         (run_dir / "rank.csv").exists(),
         "rank.csv not found in the run directory",
     )
@@ -306,7 +306,7 @@ def _render_run_page() -> None:
     ds = _downstream_readiness(_repo_root())
     st.caption(
         "Post-run generation (each step runs only if its inputs exist):\n"
-        "- 12 main figures: OK\n"
+        "- 13 main figures: OK\n"
         "- Track A/B shortlist + report: "
         f"{'OK' if ds['prioritization'] else 'MISSING (needs King 2024 mmc4/mmc5 xlsx + PlanMine parquet)'}\n"
         "- 4 GO supplementary figures: "
@@ -523,6 +523,21 @@ def _render_results_page() -> None:
                 st.warning(f"Could not parse {json_path.name}: {exc}")
         else:
             st.info("No pipeline_results.json in this run.")
+
+
+def _import_visualize_fixed():
+    """Import the visualize_fixed module from the scripts directory."""
+    import importlib.util
+    root = _repo_root()
+    path = root / "projects" / "NeuralTF" / "scripts" / "visualize_fixed.py"
+    if not path.exists():
+        return None
+    spec = importlib.util.spec_from_file_location("visualize_fixed", str(path))
+    if spec is None or spec.loader is None:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def _render_visualizations(df, *, run_dir) -> None:
