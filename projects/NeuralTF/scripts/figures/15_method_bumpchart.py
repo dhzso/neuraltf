@@ -7,20 +7,20 @@ import matplotlib.pyplot as plt, numpy as np, pandas as pd
 def build():
     fixed_top10 = load_top10()
     centered_top10 = load_centered()
-    unif99 = load_unif99()
-    centered99 = load_centered99()
+    uniform_top10 = load_uniform()
     neural = load_neural()
 
-    # Get ranks from full-rank data for ALL candidates
-    def compute_ranks(df, score_col):
-        tmp = df.copy()
-        tmp["_rank"] = tmp[score_col].rank(ascending=False, method="min")
-        return dict(zip(tmp["gene_id"], tmp["_rank"]))
+    # Build rank lookup from each top-10 file (within-track ranks 1-5)
+    def rank_lookup(df):
+        d = {}
+        for _, row in df.iterrows():
+            gid = row["gene_id"]
+            d[gid] = row.get("rank", np.nan)
+        return d
 
-    all249 = load_all()
-    fixed_ranks = compute_ranks(all249, "integrated_score")
-    centered_ranks = compute_ranks(centered99, "dirichlet_median_score")
-    uniform_ranks = compute_ranks(unif99, "uniform_median_score")
+    fixed_r = rank_lookup(fixed_top10)
+    centered_r = rank_lookup(centered_top10)
+    uniform_r = rank_lookup(uniform_top10)
 
     # Use fixed top-10 as the candidate list
     records = []
@@ -30,16 +30,16 @@ def build():
         track = row.get("track","")
         records.append({
             "name": nm, "track": track,
-            "fixed": fixed_ranks.get(gid, np.nan),
-            "centered": centered_ranks.get(gid, np.nan),
-            "uniform": uniform_ranks.get(gid, np.nan),
+            "fixed": fixed_r.get(gid, np.nan),
+            "centered": centered_r.get(gid, np.nan),
+            "uniform": uniform_r.get(gid, np.nan),
         })
     df = pd.DataFrame(records)
     df = df.sort_values("fixed", ascending=True)
     y = np.arange(len(df))
     bw = 0.25
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(9, 6))
     colors = {"fixed": C_FIXED, "centered": C_CENTERED, "uniform": C_UNIFORM}
     offsets = {"fixed": -bw, "centered": 0, "uniform": bw}
     methods = ["fixed", "centered", "uniform"]
@@ -68,12 +68,13 @@ def build():
     labels_leg.extend(["Track A (RNAi)", "Track B (novel)"])
     ax.legend(handles, labels_leg, loc="lower right", fontsize=7, frameon=True)
 
-    ax.set_xlabel("Rank (1 = highest)", fontsize=9)
+    ax.set_xlabel("Rank within track (1 = highest)", fontsize=9)
     ax.set_ylabel("Candidate", fontsize=9)
     ax.set_title("Rank comparison across three weighting methods (Top 10)\n"
-                 "Lower rank = higher priority; gene names colored by track",
+                 "Track A ranks 1-5, Track B ranks 1-5; gene names colored by track",
                  fontweight="bold", pad=10, fontsize=10)
-    ax.set_xlim(0, 12)
+    ax.set_xlim(0, 7)
+    ax.set_xticks([1, 2, 3, 4, 5, 6])
     ax.invert_yaxis()
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     save(fig, "15_method_bumpchart")
