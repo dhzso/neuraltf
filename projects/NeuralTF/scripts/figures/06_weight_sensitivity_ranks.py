@@ -45,9 +45,17 @@ def build():
     for i, c in enumerate(colors):
         ax.get_yticklabels()[i].set_color(c)
     ax.axvline(x=10, color=C_HL, lw=0.8, ls="--", label="Top 10 cutoff")
-    ax.set_xlabel("Rank across 1000 weight draws"); ax.invert_yaxis()
+    ax.set_xlabel("Rank across 1000 weight draws"); ax.set_ylabel("Candidate")
+    ax.invert_yaxis()
     ax.set_title("Weight sensitivity — rank distributions", fontweight="bold", pad=8)
-    ax.legend(frameon=False, fontsize=7)
+    from matplotlib.lines import Line2D
+    track_handles = [Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=7, label="Track A"),
+                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=7, label="Track B"),
+                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=7, label="Other neural")]
+    handles, labels_leg = ax.get_legend_handles_labels()
+    handles.extend(track_handles)
+    labels_leg.extend(["Track A","Track B","Other neural"])
+    ax.legend(handles, labels_leg, frameon=False, fontsize=7)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(); save(fig, "06_weight_sensitivity_ranks")
 

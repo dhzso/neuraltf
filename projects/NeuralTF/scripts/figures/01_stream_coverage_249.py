@@ -21,9 +21,13 @@ def build():
         ax.text(bar.get_width()+0.5, bar.get_y()+bar.get_height()/2,
                 f" {c}/{total} ({v:.0f}%)", va="center", fontsize=8)
     ax.set_yticks(y); ax.set_yticklabels(labels, fontsize=8)
-    ax.set_xlabel("% of 249 TF candidates with evidence"); ax.set_xlim(0, 105)
+    ax.set_xlabel("% of 249 TF candidates with evidence"); ax.set_ylabel("Evidence stream")
+    ax.set_xlim(0, 105)
     ax.set_title("Evidence stream coverage", fontweight="bold", pad=8)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+    from matplotlib.patches import Patch
+    ax.legend(handles=[Patch(facecolor=STREAM_C[s], label=STREAM_L[s]) for s in STREAM_COLS],
+              loc="lower right", fontsize=6, frameon=True, title="Stream", title_fontsize=7)
     fig.tight_layout(); save(fig, "01_stream_coverage_249")
 
 if __name__=="__main__": build()

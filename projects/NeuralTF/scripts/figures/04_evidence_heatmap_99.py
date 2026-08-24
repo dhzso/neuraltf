@@ -19,9 +19,11 @@ def build():
     im = ax.imshow(mat, aspect="auto", cmap=cmap, vmin=0, vmax=1, interpolation="nearest")
     ax.set_xticks(range(len(STREAM_COLS)))
     ax.set_xticklabels([STREAM_L[s] for s in STREAM_COLS], rotation=45, ha="right", fontsize=8)
+    ax.set_xlabel("Evidence stream")
     ax.xaxis.set_label_position("top")
     ylabels = [label(neural, gid) for gid in df["gene_id"]]
     ax.set_yticks(range(len(df))); ax.set_yticklabels(ylabels, fontsize=5.5)
+    ax.set_ylabel("Candidate")
     for i, gid in enumerate(df["gene_id"]):
         ps = str(neural.iloc[i].get("proof_status",""))
         if "validated" in ps.lower() or "fstf" in ps.lower():

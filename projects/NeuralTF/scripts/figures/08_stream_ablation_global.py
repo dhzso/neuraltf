@@ -36,9 +36,12 @@ def build():
         ax.text(r["median_abs"]+0.05, i, f'ΔTop10={r["n_displaced"]}', fontsize=7, va="center",
                 color=C_HL if r["n_displaced"]>0 else "#999")
     ax.set_yticks(y); ax.set_yticklabels([STREAM_L[s] for s in stats["stream"]], fontsize=8)
-    ax.set_xlabel("Median |rank change| (99 candidates)")
+    ax.set_xlabel("Median |rank change| (99 candidates)"); ax.set_ylabel("Evidence stream removed")
     ax.set_title("Stream ablation — global impact", fontweight="bold", pad=8)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+    from matplotlib.patches import Patch
+    ax.legend(handles=[Patch(facecolor=STREAM_C[s], label=STREAM_L[s]) for s in stats["stream"]],
+              loc="lower right", fontsize=6, frameon=True, title="Removed stream", title_fontsize=7)
     fig.tight_layout(); save(fig, "08_stream_ablation_global")
 
 if __name__=="__main__": build()

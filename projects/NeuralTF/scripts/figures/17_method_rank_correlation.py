@@ -40,7 +40,9 @@ def build():
     fig, ax = plt.subplots(figsize=(5, 4.5))
     im = ax.imshow(corr, cmap="RdYlBu_r", vmin=0.8, vmax=1.0, aspect="equal")
     ax.set_xticks(range(n)); ax.set_xticklabels(labels, fontsize=9)
+    ax.set_xlabel("Method")
     ax.set_yticks(range(n)); ax.set_yticklabels(labels, fontsize=9)
+    ax.set_ylabel("Method")
     for i in range(n):
         for j in range(n):
             ax.text(j, i, f"{corr[i,j]:.3f}", ha="center", va="center", fontsize=10,

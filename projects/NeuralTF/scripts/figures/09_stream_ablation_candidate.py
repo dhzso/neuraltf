@@ -44,9 +44,11 @@ def build():
     im = ax.imshow(pivot.values, aspect="auto", cmap=plt.cm.RdBu_r, norm=norm, interpolation="nearest")
     ax.set_xticks(range(len(pivot.columns)))
     ax.set_xticklabels([STREAM_L[s] for s in pivot.columns], rotation=45, ha="right", fontsize=8)
+    ax.set_xlabel("Evidence stream removed")
     ax.xaxis.set_label_position("top")
     ax.set_yticks(range(len(pivot)))
     ax.set_yticklabels([label(neural, g) for g in pivot.index], fontsize=7)
+    ax.set_ylabel("Candidate")
     for i, gid in enumerate(pivot.index):
         c = C_A if track_map.get(gid,"")=="A" else C_B
         ax.get_yticklabels()[i].set_color(c)

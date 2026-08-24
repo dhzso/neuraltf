@@ -1,4 +1,4 @@
-"""3-method comparison — slope chart showing rank changes across methods."""
+"""3-method comparison — grouped bar chart of ranks for top-10 candidates."""
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from style import *
@@ -9,51 +9,64 @@ def build():
     centered = load_centered()
     uniform = load_uniform()
     neural = load_neural()
-    track_map = dict(zip(fixed["gene_id"], fixed.get("track",[""]*len(fixed))))
 
-    all_ids = set()
-    for df in [fixed, centered, uniform]:
-        if "gene_id" in df.columns: all_ids.update(df["gene_id"].tolist())
-
+    # Merge all methods
     records = []
-    for gid in all_ids:
-        rec = {"gene_id":gid}
-        for name, df in [("fixed",fixed),("centered",centered),("uniform",uniform)]:
-            row = df[df["gene_id"]==gid]
-            if len(row)>0:
-                rec[f"{name}_rank"] = row.iloc[0].get("rank", np.nan)
-                rec[f"{name}_score"] = row.iloc[0].get("composite_score", np.nan)
-        records.append(rec)
-    rank_df = pd.DataFrame(records)
-    rank_df = rank_df.dropna(subset=["fixed_rank"], how="all")
+    for _, row in fixed.iterrows():
+        gid = row["gene_id"]
+        nm = label(neural, gid)
+        track = row.get("track","")
+        c_row = centered[centered["gene_id"]==gid]
+        u_row = uniform[uniform["gene_id"]==gid]
+        records.append({
+            "name": nm, "track": track,
+            "fixed": row.get("rank", np.nan),
+            "centered": c_row.iloc[0].get("rank", np.nan) if len(c_row)>0 else np.nan,
+            "uniform": u_row.iloc[0].get("rank", np.nan) if len(u_row)>0 else np.nan,
+        })
+    df = pd.DataFrame(records)
+    df = df.sort_values("fixed", ascending=True)
+    y = np.arange(len(df))
+    bw = 0.25
 
-    fig, axes = plt.subplots(1, 3, figsize=(10, 5), sharey=False)
-    comparisons = [
-        ("fixed_rank", "centered_rank", "Fixed", "Centered"),
-        ("fixed_rank", "uniform_rank", "Fixed", "Uniform"),
-        ("centered_rank", "uniform_rank", "Centered", "Uniform"),
-    ]
-    for ax, (col_l, col_r, lbl_l, lbl_r) in zip(axes, comparisons):
-        sub = rank_df.dropna(subset=[col_l, col_r])
-        for _, row in sub.iterrows():
-            gid = row["gene_id"]
-            track = track_map.get(gid,"")
-            color = C_A if track=="A" else C_B
-            alpha = 0.9 if gid in set(fixed["gene_id"]) else 0.4
-            lw = 1.5 if gid in set(fixed["gene_id"]) else 0.8
-            rl, rr = row[col_l], row[col_r]
-            ax.plot([0, 1], [rl, rr], "-o", color=color, alpha=alpha, lw=lw, markersize=4, zorder=3)
-            if gid in set(fixed["gene_id"]):
-                nm = label(neural, gid)
-                ax.text(1.05, rr, nm, fontsize=6, va="center", color=color, fontweight="bold")
-        ax.set_xlim(-0.1, 1.6)
-        ax.set_xticks([0, 1]); ax.set_xticklabels([lbl_l, lbl_r], fontsize=8)
-        ax.set_ylabel("Rank"); ax.invert_yaxis()
-        ax.set_ylim(10.5, 0.5)
-        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
-        ax.set_title(f"{lbl_l} vs {lbl_r}", fontsize=9, fontweight="bold")
+    fig, ax = plt.subplots(figsize=(9, 6))
+    colors = {"fixed": C_FIXED, "centered": C_CENTERED, "uniform": C_UNIFORM}
+    offsets = {"fixed": -bw, "centered": 0, "uniform": bw}
+    methods = ["fixed", "centered", "uniform"]
+    labels = ["Fixed-weight", "Centered Dirichlet", "Uniform Dirichlet"]
 
-    fig.suptitle("Rank changes across three weighting methods", fontweight="bold", fontsize=10, y=1.02)
-    fig.tight_layout(w_pad=1.5); save(fig, "15_method_bumpchart")
+    for method, lbl in zip(methods, labels):
+        vals = df[method].values
+        bars = ax.barh(y + offsets[method], vals, height=bw*0.9, color=colors[method],
+                       alpha=0.85, edgecolor="white", lw=0.3, label=lbl)
+        for i, v in enumerate(vals):
+            if pd.notna(v):
+                ax.text(v + 0.1, y[i] + offsets[method], f'{int(v)}',
+                        fontsize=6, va="center", color=colors[method], fontweight="bold")
+
+    # Gene names with track color
+    ax.set_yticks(y)
+    ax.set_yticklabels(df["name"], fontsize=8, fontweight="bold")
+    for i, track in enumerate(df["track"]):
+        ax.get_yticklabels()[i].set_color(C_A if track=="A" else C_B)
+
+    # Track legend
+    from matplotlib.lines import Line2D
+    track_handles = [Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=8, label="Track A (RNAi)"),
+                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=8, label="Track B (novel)")]
+    handles, labels_leg = ax.get_legend_handles_labels()
+    handles.extend(track_handles)
+    labels_leg.extend(["Track A (RNAi)", "Track B (novel)"])
+    ax.legend(handles, labels_leg, loc="lower right", fontsize=7, frameon=True)
+
+    ax.set_xlabel("Rank (1 = highest)", fontsize=9)
+    ax.set_ylabel("Candidate", fontsize=9)
+    ax.set_title("Rank comparison across three weighting methods (Top 10)\n"
+                 "Lower rank = higher priority; gene names colored by track",
+                 fontweight="bold", pad=10, fontsize=10)
+    ax.set_xlim(0, 12)
+    ax.invert_yaxis()
+    ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+    fig.tight_layout(); save(fig, "15_method_bumpchart")
 
 if __name__=="__main__": build()
