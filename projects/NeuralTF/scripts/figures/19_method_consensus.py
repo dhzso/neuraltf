@@ -86,21 +86,20 @@ def build():
             tc = "white" if present else "#CCC"
             ax2.text(j, i, txt, ha="center", va="center", fontsize=12, color=tc)
 
-    # Consensus label on right margin
+    # Consensus label on right margin (close to heatmap)
     for i in range(n):
         nm = df.iloc[i]["n_methods"]
         c = cons_colors[nm]
-        ax2.text(3.3, i, f"{nm}/3", fontsize=7, va="center", fontweight="bold", color=c)
+        ax2.text(2.6, i, f"{nm}/3", fontsize=7, va="center", fontweight="bold", color=c)
 
     ax2.set_title("Which candidates are supported by 1, 2, or all 3 methods?", fontweight="bold", pad=8, fontsize=10, y=1.05)
-    # Legend for right panel
+    ax2.set_xlim(-0.5, 3.2)
+
+    # Legend for right panel (simplified — no redundant color patches)
     from matplotlib.lines import Line2D
     dot_handles = [Line2D([0],[0], marker="o", color="w", markerfacecolor="#E69F00", markersize=8, label="Present in method"),
-                   Line2D([0],[0], marker="o", color="w", markerfacecolor="#DDD", markersize=8, label="Absent"),
-                   Patch(facecolor=C_A, label="3/3 (robust)"),
-                   Patch(facecolor="#CC79A7", label="2/3 (partial)"),
-                   Patch(facecolor=C_B, label="1/3 (specific)")]
-    ax2.legend(handles=dot_handles, loc="lower right", fontsize=5.5, frameon=True, ncol=2)
+                   Line2D([0],[0], marker="o", color="w", markerfacecolor="#DDD", markersize=8, label="Absent from method")]
+    ax2.legend(handles=dot_handles, loc="lower right", fontsize=6, frameon=True)
 
     fig.suptitle("Three methods agree on 3 candidates, supporting robust prioritization", fontweight="bold", fontsize=11, y=1.02)
     fig.tight_layout(w_pad=2)
