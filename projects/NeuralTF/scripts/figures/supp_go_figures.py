@@ -50,11 +50,14 @@ def fig_s5_go_heatmap_all99():
     ax.imshow(data, cmap=cmap, aspect="auto", interpolation="nearest",
               vmin=0, vmax=1)
 
-    # Dotted vertical lines separating groups
+    # Dotted vertical lines separating groups — only within heatmap area
+    n_genes = len(gene_ids)
     if neural_end > 0 and neural_end < len(go_ids_filtered):
-        ax.axvline(x=neural_end - 0.5, color="#333", ls="--", lw=1.2, zorder=5)
+        ax.plot([neural_end - 0.5, neural_end - 0.5], [0, n_genes - 1],
+                color="#333", ls="--", lw=1.2, zorder=5)
     if tf_end > neural_end and tf_end < len(go_ids_filtered):
-        ax.axvline(x=tf_end - 0.5, color="#333", ls="--", lw=1.2, zorder=5)
+        ax.plot([tf_end - 0.5, tf_end - 0.5], [0, n_genes - 1],
+                color="#333", ls="--", lw=1.2, zorder=5)
 
     # Group labels below x-tick labels
     if neural_end > 0:
