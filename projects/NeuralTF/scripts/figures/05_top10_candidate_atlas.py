@@ -92,9 +92,9 @@ def build():
     ax2.legend(handles=track_handles, loc="upper right", fontsize=6, frameon=True, title="Track", title_fontsize=7)
 
     ax.set_xlabel("Composite score (fixed-weight)", fontsize=9)
-    ax.set_ylabel("Candidate", fontsize=9)
-    ax.set_title("Top 10 prioritized candidates — composite scores\n"
-                 "Bars colored by TF family (GO/InterPro); gene names colored by track",
+    ax.set_ylabel("TF candidate (ranked by composite score)", fontsize=9)
+    ax.set_title("Top 10 candidates span multiple TF families\n"
+                 "Bars colored by TF family; gene names colored by track",
                  fontweight="bold", pad=10, fontsize=10)
     ax.set_xlim(0, max(df["composite"]) + 0.12)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)

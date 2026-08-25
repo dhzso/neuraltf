@@ -18,8 +18,8 @@ def build():
     ax.axvline(q75, color="#999", ls=":", lw=0.8, label=f"Q3 = {q75:.3f}")
 
     ax.set_xlabel("Integrated evidence score")
-    ax.set_ylabel("Number of candidates")
-    ax.set_title("Integrated score distribution across 249 TF candidates",
+    ax.set_ylabel("Number of TF candidates")
+    ax.set_title(f"Integrated scores are right-skewed across 249 TFs (median = {med:.3f})",
                  fontweight="bold", pad=8)
     ax.legend(frameon=False, fontsize=7)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)

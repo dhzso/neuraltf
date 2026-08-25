@@ -46,8 +46,9 @@ def build():
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.15,
                 f'{consensus_counts[l]}', ha="center", fontsize=10, fontweight="bold")
     ax.set_xlabel("Number of methods in top-10")
-    ax.set_ylabel("Number of candidates")
-    ax.set_title("Method consensus", fontweight="bold", pad=8)
+    ax.set_ylabel("Number of unique TF candidates")
+    ax.set_title("Most candidates appear in only 1 method's top-10,\n"
+                 "but the 3-method overlap is substantial", fontweight="bold", pad=8)
     ax.set_xticks(levels)
     ax.set_xticklabels([f"{l}/3" for l in levels])
     ax.set_ylim(0, max(consensus_counts) + 1.5)
@@ -91,7 +92,7 @@ def build():
         c = cons_colors[nm]
         ax2.text(3.3, i, f"{nm}/3", fontsize=7, va="center", fontweight="bold", color=c)
 
-    ax2.set_title("Candidate presence across methods", fontweight="bold", pad=8, fontsize=10, y=1.05)
+    ax2.set_title("Which candidates are supported by 1, 2, or all 3 methods?", fontweight="bold", pad=8, fontsize=10, y=1.05)
     # Legend for right panel
     from matplotlib.lines import Line2D
     dot_handles = [Line2D([0],[0], marker="o", color="w", markerfacecolor="#E69F00", markersize=8, label="Present in method"),
@@ -101,7 +102,7 @@ def build():
                    Patch(facecolor=C_B, label="1/3 (specific)")]
     ax2.legend(handles=dot_handles, loc="lower right", fontsize=5.5, frameon=True, ncol=2)
 
-    fig.suptitle("Method consensus analysis — ranking robustness", fontweight="bold", fontsize=11, y=1.02)
+    fig.suptitle("Three methods agree on 3 candidates, supporting robust prioritization", fontweight="bold", fontsize=11, y=1.02)
     fig.tight_layout(w_pad=2)
     save(fig, "19_method_consensus")
 

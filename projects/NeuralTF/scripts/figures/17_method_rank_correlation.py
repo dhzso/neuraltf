@@ -40,14 +40,15 @@ def build():
     fig, ax = plt.subplots(figsize=(5, 4.5))
     im = ax.imshow(corr, cmap="RdYlBu_r", vmin=0.8, vmax=1.0, aspect="equal")
     ax.set_xticks(range(n)); ax.set_xticklabels(labels, fontsize=9)
-    ax.set_xlabel("Method")
     ax.set_yticks(range(n)); ax.set_yticklabels(labels, fontsize=9)
-    ax.set_ylabel("Method")
+    ax.set_xlabel("Weighting method (column)")
+    ax.set_ylabel("Weighting method (row)")
     for i in range(n):
         for j in range(n):
             ax.text(j, i, f"{corr[i,j]:.3f}", ha="center", va="center", fontsize=10,
                     color="white" if corr[i,j]<0.9 else "#333", fontweight="bold")
-    ax.set_title("Spearman rank correlation — three methods", fontweight="bold", pad=8)
+    ax.set_title("All three weighting methods produce highly concordant rankings (Spearman rho > 0.9)",
+                 fontweight="bold", pad=8)
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Spearman rho", fontsize=8)
     fig.tight_layout(); save(fig, "17_method_rank_correlation")

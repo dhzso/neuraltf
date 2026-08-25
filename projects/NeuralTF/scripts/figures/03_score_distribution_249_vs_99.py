@@ -27,8 +27,9 @@ def build():
     ks, p = ks_2samp(a, n)
     ax.text(0.97, 0.95, f"KS = {ks:.3f}\np = {p:.1e}", transform=ax.transAxes,
             fontsize=8, ha="right", va="top", bbox=dict(boxstyle="round,pad=0.3", fc="white", alpha=0.8))
-    ax.set_xlabel("Integrated evidence score"); ax.set_ylabel("Density")
-    ax.set_title("Score distribution: 249 full vs 99 neural-filtered", fontweight="bold", pad=8)
+    ax.set_xlabel("Integrated evidence score"); ax.set_ylabel("Relative frequency of candidates")
+    ax.set_title("Neural filtering enriches for higher-scoring candidates\n"
+                 "(99 neural vs 249 full; KS test shown)", fontweight="bold", pad=8)
     ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(); save(fig, "03_score_distribution_249_vs_99")
 

@@ -20,9 +20,10 @@ def build():
         c = C_A if track_map.get(r["gene_id"],"")=="A" else C_B if r["gene_id"] in set(top10["gene_id"]) else C_NEURAL
         ax.get_yticklabels()[i].set_color(c)
     ax.axvline(x=0.8, color=C_HL, lw=0.8, ls="--", label="80% threshold")
-    ax.set_xlabel("Fraction of 1000 draws in Top 10"); ax.set_ylabel("Candidate")
+    ax.set_xlabel("Fraction of 1000 draws in Top 10"); ax.set_ylabel("TF candidate (sorted by P(Top 10))")
     ax.set_xlim(0, 1.05)
-    ax.set_title("P(Top 10) under random weight perturbation", fontweight="bold", pad=8)
+    ax.set_title("Several candidates robustly rank in top 10 across >80% of weight draws",
+                 fontweight="bold", pad=8)
     from matplotlib.lines import Line2D
     track_handles = [Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=7, label="Track A"),
                      Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=7, label="Track B"),

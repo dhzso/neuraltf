@@ -61,17 +61,17 @@ def fig_s5_go_heatmap_all99():
 
     # Group labels below x-tick labels
     if neural_end > 0:
-        ax.text(neural_end / 2 - 0.5, -2.2, "Neural GO", fontsize=9,
+        ax.text(neural_end / 2 - 0.5, -3.0, "Neural GO", fontsize=9,
                 ha="center", fontweight="bold", color="#C44E52")
     if tf_end > neural_end:
-        ax.text((neural_end + tf_end) / 2 - 0.5, -2.2, "TF GO", fontsize=9,
+        ax.text((neural_end + tf_end) / 2 - 0.5, -3.0, "TF GO", fontsize=9,
                 ha="center", fontweight="bold", color="#4C72B0")
     remaining = len(go_ids_filtered) - tf_end
     if remaining > 0:
-        ax.text(tf_end + remaining / 2 - 0.5, -2.2, "Other GO", fontsize=9,
+        ax.text(tf_end + remaining / 2 - 0.5, -3.0, "Other GO", fontsize=9,
                 ha="center", fontweight="bold", color="#555555")
 
-    # Y-axis labels
+    # Y-axis labels with decoded information
     ax.set_yticks(range(len(gene_ids)))
     ylabels = []
     for g in gene_ids:
@@ -83,7 +83,9 @@ def fig_s5_go_heatmap_all99():
     for i, g in enumerate(gene_ids):
         if proof_map.get(g, "") == "known_rnai_validated":
             ax.get_yticklabels()[i].set_color("#C44E52")
-    ax.set_ylabel("Candidate", fontsize=10, fontweight="bold")
+    ax.set_ylabel("TF candidate  —  [A] Track A (RNAi-validated),  [B] Track B (novel)\n"
+                   "Integrated evidence score in parentheses",
+                   fontsize=8, fontweight="bold", labelpad=12)
 
     # X-axis labels
     ax.set_xticks(range(len(go_ids_filtered)))
@@ -97,7 +99,8 @@ def fig_s5_go_heatmap_all99():
             ax.get_xticklabels()[j].set_color("#4C72B0")
         else:
             ax.get_xticklabels()[j].set_color("#555555")
-    ax.set_xlabel("GO term (number of candidates annotated)", fontsize=10, fontweight="bold")
+    ax.set_xlabel("GO term name  (number of candidates annotated with this term)",
+                   fontsize=8, fontweight="bold", labelpad=40)
 
     # Legend
     legend_handles = [
@@ -111,20 +114,17 @@ def fig_s5_go_heatmap_all99():
     ax.legend(handles=legend_handles, loc="upper right", fontsize=7.5, frameon=True,
               title="Legend", title_fontsize=9)
 
-    ax.set_title("GO annotation landscape — 99 neural TF candidates\n"
-                 "Dotted lines separate Neural / TF / Other GO term groups",
-                 fontweight="bold", pad=20, fontsize=11)
-    ax.set_ylim(len(gene_ids) - 0.5, -2.5)
+    ax.set_title("GO annotation landscape — which GO terms are shared across neural TF candidates?\n"
+                 "Neural GO terms linked to brain development, TF GO terms linked to transcription regulation, "
+                 "Other GO terms = remaining functional annotations",
+                 fontweight="bold", pad=15, fontsize=9)
+    ax.set_ylim(len(gene_ids) - 0.5, -3.5)
     ax.set_xlim(-0.5, len(go_ids_filtered) - 0.5)
 
     fig.tight_layout()
     fig.savefig(SUP / "fig_s5_go_heatmap_all99.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print("  wrote fig_s5_go_heatmap_all99.png")
-    ax.set_xlim(-0.5, len(go_ids_filtered) - 0.5)
-
-    fig.tight_layout()
-    fig.savefig(SUP / "fig_s5_go_heatmap_all99.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print("  wrote fig_s5_go_heatmap_all99.png")
 

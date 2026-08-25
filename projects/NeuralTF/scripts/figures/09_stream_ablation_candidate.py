@@ -48,7 +48,7 @@ def build():
     ax.xaxis.set_label_position("top")
     ax.set_yticks(range(len(pivot)))
     ax.set_yticklabels([label(neural, g) for g in pivot.index], fontsize=7)
-    ax.set_ylabel("Candidate")
+    ax.set_ylabel("Top-10 TF candidate (sorted by track)")
     for i, gid in enumerate(pivot.index):
         c = C_A if track_map.get(gid,"")=="A" else C_B
         ax.get_yticklabels()[i].set_color(c)
@@ -58,7 +58,7 @@ def build():
             if not np.isnan(v):
                 tc = "white" if abs(v)>vmax*0.6 else "#333"
                 ax.text(j, i, f"{v:.0f}", ha="center", va="center", fontsize=6, color=tc)
-    ax.set_title("Candidate sensitivity — rank change per stream removed", fontweight="bold", pad=12)
+    ax.set_title("Top-10 candidates vary in sensitivity to individual stream removal", fontweight="bold", pad=12)
     cbar = fig.colorbar(im, ax=ax, fraction=0.02, pad=0.02)
     cbar.set_label("Rank change (− = improves)", fontsize=8)
     from matplotlib.lines import Line2D

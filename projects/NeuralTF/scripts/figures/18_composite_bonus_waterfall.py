@@ -76,9 +76,9 @@ def build():
     for i, track in enumerate(df["track"]):
         ax.get_yticklabels()[i].set_color(C_A if track == "A" else C_B)
 
-    ax.set_xlabel("Score", fontsize=9)
-    ax.set_ylabel("Candidate", fontsize=9)
-    ax.set_title("Composite score breakdown — base score + annotation bonuses (Top 10)\n"
+    ax.set_xlabel("Composite score (base integrated + annotation bonuses)", fontsize=9)
+    ax.set_ylabel("Top-10 TF candidate (sorted by base score)", fontsize=9)
+    ax.set_title("Annotation bonuses add 0.05-0.12 to base integrated scores for top-10 candidates\n"
                  "Gene names colored by track (blue = Track A RNAi-validated, orange = Track B novel)",
                  fontweight="bold", pad=10, fontsize=10)
     ax.legend(loc="lower right", fontsize=6, frameon=True, title="Score component", title_fontsize=7)

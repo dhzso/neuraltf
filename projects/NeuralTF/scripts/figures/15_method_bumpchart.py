@@ -69,8 +69,8 @@ def build():
     ax.legend(handles, labels_leg, loc="lower right", fontsize=7, frameon=True)
 
     ax.set_xlabel("Rank within track (1 = highest)", fontsize=9)
-    ax.set_ylabel("Candidate", fontsize=9)
-    ax.set_title("Rank comparison across three weighting methods (Top 10)\n"
+    ax.set_ylabel("TF candidate (sorted by fixed-weight rank)", fontsize=9)
+    ax.set_title("Fixed-weight, centered, and uniform methods produce largely concordant rankings\n"
                  "Track A ranks 1-5, Track B ranks 1-5; gene names colored by track",
                  fontweight="bold", pad=10, fontsize=10)
     ax.set_xlim(0, 7)

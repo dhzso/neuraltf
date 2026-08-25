@@ -37,7 +37,8 @@ def build():
                 color=C_HL if r["n_displaced"]>0 else "#999")
     ax.set_yticks(y); ax.set_yticklabels([STREAM_L[s] for s in stats["stream"]], fontsize=8)
     ax.set_xlabel("Median |rank change| (99 candidates)"); ax.set_ylabel("Evidence stream removed")
-    ax.set_title("Stream ablation — global impact", fontweight="bold", pad=8)
+    ax.set_title("Removing expression or reproducibility causes largest rank shifts",
+                 fontweight="bold", pad=8)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     from matplotlib.patches import Patch
     ax.legend(handles=[Patch(facecolor=STREAM_C[s], label=STREAM_L[s]) for s in stats["stream"]],

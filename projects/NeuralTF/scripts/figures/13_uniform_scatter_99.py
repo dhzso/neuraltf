@@ -24,9 +24,10 @@ def build():
     ax.text(0.05, 0.95, f"n = {len(x)} candidates\nSpearman rho = {rho:.3f}\np = {p:.1e}",
             transform=ax.transAxes, fontsize=8, va="top",
             bbox=dict(boxstyle="round",fc="white",alpha=0.8))
-    ax.set_xlabel("Integrated score (fixed-weight)")
-    ax.set_ylabel("Uniform Dirichlet median score")
-    ax.set_title("Fixed vs uniform Dirichlet score (all 249)", fontweight="bold", pad=8)
+    ax.set_xlabel("Fixed-weight integrated score")
+    ax.set_ylabel("Uniform Dirichlet median score (alpha=1)")
+    ax.set_title(f"Fixed-weight and uniform Dirichlet scores are strongly correlated (rho = {rho:.2f})",
+                 fontweight="bold", pad=8)
     from matplotlib.lines import Line2D
     legend_handles = [Line2D([0],[0], marker="o", color="w", markerfacecolor=C_A, markersize=6, label="RNAi-validated"),
                       Line2D([0],[0], marker="o", color="w", markerfacecolor=C_B, markersize=6, label="Novel"),

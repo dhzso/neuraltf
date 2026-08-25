@@ -45,9 +45,10 @@ def build():
     for i, c in enumerate(colors):
         ax.get_yticklabels()[i].set_color(c)
     ax.axvline(x=10, color=C_HL, lw=0.8, ls="--", label="Top 10 cutoff")
-    ax.set_xlabel("Rank across 1000 weight draws"); ax.set_ylabel("Candidate")
+    ax.set_xlabel("Rank across 1000 weight draws"); ax.set_ylabel("TF candidate (sorted by baseline rank)")
     ax.invert_yaxis()
-    ax.set_title("Weight sensitivity — rank distributions", fontweight="bold", pad=8)
+    ax.set_title("Most top-10 candidates maintain stable ranks under weight perturbation",
+                 fontweight="bold", pad=8)
     from matplotlib.lines import Line2D
     track_handles = [Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=7, label="Track A"),
                      Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=7, label="Track B"),

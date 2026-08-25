@@ -44,11 +44,11 @@ def build():
                 tc = "white" if abs(v) > 0.5 else "#333"
                 ax.text(j, i, f"{v:.2f}{sig}", ha="center", va="center", fontsize=6, color=tc)
 
-    ax.set_title("Spearman correlation between evidence streams (249 TFs)\n"
-                 "* p<0.05  ** p<0.01  *** p<0.001",
+    ax.set_title("Expression and reproducibility are most strongly correlated;\n"
+                 "neural-specificity is relatively independent",
                  fontweight="bold", pad=10, fontsize=10)
-    ax.set_xlabel("Evidence stream")
-    ax.set_ylabel("Evidence stream")
+    ax.set_xlabel("Evidence stream (variable 1)")
+    ax.set_ylabel("Evidence stream (variable 2)")
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Spearman rho", fontsize=8)
     fig.tight_layout(); save(fig, "20_stream_correlation")

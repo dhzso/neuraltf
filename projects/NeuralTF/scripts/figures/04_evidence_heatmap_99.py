@@ -23,7 +23,7 @@ def build():
     ax.xaxis.set_label_position("top")
     ylabels = [label(neural, gid) for gid in df["gene_id"]]
     ax.set_yticks(range(len(df))); ax.set_yticklabels(ylabels, fontsize=5.5)
-    ax.set_ylabel("Candidate")
+    ax.set_ylabel("TF candidate (sorted by integrated score, descending)")
     for i, gid in enumerate(df["gene_id"]):
         ps = str(neural.iloc[i].get("proof_status",""))
         if "validated" in ps.lower() or "fstf" in ps.lower():
@@ -34,7 +34,8 @@ def build():
             if v > 0:
                 tc = "white" if v > 0.6 else "#333"
                 ax.text(j, i, f"{v:.2f}", ha="center", va="center", fontsize=4, color=tc)
-    ax.set_title("Evidence heatmap — all 99 neural candidates", fontweight="bold", pad=12, fontsize=10)
+    ax.set_title("Expression and specificity streams contribute most to neural candidate evidence",
+                 fontweight="bold", pad=12, fontsize=10)
     cbar = fig.colorbar(im, ax=ax, fraction=0.015, pad=0.02)
     cbar.set_label("Evidence strength", fontsize=8)
     from matplotlib.lines import Line2D

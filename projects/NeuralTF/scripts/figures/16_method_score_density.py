@@ -17,8 +17,10 @@ def build():
             kde = gaussian_kde(vals)
             ax.plot(x_grid, kde(x_grid), color=c, lw=1.5, label=lbl)
             ax.fill_between(x_grid, kde(x_grid), color=c, alpha=0.15)
-    ax.set_xlabel("Composite score"); ax.set_ylabel("Density")
-    ax.set_title("Composite score distributions — three methods", fontweight="bold", pad=8)
+    ax.set_xlabel("Composite score (base integrated + annotation bonuses)")
+    ax.set_ylabel("Probability density of candidates per score bin")
+    ax.set_title("Three methods produce similar composite score distributions for their top-10 candidates",
+                 fontweight="bold", pad=8)
     ax.legend(frameon=False, fontsize=7); ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(); save(fig, "16_method_score_density")
 

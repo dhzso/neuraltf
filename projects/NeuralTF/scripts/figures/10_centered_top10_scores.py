@@ -26,8 +26,10 @@ def build():
         bonus = comp - base if pd.notna(comp) and pd.notna(base) else 0
         ax.text(comp + 0.02, y[i] - 0.15, f"+{bonus:.3f}", fontsize=5, va="center", color="#666")
     ax.set_yticks(y); ax.set_yticklabels(names, fontsize=7)
-    ax.set_xlabel("Score"); ax.set_ylabel("Candidate"); ax.set_xlim(0, 1.05)
-    ax.set_title("Centered Dirichlet (k=40) — Dirichlet median vs composite (Top 10)",
+    ax.set_xlabel("Score (composite = dark, Dirichlet median = light)")
+    ax.set_ylabel("Top-10 TF candidate (ranked by composite score)")
+    ax.set_xlim(0, 1.05)
+    ax.set_title("Composite score exceeds Dirichlet median for all top-10 candidates, driven by annotation bonuses",
                  fontweight="bold", pad=8, fontsize=9)
     from matplotlib.patches import Patch
     from matplotlib.lines import Line2D
