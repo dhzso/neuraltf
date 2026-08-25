@@ -29,6 +29,12 @@ def fig_s5_go_heatmap_all99():
         not term_neural.get(t, False), not term_tf.get(t, False),
         -term_count.get(t, 0)))
     go_ids_filtered = [t for t in go_ids_sorted if term_count.get(t, 0) >= 2]
+
+    # Find boundaries between groups
+    neural_end = sum(1 for t in go_ids_filtered if term_neural.get(t, False))
+    tf_end = neural_end + sum(1 for t in go_ids_filtered[neural_end:]
+                              if term_tf.get(t, False))
+
     proof_map = dict(zip(neural["gene_id"], neural["proof_status"]))
     score_map = dict(zip(neural["gene_id"], neural["integrated_score"]))
     gene_ids = sorted(mat["gene_id"].tolist(),
@@ -38,18 +44,29 @@ def fig_s5_go_heatmap_all99():
     data = mat_indexed[go_ids_filtered].fillna(0).values
 
     fig, ax = plt.subplots(figsize=(14, 13))
-    cmap = plt.cm.colors.ListedColormap(["#FFFFFF", "#0072B2"])
-    ax.imshow(data, cmap=cmap, aspect="auto", interpolation="nearest")
 
-    # Mark neural/TF terms with colored rectangles ABOVE the heatmap
-    n_rows = len(gene_ids)
-    for j, t in enumerate(go_ids_filtered):
-        if term_neural.get(t, False):
-            ax.add_patch(plt.Rectangle((j - 0.5, -1.5), 1.0, 1.2,
-                         facecolor=C_NEURAL_GO, alpha=0.8, edgecolor="none"))
-        elif term_tf.get(t, False):
-            ax.add_patch(plt.Rectangle((j - 0.5, -1.5), 1.0, 1.2,
-                         facecolor=C_TF_GO, alpha=0.6, edgecolor="none"))
+    # Professional color scheme: soft coral for annotated, light gray for absent
+    cmap = plt.cm.colors.ListedColormap(["#F5F5F5", "#C44E52"])
+    ax.imshow(data, cmap=cmap, aspect="auto", interpolation="nearest",
+              vmin=0, vmax=1)
+
+    # Dotted vertical lines separating groups
+    if neural_end > 0 and neural_end < len(go_ids_filtered):
+        ax.axvline(x=neural_end - 0.5, color="#333", ls="--", lw=1.2, zorder=5)
+    if tf_end > neural_end and tf_end < len(go_ids_filtered):
+        ax.axvline(x=tf_end - 0.5, color="#333", ls="--", lw=1.2, zorder=5)
+
+    # Group labels at the top
+    if neural_end > 0:
+        ax.text(neural_end / 2 - 0.5, -1.8, "Neural GO", fontsize=9,
+                ha="center", fontweight="bold", color="#C44E52")
+    if tf_end > neural_end:
+        ax.text((neural_end + tf_end) / 2 - 0.5, -1.8, "TF GO", fontsize=9,
+                ha="center", fontweight="bold", color="#4C72B0")
+    remaining = len(go_ids_filtered) - tf_end
+    if remaining > 0:
+        ax.text(tf_end + remaining / 2 - 0.5, -1.8, "Other GO", fontsize=9,
+                ha="center", fontweight="bold", color="#555555")
 
     # Y-axis labels
     ax.set_yticks(range(len(gene_ids)))
@@ -62,7 +79,7 @@ def fig_s5_go_heatmap_all99():
     ax.set_yticklabels(ylabels, fontsize=5.5)
     for i, g in enumerate(gene_ids):
         if proof_map.get(g, "") == "known_rnai_validated":
-            ax.get_yticklabels()[i].set_color(C_A)
+            ax.get_yticklabels()[i].set_color("#C44E52")
     ax.set_ylabel("Candidate", fontsize=10, fontweight="bold")
 
     # X-axis labels
@@ -71,30 +88,36 @@ def fig_s5_go_heatmap_all99():
     ax.set_xticklabels(xlabels, rotation=60, ha="right", fontsize=5.5)
     for j, t in enumerate(go_ids_filtered):
         if term_neural.get(t, False):
-            ax.get_xticklabels()[j].set_color(C_NEURAL_GO)
+            ax.get_xticklabels()[j].set_color("#C44E52")
             ax.get_xticklabels()[j].set_fontweight("bold")
         elif term_tf.get(t, False):
-            ax.get_xticklabels()[j].set_color(C_TF_GO)
+            ax.get_xticklabels()[j].set_color("#4C72B0")
+        else:
+            ax.get_xticklabels()[j].set_color("#555555")
     ax.set_xlabel("GO term (number of candidates annotated)", fontsize=10, fontweight="bold")
 
     # Legend
     legend_handles = [
-        mpatches.Patch(facecolor="#0072B2", label="GO annotation present"),
-        mpatches.Patch(facecolor="#FFFFFF", edgecolor="#CCC", label="No annotation"),
-        mpatches.Patch(facecolor=C_NEURAL_GO, alpha=0.8, label="Neural GO term (+0.03 bonus)"),
-        mpatches.Patch(facecolor=C_TF_GO, alpha=0.6, label="TF GO term (+0.02 bonus)"),
-        mpatches.Patch(facecolor=C_A, label="Track A (RNAi-validated)"),
+        mpatches.Patch(facecolor="#C44E52", label="Annotated (present)"),
+        mpatches.Patch(facecolor="#F5F5F5", edgecolor="#CCC", label="Not annotated"),
+        plt.Line2D([0],[0], color="#333", ls="--", lw=1.2, label="Group boundary"),
+        mpatches.Patch(facecolor="#C44E52", alpha=0.3, label="Neural GO (+0.03 bonus)"),
+        mpatches.Patch(facecolor="#4C72B0", alpha=0.3, label="TF GO (+0.02 bonus)"),
+        mpatches.Patch(facecolor="#C44E52", label="Track A (RNAi-validated)"),
     ]
-    ax.legend(handles=legend_handles, loc="upper right", fontsize=8, frameon=True,
+    ax.legend(handles=legend_handles, loc="upper right", fontsize=7.5, frameon=True,
               title="Legend", title_fontsize=9)
 
     ax.set_title("GO annotation landscape — 99 neural TF candidates\n"
-                 "Neural GO terms (orange marker above) and TF GO terms (blue marker above) "
-                 "are highlighted; blue cells = annotated",
+                 "Dotted lines separate Neural / TF / Other GO term groups",
                  fontweight="bold", pad=20, fontsize=11)
+    ax.set_ylim(len(gene_ids) - 0.5, -2.5)
+    ax.set_xlim(-0.5, len(go_ids_filtered) - 0.5)
 
-    # Extend ylim to show the marker row
-    ax.set_ylim(len(gene_ids) - 0.5, -2.0)
+    fig.tight_layout()
+    fig.savefig(SUP / "fig_s5_go_heatmap_all99.png", dpi=300, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    print("  wrote fig_s5_go_heatmap_all99.png")
     ax.set_xlim(-0.5, len(go_ids_filtered) - 0.5)
 
     fig.tight_layout()
@@ -132,20 +155,20 @@ def fig_s6_top10_go_profiles():
         no_go = len(go_ids_filtered) - len(annotations)
         counts = [neural_count, tf_count, other_count, no_go]
         labels_ = ["Neural GO", "TF GO", "Other GO", "Not annotated"]
-        colors = [C_NEURAL_GO, C_TF_GO, C_OTHER_GO, "#EEEEEE"]
+        colors = ["#C44E52", "#4C72B0", "#55A868", "#E0E0E0"]
         ax.barh(range(4), counts, color=colors, edgecolor="white", lw=0.5, height=0.6)
         ax.set_yticks(range(4))
         ax.set_yticklabels(labels_, fontsize=6)
         for i, v in enumerate(counts):
             if v > 0:
                 ax.text(v + 0.1, i, str(v), fontsize=7, va="center", fontweight="bold")
-        tc = C_A if track == "A" else C_B
+        tc = "#C44E52" if track == "A" else "#4C72B0"
         ax.set_title(f"[{track}] {nm}", fontsize=8, fontweight="bold", color=tc, pad=5)
         ax.set_xlabel("GO terms", fontsize=6)
         ax.set_xlim(0, max(counts) + 2)
         ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.suptitle("GO annotation profiles — Top 10 candidates\n"
-                 "Orange = neural GO, Blue = TF GO, Gray = other GO",
+                 "Red = neural GO, Blue = TF GO, Green = other GO",
                  fontweight="bold", fontsize=10, y=1.02)
     fig.tight_layout(w_pad=1)
     fig.savefig(SUP / "fig_s6_top10_go_profiles.png", dpi=300, bbox_inches="tight", facecolor="white")
@@ -173,8 +196,8 @@ def fig_s7_go_namespace_and_track():
             non_neural_ns[ns_short] = non_neural_ns.get(ns_short, 0) + 1
     all_ns = sorted(set(list(neural_ns.keys()) + list(non_neural_ns.keys())))
     x = np.arange(len(all_ns)); w = 0.35
-    ax.bar(x - w/2, [neural_ns.get(n, 0) for n in all_ns], w, color=C_NEURAL_GO, alpha=0.8, label="Neural GO")
-    ax.bar(x + w/2, [non_neural_ns.get(n, 0) for n in all_ns], w, color=C_TF_GO, alpha=0.5, label="Non-neural GO")
+    ax.bar(x - w/2, [neural_ns.get(n, 0) for n in all_ns], w, color="#C44E52", alpha=0.8, label="Neural GO")
+    ax.bar(x + w/2, [non_neural_ns.get(n, 0) for n in all_ns], w, color="#4C72B0", alpha=0.6, label="Non-neural GO")
     ax.set_xticks(x)
     ns_labels = {"Bio": "Biological\nProcess", "Mol": "Molecular\nFunction",
                  "Cel": "Cellular\nComponent", "unk": "Unknown"}
@@ -200,8 +223,8 @@ def fig_s7_go_namespace_and_track():
     a_vals = [np.mean(a_nn) if a_nn else 0, np.mean(a_oo) if a_oo else 0]
     b_vals = [np.mean(b_nn) if b_nn else 0, np.mean(b_oo) if b_oo else 0]
     x = np.arange(len(cats)); w = 0.35
-    ax2.bar(x - w/2, a_vals, w, color=C_A, alpha=0.8, label=f"Track A (n={len(track_a)})")
-    ax2.bar(x + w/2, b_vals, w, color=C_B, alpha=0.8, label=f"Track B (n={len(track_b)})")
+    ax2.bar(x - w/2, a_vals, w, color="#C44E52", alpha=0.8, label=f"Track A (n={len(track_a)})")
+    ax2.bar(x + w/2, b_vals, w, color="#4C72B0", alpha=0.8, label=f"Track B (n={len(track_b)})")
     ax2.set_xticks(x); ax2.set_xticklabels(cats, fontsize=8)
     ax2.set_ylabel("Mean GO annotations per candidate")
     ax2.set_title("GO density by track", fontweight="bold", pad=8)
