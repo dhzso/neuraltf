@@ -36,14 +36,22 @@ def fig_s5_go_heatmap_all99():
                                      -score_map.get(g, 0)))
     mat_indexed = mat.set_index("gene_id").loc[gene_ids]
     data = mat_indexed[go_ids_filtered].fillna(0).values
-    fig, ax = plt.subplots(figsize=(14, 12))
+
+    fig, ax = plt.subplots(figsize=(14, 13))
     cmap = plt.cm.colors.ListedColormap(["#FFFFFF", "#0072B2"])
     ax.imshow(data, cmap=cmap, aspect="auto", interpolation="nearest")
+
+    # Mark neural/TF terms with colored rectangles ABOVE the heatmap
+    n_rows = len(gene_ids)
     for j, t in enumerate(go_ids_filtered):
         if term_neural.get(t, False):
-            ax.axvspan(j - 0.5, j + 0.5, ymin=0.97, ymax=1.0, color=C_NEURAL_GO, alpha=0.6, clip_on=False)
+            ax.add_patch(plt.Rectangle((j - 0.5, -1.5), 1.0, 1.2,
+                         facecolor=C_NEURAL_GO, alpha=0.8, edgecolor="none"))
         elif term_tf.get(t, False):
-            ax.axvspan(j - 0.5, j + 0.5, ymin=0.97, ymax=1.0, color=C_TF_GO, alpha=0.4, clip_on=False)
+            ax.add_patch(plt.Rectangle((j - 0.5, -1.5), 1.0, 1.2,
+                         facecolor=C_TF_GO, alpha=0.6, edgecolor="none"))
+
+    # Y-axis labels
     ax.set_yticks(range(len(gene_ids)))
     ylabels = []
     for g in gene_ids:
@@ -55,6 +63,9 @@ def fig_s5_go_heatmap_all99():
     for i, g in enumerate(gene_ids):
         if proof_map.get(g, "") == "known_rnai_validated":
             ax.get_yticklabels()[i].set_color(C_A)
+    ax.set_ylabel("Candidate", fontsize=10, fontweight="bold")
+
+    # X-axis labels
     ax.set_xticks(range(len(go_ids_filtered)))
     xlabels = [f"{term_name.get(t, t)}\n({term_count.get(t, 0)})" for t in go_ids_filtered]
     ax.set_xticklabels(xlabels, rotation=60, ha="right", fontsize=5.5)
@@ -64,18 +75,28 @@ def fig_s5_go_heatmap_all99():
             ax.get_xticklabels()[j].set_fontweight("bold")
         elif term_tf.get(t, False):
             ax.get_xticklabels()[j].set_color(C_TF_GO)
+    ax.set_xlabel("GO term (number of candidates annotated)", fontsize=10, fontweight="bold")
+
+    # Legend
     legend_handles = [
         mpatches.Patch(facecolor="#0072B2", label="GO annotation present"),
         mpatches.Patch(facecolor="#FFFFFF", edgecolor="#CCC", label="No annotation"),
-        mpatches.Patch(facecolor=C_NEURAL_GO, alpha=0.6, label="Neural GO (+0.03)"),
-        mpatches.Patch(facecolor=C_TF_GO, alpha=0.4, label="TF GO (+0.02)"),
-        mpatches.Patch(facecolor=C_A, label="Track A (RNAi-validated)")]
-    ax.legend(handles=legend_handles, loc="lower left", fontsize=7, frameon=True)
-    ax.set_xlabel("GO term (n candidates annotated)", fontsize=9)
-    ax.set_ylabel("Candidate", fontsize=9)
+        mpatches.Patch(facecolor=C_NEURAL_GO, alpha=0.8, label="Neural GO term (+0.03 bonus)"),
+        mpatches.Patch(facecolor=C_TF_GO, alpha=0.6, label="TF GO term (+0.02 bonus)"),
+        mpatches.Patch(facecolor=C_A, label="Track A (RNAi-validated)"),
+    ]
+    ax.legend(handles=legend_handles, loc="upper right", fontsize=8, frameon=True,
+              title="Legend", title_fontsize=9)
+
     ax.set_title("GO annotation landscape — 99 neural TF candidates\n"
-                 "Orange border = neural GO; blue border = TF GO; blue cell = annotated",
-                 fontweight="bold", pad=25, fontsize=10)
+                 "Neural GO terms (orange marker above) and TF GO terms (blue marker above) "
+                 "are highlighted; blue cells = annotated",
+                 fontweight="bold", pad=20, fontsize=11)
+
+    # Extend ylim to show the marker row
+    ax.set_ylim(len(gene_ids) - 0.5, -2.0)
+    ax.set_xlim(-0.5, len(go_ids_filtered) - 0.5)
+
     fig.tight_layout()
     fig.savefig(SUP / "fig_s5_go_heatmap_all99.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
