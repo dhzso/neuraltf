@@ -56,16 +56,16 @@ def fig_s5_go_heatmap_all99():
     if tf_end > neural_end and tf_end < len(go_ids_filtered):
         ax.axvline(x=tf_end - 0.5, color="#333", ls="--", lw=1.2, zorder=5)
 
-    # Group labels at the top
+    # Group labels below x-tick labels
     if neural_end > 0:
-        ax.text(neural_end / 2 - 0.5, -1.8, "Neural GO", fontsize=9,
+        ax.text(neural_end / 2 - 0.5, -2.2, "Neural GO", fontsize=9,
                 ha="center", fontweight="bold", color="#C44E52")
     if tf_end > neural_end:
-        ax.text((neural_end + tf_end) / 2 - 0.5, -1.8, "TF GO", fontsize=9,
+        ax.text((neural_end + tf_end) / 2 - 0.5, -2.2, "TF GO", fontsize=9,
                 ha="center", fontweight="bold", color="#4C72B0")
     remaining = len(go_ids_filtered) - tf_end
     if remaining > 0:
-        ax.text(tf_end + remaining / 2 - 0.5, -1.8, "Other GO", fontsize=9,
+        ax.text(tf_end + remaining / 2 - 0.5, -2.2, "Other GO", fontsize=9,
                 ha="center", fontweight="bold", color="#555555")
 
     # Y-axis labels
