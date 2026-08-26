@@ -54,6 +54,8 @@ projects/NeuralTF/results/*
 !projects/NeuralTF/results/.gitkeep
 projects/NeuralTF/figures/*.png
 projects/NeuralTF/figures/*.pdf
+projects/NeuralTF/figures/weight_sensitivity_draws.csv
+projects/NeuralTF/figures/weight_sensitivity_top10_challengers.csv
 projects/NeuralTF/figures/supplementary/*
 !projects/NeuralTF/figures/supplementary/.gitkeep
 
