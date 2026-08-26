@@ -505,7 +505,7 @@ class NeuralTFPipeline:
                 rec.add_score(
                     EvidenceSource.EXPRESSION,
                     max(rec.scores.get(EvidenceSource.EXPRESSION, 0.0), cui_expr),
-                    note=f"cui_fc={row.get('max_fold_change', 0):.2f}",
+                    note=f"cui_fc={float(row.get('max_fold_change', 0) or 0):.2f}",
                 )
 
             # Specificity: best-atlas-wins

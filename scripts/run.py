@@ -39,7 +39,7 @@ def main() -> None:
 
     pipe = NeuralTFPipeline(
         out_dir=args.out,
-        subsample=args.subsample if args.subsample > 0 else None,
+        subsample=args.subsample if args.subsample > 0 else 0,
     )
     pipe.run()
 

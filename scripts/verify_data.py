@@ -19,10 +19,10 @@ RAW_DIR = REPO / "datasets" / "raw"
 EXPECTED_FILES = [
     "GSE103633_GEO_Plass_atlas/GSE103633_RAW.tar",
     "GSE111764_GEO_Fincher_atlas/GSE111764_PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz",
-    "Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc4.xlsx",
-    "Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc5.xlsx",
-    "Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc6.xlsx",
-    "Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc7.xlsx",
+    "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc4.xlsx",
+    "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc5.xlsx",
+    "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc6.xlsx",
+    "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc7.xlsx",
     "smed_20140614.mapping.rosettastone.2020.txt",
     "go.obo",
 ]

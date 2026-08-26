@@ -54,6 +54,7 @@ from dirichlet_prioritize import (
     build_csv,
     clean_ortholog,
     rnai_marker_notes,
+    read_mmc5,
 )
 from bioforge.projects.neuraltf.prioritize import attach_v4
 
@@ -223,7 +224,7 @@ def main() -> int:
     mmc5 = None
     mmc5_path = _resolve(KING_DIR, "mmc5")
     if mmc5_path.exists():
-        mmc5 = read_mmc4(mmc5_path)
+        mmc5 = read_mmc5(mmc5_path)
 
     # RNAi phenotype notes
     notes = []
@@ -312,9 +313,9 @@ def main() -> int:
         cent_vals = comp["centered_median"]
 
         max_range = max(
-            abs(fixed_vals.max() - fixed_vals.min()),
-            abs(unif_vals.max() - unif_vals.min()),
-            abs(cent_vals.max() - cent_vals.min()),
+            abs(fixed_vals.dropna().max() - fixed_vals.dropna().min()) if len(fixed_vals.dropna()) > 0 else 0,
+            abs(unif_vals.dropna().max() - unif_vals.dropna().min()) if len(unif_vals.dropna()) > 0 else 0,
+            abs(cent_vals.dropna().max() - cent_vals.dropna().min()) if len(cent_vals.dropna()) > 0 else 0,
         )
 
         summary_lines = [
