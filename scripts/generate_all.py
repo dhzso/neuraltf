@@ -52,6 +52,9 @@ def _ready(root: Path, step: str) -> str | None:
             any(p.suffix == ".tar" and ("RAW" in p.name.upper() or "GSE103633" in p.name.upper())
                 for p in raw.rglob("*")) if raw.exists() else False,
             "GSE103633_RAW.tar missing (README 'Datasets' -> Plass)"),
+        "Cui atlas": (
+            any(raw.rglob("OMIX*Cui*.h5ad")) if raw.exists() else False,
+            "Cui 2023 h5ad missing (OMIX003867)"),
         "Bridge CSV": (
             (raw / "smed_20140614.mapping.rosettastone.2020.txt").exists()
             and any(king.glob("*mmc4*.xlsx")) if king.exists() else False,
