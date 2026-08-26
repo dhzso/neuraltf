@@ -124,16 +124,9 @@ def _ready(root: Path, step: str) -> str | None:
             and (root / "projects" / "NeuralTF" / "results"
                  / "fstf_ranked_19_neural.csv").exists(),
             "prioritization CSVs / FSTF CSVs missing"),
-        "Generate publication figures": (
-            (run / "rank.csv").exists()
-            and (run / "rank_neural.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "top10_neural_tfs_prioritized.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_top10_prioritized.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_uniform_top10.csv").exists(),
-            "rank.csv / rank_neural.csv / prioritization CSVs missing"),
+        "Weight sensitivity analysis": (
+            (run / "rank_neural.csv").exists(),
+            "rank_neural.csv missing (run the pipeline first)"),
         "Validate with Perez ANANSE": (
             (root / "projects" / "NeuralTF" / "results"
              / "top10_neural_tfs_prioritized.csv").exists()
@@ -178,6 +171,7 @@ STEPS = [
      [["projects", "NeuralTF", "results", "dirichlet_top10_prioritized.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_overall_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_overall_top10_byscore.csv"],
+      ["projects", "NeuralTF", "results", "dirichlet_centered_full_rank.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_candidate_summary_report.md"]]),
     ("Dirichlet-uniform", ["projects/NeuralTF/scripts/dirichlet_uniform.py"], [],
      [["projects", "NeuralTF", "results", "dirichlet_uniform_top10.csv"],
@@ -195,6 +189,20 @@ STEPS = [
      [["projects", "NeuralTF", "results", "fstf_ranked_19_neural.csv"],
       ["projects", "NeuralTF", "results", "fstf_ranked_43_all.csv"],
       ["projects", "NeuralTF", "results", "fstf_ranked_74_catalog.csv"]]),
+    ("Generate supplementary tables",
+     ["projects/NeuralTF/scripts/create_supplementary_tables.py"], [],
+     [["projects", "NeuralTF", "results", "supplementary_table_S1_method_comparison.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S2_fixed_all249.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S3_centered_all99.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S4_uniform_all99.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S5_uniform_all249.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S6_fstf_19_neural.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S7_fstf_43_all.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S8_fstf_74_catalog.csv"]]),
+    ("Weight sensitivity analysis",
+     ["scripts", "run_weight_sensitivity.py"], [],
+     [["projects", "NeuralTF", "figures", "weight_sensitivity_draws.csv"],
+      ["projects", "NeuralTF", "figures", "weight_sensitivity_top10_challengers.csv"]]),
     ("Generate publication figures",
      ["projects/NeuralTF/scripts/generate_publication_figures.py"], [],
      [["projects", "NeuralTF", "figures", "01_stream_coverage_249.png"],
@@ -221,17 +229,6 @@ STEPS = [
     ("Validate with Perez ANANSE",
      ["projects/NeuralTF/scripts/validate_with_perez.py"], [],
      []),  # validation script, no persistent outputs
-    ("Generate supplementary tables",
-     ["projects/NeuralTF/scripts/create_supplementary_tables.py"], [],
-     [["projects", "NeuralTF", "results", "supplementary_table_S1_method_comparison.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S2_fixed_all249.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S3_centered_all99.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S4_uniform_all99.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S5_uniform_all249.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S6_fstf_19_neural.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S7_fstf_43_all.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S8_fstf_74_catalog.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S9_99vs249.csv"]]),
 ]
 
 

@@ -307,7 +307,7 @@ class NeuralTFPipeline:
             sc.pp.pca(hvg, n_comps=50)
             sc.pp.neighbors(hvg, n_neighbors=10, n_pcs=40)
             print("neighbors ", end="", flush=True)
-            sc.tl.leiden(hvg, resolution=0.5)
+            sc.tl.leiden(hvg, resolution=0.5, flavor="igraph", n_iterations=2, directed=False)
             adata.obs["leiden"] = hvg.obs["leiden"]
             hvgs = int(adata.var.highly_variable.sum())
             n_cl = adata.obs["leiden"].nunique()
