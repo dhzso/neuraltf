@@ -89,6 +89,15 @@ src/bioforge.egg-info/
 /rank_neural.csv
 /pipeline_results.json
 
+# Presentation/one-time scripts (not needed for replication)
+projects/NeuralTF/scripts/generate_neuraltf_sota.py
+projects/NeuralTF/scripts/count_slides.py
+
+# Stray output CSVs
+analysis_results.csv
+corrected_comparison.csv
+scores_comparison.csv
+
 # Legacy duplicate
 neuraltf-repo/
 
