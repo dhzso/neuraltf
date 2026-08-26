@@ -73,6 +73,7 @@ class NeuralTFPipeline:
 
         self.fincher_path = self.proc_dir / "fincher_subsample.h5ad"
         self.plass_path = self.proc_dir / "plass_v6.h5ad"
+        self.cui_path = self.proc_dir / "cui_v6.h5ad"
         self.bridge_path = self.data_dir / "bridge.csv"
         self.king_atlas_path = self.data_dir / "king_atlas.tsv"
         self.cui_atlas_path = self.data_dir / "cui_atlas_summary.csv"
@@ -131,6 +132,12 @@ class NeuralTFPipeline:
         print(f"  Fincher: {self.adata_fincher.n_obs} cells x {self.adata_fincher.n_vars} genes (v4)")
         self.adata_plass = ad.read_h5ad(self.plass_path)
         print(f"  Plass:   {self.adata_plass.n_obs} cells x {self.adata_plass.n_vars} genes (v6)")
+        self.adata_cui = None
+        if self.cui_path.exists():
+            self.adata_cui = ad.read_h5ad(self.cui_path)
+            print(f"  Cui:     {self.adata_cui.n_obs} cells x {self.adata_cui.n_vars} genes (v6)")
+        else:
+            print(f"  Cui:     (missing {self.cui_path}, skipping)")
 
         if self.subsample:
             for adata, name in [(self.adata_fincher, "Fincher"), (self.adata_plass, "Plass")]:
@@ -284,7 +291,10 @@ class NeuralTFPipeline:
 
     def run_qc(self):
         print("[4/9] QC + clustering (leiden)...")
-        for adata, label in [(self.adata_fincher, "Fincher"), (self.adata_plass, "Plass")]:
+        atlases = [(self.adata_fincher, "Fincher"), (self.adata_plass, "Plass")]
+        if self.adata_cui is not None:
+            atlases.append((self.adata_cui, "Cui"))
+        for adata, label in atlases:
             print(f"  {label}: ", end="", flush=True)
             sc.pp.filter_genes(adata, min_cells=3)
             sc.pp.normalize_total(adata, target_sum=1e4)
@@ -312,7 +322,10 @@ class NeuralTFPipeline:
         print("\n[5/9] Scoring candidates per atlas ...")
         print(f"  {len(self.tf_ids)} TF targets")
 
-        for atlas, atlas_label in [(self.adata_fincher, "fincher"), (self.adata_plass, "plass")]:
+        atlases = [(self.adata_fincher, "fincher"), (self.adata_plass, "plass")]
+        if self.adata_cui is not None:
+            atlases.append((self.adata_cui, "cui"))
+        for atlas, atlas_label in atlases:
             print(f"  {atlas_label}: wilcoxon DE ", end="", flush=True)
             t0 = time.time()
             sc.tl.rank_genes_groups(atlas, "leiden", method="wilcoxon")
@@ -797,7 +810,6 @@ class NeuralTFPipeline:
         self.run_qc()
         self.score_atlases()
         self.integrate_king_atlas()
-        self.integrate_cui_atlas()
         self.integrate_rnai()
         self.integrate_correlations()
         self.assign_reproducibility()
