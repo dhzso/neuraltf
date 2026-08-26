@@ -53,8 +53,12 @@ def _ready(root: Path, step: str) -> str | None:
                 for p in raw.rglob("*")) if raw.exists() else False,
             "GSE103633_RAW.tar missing (README 'Datasets' -> Plass)"),
         "Cui atlas": (
-            any(raw.rglob("OMIX*Cui*.h5ad")) if raw.exists() else False,
+            any((raw / "OMIX*Cui*").rglob("*.h5ad")) if raw.exists() else False,
             "Cui 2023 h5ad missing (OMIX003867)"),
+        "Perez TF summary": (
+            any((raw / "Supplementary_Data_ Perez_2025").glob("*MOESM5*.xlsx"))
+            if (raw / "Supplementary_Data_ Perez_2025").exists() else False,
+            "Perez MOESM5 xlsx missing"),
         "Bridge CSV": (
             (raw / "smed_20140614.mapping.rosettastone.2020.txt").exists()
             and any(king.glob("*mmc4*.xlsx")) if king.exists() else False,
@@ -179,6 +183,8 @@ STEPS = [
      [["datasets", "processed", "plass_v6.h5ad"]]),
     ("Cui atlas", ["projects/NeuralTF/scripts/preprocess_cui.py"], [],
      [["projects", "NeuralTF", "data", "cui_atlas_summary.csv"]]),
+    ("Perez TF summary", ["projects/NeuralTF/scripts/preprocess_perez.py"], [],
+     [["projects", "NeuralTF", "data", "perez_tf_summary.csv"]]),
     ("Bridge CSV", ["scripts", "build_bridge.py"], [],
      [["projects", "NeuralTF", "data", "bridge.csv"]]),
     ("King atlas TSV", ["scripts", "build_king_atlas.py"], [],

@@ -52,17 +52,19 @@ def build():
             v6_map[sid] = v6s
     print(f"  Mapped: {len(v6_map)} SMED IDs -> v6")
 
-    # Only keep genes that map to v6
+    # Only keep genes that map to v6 (use dict for O(1) lookup instead of list.index O(N))
     mapped_smed = list(v6_map.keys())
-    mapped_idx = [gene_names.index(s) for s in mapped_smed]
+    name_to_idx = {name: i for i, name in enumerate(gene_names)}
+    mapped_idx = [name_to_idx[s] for s in mapped_smed if s in name_to_idx]
     print(f"  Processing {len(mapped_idx)} mapped genes (out of {len(gene_names)})")
 
-    # Subset the sparse matrix to only mapped genes (much faster)
+    # Subset the sparse matrix to only mapped genes (keep sparse for memory)
     X_sub = X[:, mapped_idx]
     if hasattr(X_sub, "toarray"):
-        X_sub = X_sub.toarray()
-    X_sub = np.asarray(X_sub)
-    print(f"  Subset matrix: {X_sub.shape}")
+        import scipy.sparse as sp
+        if not sp.issparse(X_sub):
+            X_sub = sp.csr_matrix(X_sub)
+    print(f"  Subset matrix: {X_sub.shape}, nnz: {X_sub.nnz if hasattr(X_sub, 'nnz') else '?'}")
 
     # Cell type annotations
     cell_types = adata.obs["Annotation"].astype(str).tolist()
@@ -82,50 +84,94 @@ def build():
     print(f"  Big types: {len(unique_big)}, Annotations: {len(unique_annot)}")
     print(f"  Neural annotations: {neural_annot}")
 
-    # Build masks for big types and timepoints
-    big_masks = {bt: (obs_df["big_type"] == bt).values for bt in unique_big}
-    neural_big_masks = {bt: big_masks[bt] for bt in unique_big if "neur" in bt.lower()}
-    neural_annot_masks = {ca: (obs_df["cell_type"] == ca).values for ca in neural_annot}
-    tp_masks = {tp: (obs_df["timepoint"] == tp).values for tp in unique_tp}
+    # Vectorized computation using sparse matrix operations
+    # Precompute boolean masks as sparse row selectors
+    import scipy.sparse as sp
+
+    # Build indicator matrices for each big type (n_cells x n_big_types)
+    big_type_names = list(unique_big)
+    bt_indicator = sp.csr_matrix(
+        np.column_stack([(obs_df["big_type"] == bt).values for bt in big_type_names])
+    )
+    # Neural big type mask (column indices in bt_indicator)
+    neural_bt_idx = [i for i, bt in enumerate(big_type_names) if "neur" in bt.lower()]
+
+    # Per-timepoint indicator
+    tp_names = list(unique_tp)
+    tp_indicator = sp.csr_matrix(
+        np.column_stack([(obs_df["timepoint"] == tp).values for tp in tp_names])
+    )
+
+    # Per-neural-annotation indicator
+    neural_annot_names = list(neural_annot)
+    if neural_annot_names:
+        na_indicator = sp.csr_matrix(
+            np.column_stack([(obs_df["cell_type"] == ca).values for ca in neural_annot_names])
+        )
+    else:
+        na_indicator = None
+
+    # Cell counts per big type and timepoint (for mean computation)
+    bt_counts = np.asarray(bt_indicator.sum(axis=0)).flatten().astype(float)
+    tp_counts = np.asarray(tp_indicator.sum(axis=0)).flatten().astype(float)
+    na_counts = np.asarray(na_indicator.sum(axis=0)).flatten().astype(float) if na_indicator is not None else np.array([])
+
+    # Overall mean per gene: X_sub.T @ ones / n_cells
+    n_cells = float(X_sub.shape[0])
+    overall_means = np.asarray(X_sub.mean(axis=0)).flatten()
+
+    # Per-big-type means: (X_sub.T @ bt_indicator) / bt_counts  -> (n_genes, n_big_types)
+    bt_means = (X_sub.T @ bt_indicator).toarray() / np.maximum(bt_counts, 1)  # shape (n_genes, n_big_types)
+
+    # Per-timepoint means
+    tp_means_all = (X_sub.T @ tp_indicator).toarray() / np.maximum(tp_counts, 1)
+
+    # Per-neural-annotation means
+    if na_indicator is not None and len(neural_annot_names) > 0:
+        na_means_all = (X_sub.T @ na_indicator).toarray() / np.maximum(na_counts, 1)
+    else:
+        na_means_all = None
+
+    # Positive expression mask (for median computation) — use csr for row slicing
+    X_csr = sp.csr_matrix(X_sub)
 
     records = []
     for local_idx, smed_id in enumerate(mapped_smed):
         v6_ids = v6_map[smed_id]
-        expr = X_sub[:, local_idx]
+        overall_mean = float(overall_means[local_idx])
 
-        if expr.sum() == 0:
+        if overall_mean == 0:
             continue
 
-        overall_mean = expr.mean()
-
-        # Per-big-type mean expression
-        big_means = {bt: expr[big_masks[bt]].mean() for bt in unique_big if big_masks[bt].sum() > 0}
+        # Big-type means for this gene
+        bmeans = {bt: float(bt_means[local_idx, i]) for i, bt in enumerate(big_type_names) if bt_counts[i] > 0}
+        neural_max = max((bt_means[local_idx, i] for i in neural_bt_idx), default=0)
 
         # Expression score
-        if overall_mean > 0:
-            fold_changes = {bt: m / overall_mean for bt, m in big_means.items() if m > 0}
-            max_fc = max(fold_changes.values()) if fold_changes else 0
-        else:
-            max_fc = 0
+        fold_changes = {bt: m / overall_mean for bt, m in bmeans.items() if m > 0}
+        max_fc = max(fold_changes.values()) if fold_changes else 0
         expression_score = min(1.0, max_fc / 5.0) if max_fc > 0 else 0.0
 
         # Specificity
-        pos_expr = expr[expr > 0]
-        median_expr = float(np.median(pos_expr)) if len(pos_expr) > 0 else 0
-        expressed_types = [bt for bt, m in big_means.items() if m > median_expr]
+        expr_row = X_csr.getrow(local_idx)
+        pos_vals = expr_row.data
+        median_expr = float(np.median(pos_vals)) if len(pos_vals) > 0 else 0
+        expressed_types = [bt for bt, m in bmeans.items() if m > median_expr]
         specificity_score = 1.0 / len(expressed_types) if expressed_types else 0.0
 
         # Neural enrichment
-        neural_max = max((big_means.get(bt, 0) for bt in neural_big_masks), default=0)
         neural_enriched = neural_max > median_expr * 2 if median_expr > 0 else False
 
         # Neural specificity
-        neural_means = {ca: expr[neural_annot_masks[ca]].mean() for ca in neural_annot if neural_annot_masks[ca].sum() > 0}
-        neural_expressed = [ca for ca, m in neural_means.items() if m > median_expr]
+        if na_means_all is not None:
+            nmeans = {ca: float(na_means_all[local_idx, i]) for i, ca in enumerate(neural_annot_names) if na_counts[i] > 0}
+            neural_expressed = [ca for ca, m in nmeans.items() if m > median_expr]
+        else:
+            neural_expressed = []
         neural_specificity_score = 1.0 / len(neural_expressed) if neural_expressed else 0.0
 
         # Per-timepoint means
-        tp_means = {tp: float(expr[tp_masks[tp]].mean()) for tp in unique_tp if tp_masks[tp].sum() > 0}
+        tp_m = {tp: float(tp_means_all[local_idx, i]) for i, tp in enumerate(tp_names) if tp_counts[i] > 0}
 
         for v6 in v6_ids:
             records.append({
@@ -138,8 +184,8 @@ def build():
                 "max_fold_change": round(max_fc, 4),
                 "n_expressed_types": len(expressed_types),
                 "n_neural_expressed": len(neural_expressed),
-                "mean_expression": round(float(overall_mean), 4),
-                **{f"mean_{tp}": round(float(tp_means.get(tp, 0)), 4) for tp in unique_tp},
+                "mean_expression": round(overall_mean, 4),
+                **{f"mean_{tp}": round(float(tp_m.get(tp, 0)), 4) for tp in tp_names},
             })
 
     df = pd.DataFrame(records)
