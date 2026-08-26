@@ -22,13 +22,13 @@ datasets/
     GSE103633_GEO_Plass_atlas/      # Plass et al., Science 2018 — GSE103633_RAW.tar, ~2 GB
     GSE111764_GEO_Fincher_atlas/    # Fincher et al., Science 2018 — DGE .txt.gz
     Supplementary_Data_King_2024/   # King et al., Cell Reports 2024 — mmc2–mmc7 xlsx
-    OMIX003867_OMIX_Cui_atlas/      # Cui et al., 2023 — single‑cell h5ad (~55 GB)
+    OMIX003867_OMIX_Cui_atlas/      # Cui et al., 2023 — single‑cell h5ad (~55 GB) (download: https://ngdc.cncb.ac.cn/omix/release/OMIX003867)
       OMIX003867-01/
         singlecell_h5ad/
           adata_scRNA_Annotated.h5ad   # Cui annotated h5ad used by the pipeline
     smed_20140614.mapping.rosettastone.2020.txt    # Rosetta Stone gene-ID bridge, 67 MB
     go.obo                          # Gene Ontology, current release, ~40 MB
-    Supplementary_Data_Perez_2025/   # Perez et al., 2025 — MOESM5 (TF classification) & MOESM22 (ANANSE validation) xlsx
+    Supplementary_Data_Perez_2025/   # Perez et al., 2025 — MOESM5 (TF classification) & MOESM22 (ANANSE validation) xlsx (download: https://www.nature.com/articles/s41467-025-65712-0#Sec94)
   processed/                        # GENERATED: fincher_subsample.h5ad, plass_v6.h5ad, cui_v6.h5ad,
                                      # planmine_annotations.parquet, planmine_transcripts.fasta
   references/
