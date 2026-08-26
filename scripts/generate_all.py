@@ -112,6 +112,18 @@ def _ready(root: Path, step: str) -> str | None:
         "Export ranked FSTF": (
             (run / "rank.csv").exists(),
             "rank.csv missing (run the pipeline first)"),
+        "Generate supplementary tables": (
+            (root / "projects" / "NeuralTF" / "results"
+             / "top10_neural_tfs_prioritized.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_top10_prioritized.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_uniform_top10.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_uniform_all249_full_rank.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "fstf_ranked_19_neural.csv").exists(),
+            "prioritization CSVs / FSTF CSVs missing"),
         "Generate publication figures": (
             (root / "projects" / "NeuralTF" / "results"
              / "top10_neural_tfs_prioritized.csv").exists()
