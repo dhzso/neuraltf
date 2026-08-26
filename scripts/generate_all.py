@@ -147,6 +147,22 @@ and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
             and (root / "projects" / "NeuralTF" / "results"
                  / "fstf_ranked_19_neural.csv").exists(),
             "prioritization CSVs / FSTF CSVs missing"),
+        "Generate publication figures": (
+            (run / "rank.csv").exists()
+            and (run / "rank_neural.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "top10_neural_tfs_prioritized.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_top10_prioritized.csv").exists()
+            and (root / "projects" / "NeuralTF" / "results"
+                 / "dirichlet_uniform_top10.csv").exists(),
+            "rank.csv / rank_neural.csv / prioritization CSVs missing"),
+        "Validate with Perez ANANSE": (
+            (root / "projects" / "NeuralTF" / "results"
+             / "top10_neural_tfs_prioritized.csv").exists()
+            and (root / "datasets" / "raw" / "Supplementary_Data_ Perez_2025"
+                 / "41467_2025_65712_MOESM22_ESM.xlsx").exists(),
+            "prioritized top10 or Perez MOESM22 missing"),
     }
     ok, why = rules[step]
     return None if ok else why
@@ -216,7 +232,14 @@ STEPS = [
       ["projects", "NeuralTF", "figures", "14_uniform_99vs249_rankrank.png"],
       ["projects", "NeuralTF", "figures", "15_method_bumpchart.png"],
       ["projects", "NeuralTF", "figures", "16_method_score_density.png"],
-      ["projects", "NeuralTF", "figures", "17_method_rank_correlation.png"]]),
+      ["projects", "NeuralTF", "figures", "17_method_rank_correlation.png"],
+      ["projects", "NeuralTF", "figures", "18_composite_bonus_waterfall.png"],
+      ["projects", "NeuralTF", "figures", "19_method_consensus.png"],
+      ["projects", "NeuralTF", "figures", "20_stream_correlation.png"],
+      ["projects", "NeuralTF", "figures", "21_centered_vs_uniform_scatter.png"]]),
+    ("Validate with Perez ANANSE",
+     ["projects/NeuralTF/scripts/validate_with_perez.py"], [],
+     []),  # validation script, no persistent outputs
     ("Generate supplementary tables",
      ["projects/NeuralTF/scripts/create_supplementary_tables.py"], [],
      [["projects", "NeuralTF", "results", "supplementary_table_S1_method_comparison.csv"],
