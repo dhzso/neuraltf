@@ -256,7 +256,10 @@ STEPS = [
 
 def _has_output(root: Path, out_parts: list[list[str]]) -> bool:
     """True only when *every* expected output of a step exists and is non-empty
-    (a crashed run that wrote one of several outputs must not be skipped)."""
+    (a crashed run that wrote one of several outputs must not be skipped).
+    Empty output list means no outputs to check — must run the step."""
+    if not out_parts:
+        return False  # No outputs defined → must run
     for parts in out_parts:
         out = root.joinpath(*parts)
         if not (out.exists() and out.stat().st_size > 0):

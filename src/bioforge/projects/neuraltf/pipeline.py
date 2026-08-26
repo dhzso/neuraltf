@@ -332,9 +332,16 @@ class NeuralTFPipeline:
 
         # Build gene_best using q-values
         gene_best: dict[str, tuple[float, float, float]] = {}  # (abs_lfc, pval, qval)
+        # Pre-build lookup dicts for each cluster to avoid O(N²) index() calls
+        cluster_lookups: dict[str, dict[str, int]] = {}
+        for cl in clusters:
+            cluster_lookups[cl] = {str(g): i for i, g in enumerate(result["names"][cl])}
         for (key, cl), qval in zip(gene_cluster_keys, qvals):
-            abs_lfc = abs(float(result["logfoldchanges"][cl][list(result["names"][cl]).index(key)]))
-            pval = float(result["pvals"][cl][list(result["names"][cl]).index(key)])
+            idx = cluster_lookups[cl].get(key)
+            if idx is None:
+                continue
+            abs_lfc = abs(float(result["logfoldchanges"][cl][idx]))
+            pval = float(result["pvals"][cl][idx])
             if key not in gene_best or abs_lfc > abs(gene_best[key][0]):
                 gene_best[key] = (abs_lfc, pval, qval)
 
@@ -347,7 +354,12 @@ class NeuralTFPipeline:
             if atlas_name == "fincher":
                 v6_id = bridge.v4_to_v6(gene)
             else:
-                v6_id = gene if gene in self.tf_ids else gene + "_1"
+                if gene in self.tf_ids:
+                    v6_id = gene
+                elif gene + "_1" in self.tf_ids:
+                    v6_id = gene + "_1"
+                else:
+                    continue  # skip genes not in TF catalog
 
             gn_from_bridge = bridge.v6_to_name(v6_id) if v6_id else None
 
@@ -600,13 +612,15 @@ class NeuralTFPipeline:
                 out.add(f"dd{re.sub(r'\\D+', '', m.group(1))}")
             return out
 
+        # Pre-compute normalization once (not per candidate)
+        tf1_ok = data["tf1"].map(normalize)
+        tf2_ok = data["tf2"].map(normalize)
+
         matched = 0
         for rec in self.all_records.values():
             ids = self._all_ids_for_record(rec)
             if not ids:
                 continue
-            tf1_ok = data["tf1"].map(normalize)
-            tf2_ok = data["tf2"].map(normalize)
             mask = tf1_ok.apply(lambda c: bool(c & ids)) | tf2_ok.apply(lambda c: bool(c & ids))
             sub = data[mask]
             if len(sub) == 0:

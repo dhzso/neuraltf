@@ -459,10 +459,15 @@ def main() -> int:
          "dna_binding_domains"]].to_string(index=False))
 
     # --- Overall top-10 by Dirichlet median score ---------------------------
-    # Recompute fixed-weight scores for comparison
+    # Recompute fixed-weight scores for comparison (with renormalization)
     fixed_S = cand[STREAMS].to_numpy(dtype=float)
     fixed_mask = ~np.isnan(fixed_S)
-    cand["fixed_score"] = np.where(fixed_mask, fixed_S, 0.0) @ W_DEFAULT
+    fixed_filled = np.where(fixed_mask, fixed_S, 0.0)
+    fixed_weight_sum = (fixed_mask * W_DEFAULT).sum(axis=1)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        cand["fixed_score"] = np.where(fixed_weight_sum > 0,
+                                        (fixed_filled @ W_DEFAULT) / fixed_weight_sum,
+                                        0.0)
 
     print("\n  === Overall top-10 by Dirichlet median score (all 99) ===")
     overall = cand.nlargest(10, "dirichlet_median_score")

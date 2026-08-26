@@ -91,7 +91,8 @@ def validate_top10():
             elif is_target:
                 # Find which TFs target this gene
                 targeting = ananse[ananse["Target gene (gene ID)"] == h1]
-                tf_names = targeting["TF(gene symbol)"].unique()[:3]
+                tf_sym_col = next((c for c in targeting.columns if "TF" in c and "gene symbol" in c.lower()), None)
+                tf_names = targeting[tf_sym_col].unique()[:3] if tf_sym_col else []
                 print(f"  {gene:<20}  ANANSE target of: {', '.join(tf_names)}")
                 as_target += 1
             else:

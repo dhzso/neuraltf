@@ -62,6 +62,8 @@ class EvidenceScorer:
         if not used:
             return 0.0
         total_w = sum(used.values())
+        if total_w == 0:
+            return 0.0
         return sum(used[s] * record.scores[s] for s in used) / total_w
 
     def __call__(self, records: Iterable[EvidenceRecord]) -> list[EvidenceRecord]:

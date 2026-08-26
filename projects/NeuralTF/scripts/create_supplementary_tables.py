@@ -87,11 +87,9 @@ def main() -> int:
     print('Created FSTF supplementary tables')
 
     # S7: 99 vs 249 comparison
-    comp = pd.read_csv(IN_DIR / 'dirichlet_uniform_all249_summary.txt')
-    comp.to_csv(IN_DIR / 'supplementary_table_S9_99vs249.csv', index=False)
-    print('Created supplementary_table_S9_99vs249.csv')
-
-    print('\nAll supplementary tables created in', IN_DIR)
+    # summary.txt is a text file, not a CSV — skip this table
+    print('  Skipping S9 (99vs249 comparison) — summary.txt is not a CSV')
+    print('All supplementary tables created in', OUT_DIR)
     return 0
 
 

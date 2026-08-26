@@ -42,8 +42,9 @@ def load_tf_catalog():
 
 
 def load_bridge():
-    """Load bridge table."""
-    return pd.read_csv(BRIDGE_PATH, dtype=str)
+    """Load bridge table as BridgeTable for v4<->v6 mapping."""
+    from bioforge.evidence import load_bridge as _load_bridge
+    return _load_bridge(BRIDGE_PATH)
 
 
 def score_one_atlas_permuted(adata, atlas_name, tf_ids_norm, bridge, rng):
