@@ -16,15 +16,17 @@ steps are skipped, never aborted:
   2. consolidate_plass.py            -> datasets/processed/plass_v6.h5ad
   3. build_bridge.py                 -> projects/NeuralTF/data/bridge.csv
   4. build_king_atlas.py             -> projects/NeuralTF/data/king_atlas.tsv
-  5. pipeline (run.py)               -> projects/NeuralTF/runs/pipeline_run/*
-6. query_planmine.py                  -> datasets/processed/planmine_annotations.parquet (network)
-  7. prioritize_neural_tfs.py           -> projects/NeuralTF/results/top10_*.csv + report.md
-  8. make_supp_go_figures.py            -> projects/NeuralTF/figures/supplementary/*
-  9. dirichlet_prioritize.py            -> projects/NeuralTF/results/dirichlet_*.csv|md
-  10. dirichlet_uniform.py              -> projects/NeuralTF/results/dirichlet_uniform_*.csv|txt
-  11. dirichlet_uniform_all249.py       -> projects/NeuralTF/results/dirichlet_uniform_all249_*.csv|txt
-  12. export_fstf_ranked.py             -> projects/NeuralTF/results/fstf_ranked_*.csv
-  13. generate_publication_figures.py   -> projects/NeuralTF/figures/01-17_*.png (17 figs)
+  5. preprocess_cui.py               -> projects/NeuralTF/data/cui_atlas_summary.csv
+  6. pipeline (run.py)               -> projects/NeuralTF/runs/pipeline_run/*
+  7. query_planmine.py               -> datasets/processed/planmine_annotations.parquet (network)
+  8. prioritize_neural_tfs.py        -> projects/NeuralTF/results/top10_*.csv + report.md
+  9. make_supp_go_figures.py         -> projects/NeuralTF/figures/supplementary/*
+  10. dirichlet_prioritize.py        -> projects/NeuralTF/results/dirichlet_*.csv|md
+  11. dirichlet_uniform.py           -> projects/NeuralTF/results/dirichlet_uniform_*.csv|txt
+  12. dirichlet_uniform_all249.py    -> projects/NeuralTF/results/dirichlet_uniform_all249_*.csv|txt
+  13. export_fstf_ranked.py          -> projects/NeuralTF/results/fstf_ranked_*.csv
+  14. generate_publication_figures.py -> projects/NeuralTF/figures/01-21_*.png (21 figs)
+  15. validate_with_perez.py         -> ANANSE cross-validation report
 """
 from __future__ import annotations
 
@@ -60,6 +62,10 @@ def _ready(root: Path, step: str) -> str | None:
             any(king.glob("*mmc4*.xlsx")) and any(king.glob("*mmc7*.xlsx"))
             if king.exists() else False,
             "King mmc4/mmc7 xlsx missing"),
+        "Cui atlas CSV": (
+            (root / "datasets" / "raw" / "OMIX003867_OMIX_Cui_atlas"
+             / "OMIX003867-01" / "singlecell_h5ad" / "adata_scRNA_Annotated.h5ad").exists(),
+            "Cui 2023 h5ad missing (OMIX003867)"),
         "Pipeline run": (
             (proc / "fincher_subsample.h5ad").exists()
             and (proc / "plass_v6.h5ad").exists()
@@ -161,6 +167,8 @@ STEPS = [
      [["projects", "NeuralTF", "data", "bridge.csv"]]),
     ("King atlas TSV", ["scripts", "build_king_atlas.py"], [],
      [["projects", "NeuralTF", "data", "king_atlas.tsv"]]),
+    ("Cui atlas CSV", ["projects/NeuralTF/scripts/preprocess_cui.py"], [],
+     [["projects", "NeuralTF", "data", "cui_atlas_summary.csv"]]),
     ("Pipeline run", ["scripts", "run.py"], [],
      [["projects", "NeuralTF", "runs", "pipeline_run", "rank.csv"],
       ["projects", "NeuralTF", "runs", "pipeline_run", "rank_neural.csv"],
@@ -200,23 +208,30 @@ STEPS = [
       ["projects", "NeuralTF", "results", "fstf_ranked_74_catalog.csv"]]),
     ("Generate publication figures",
      ["projects/NeuralTF/scripts/generate_publication_figures.py"], [],
-     [["projects", "NeuralTF", "figures", "01_stream_coverage_249.png"],
-      ["projects", "NeuralTF", "figures", "02_integrated_vs_composite.png"],
-      ["projects", "NeuralTF", "figures", "03_score_distribution_249_vs_99.png"],
-      ["projects", "NeuralTF", "figures", "04_evidence_heatmap_99.png"],
-      ["projects", "NeuralTF", "figures", "05_top10_candidate_atlas.png"],
-      ["projects", "NeuralTF", "figures", "06_weight_sensitivity_ranks.png"],
-      ["projects", "NeuralTF", "figures", "07_weight_sensitivity_ptop10.png"],
-      ["projects", "NeuralTF", "figures", "08_stream_ablation_global.png"],
-      ["projects", "NeuralTF", "figures", "09_stream_ablation_candidate.png"],
-      ["projects", "NeuralTF", "figures", "10_centered_top10_scores.png"],
-      ["projects", "NeuralTF", "figures", "11_centered_scatter_99.png"],
-      ["projects", "NeuralTF", "figures", "12_uniform_top10_scores.png"],
-      ["projects", "NeuralTF", "figures", "13_uniform_scatter_99.png"],
-      ["projects", "NeuralTF", "figures", "14_uniform_99vs249_rankrank.png"],
-      ["projects", "NeuralTF", "figures", "15_method_bumpchart.png"],
-      ["projects", "NeuralTF", "figures", "16_method_score_density.png"],
-      ["projects", "NeuralTF", "figures", "17_method_rank_correlation.png"]]),
+     [["projects/NeuralTF/figures", "01_stream_coverage_249.png"],
+      ["projects/NeuralTF/figures", "02_integrated_vs_composite.png"],
+      ["projects/NeuralTF/figures", "03_score_distribution_249_vs_99.png"],
+      ["projects/NeuralTF/figures", "04_evidence_heatmap_99.png"],
+      ["projects/NeuralTF/figures", "05_top10_candidate_atlas.png"],
+      ["projects/NeuralTF/figures", "06_weight_sensitivity_ranks.png"],
+      ["projects/NeuralTF/figures", "07_weight_sensitivity_ptop10.png"],
+      ["projects/NeuralTF/figures", "08_stream_ablation_global.png"],
+      ["projects/NeuralTF/figures", "09_stream_ablation_candidate.png"],
+      ["projects/NeuralTF/figures", "10_centered_top10_scores.png"],
+      ["projects/NeuralTF/figures", "11_centered_scatter_99.png"],
+      ["projects/NeuralTF/figures", "12_uniform_top10_scores.png"],
+      ["projects/NeuralTF/figures", "13_uniform_scatter_99.png"],
+      ["projects/NeuralTF/figures", "14_uniform_99vs249_rankrank.png"],
+      ["projects/NeuralTF/figures", "15_method_bumpchart.png"],
+      ["projects/NeuralTF/figures", "16_method_score_density.png"],
+      ["projects/NeuralTF/figures", "17_method_rank_correlation.png"],
+      ["projects/NeuralTF/figures", "18_composite_bonus_waterfall.png"],
+      ["projects/NeuralTF/figures", "19_method_consensus.png"],
+      ["projects/NeuralTF/figures", "20_stream_correlation.png"],
+      ["projects/NeuralTF/figures", "21_centered_vs_uniform_scatter.png"]]),
+    ("Validate with Perez ANANSE",
+     ["projects/NeuralTF/scripts/validate_with_perez.py"], [],
+     []),  # validation script, no persistent outputs
     ("Generate supplementary tables",
      ["projects/NeuralTF/scripts/create_supplementary_tables.py"], [],
      [["projects", "NeuralTF", "results", "supplementary_table_S1_method_comparison.csv"],
