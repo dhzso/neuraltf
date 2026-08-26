@@ -98,9 +98,19 @@ analysis_results.csv
 corrected_comparison.csv
 scores_comparison.csv
 
+# Stray analysis scripts (not needed for replication)
+analyze_full.py
+analyze_missing.py
+final_validation.py
+verify_final.py
+
 # Generated zip archives
 projects/NeuralTF/figures.zip
 projects/NeuralTF/results.zip
+
+# Internal audit/guide docs (not for replication)
+projects/NeuralTF/FIGURE_AUDIT.md
+projects/NeuralTF/FIGURE_GUIDE.md
 
 # Legacy duplicate
 neuraltf-repo/
