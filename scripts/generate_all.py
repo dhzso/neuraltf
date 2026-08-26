@@ -70,11 +70,12 @@ def _ready(root: Path, step: str) -> str | None:
         "PlanMine parquet": (
             (run / "rank_neural.csv").exists(),
             "rank_neural.csv missing (run the pipeline first); network step"),
-        "Prioritization": (
+"Prioritization": (
             (run / "rank_neural.csv").exists()
             and (proc / "planmine_annotations.parquet").exists()
+            and (data / "bridge.csv").exists()
             and any(king.glob("*mmc4*.xlsx"))
-and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
+            and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
             "rank_neural.csv / PlanMine parquet / bridge.csv / King mmc4-5 xlsx missing"),
         "GO supp figures": (
             (root / "projects" / "NeuralTF" / "results"
@@ -173,6 +174,8 @@ STEPS = [
      [["datasets", "processed", "fincher_subsample.h5ad"]]),
     ("Plass h5ad", ["scripts", "consolidate_plass.py"], [],
      [["datasets", "processed", "plass_v6.h5ad"]]),
+    ("Cui atlas", ["projects/NeuralTF/scripts/preprocess_cui.py"], [],
+     [["projects", "NeuralTF", "data", "cui_atlas_summary.csv"]]),
     ("Bridge CSV", ["scripts", "build_bridge.py"], [],
      [["projects", "NeuralTF", "data", "bridge.csv"]]),
     ("King atlas TSV", ["scripts", "build_king_atlas.py"], [],

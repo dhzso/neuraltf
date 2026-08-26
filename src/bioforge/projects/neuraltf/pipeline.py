@@ -714,7 +714,8 @@ class NeuralTFPipeline:
 
         # Neural-specific output
         neural_df = rank_df[
-            rank_df["neural_enriched"].notna() | (rank_df["rnai"] > 0)
+            (rank_df["neural_enriched"].notna() & (rank_df["neural_enriched"] > 0))
+            | (rank_df["rnai"] > 0)
         ]
         if len(neural_df) == 0:
             neural_df = rank_df.head(25)

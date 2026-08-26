@@ -39,7 +39,6 @@ def main() -> int:
 
     # S2: Full fixed-weight ranked list (all 249)
     rank = pd.read_csv(REPO / 'projects' / 'NeuralTF' / 'runs' / 'pipeline_run' / 'rank.csv')
-    rank_neural = pd.read_csv(REPO / 'projects' / 'NeuralTF' / 'runs' / 'pipeline_run' / 'rank_neural.csv')
 
     # Add composite scores for all 249
     fixed_top10 = pd.read_csv(IN_DIR / 'top10_neural_tfs_prioritized.csv')
