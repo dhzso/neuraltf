@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 
 # Resolve relative to this file's location, not CWD
-_REPO = Path(__file__).resolve().parents[3]
+_REPO = Path(__file__).resolve().parents[4]
 _RAW = _REPO / "datasets" / "raw"
 _ROSETTA = _RAW / "smed_20140614.mapping.rosettastone.2020.txt"
 _MOESM5 = (
