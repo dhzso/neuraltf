@@ -112,38 +112,7 @@ def _ready(root: Path, step: str) -> str | None:
         "Export ranked FSTF": (
             (run / "rank.csv").exists(),
             "rank.csv missing (run the pipeline first)"),
-        "Visualize fixed-weight": (
-            (run / "rank.csv").exists()
-            and (run / "rank_neural.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "top10_neural_tfs_prioritized.csv").exists(),
-            "rank.csv / rank_neural.csv / top10_neural_tfs_prioritized.csv missing"),
-        "Visualize Dirichlet-centered": (
-            (root / "projects" / "NeuralTF" / "results"
-             / "dirichlet_top10_prioritized.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "top10_neural_tfs_prioritized.csv").exists(),
-            "dirichlet_top10_prioritized.csv / top10_neural_tfs_prioritized.csv missing"),
-        "Visualize Dirichlet-uniform": (
-            (root / "projects" / "NeuralTF" / "results"
-             / "dirichlet_uniform_top10.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_top10_prioritized.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "top10_neural_tfs_prioritized.csv").exists(),
-            "dirichlet_uniform_top10.csv / dirichlet_top10_prioritized.csv / top10_neural_tfs_prioritized.csv missing"),
-        "Visualize method comparison": (
-            (root / "projects" / "NeuralTF" / "results"
-             / "dirichlet_uniform_full_rank.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_top10_prioritized.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_uniform_all249_full_rank.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "top10_neural_tfs_prioritized.csv").exists(),
-            "dirichlet_uniform_full_rank.csv / dirichlet_top10_prioritized.csv / "
-            "dirichlet_uniform_all249_full_rank.csv / top10_neural_tfs_prioritized.csv missing"),
-        "Generate supplementary tables": (
+        "Generate publication figures": (
             (root / "projects" / "NeuralTF" / "results"
              / "top10_neural_tfs_prioritized.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"

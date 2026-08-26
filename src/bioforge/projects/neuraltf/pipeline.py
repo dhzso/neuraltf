@@ -76,7 +76,6 @@ class NeuralTFPipeline:
         self.cui_path = self.proc_dir / "cui_v6.h5ad"
         self.bridge_path = self.data_dir / "bridge.csv"
         self.king_atlas_path = self.data_dir / "king_atlas.tsv"
-        self.cui_atlas_path = self.data_dir / "cui_atlas_summary.csv"
 
         king_dir = self.raw_dir / "Supplementary_Data_ King_2024"
         # Try the original Cell Reports (Elsevier) filenames first. If those
@@ -503,74 +502,6 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
     # Cui 2023 Atlas integration (preprocessed CSV)
     # ------------------------------------------------------------------
-
-    def integrate_cui_atlas(self):
-        """Integrate Cui 2023 scRNA-seq atlas as 4th evidence source.
-
-        Adds expression and specificity from Cui's 61 cell-type annotations
-        across 8 regeneration timepoints. Reuses existing EvidenceSource
-        enums (EXPRESSION, SPECIFICITY) — best-atlas-wins semantics.
-        """
-        print("[6b/9] Cui 2023 Atlas...")
-        if not self.cui_atlas_path.exists():
-            print(f"  (missing {self.cui_atlas_path}, skipping)")
-            return
-
-        cui = pd.read_csv(self.cui_atlas_path)
-        print(f"  Loaded {len(cui)} genes from Cui atlas")
-
-        # Cui expression scores are already normalized to [0,1] by the
-        # preprocessing script. Neural enrichment/enrichment specificity
-        # are also precomputed.
-        for _, row in cui.iterrows():
-            gene_id = str(row["gene_id"]).strip()
-            if not gene_id or gene_id == "nan":
-                continue
-
-            if gene_id not in self.all_records:
-                self.all_records[gene_id] = EvidenceRecord(gene_id=gene_id)
-
-            rec = self.all_records[gene_id]
-
-            # Expression: best-atlas-wins (same semantics as King)
-            cui_expr = float(row.get("expression_score", 0) or 0)
-            if cui_expr > 0:
-                rec.add_score(
-                    EvidenceSource.EXPRESSION,
-                    max(rec.scores.get(EvidenceSource.EXPRESSION, 0.0), cui_expr),
-                    note=f"cui_fc={float(row.get('max_fold_change', 0) or 0):.2f}",
-                )
-
-            # Specificity: best-atlas-wins
-            cui_spec = float(row.get("specificity_score", 0) or 0)
-            if cui_spec > 0:
-                rec.add_score(
-                    EvidenceSource.SPECIFICITY,
-                    max(rec.scores.get(EvidenceSource.SPECIFICITY, 0.0), cui_spec),
-                    note=f"cui_n_types={row.get('n_expressed_types', 0)}",
-                )
-
-            # Neural enrichment from Cui (independent of King)
-            if row.get("neural_enriched", False):
-                # Only upgrade — never downgrade existing neural signal
-                existing = rec.scores.get(EvidenceSource.NEURAL_ENRICHED, 0.0)
-                if existing < 1.0:
-                    rec.add_score(
-                        EvidenceSource.NEURAL_ENRICHED, 1.0,
-                        note="cui_neural_enriched=True",
-                    )
-
-            # Neural specificity from Cui
-            cui_nspec = float(row.get("neural_specificity_score", 0) or 0)
-            if cui_nspec > 0:
-                existing_nspec = rec.scores.get(EvidenceSource.NEURAL_SPECIFICITY, 0.0)
-                if cui_nspec > existing_nspec:
-                    rec.add_score(
-                        EvidenceSource.NEURAL_SPECIFICITY, cui_nspec,
-                        note=f"cui_n_neural={row.get('n_neural_expressed', 0)}",
-                    )
-
-            self.atlas_membership.setdefault(gene_id, set()).add("cui")
 
     # ------------------------------------------------------------------
     # RNAi phenotype table (mmc5)
