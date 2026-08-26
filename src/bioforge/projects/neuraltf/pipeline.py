@@ -149,28 +149,41 @@ class NeuralTFPipeline:
         print(f"  Catalog: {len(self.tf_catalog)} entries ({len(self.tf_ids)} TFs)")
         print(f"  RNAi: {len(self.rnai_table)} rows, Correlations: {len(self.correlations)} pairs")
 
-        # Load Perez 2025 TF classification (MOESM5)
+        # Load Perez 2025 TF classification (preprocessed CSV)
         self.perez_tf_class: dict[str, str] = {}
-        perez_path = (
-            self.raw_dir / "Supplementary_Data_ Perez_2025"
-            / "41467_2025_65712_MOESM5_ESM.xlsx"
-        )
-        if perez_path.exists():
+        perez_csv = self.data_dir / "perez_tf_summary.csv"
+        if perez_csv.exists():
             try:
-                perez = pd.read_excel(perez_path, sheet_name=0, dtype=str, nrows=60000)
-                cols = perez.columns.tolist()
-                gene_col = cols[0]
-                tf_class_col = next((c for c in cols if "TF Class" in c and "Perez" in c), None)
-                rbh_col = next((c for c in cols if "1:1" in c and "v6" in c.lower()), None)
-                if tf_class_col and rbh_col:
-                    for _, r in perez.iterrows():
-                        v6 = str(r.get(rbh_col, "")).strip()
-                        cls = str(r.get(tf_class_col, "")).strip()
-                        if v6 and v6 != "nan" and cls and cls != "nan":
-                            self.perez_tf_class[v6] = cls
-                    print(f"  Perez TF classification: {len(self.perez_tf_class)} genes")
+                perez = pd.read_csv(perez_csv, dtype=str)
+                for _, r in perez.iterrows():
+                    v6 = str(r.get("v6_id", "")).strip()
+                    cls = str(r.get("tf_class", "")).strip()
+                    if v6 and v6 != "nan" and cls and cls != "nan":
+                        self.perez_tf_class[v6] = cls
+                print(f"  Perez TF classification: {len(self.perez_tf_class)} genes (from preprocessed CSV)")
             except Exception as e:
                 print(f"  (Perez TF classification load failed: {e})")
+        else:
+            # Fallback: try loading raw MOESM5
+            perez_path = (
+                self.raw_dir / "Supplementary_Data_ Perez_2025"
+                / "41467_2025_65712_MOESM5_ESM.xlsx"
+            )
+            if perez_path.exists():
+                try:
+                    perez = pd.read_excel(perez_path, sheet_name=0, dtype=str, nrows=60000)
+                    cols = perez.columns.tolist()
+                    tf_class_col = next((c for c in cols if "TF Class" in c and "Perez" in c), None)
+                    rbh_col = next((c for c in cols if "1:1" in c and "v6" in c.lower()), None)
+                    if tf_class_col and rbh_col:
+                        for _, r in perez.iterrows():
+                            v6 = str(r.get(rbh_col, "")).strip()
+                            cls = str(r.get(tf_class_col, "")).strip()
+                            if v6 and v6 != "nan" and cls and cls != "nan":
+                                self.perez_tf_class[v6] = cls
+                        print(f"  Perez TF classification: {len(self.perez_tf_class)} genes (from raw MOESM5)")
+                except Exception as e:
+                    print(f"  (Perez TF classification load failed: {e})")
 
         print("[3/9] Bridge table...")
         self.bridge = load_bridge(self.bridge_path)
