@@ -223,6 +223,16 @@ def prepare_candidates(rank: pd.DataFrame, mmc4: pd.DataFrame | None = None) -> 
                 lambda g: tfm.get(g, "") if tfm.get(g, "") != "nan" else ""
             )
 
+    # Perez 2025 TF classification (authoritative TF family assignment)
+    r["perez_tf_class"] = ""
+    try:
+        from bioforge.projects.neuraltf.smapping import v6_to_perez_tf_class
+        r["perez_tf_class"] = r["gene_id"].map(
+            lambda g: v6_to_perez_tf_class(g) or ""
+        )
+    except Exception:
+        pass
+
     # PlanMine annotation columns (populated by a later merge; default empty)
     for col in (
         "dna_binding_domains", "domains_all", "go_terms", "go_namespaces",
@@ -290,6 +300,8 @@ def _composite_score(row: pd.Series) -> float:
     if doms and doms.lower() not in ("nan", "none"):
         bonus += BONUS_TF_DOMAIN
     elif str(row.get("mmc4_tf_flag", "")).strip().upper() == "TF":
+        bonus += BONUS_TF_DOMAIN
+    elif str(row.get("perez_tf_class", "")).strip().lower() not in ("", "nan", "none"):
         bonus += BONUS_TF_DOMAIN
     has_neural_go = has_go_tf = False
     seen: set[str] = set()

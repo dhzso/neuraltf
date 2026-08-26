@@ -35,7 +35,7 @@ _NEURAL_FC_THRESHOLD = 2.0
 class NeuralTFPipeline:
     """End-to-end neural TF candidate discovery pipeline.
 
-    Integrates 3 atlases (Fincher, Plass, King) plus King TF catalog,
+    Integrates 4 atlases (Fincher, Plass, King, Cui) plus King TF catalog,
     RNAi phenotype table, and neural TF-pair correlations. Produces a
     full ranking and a neural-filtered ranking.
 
@@ -72,6 +72,7 @@ class NeuralTFPipeline:
         self.plass_path = self.proc_dir / "plass_v6.h5ad"
         self.bridge_path = self.data_dir / "bridge.csv"
         self.king_atlas_path = self.data_dir / "king_atlas.tsv"
+        self.cui_atlas_path = self.data_dir / "cui_atlas_summary.csv"
 
         king_dir = self.raw_dir / "Supplementary_Data_ King_2024"
         # Try the original Cell Reports (Elsevier) filenames first. If those
@@ -122,7 +123,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def load_datasets(self):
-        print("[1/8] Loading datasets...")
+        print("[1/9] Loading datasets...")
         self.adata_fincher = ad.read_h5ad(self.fincher_path)
         print(f"  Fincher: {self.adata_fincher.n_obs} cells x {self.adata_fincher.n_vars} genes (v4)")
         self.adata_plass = ad.read_h5ad(self.plass_path)
@@ -135,7 +136,7 @@ class NeuralTFPipeline:
                     print(f"  Subsampled {name} to {adata.n_obs} cells")
 
     def load_reference_tables(self):
-        print("[2/8] Reference tables...")
+        print("[2/9] Reference tables...")
         self.tf_catalog = pd.read_excel(self.mmc4, sheet_name="TF")
         self.rnai_table = pd.read_excel(self.mmc5, header=None)
         self.correlations = pd.read_excel(self.mmc6, header=None)
@@ -146,7 +147,30 @@ class NeuralTFPipeline:
         print(f"  Catalog: {len(self.tf_catalog)} entries ({len(self.tf_ids)} TFs)")
         print(f"  RNAi: {len(self.rnai_table)} rows, Correlations: {len(self.correlations)} pairs")
 
-        print("[3/8] Bridge table...")
+        # Load Perez 2025 TF classification (MOESM5)
+        self.perez_tf_class: dict[str, str] = {}
+        perez_path = (
+            self.raw_dir / "Supplementary_Data_ Perez_2025"
+            / "41467_2025_65712_MOESM5_ESM.xlsx"
+        )
+        if perez_path.exists():
+            try:
+                perez = pd.read_excel(perez_path, sheet_name=0, dtype=str, nrows=60000)
+                cols = perez.columns.tolist()
+                gene_col = cols[0]
+                tf_class_col = next((c for c in cols if "TF Class" in c and "Perez" in c), None)
+                rbh_col = next((c for c in cols if "1:1" in c and "v6" in c.lower()), None)
+                if tf_class_col and rbh_col:
+                    for _, r in perez.iterrows():
+                        v6 = str(r.get(rbh_col, "")).strip()
+                        cls = str(r.get(tf_class_col, "")).strip()
+                        if v6 and v6 != "nan" and cls and cls != "nan":
+                            self.perez_tf_class[v6] = cls
+                    print(f"  Perez TF classification: {len(self.perez_tf_class)} genes")
+            except Exception as e:
+                print(f"  (Perez TF classification load failed: {e})")
+
+        print("[3/9] Bridge table...")
         self.bridge = load_bridge(self.bridge_path)
         self._enrich_bridge_names()
         print(f"  {len(self.bridge.df)} rows bridged")
@@ -228,7 +252,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def run_qc(self):
-        print("[4/8] QC + clustering (leiden)...")
+        print("[4/9] QC + clustering (leiden)...")
         for adata, label in [(self.adata_fincher, "Fincher"), (self.adata_plass, "Plass")]:
             print(f"  {label}: ", end="", flush=True)
             sc.pp.filter_genes(adata, min_cells=3)
@@ -252,7 +276,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def score_atlases(self):
-        print("\n[5/8] Scoring candidates per atlas ...")
+        print("\n[5/9] Scoring candidates per atlas ...")
         print(f"  {len(self.tf_ids)} TF targets")
 
         for atlas, atlas_label in [(self.adata_fincher, "fincher"), (self.adata_plass, "plass")]:
@@ -331,7 +355,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def integrate_king_atlas(self):
-        print("[6/8] King TF Atlas...")
+        print("[6/9] King TF Atlas...")
         if not self.king_atlas_path.exists():
             print("  (missing, skipping)")
             return
@@ -401,11 +425,83 @@ class NeuralTFPipeline:
                 self.atlas_membership.setdefault(gene_id, set()).add("king")
 
     # ------------------------------------------------------------------
+    # Cui 2023 Atlas integration (preprocessed CSV)
+    # ------------------------------------------------------------------
+
+    def integrate_cui_atlas(self):
+        """Integrate Cui 2023 scRNA-seq atlas as 4th evidence source.
+
+        Adds expression and specificity from Cui's 61 cell-type annotations
+        across 8 regeneration timepoints. Reuses existing EvidenceSource
+        enums (EXPRESSION, SPECIFICITY) — best-atlas-wins semantics.
+        """
+        print("[6b/9] Cui 2023 Atlas...")
+        if not self.cui_atlas_path.exists():
+            print(f"  (missing {self.cui_atlas_path}, skipping)")
+            return
+
+        cui = pd.read_csv(self.cui_atlas_path)
+        print(f"  Loaded {len(cui)} genes from Cui atlas")
+
+        # Cui expression scores are already normalized to [0,1] by the
+        # preprocessing script. Neural enrichment/enrichment specificity
+        # are also precomputed.
+        for _, row in cui.iterrows():
+            gene_id = str(row["gene_id"]).strip()
+            if not gene_id or gene_id == "nan":
+                continue
+
+            if gene_id not in self.all_records:
+                self.all_records[gene_id] = EvidenceRecord(gene_id=gene_id)
+
+            rec = self.all_records[gene_id]
+
+            # Expression: best-atlas-wins (same semantics as King)
+            cui_expr = float(row.get("expression_score", 0) or 0)
+            if cui_expr > 0:
+                rec.add_score(
+                    EvidenceSource.EXPRESSION,
+                    max(rec.scores.get(EvidenceSource.EXPRESSION, 0.0), cui_expr),
+                    note=f"cui_fc={row.get('max_fold_change', 0):.2f}",
+                )
+
+            # Specificity: best-atlas-wins
+            cui_spec = float(row.get("specificity_score", 0) or 0)
+            if cui_spec > 0:
+                rec.add_score(
+                    EvidenceSource.SPECIFICITY,
+                    max(rec.scores.get(EvidenceSource.SPECIFICITY, 0.0), cui_spec),
+                    note=f"cui_n_types={row.get('n_expressed_types', 0)}",
+                )
+
+            # Neural enrichment from Cui (independent of King)
+            if row.get("neural_enriched", False):
+                # Only upgrade — never downgrade existing neural signal
+                existing = rec.scores.get(EvidenceSource.NEURAL_ENRICHED, 0.0)
+                if existing < 1.0:
+                    rec.add_score(
+                        EvidenceSource.NEURAL_ENRICHED, 1.0,
+                        note="cui_neural_enriched=True",
+                    )
+
+            # Neural specificity from Cui
+            cui_nspec = float(row.get("neural_specificity_score", 0) or 0)
+            if cui_nspec > 0:
+                existing_nspec = rec.scores.get(EvidenceSource.NEURAL_SPECIFICITY, 0.0)
+                if cui_nspec > existing_nspec:
+                    rec.add_score(
+                        EvidenceSource.NEURAL_SPECIFICITY, cui_nspec,
+                        note=f"cui_n_neural={row.get('n_neural_expressed', 0)}",
+                    )
+
+            self.atlas_membership.setdefault(gene_id, set()).add("cui")
+
+    # ------------------------------------------------------------------
     # RNAi phenotype table (mmc5)
     # ------------------------------------------------------------------
 
     def integrate_rnai(self):
-        print("[7/8] RNAi phenotypes...")
+        print("[8/9] RNAi phenotypes...")
         if self.rnai_table is None:
             print("  (no table, skipping)")
             return
@@ -453,7 +549,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def integrate_correlations(self):
-        print("[8/8] TF pair correlations...")
+        print("[9/9] TF pair correlations...")
         if self.correlations is None or self.correlations.shape[1] < 4:
             print("  No correlations available")
             return
@@ -502,12 +598,13 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def assign_reproducibility(self):
+        n_atlases = 4  # Fincher, Plass, King, Cui
         for gene_id in self.all_records:
             atlases = self.atlas_membership.get(gene_id, set())
-            n = min(len(atlases), 3)
+            n = min(len(atlases), n_atlases)
             self.all_records[gene_id].add_score(
                 EvidenceSource.REPRODUCIBILITY,
-                n / 3.0,
+                n / float(n_atlases),
                 note=f"atlases={sorted(atlases)}",
             )
 
@@ -633,6 +730,7 @@ class NeuralTFPipeline:
         self.run_qc()
         self.score_atlases()
         self.integrate_king_atlas()
+        self.integrate_cui_atlas()
         self.integrate_rnai()
         self.integrate_correlations()
         self.assign_reproducibility()
