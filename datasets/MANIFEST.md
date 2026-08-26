@@ -46,6 +46,23 @@ datasets/
 | Fincher 2018 | [GSE111764](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111764) | SRP135258 | PRJNA438083 |
 | King 2024 | Cell Reports [supplementary](https://www.sciencedirect.com/science/article/pii/S2211124724001712) (mmc4–mmc7) | — | — |
 
+## Data Integrity Checksums (SHA256)
+
+**Verify after download:** `python scripts/verify_data.py`
+
+| File | SHA256 | Size | Source |
+|------|--------|------|--------|
+| `datasets/raw/GSE103633_GEO_Plass_atlas/GSE103633_RAW.tar` | `PENDING` | ~2 GB | GEO GSE103633 |
+| `datasets/raw/GSE111764_GEO_Fincher_atlas/GSE111764_PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz` | `PENDING` | ~500 MB | GEO GSE111764 |
+| `datasets/raw/Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc4.xlsx` | `PENDING` | ~5 MB | Cell Reports supplementary |
+| `datasets/raw/Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc5.xlsx` | `PENDING` | ~1 MB | Cell Reports supplementary |
+| `datasets/raw/Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc6.xlsx` | `PENDING` | ~1 MB | Cell Reports supplementary |
+| `datasets/raw/Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc7.xlsx` | `PENDING` | ~10 MB | Cell Reports supplementary |
+| `datasets/raw/smed_20140614.mapping.rosettastone.2020.txt` | `PENDING` | 67 MB | PLANOSPHERE Rosetta Stone |
+| `datasets/raw/go.obo` | `PENDING` | ~40 MB | Gene Ontology |
+
+> **Note**: Replace `PENDING` with actual SHA256 after downloading. Run `sha256sum <file>` on Linux/macOS or `Get-FileHash -Algorithm SHA256 <file>` on Windows PowerShell.
+
 ## Gene Ontology (go.obo)
 
 Downloaded from the Gene Ontology current release — either the GO mirror at

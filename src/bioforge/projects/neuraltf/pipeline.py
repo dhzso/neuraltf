@@ -17,6 +17,7 @@ import anndata as ad
 import numpy as np
 import pandas as pd
 import scanpy as sc
+from statsmodels.stats.multitest import multipletests
 
 from bioforge.evidence.readers import king as king_reader
 from bioforge.evidence import load_bridge
@@ -30,6 +31,7 @@ DATA_ROOT = Path.cwd()
 
 _RE_DD_ID = re.compile(r"(dd\D*?\d+)")
 _NEURAL_FC_THRESHOLD = 2.0
+_FDR_THRESHOLD = 0.1  # Benjamini-Hochberg q-value threshold
 
 
 class NeuralTFPipeline:
@@ -175,6 +177,21 @@ class NeuralTFPipeline:
         self._enrich_bridge_names()
         print(f"  {len(self.bridge.df)} rows bridged")
 
+        # Mapping quality report
+        try:
+            from bioforge.projects.neuraltf.smapping import mapping_stats
+            stats = mapping_stats()
+            rs = stats["rosetta"]
+            m5 = stats["moesm5"]
+            print("  Mapping QC:")
+            print(f"    Rosetta: {rs['total_smed']} SMED -> {rs['total_v6']} v6 "
+                  f"(1-to-many: SMED={rs['smed_one_to_many']}, v6={rs['v6_one_to_many']})")
+            print(f"    MOESM5: {m5['total_h1smcg']} h1SMcG -> {m5['total_v6_all']} v6 "
+                  f"(h1SMcG->v6 rate: {m5['rate_h1smcg_to_v6']:.2%}, "
+                  f"v6->h1SMcG rate: {m5['rate_v6_to_h1smcg']:.2%})")
+        except Exception as e:
+            print(f"  (Mapping QC skipped: {e})")
+
     def _enrich_bridge_names(self):
         """Backfill empty bridge.gene_name from mmc4 GenBank names.
 
@@ -299,18 +316,32 @@ class NeuralTFPipeline:
         n_clusters = len(adata.obs["leiden"].cat.categories)
         clusters = result["names"].dtype.names
 
-        gene_best: dict[str, tuple[float, float]] = {}
+        # Collect all p-values per gene per cluster for FDR correction
+        all_pvals = []
+        gene_cluster_keys = []
         for cl in clusters:
             for g, lfc, pval in zip(result["names"][cl], result["logfoldchanges"][cl], result["pvals"][cl]):
-                key = str(g)
-                abs_lfc = abs(float(lfc))
-                if key not in gene_best or abs_lfc > abs(gene_best[key][0]):
-                    gene_best[key] = (abs_lfc, float(pval))
+                all_pvals.append(float(pval))
+                gene_cluster_keys.append((str(g), cl))
+
+        # Benjamini-Hochberg FDR correction
+        if all_pvals:
+            _, qvals, _, _ = multipletests(all_pvals, alpha=_FDR_THRESHOLD, method="fdr_bh")
+        else:
+            qvals = []
+
+        # Build gene_best using q-values
+        gene_best: dict[str, tuple[float, float, float]] = {}  # (abs_lfc, pval, qval)
+        for (key, cl), qval in zip(gene_cluster_keys, qvals):
+            abs_lfc = abs(float(result["logfoldchanges"][cl][list(result["names"][cl]).index(key)]))
+            pval = float(result["pvals"][cl][list(result["names"][cl]).index(key)])
+            if key not in gene_best or abs_lfc > abs(gene_best[key][0]):
+                gene_best[key] = (abs_lfc, pval, qval)
 
         for gene in score_genes:
-            best_l2fc, best_p = gene_best.get(gene, (0.0, 1.0))
+            best_l2fc, best_p, best_q = gene_best.get(gene, (0.0, 1.0, 1.0))
 
-            if best_p > 0.05:
+            if best_q > _FDR_THRESHOLD:
                 continue
 
             if atlas_name == "fincher":
@@ -338,7 +369,7 @@ class NeuralTFPipeline:
             rec.add_score(EvidenceSource.EXPRESSION,
                           max(rec.scores.get(EvidenceSource.EXPRESSION, 0.0),
                               min(1.0, best_l2fc / 5.0)),
-                          note=f"log2FC={best_l2fc:.2f},p={best_p:.2g}")
+                          note=f"log2FC={best_l2fc:.2f},p={best_p:.2g},q={best_q:.2g}")
 
             # specificity [ crude = 1/n_clusters ] — best (most specific)
             # atlas wins; per-atlas values accumulate.
@@ -657,6 +688,7 @@ class NeuralTFPipeline:
                 "gene_name": rec.gene_name or "",
                 "integrated_score": scorer.integrated_score(rec),
                 "n_streams": rec.supporting_streams(),
+                "completeness": round(rec.completeness, 3),
                 "proof_status": rec.proof_status or "unknown",
                 "tier": tier_of.get(rec.gene_id, "low"),
             }

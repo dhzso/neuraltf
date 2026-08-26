@@ -142,3 +142,66 @@ def batch_v6_to_h1smcg(v6_ids: list[str]) -> dict[str, str | None]:
             if v not in v6_to_h1:
                 v6_to_h1[v] = h1
     return {v6: v6_to_h1.get(v6) for v6 in v6_ids}
+
+
+def mapping_stats() -> dict:
+    """Return mapping quality statistics for all three maps.
+
+    Returns
+    -------
+    dict with keys:
+        rosetta: {total_smed, total_v6, mapped_smed, mapped_v6, rate_smed_to_v6, rate_v6_to_smed, one_to_many}
+        moesm5: {total_h1smcg, total_v6_rbh, total_v6_all, mapped_h1smcg, mapped_v6, rate_h1smcg_to_v6, rate_v6_to_h1smcg}
+    """
+    rosetta = _load_rosetta()
+    moesm5 = _load_moism5()
+
+    # Rosetta Stone stats
+    total_smed = rosetta["smed_id"].nunique()
+    total_v6 = rosetta["v6_id"].nunique()
+    mapped_smed = total_smed  # all SMED in table map to at least one v6
+    mapped_v6 = total_v6      # all v6 in table map to at least one SMED
+
+    # One-to-many counts
+    smed_to_v6_counts = rosetta.groupby("smed_id")["v6_id"].nunique()
+    v6_to_smed_counts = rosetta.groupby("v6_id")["smed_id"].nunique()
+    smed_one_to_many = (smed_to_v6_counts > 1).sum()
+    v6_one_to_many = (v6_to_smed_counts > 1).sum()
+
+    # MOESM5 stats
+    total_h1smcg = moesm5["h1smcg_id"].nunique()
+    total_v6_rbh = moesm5["v6_rbh"].replace("", pd.NA).dropna().nunique()
+    all_v6 = set()
+    for v6_list in moesm5["v6_all"]:
+        all_v6.update(v6_list)
+    total_v6_all = len(all_v6)
+
+    mapped_h1smcg = moesm5[moesm5["v6_all"].apply(len) > 0]["h1smcg_id"].nunique()
+    mapped_v6_moesm5 = len([v for v in all_v6 if v6_to_h1smcg(v) is not None])
+
+    # One-to-many in MOESM5
+    h1_to_v6_counts = moesm5["v6_all"].apply(len)
+    h1_one_to_many = (h1_to_v6_counts > 1).sum()
+
+    return {
+        "rosetta": {
+            "total_smed": int(total_smed),
+            "total_v6": int(total_v6),
+            "mapped_smed": int(mapped_smed),
+            "mapped_v6": int(mapped_v6),
+            "rate_smed_to_v6": 1.0,
+            "rate_v6_to_smed": 1.0,
+            "smed_one_to_many": int(smed_one_to_many),
+            "v6_one_to_many": int(v6_one_to_many),
+        },
+        "moesm5": {
+            "total_h1smcg": int(total_h1smcg),
+            "total_v6_rbh": int(total_v6_rbh),
+            "total_v6_all": int(total_v6_all),
+            "mapped_h1smcg": int(mapped_h1smcg),
+            "mapped_v6": int(mapped_v6_moesm5),
+            "rate_h1smcg_to_v6": float(mapped_h1smcg / total_h1smcg) if total_h1smcg > 0 else 0.0,
+            "rate_v6_to_h1smcg": float(mapped_v6_moesm5 / total_v6_all) if total_v6_all > 0 else 0.0,
+            "h1_one_to_many": int(h1_one_to_many),
+        },
+    }

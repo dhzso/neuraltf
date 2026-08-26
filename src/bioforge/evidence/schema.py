@@ -79,3 +79,15 @@ class EvidenceRecord:
     def supporting_streams(self) -> int:
         """Number of evidence sources with a non-zero score."""
         return sum(1 for s in self.scores.values() if s > 0.0)
+
+    @property
+    def completeness(self) -> float:
+        """Fraction of 7 evidence streams with any score (zero or non-zero).
+
+        Returns a value in [0, 1] indicating data completeness. A record with
+        all 7 streams populated returns 1.0; one with only 3 streams returns
+        3/7 ≈ 0.43. This metadata does NOT affect the integrated score
+        (which renormalizes over available streams) but allows downstream
+        analysis to weight by completeness if desired.
+        """
+        return len(self.scores) / 7.0

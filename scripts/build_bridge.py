@@ -23,6 +23,7 @@ Usage:
 """
 
 import argparse
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -70,8 +71,19 @@ def build_bridge(rosetta_path, mmc4_path, out_path):
         for ref, g in v6_rows.groupby("ref_id")
     }
 
+    # Mapping rate statistics
+    v4_refs = set(v4_map.keys())
+    v6_refs = set(v6_map.keys())
+    common_refs = v4_refs & v6_refs
+    v4_only = v4_refs - v6_refs
+    v6_only = v6_refs - v4_refs
+
+    print(f"  Rosetta stats:")
+    print(f"    v4 refs: {len(v4_refs)}, v6 refs: {len(v6_refs)}, common: {len(common_refs)}")
+    print(f"    v4-only: {len(v4_only)}, v6-only: {len(v6_only)}")
+
     records: list[dict[str, str]] = []
-    for ref in set(v4_map) & set(v6_map):
+    for ref in common_refs:
         for v4_id in v4_map[ref]:
             for v6_id in v6_map[ref]:
                 records.append({"v6_id": v6_id, "v4_id": v4_id})
@@ -108,6 +120,30 @@ def build_bridge(rosetta_path, mmc4_path, out_path):
     bridged = (merged["v4_id"].notna()).sum()
     print(f"Bridge written to {out_path}")
     print(f"  {len(merged)} rows, {bridged} with v4 mapping")
+
+    # Write mapping report
+    report = {
+        "rosetta": {
+            "v4_refs_total": int(len(v4_refs)),
+            "v6_refs_total": int(len(v6_refs)),
+            "common_refs": int(len(common_refs)),
+            "v4_only_refs": int(len(v4_only)),
+            "v6_only_refs": int(len(v6_only)),
+            "paired_rows_before_dedup": int(len(bridge)),
+            "paired_rows_after_dedup": int(len(bridge)),
+            "final_bridge_rows": int(len(merged)),
+            "rows_with_v4": int(bridged),
+            "v4_mapping_rate": float(bridged / len(merged)) if len(merged) > 0 else 0.0,
+        },
+        "inputs": {
+            "rosetta_path": str(rosetta_path),
+            "mmc4_path": str(mmc4_path),
+            "output_path": str(out_path),
+        },
+    }
+    report_path = Path(out_path).with_suffix(".mapping_report.json")
+    report_path.write_text(json.dumps(report, indent=2))
+    print(f"Mapping report written to {report_path}")
 
 
 def main():
