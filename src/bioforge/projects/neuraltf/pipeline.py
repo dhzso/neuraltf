@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from pathlib import Path
 from typing import Any
 
@@ -288,6 +289,7 @@ class NeuralTFPipeline:
             sc.pp.filter_genes(adata, min_cells=3)
             sc.pp.normalize_total(adata, target_sum=1e4)
             sc.pp.log1p(adata)
+            print("norm+log ", end="", flush=True)
             sc.pp.highly_variable_genes(adata, n_top_genes=5000, batch_key=None)
             tf_in_mask = [v for v in adata.var_names if v in self.tf_ids_norm]
             adata.var.loc[tf_in_mask, "highly_variable"] = True
@@ -295,11 +297,12 @@ class NeuralTFPipeline:
             hvg = adata[:, adata.var.highly_variable].copy()
             sc.pp.pca(hvg, n_comps=50)
             sc.pp.neighbors(hvg, n_neighbors=10, n_pcs=40)
+            print("neighbors ", end="", flush=True)
             sc.tl.leiden(hvg, resolution=0.5)
             adata.obs["leiden"] = hvg.obs["leiden"]
             hvgs = int(adata.var.highly_variable.sum())
             n_cl = adata.obs["leiden"].nunique()
-            print(f"cells={adata.n_obs} HVGs={hvgs} leiden={n_cl}")
+            print(f"leiden={n_cl}")
 
     # ------------------------------------------------------------------
     # Per-atlas scoring (Fincher, Plass)
@@ -310,9 +313,13 @@ class NeuralTFPipeline:
         print(f"  {len(self.tf_ids)} TF targets")
 
         for atlas, atlas_label in [(self.adata_fincher, "fincher"), (self.adata_plass, "plass")]:
-            print(f"  {atlas_label}: ", end="", flush=True)
+            print(f"  {atlas_label}: wilcoxon DE ", end="", flush=True)
+            t0 = time.time()
             sc.tl.rank_genes_groups(atlas, "leiden", method="wilcoxon")
+            print(f"({time.time()-t0:.0f}s) scoring ", end="", flush=True)
+            t0 = time.time()
             self._score_one_atlas(atlas, atlas_label, atlas.uns["rank_genes_groups"])
+            print(f"({time.time()-t0:.0f}s)")
 
         print(f"  Generated records: {len(self.all_records)}")
 
