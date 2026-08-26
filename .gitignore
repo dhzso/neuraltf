@@ -98,6 +98,10 @@ analysis_results.csv
 corrected_comparison.csv
 scores_comparison.csv
 
+# Generated zip archives
+projects/NeuralTF/figures.zip
+projects/NeuralTF/results.zip
+
 # Legacy duplicate
 neuraltf-repo/
 
