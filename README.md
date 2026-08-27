@@ -79,7 +79,7 @@ $$\text{Integrated Score} = \sum_{i \in \text{Present}} w_i \cdot s_i \Bigg/ \su
 
 | # | Stream | Default Weight ($w_i$) | Biological Basis & Computation |
 |---|--------|------------------------|---------------------------------|
-| 1 | **Expression** | **0.200** | $\min(1.0, \max(\text{log}_2\text{FC})/5)$ across Fincher, Plass, and Cui scRNA-seq atlases |
+| 1 | **Expression** | 0.200 | $\min(1.0, \max(\text{log}_2\text{FC})/5)$ across Fincher, Plass, and Cui scRNA-seq atlases |
 | 2 | **Specificity** | 0.100 | $1 / n_{\text{clusters}}$ supporting differential expression |
 | 3 | **Reproducibility** | 0.100 | $n_{\text{atlases supporting}} / 3$ (Fincher, Plass, Cui) |
 | 4 | **RNAi** | 0.100 | Binary indicator (1.0) if functional phenotype observed in King mmc5 screen |
