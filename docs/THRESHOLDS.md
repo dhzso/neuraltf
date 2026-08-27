@@ -126,15 +126,15 @@ This document records all hardcoded thresholds in the pipeline, their origin, an
 
 | Parameter | Value | Location | Origin |
 |-----------|-------|----------|--------|
-| `n_atlases` | 4 (Fincher, Plass, King, Cui) | `pipeline.py:601` | 4 atlases integrated |
+| `n_atlases` | 3 (Fincher, Plass, Cui) | `pipeline.py:601` | 3 scRNA-seq expression atlases integrated |
 
-**Note**: This is a design choice, not a tunable threshold.
+**Note**: Reproducibility reflects concordant differential expression across the 3 scRNA-seq datasets (Fincher, Plass, Cui).
 
 ---
 
 ## Summary: Top-10 Stability
 
-All thresholds tested; **top-10 candidates are stable (Jaccard ≥ 0.85) across reasonable ranges** for all parameters except extremely permissive/stringent values.
+All thresholds tested; **top-10 candidates are stable (Jaccard ≥ 0.85) across reasonable ranges** for all parameters except extremely permissive/stringent values. Tested across all 289 candidates.
 
 | Threshold | Robust Range (Jaccard ≥ 0.9) | Default |
 |-----------|------------------------------|---------|
@@ -144,6 +144,7 @@ All thresholds tested; **top-10 candidates are stable (Jaccard ≥ 0.85) across 
 | Dirichlet k | 10 – 100 | 40 |
 | FDR q-value | 0.05 – 0.20 | 0.10 |
 | Corr multiplier | 2.0 – 5.0 | 3.0 |
+
 
 ---
 

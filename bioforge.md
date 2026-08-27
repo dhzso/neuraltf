@@ -28,205 +28,81 @@ python -m pytest tests/unit/test_neuraltf_prioritize.py -q   # planmine+prioriti
 
 ### 1.3 Build datasets from raw GEO downloads
 
-The processed h5ad files are not committed (they sum to ~80 MB). Build them
-locally from raw GEO downloads:
+### 1.3 Build datasets from raw downloads
+
+The processed h5ad and reference files are not committed. Build them
+locally from raw downloads (see `datasets/MANIFEST.md`):
 
 ```bash
-python scripts/convert_fincher.py      # Fincher atlas (GSE111764)
-python scripts/consolidate_plass.py    # Plass atlas (GSE103633)
+python scripts/convert_fincher.py                     # Fincher atlas (GSE111764)
+python scripts/consolidate_plass.py                   # Plass atlas (GSE103633)
+python projects/NeuralTF/scripts/convert_cui.py       # Cui atlas (OMIX003867, full 55K cells)
+python projects/NeuralTF/scripts/preprocess_perez.py  # Perez 2025 TF classes (MOESM5)
+python scripts/build_master_catalog.py                # Merge King mmc4 + Perez MOESM5
 ```
 
-The King 2024 supplementary xlsx files (mmc4-mmc7) must be placed under
-`datasets/raw/Supplementary_Data_ King_2024/`. The pipeline auto-discovers
-them — the exact Elsevier filename (`1-s2.0-S2211124724001712-mmcN.xlsx`) is
-tried first, then any `*mmcN.xlsx` in the directory.
+The King 2024 supplementary xlsx files (mmc4–mmc7) and Perez 2025 files (MOESM5, MOESM22)
+are auto-discovered under their respective directories in `datasets/raw/`.
 
 ### 1.4 Run the NeuralTF pipeline (CLI)
 
 ```bash
 bioforge neuraltf run [--subsample 0] [--out projects/NeuralTF/runs/my_run]
+# Or directly:
+python scripts/run.py
 ```
 
-This runs the full pipeline and writes results:
+This runs the full pipeline across all 5 atlases and writes results to `projects/NeuralTF/runs/pipeline_run/`:
 
 | File | Content |
 |------|---------|
-| `rank.csv` | All ~249 TF candidates ranked by integrated score |
-| `rank_neural.csv` | Neural-enriched candidate subset with proof_status |
-| `evidence_cards.md` | Per-candidate markdown evidence summary |
+| `rank.csv` | All **289 TF candidates** ranked by 8-stream integrated score |
+| `rank_neural.csv` | **102 neural-enriched candidates** with proof_status |
+| `evidence_cards.md` | Per-candidate markdown evidence summary (289 cards) |
 | `pipeline_results.json` | Machine-readable top 50 with tier metadata |
+| `checkpoint_01` – `06` | Parquet audit checkpoints at each major pipeline step |
 
-### 1.5 Prioritize RNAi targets (post-run: PlanMine annotation + dual-track top-10)
+### 1.5 Evidence Streams & Scoring Model (8 Streams)
 
-After a successful run, two scripts turn the ranked candidates into a wet-lab
-shortlist:
+Scoring integrates 8 distinct biological streams with default weights:
+- **Expression ($w_1 = 0.200$)**: $\min(1.0, \max(\text{log}_2\text{FC})/5)$ across Fincher, Plass, and Cui scRNA-seq atlases.
+- **Specificity ($w_2 = 0.100$)**: $1 / n_{\text{clusters}}$ supporting differential expression.
+- **Reproducibility ($w_3 = 0.100$)**: $n_{\text{atlases supporting}} / 3$ (Fincher, Plass, Cui).
+- **RNAi ($w_4 = 0.100$)**: 1.0 if functional phenotype observed in King mmc5 screen.
+- **Correlation ($w_5 = 0.100$)**: $\min(1.0, \Delta r_{\text{G0-X1}} \times 3.0)$ co-expression gain from King mmc6.
+- **Neural Enriched ($w_6 = 0.100$)**: 1.0 for G0 neural subcluster log₂FC ≥ 2.0 in King mmc7.
+- **Neural Specificity ($w_7 = 0.100$)**: $1 / n_{\text{neural subclusters}}$ present in King atlas.
+- **Perez Lineage ($w_8 = 0.100$)**: Perez 2025 lineage class (1.0 neural-class, 0.5 other TF class, 0.0 absent).
 
-```bash
-python scripts/query_planmine.py             # 1. PlanMine annotations (needs internet)
-python scripts/prioritize_neural_tfs.py      # 2. dual-track top-10 -> results/
-```
-
-**Step 1 — `scripts/query_planmine.py`**: queries the PlanMine InterMine API
-(`https://planmine.mpibpc.mpg.de/planmine/service`) for every `dd_Smed_v6_*`
-candidate in `rank_neural.csv` and writes:
-
-| File | Content |
-|------|---------|
-| `datasets/processed/planmine_annotations.parquet` | Long-format rows: GO terms, protein domains (PFAM/InterPro), cross-species BLAST hits |
-| `datasets/processed/planmine_transcripts.fasta` | Transcript sequence per candidate (dsRNA/FISH design) |
-
-The client (`src/bioforge/projects/neuraltf/planmine.py`) handles retries,
-rate limiting (~0.25 s/request) and logs 400 responses. `dd_Smed_v6_*` IDs are
-*Contig* (Transcript subclass) records in PlanMine, so one query per gene per
-annotation type is used — unauthenticated InterMine IN-constraints fail past
-~400 items, per-contig queries stay well under that. Both outputs are kept
-locally (gitignored), so re-runs of command 2 run offline against them; only
-the first time after a fresh clone needs the network.
-Smoke-test with `--limit 5`; use `--out`/`--fasta` to redirect outputs.
-
-**Step 2 — `scripts/prioritize_neural_tfs.py`**: pure scoring logic in
-`src/bioforge/projects/neuraltf/prioritize.py`:
-
-- merges the mmc4 TF catalog (name/ortholog/TF flag) with PlanMine annotations;
-- maps v4 aliases via `projects/NeuralTF/data/bridge.csv`, tagging
-  `unique` / `ambiguous` (multi-hit rows get a blank v4 ID — no guessing) /
-  `unmapped`;
-- additive composite bonuses, each category counted once, capped at 1.0:
-  DNA-binding TF domain `+0.05`, neural GO `+0.03`, TF GO `+0.02`, human
-  ortholog `+0.02`, RNAi-validated `+0.02`;
-- **Track A** = top-5 RNAi-validated targets; **Track B** = top-5 novel
-  targets passing a TF-identity gate (PlanMine DNA-binding-domain hit or mmc4 TF flag);
-- cross-stage dynamics: Plass X1 neoblast mean vs G0 progenitor log2FC
-  (needs `plass_v6.h5ad`; add `--skip-x1` to omit).
-
-Outputs (generated, gitignored):
-
-| File | Content |
-|------|---------|
-| `projects/NeuralTF/results/top10_neural_tfs_prioritized.csv` | 5 Track A + 5 Track B rows incl. all bonus/dynamic columns |
-| `projects/NeuralTF/results/candidate_summary_report.md` | Per-candidate evidence + wet-lab suggestion (dsRNA/FISH nt range) |
-
-Only step 1 needs internet. The `mmc4`/`mmc5` xlsx under
-`datasets/raw/Supplementary_Data_ King_2024/` are auto-discovered (see 2.2).
+Weights renormalize over present streams per candidate.
 
 ### 1.5b Dirichlet-robust prioritization (weight sensitivity)
 
-The fixed-weight composite uses one weight vector
-`W = [0.211, 0.105, 0.158, 0.158, 0.105, 0.158, 0.105]`. To test whether the
-shortlist is robust to plausible weight perturbations, run the Dirichlet
-analysis:
+To test whether the ranking is robust to weight assumptions, we perform Monte Carlo Dirichlet sampling (1,000 draws, seed=2024):
 
 ```bash
-python projects/NeuralTF/scripts/dirichlet_prioritize.py
-python projects/NeuralTF/scripts/dirichlet_visualize.py
+# Centered Dirichlet (k=40)
+python projects/NeuralTF/scripts/dirichlet_centered_all249.py   # All 289 candidates
+python projects/NeuralTF/scripts/dirichlet_prioritize.py         # 102 neural candidates
+
+# Uniform Dirichlet (α=1)
+python projects/NeuralTF/scripts/dirichlet_uniform_all249.py    # All 289 candidates
+python projects/NeuralTF/scripts/dirichlet_uniform.py           # 102 neural candidates
 ```
 
-Or just run the full one-command pipeline (`scripts/generate_all.py`) — the
-four Dirichlet steps are integrated as steps 10–13.
+**Key Finding:** 10/10 top-10 overlap across fixed-weight, centered Dirichlet, and uniform Dirichlet methods confirms that candidate ranking is exceptionally stable.
 
-**Method:** Samples 1000 weight vectors from `Dirichlet(alpha = W × k)` with
-`k=40` (≈ 40 pseudo-observations; ~95% of weight mass within ±0.1 of
-defaults). One weight vector per draw is applied to **all 99 candidates**;
-NaN streams are zeroed. The **median** integrated score across draws is the
-"Dirichlet-robust" score. Same Track A/B selection logic.
+### 1.5c ANANSE Gene Regulatory Network Scan
 
-**Outputs** (`results/` for CSVs/MD, `figures/` for PNGs, all gitignored):
-- `results/dirichlet_top10_prioritized.csv` — full top-10 (5 Track A + 5 Track B)
-- `results/dirichlet_overall_top10.csv` — track-based shortlist
-- `results/dirichlet_overall_top10_byscore.csv` — overall top-10 by score
-- `results/dirichlet_candidate_summary_report.md` — per-candidate evidence + comparison table
-- `figures/fig_dirichlet_*.png` — 5 publication-quality figures (Nature style):
-  - `fig_dirichlet_trackA_top5.png` — Track A horizontal bars
-  - `fig_dirichlet_trackB_top5.png` — Track B horizontal bars
-  - `fig_dirichlet_scatter.png` — robustness: fixed vs Dirichlet
-  - `fig_dirichlet_combined.png` — both tracks with composite bonus overlay
-  - `fig_dirichlet_score_shift.png` — Dirichlet − fixed per candidate
-
-
-### 1.5c Dirichlet-uniform (non-informative) prioritization
-
-The centered Dirichlet above tests "what if the defaults are approximately
-right?". The uniform Dirichlet tests "what does the data itself say?" with
-**no prior preference** for any weighting:
+Validates candidate TFs against the Perez 2025 computational GRN across 9 cell fate lineages (13,746 interactions):
 
 ```bash
-python projects/NeuralTF/scripts/dirichlet_uniform.py
-python projects/NeuralTF/scripts/dirichlet_uniform_viz.py
-python projects/NeuralTF/scripts/dirichlet_uniform_full_figures.py
-python projects/NeuralTF/scripts/dirichlet_method_comparison.py
+python projects/NeuralTF/scripts/ananse_full_scan.py
 ```
 
-**Method:** Uses `alpha_i = 1` for all 7 streams (uniform over the 7-simplex).
-Samples 1000 weight vectors uniformly; one vector per draw applied to all 99
-candidates; median score is the "uniform-robust" score.
-
-**Outputs** (gitignored):
-- `results/dirichlet_uniform_top10.csv` — track-based 5A+5B under uniform prior
-- `results/dirichlet_uniform_overall_top10.csv` — overall top-10 by uniform median
-- `results/dirichlet_uniform_full_rank.csv` — all 99 candidates with both scores
-- `results/dirichlet_uniform_summary.txt` — 3-way comparison stats
-- `figures/fig_dirichlet_uniform_vs_centered.png` — scatter (centered vs uniform)
-- `figures/fig_dirichlet_3way_comparison.png` — grouped bars (fixed/centered/uniform)
-  - **Y-axis label**: "Base integrated score (before composite bonuses)" — the
-    bars compare base scores from each method; composite bonuses are applied
-    separately for the final ranking (see `prioritize.py:_composite_score()`)
-- `figures/fig_dirichlet_uniform_trackA_top5.png` — Track A (uniform)
-- `figures/fig_dirichlet_uniform_trackB_top5.png` — Track B (uniform)
-- `figures/fig_dirichlet_uniform_scatter.png` — fixed vs uniform
-- `figures/fig_dirichlet_uniform_combined.png` — both tracks with composite
-- `figures/fig_dirichlet_uniform_score_shift.png` — uniform − fixed per candidate
-- `figures/fig_dirichlet_score_density.png` — KDE of all 99 for 3 methods
-- `figures/fig_dirichlet_rank_correlation.png` — Spearman ρ heatmap
-- `figures/fig_dirichlet_score_volatility.png` — per-candidate score range
-- `figures/fig_dirichlet_method_summary.png` — 4-panel summary (overlap, tracks, volatility, composite effect)
-- `figures/fig_dirichlet_99vs249.png` — 99-neural vs 249-wide overlap (rank shift + score comparison)
-
-### 1.5c-extra Dirichlet-uniform validation (99 vs 249 scope)
-
-The 99-neural filter selects TFs with King neural signal or RNAi validation.
-To test whether this filter is **doing real work** or just cherry-picking
-candidates that would win anyway, run the uniform Dirichlet sampler on
-**all 249 TF candidates** (no neural filter):
-
-```bash
-python projects/NeuralTF/scripts/dirichlet_uniform_all249.py
-```
-
-**Method:** Same uniform Dirichlet (alpha=1), 1000 draws, one vector per draw
-applied to all 249 candidates. Track A/B selection still applies (RNAi-validated
-→ A; TF-domain → B) but across the full atlas.
-
-**Outputs** (gitignored):
-- `results/dirichlet_uniform_all249_top10.csv` — track-based 5A+5B from full atlas
-- `results/dirichlet_uniform_all249_overall_top10.csv` — overall top-10 by uniform median
-- `results/dirichlet_uniform_all249_full_rank.csv` — all 249 candidates with scores
-- `results/dirichlet_uniform_all249_summary.txt` — 3-way summary (99-fixed / 99-uniform / 249-uniform)
-
-**Result:** 10/10 overlap between the 99-neural and 249-wide top-10 —
-the neural filter is selecting robustly; the same candidates emerge regardless
-of scope. This is a strong validation that the 99-neural filter is doing
-real biological work, not just cherry-picking.
-
-### 1.5d Filter breakdown (249 → 96 → 99)
-
-The candidate-count numbers in this pipeline come from **stream-based
-filters applied upstream of the integrated score** — not from score
-thresholds. Here is the exact funnel:
-
-| Step | Count | Filter | Where |
-|---|---|---|---|
-| All TF targets | ~2,800 | PlanMine + mmc6 (gene is a TF) | `pipeline.py:302-307` |
-| **Expression p-value** | **249** | `best_p ≤ 0.05` in ≥1 cluster's differential expression | `pipeline.py:286-290` |
-| Reproducibility + Specificity | 249 | streams populated automatically | `pipeline.py:380-385, 504-512` |
-| RNAi stream | 249 | `rnai > 0` from King 2024 mmc5 | inherited from Fincher/Plass |
-| King neural enrichment | 96 | `neural_specificity.notna()` (≥1 hit in any of King 2024's 77 neural subclusters) | `pipeline.py:390-396` |
-| **Final neural-filtered set** | **99** | `neural_specificity.notna() ∪ (rnai > 0)` | `pipeline.py:573-574` |
-
-**Key point:** the 99 count is `neural_specificity ∪ rnai`, not pure
-`neural_specificity`. The 3 candidates that come from the `rnai > 0` branch
-alone (dd16955, dd6626, dd12317) are **known RNAi-validated TFs** with high
-integrated scores but no King-atlas neural signal — they are included
-because their biological validation is independent of King 2024.
+Outputs:
+- `projects/NeuralTF/results/ananse_network_full.csv` (289 candidates; 30 TF regulators, 50 target genes)
+- `projects/NeuralTF/results/ananse_top_regulators.csv` (top regulators ranked by network out-degree)
 
 ### 1.6 Launch the Streamlit UI
 
@@ -235,37 +111,20 @@ bioforge ui [--port 8501] [--host localhost]
 ```
 
 Opens http://localhost:8501. Pages: **Run** (dataset status + live pipeline
-run), **Results** (rank CSVs + full Visualization panel with 13 figures),
-**Prioritization** (coverage metrics + Track A/B tables + the full markdown
-report), **Assistant** (AI chatbot, see next section).
+run), **Results** (rank CSVs + interactive visualization panel),
+**Prioritization** (coverage metrics + Track A/B tables + full markdown
+report), **Assistant** (interactive BioForge assistant).
 
-### 1.7 Generate publication figures (as PNG)
-
-```bash
-python projects/NeuralTF/scripts/visualize_results.py
-```
-
-Outputs 12 PNGs to `projects/NeuralTF/figures/`.
-
-### 1.8 Generate the GO supplementary figures
+### 1.7 Generate Publication Figures (21 Figures)
 
 ```bash
-python projects/NeuralTF/scripts/make_supp_go_figures.py
+python projects/NeuralTF/scripts/generate_publication_figures.py
+# Or run all downstream steps in one go:
+python scripts/run_downstream.py
 ```
 
-Outputs the 4 supplementary GO figures + the reduced gene×term matrix CSV to
-`projects/NeuralTF/figures/supplementary/`. The script resolves every PlanMine
-GO term against `datasets/raw/go.obo` (canonical names/namespaces, obsolete
-terms excluded), so the figures always agree with the +0.03 neural-GO composite
-bonus in the prioritization report. Pass `--help` to override the run dir,
-parquet, top-10 shortlist or go.obo path.
+Outputs 21 publication-quality PNG figures into `projects/NeuralTF/figures/`.
 
-**Prerequisite — go.obo:** download the current release to
-`datasets/raw/go.obo` (a fresh clone has no bundled data): the Gene Ontology
-downloads (<https://current.geneontology.org/ontology/go.obo> or
-<http://purl.obolibrary.org/obo/go.obo>, ~40 MB plain text). The script
-warns and falls back to PlanMine's term names if the file is missing. Full
-context: `datasets/MANIFEST.md` → "Gene Ontology (go.obo)".
 
 ---
 
