@@ -14,13 +14,13 @@ def build():
 
     fig, ax = plt.subplots(figsize=(7, 4.5))
     bins = np.linspace(0, max(a.max(),n.max())*1.02, 35)
-    ax.hist(a, bins=bins, density=True, alpha=0.5, color=C_ALL, edgecolor="white", lw=0.3, label=f"All 249 (n={len(a)})")
-    ax.hist(n, bins=bins, density=True, alpha=0.6, color=C_CENTERED, edgecolor="white", lw=0.3, label=f"Neural 99 (n={len(n)})")
+    ax.hist(a, bins=bins, density=True, alpha=0.5, color=C_ALL, edgecolor="white", lw=0.3, label=f"All candidates (n={len(a)})")
+    ax.hist(n, bins=bins, density=True, alpha=0.6, color=C_CENTERED, edgecolor="white", lw=0.3, label=f"Neural-enriched (n={len(n)})")
 
     # KDE overlay
     from scipy.stats import gaussian_kde
     x_grid = np.linspace(bins[0], bins[-1], 200)
-    for vals, c, lbl in [(a, C_ALL, "All 249 KDE"), (n, C_CENTERED, "Neural 99 KDE")]:
+    for vals, c, lbl in [(a, C_ALL, f"All candidates KDE (n={len(a)})"), (n, C_CENTERED, f"Neural KDE (n={len(n)})")]:
         kde = gaussian_kde(vals)
         ax.plot(x_grid, kde(x_grid), color=c, lw=1.2, label=lbl)
 
@@ -29,7 +29,8 @@ def build():
             fontsize=8, ha="right", va="top", bbox=dict(boxstyle="round,pad=0.3", fc="white", alpha=0.8))
     ax.set_xlabel("Integrated evidence score"); ax.set_ylabel("Relative frequency of candidates")
     ax.set_title("Neural filtering enriches for higher-scoring candidates\n"
-                 "(99 neural vs 249 full; KS test shown)", fontweight="bold", pad=8)
+                 "(Neural-enriched vs All candidates; KS test shown)", fontweight="bold", pad=8)
+
     ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(); save(fig, "03_score_distribution_249_vs_99")
 

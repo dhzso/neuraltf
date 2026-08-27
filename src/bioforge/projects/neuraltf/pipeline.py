@@ -295,6 +295,7 @@ class NeuralTFPipeline:
             atlases.append((self.adata_cui, "Cui"))
         for adata, label in atlases:
             print(f"  {label}: ", end="", flush=True)
+            sc.pp.filter_cells(adata, min_counts=1)
             sc.pp.filter_genes(adata, min_cells=3)
             sc.pp.normalize_total(adata, target_sum=1e4)
             sc.pp.log1p(adata)
@@ -314,7 +315,7 @@ class NeuralTFPipeline:
             print(f"leiden={n_cl}")
 
     # ------------------------------------------------------------------
-    # Per-atlas scoring (Fincher, Plass)
+    # Per-atlas scoring (Fincher, Plass, Cui)
     # ------------------------------------------------------------------
 
     def score_atlases(self):
@@ -327,11 +328,16 @@ class NeuralTFPipeline:
         for atlas, atlas_label in atlases:
             print(f"  {atlas_label}: wilcoxon DE ", end="", flush=True)
             t0 = time.time()
-            sc.tl.rank_genes_groups(atlas, "leiden", method="wilcoxon")
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=pd.errors.PerformanceWarning)
+                warnings.simplefilter("ignore", category=FutureWarning)
+                sc.tl.rank_genes_groups(atlas, "leiden", method="wilcoxon")
             print(f"({time.time()-t0:.0f}s) scoring ", end="", flush=True)
             t0 = time.time()
             self._score_one_atlas(atlas, atlas_label, atlas.uns["rank_genes_groups"])
             print(f"({time.time()-t0:.0f}s)")
+
 
         print(f"  Generated records: {len(self.all_records)}")
 

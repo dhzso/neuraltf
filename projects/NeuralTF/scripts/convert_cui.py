@@ -150,14 +150,9 @@ def build(subsample_n: int | None = None, seed: int = 42) -> int:
         "expected >1000 after v6 mapping"
     )
 
-    # ---------- Normalize and log-transform (save raw first) ------------------
-    print("  Storing raw counts layer ...")
-    new_adata.layers["raw_counts"] = new_adata.X.copy()
+    # ---------- Preserve raw integer counts in X ------------------------------
+    print("  Preserving raw counts matrix in adata.X (pipeline will normalize) ...")
 
-    print("  Normalizing (target_sum=1e4) and log1p ...")
-    import scanpy as sc
-    sc.pp.normalize_total(new_adata, target_sum=1e4)
-    sc.pp.log1p(new_adata)
 
     # ---------- Write output --------------------------------------------------
     OUT.parent.mkdir(parents=True, exist_ok=True)

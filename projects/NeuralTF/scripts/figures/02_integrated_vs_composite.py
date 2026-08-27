@@ -19,8 +19,9 @@ def build():
 
     ax.set_xlabel("Integrated evidence score")
     ax.set_ylabel("Number of TF candidates")
-    ax.set_title(f"Integrated scores are right-skewed across 249 TFs (median = {med:.3f})",
+    ax.set_title(f"Integrated scores distribution across TF candidates (n={len(scores)}, median = {med:.3f})",
                  fontweight="bold", pad=8)
+
     ax.legend(frameon=False, fontsize=7)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(); save(fig, "02_integrated_vs_composite")

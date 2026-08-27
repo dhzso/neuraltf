@@ -32,11 +32,12 @@ def build():
     rho, p = spearmanr(merged["r99"], merged["r249"])
     ax.text(0.95, 0.05, f"Spearman rho = {rho:.3f}\np = {p:.1e}", transform=ax.transAxes,
             fontsize=8, ha="right", va="bottom", bbox=dict(boxstyle="round",fc="white",alpha=0.8))
-    ax.set_xlabel("Rank (99 neural-filtered candidates, uniform Dirichlet)")
-    ax.set_ylabel("Rank (249 full universe, uniform Dirichlet)")
-    ax.set_title(f"Neural-filtered rankings largely recover full-universe rankings (rho = {rho:.2f})",
+    ax.set_xlabel(f"Rank ({len(u99)} neural candidates, uniform Dirichlet)")
+    ax.set_ylabel(f"Rank ({len(u249)} full candidates, uniform Dirichlet)")
+    ax.set_title(f"Neural-filtered rankings recover full-universe rankings (rho = {rho:.2f})",
                  fontweight="bold", pad=8)
     ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+
     fig.tight_layout(); save(fig, "14_uniform_99vs249_rankrank")
 
 if __name__=="__main__": build()

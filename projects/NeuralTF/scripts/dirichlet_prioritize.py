@@ -231,13 +231,15 @@ def compute_x1_dynamics(plass_path: Path, genes: list[str],
         gene_loc[g] = slot_of.get(num)
 
     wi = slot_of.get("11973")  # smedwi-1
+    sc.pp.filter_cells(adata, min_counts=1)
     sc.pp.normalize_total(adata, target_sum=1e4, inplace=True)
     sc.pp.log1p(adata)
     sc.pp.highly_variable_genes(adata, n_top_genes=2000, flavor="seurat",
                                 inplace=True)
-    sc.pp.pca(adata, n_comps=50, use_highly_variable=True)
+    sc.pp.pca(adata, n_comps=50, mask_var="highly_variable")
     sc.pp.neighbors(adata, n_neighbors=15, n_pcs=30)
     sc.tl.leiden(adata, resolution=0.5, flavor="igraph")
+
 
     groups = pd.Series(adata.obs["leiden"].astype(str), index=adata.obs.index)
     smedwi = np.zeros(adata.n_obs)

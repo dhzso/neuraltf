@@ -18,14 +18,15 @@ def pca(adata: AnnData, n_comps: int = 50, use_hvg: bool = True) -> AnnData:
     When ``use_hvg=True``, only ``var['highly_variable']==True`` genes are
     used; requires normalize module has flagged HVGs.
     """
-    use_highly_variable = bool(use_hvg and "highly_variable" in adata.var)
+    mask_var = "highly_variable" if (use_hvg and "highly_variable" in adata.var) else None
     sc.pp.pca(
         adata,
         n_comps=n_comps,
-        use_highly_variable=use_highly_variable,
+        mask_var=mask_var,
     )
-    logger.info("PCA computed: n_comps=%d use_hvg=%s", n_comps, use_highly_variable)
+    logger.info("PCA computed: n_comps=%d mask_var=%s", n_comps, mask_var)
     return adata
+
 
 
 def neighbors(
