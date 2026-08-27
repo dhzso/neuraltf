@@ -8,11 +8,13 @@ python scripts/generate_all.py            # everything, incl. PlanMine (network)
 python scripts/generate_all.py --skip-planmine   # offline use
 ```
 
-The generated outputs live in `datasets/processed/` (fincher/plass h5ads,
+The generated outputs live in `datasets/processed/` (fincher/plass/cui h5ads,
 PlanMine parquet + fasta), `projects/NeuralTF/data/` (bridge.csv,
-king_atlas.tsv), `projects/NeuralTF/results/` (top10 shortlist, report),
-`projects/NeuralTF/figures/` (12 main + 4 GO supplementary figures) and
-`projects/NeuralTF/runs/pipeline_run/` (rank tables).
+king_atlas.tsv, master_tf_catalog.csv), `projects/NeuralTF/results/`
+(Dirichlet CSVs, ANANSE network, supplementary tables S1–S5),
+`projects/NeuralTF/figures/` (21 publication figures) and
+`projects/NeuralTF/runs/pipeline_run/` (rank.csv, rank_neural.csv,
+evidence_cards.md, 6 checkpoint parquets).
 
 ## Layout (download these to `datasets/raw/`)
 
@@ -74,7 +76,7 @@ datasets/
 
 > **Note**: Replace `PENDING` with actual SHA256 after downloading. Run `sha256sum <file>` on Linux/macOS or `Get-FileHash -Algorithm SHA256 <file>` on Windows PowerShell.
 > 
-> **NOTE**: The pipeline now integrates **four** atlases (Fincher, Plass, King, Cui). The reproducibility score reflects `|atlases|/4`. Older runs used `/3` and will show a slight shift in scores after a fresh run.
+> **NOTE**: The pipeline now integrates **five** atlases (Fincher, Plass, Cui, King, Perez). The 8th evidence stream (`perez_lineage`) scores TF family classification from Perez 2025. Scoring weights: expression=0.200, all 7 others=0.100. Older runs used a 7-stream schema and will show score shifts after a fresh run.
 
 ## Gene Ontology (go.obo)
 
