@@ -32,12 +32,26 @@ C_A, C_B = "#0072B2", "#E69F00"
 C_FIXED, C_CENTERED, C_UNIFORM = "#333333", "#56B4E9", "#CC79A7"
 C_NEURAL, C_ALL = "#999999", "#DDDDDD"
 C_HL = "#D55E00"
-STREAM_COLS = ["expression","specificity","reproducibility","rnai","correlation","neural_enriched","neural_specificity"]
-STREAM_C = {"expression":"#0072B2","specificity":"#E69F00","reproducibility":"#009E73",
-            "rnai":"#D55E00","correlation":"#CC79A7","neural_enriched":"#56B4E9","neural_specificity":"#F0E442"}
-STREAM_L = {"expression":"Expression","specificity":"Specificity","reproducibility":"Reproducibility",
-            "rnai":"RNAi","correlation":"Correlation","neural_enriched":"Neural enriched","neural_specificity":"Neural specificity"}
-W = np.array([0.211,0.105,0.158,0.158,0.105,0.158,0.105])
+STREAM_COLS = ["expression","specificity","reproducibility","rnai",
+               "correlation","neural_enriched","neural_specificity","perez_lineage"]
+STREAM_C = {"expression":   "#0072B2",
+            "specificity":  "#E69F00",
+            "reproducibility": "#009E73",
+            "rnai":         "#D55E00",
+            "correlation":  "#CC79A7",
+            "neural_enriched": "#56B4E9",
+            "neural_specificity": "#F0E442",
+            "perez_lineage": "#999933"}   # olive — Perez 2025 lineage evidence
+STREAM_L = {"expression":   "Expression",
+            "specificity":  "Specificity",
+            "reproducibility": "Reproducibility",
+            "rnai":         "RNAi",
+            "correlation":  "Correlation",
+            "neural_enriched": "Neural enriched",
+            "neural_specificity": "Neural specificity",
+            "perez_lineage": "Perez lineage"}
+# expression=0.2, all 7 others=0.1 (matches EvidenceScorer DEFAULT_WEIGHTS)
+W = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
 
 def _nid(df):
     if "gene_id_v6" in df.columns and "gene_id" not in df.columns:
@@ -70,6 +84,9 @@ def load_unif249():
 
 def load_centered99():
     return _nid(_csv(RES/"dirichlet_centered_full_rank.csv"))
+
+def load_centered249():
+    return _nid(_csv(RES/"dirichlet_centered_all249_full_rank.csv"))
 
 def load_sens_draws():
     return _csv(FIG/"weight_sensitivity_draws.csv")

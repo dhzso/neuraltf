@@ -20,13 +20,18 @@ logger = get_logger("evidence.scoring")
 
 
 DEFAULT_WEIGHTS: dict[EvidenceSource, float] = {
-    EvidenceSource.EXPRESSION: 0.211,
-    EvidenceSource.SPECIFICITY: 0.105,
-    EvidenceSource.REPRODUCIBILITY: 0.158,
-    EvidenceSource.RNai: 0.158,
-    EvidenceSource.CORRELATION: 0.105,
-    EvidenceSource.NEURAL_ENRICHED: 0.158,
-    EvidenceSource.NEURAL_SPECIFICITY: 0.105,
+    # Expression is weighted at 0.2 (highest priority — direct evidence).
+    # All other 7 streams are equal at 0.1 each.
+    # The EvidenceScorer always renormalizes over *present* streams, so
+    # these proportions are what matters, not that they sum to exactly 1.0.
+    EvidenceSource.EXPRESSION:          0.200,
+    EvidenceSource.SPECIFICITY:         0.100,
+    EvidenceSource.REPRODUCIBILITY:     0.100,
+    EvidenceSource.RNai:                0.100,
+    EvidenceSource.CORRELATION:         0.100,
+    EvidenceSource.NEURAL_ENRICHED:     0.100,
+    EvidenceSource.NEURAL_SPECIFICITY:  0.100,
+    EvidenceSource.PEREZ_LINEAGE:       0.100,   # Perez 2025 TF lineage evidence
 }
 
 

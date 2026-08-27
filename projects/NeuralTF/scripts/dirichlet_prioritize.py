@@ -64,8 +64,9 @@ KING_DIR = REPO / "datasets" / "raw" / "Supplementary_Data_ King_2024"
 # Constants (same as dirichlet_rank_analysis.py)
 # ---------------------------------------------------------------------------
 STREAMS = ["expression", "specificity", "reproducibility", "rnai",
-           "correlation", "neural_enriched", "neural_specificity"]
-W_DEFAULT = np.array([0.211, 0.105, 0.158, 0.158, 0.105, 0.158, 0.105])
+           "correlation", "neural_enriched", "neural_specificity", "perez_lineage"]
+# W_DEFAULT: expression=0.2, all 7 others=0.1 each (renormalized per candidate)
+W_DEFAULT = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
 
 N_DRAWS = 1000
 K_DIR   = 40.0

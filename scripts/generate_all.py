@@ -53,8 +53,11 @@ def _ready(root: Path, step: str) -> str | None:
                 for p in raw.rglob("*")) if raw.exists() else False,
             "GSE103633_RAW.tar missing (README 'Datasets' -> Plass)"),
         "Cui atlas": (
-            any((raw / "OMIX*Cui*").rglob("*.h5ad")) if raw.exists() else False,
-            "Cui 2023 h5ad missing (OMIX003867)"),
+            (raw / "OMIX003867_OMIX_Cui_atlas" / "OMIX003867-01"
+             / "singlecell_h5ad" / "adata_scRNA_Annotated.h5ad").exists(),
+            "Cui 2023 h5ad missing (OMIX003867): expected at "
+            "datasets/raw/OMIX003867_OMIX_Cui_atlas/OMIX003867-01/"
+            "singlecell_h5ad/adata_scRNA_Annotated.h5ad"),
         "Perez TF summary": (
             any((raw / "Supplementary_Data_ Perez_2025").glob("*MOESM5*.xlsx"))
             if (raw / "Supplementary_Data_ Perez_2025").exists() else False,
@@ -139,12 +142,21 @@ def _ready(root: Path, step: str) -> str | None:
         "Weight sensitivity analysis": (
             (run / "rank_neural.csv").exists(),
             "rank_neural.csv missing (run the pipeline first)"),
-        "Validate with Perez ANANSE": (
-            (root / "projects" / "NeuralTF" / "results"
-             / "top10_neural_tfs_prioritized.csv").exists()
+        "Master TF Catalog": (
+            any(king.glob("*mmc4*.xlsx")) if king.exists() else False
+            and (proc.parent.parent / "projects" / "NeuralTF" / "data"
+                 / "perez_tf_summary.csv").exists(),
+            "King mmc4 or perez_tf_summary.csv missing "
+            "(run preprocess_perez.py first)"),
+        "Dirichlet-centered-all249": (
+            (run / "rank.csv").exists()
+            and (run / "rank_neural.csv").exists(),
+            "rank.csv / rank_neural.csv missing (run the pipeline first)"),
+        "ANANSE full scan": (
+            (run / "rank.csv").exists()
             and (root / "datasets" / "raw" / "Supplementary_Data_ Perez_2025"
                  / "41467_2025_65712_MOESM22_ESM.xlsx").exists(),
-            "prioritized top10 or Perez MOESM22 missing"),
+            "rank.csv or Perez MOESM22 missing"),
     }
     ok, why = rules[step]
     return None if ok else why
@@ -159,6 +171,8 @@ STEPS = [
      [["datasets", "processed", "cui_v6.h5ad"]]),
     ("Perez TF summary", ["projects/NeuralTF/scripts/preprocess_perez.py"], [],
      [["projects", "NeuralTF", "data", "perez_tf_summary.csv"]]),
+    ("Master TF Catalog", ["scripts", "build_master_catalog.py"], [],
+     [["projects", "NeuralTF", "data", "master_tf_catalog.csv"]]),
     ("Bridge CSV", ["scripts", "build_bridge.py"], [],
      [["projects", "NeuralTF", "data", "bridge.csv"]]),
     ("King atlas TSV", ["scripts", "build_king_atlas.py"], [],
@@ -196,11 +210,21 @@ STEPS = [
       ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_overall_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_full_rank.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_summary.txt"]]),
+    ("Dirichlet-centered-all249",
+     ["projects/NeuralTF/scripts/dirichlet_centered_all249.py"], [],
+     [["projects", "NeuralTF", "results", "dirichlet_centered_all249_full_rank.csv"],
+      ["projects", "NeuralTF", "results", "dirichlet_centered_all249_top10.csv"],
+      ["projects", "NeuralTF", "results", "dirichlet_centered_all249_overall_top10.csv"],
+      ["projects", "NeuralTF", "results", "dirichlet_centered_all249_summary.txt"]]),
     ("Export ranked FSTF",
      ["projects/NeuralTF/scripts/export_fstf_ranked.py"], [],
      [["projects", "NeuralTF", "results", "fstf_ranked_19_neural.csv"],
       ["projects", "NeuralTF", "results", "fstf_ranked_43_all.csv"],
       ["projects", "NeuralTF", "results", "fstf_ranked_74_catalog.csv"]]),
+    ("ANANSE full scan",
+     ["projects/NeuralTF/scripts/ananse_full_scan.py"], [],
+     [["projects", "NeuralTF", "results", "ananse_network_full.csv"],
+      ["projects", "NeuralTF", "results", "ananse_top_regulators.csv"]]),
     ("Generate supplementary tables",
      ["projects/NeuralTF/scripts/create_supplementary_tables.py"], [],
      [["projects", "NeuralTF", "results", "supplementary_table_S1_method_comparison.csv"],
@@ -238,9 +262,6 @@ STEPS = [
       ["projects", "NeuralTF", "figures", "19_method_consensus.png"],
       ["projects", "NeuralTF", "figures", "20_stream_correlation.png"],
       ["projects", "NeuralTF", "figures", "21_centered_vs_uniform_scatter.png"]]),
-    ("Validate with Perez ANANSE",
-     ["projects/NeuralTF/scripts/validate_with_perez.py"], [],
-     []),  # validation script, no persistent outputs
 ]
 
 

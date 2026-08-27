@@ -500,8 +500,56 @@ class NeuralTFPipeline:
                 self.atlas_membership.setdefault(gene_id, set()).add("king")
 
     # ------------------------------------------------------------------
-    # Cui 2023 Atlas integration (preprocessed CSV)
+    # Perez 2025 TF lineage classification (EvidenceSource.PEREZ_LINEAGE)
     # ------------------------------------------------------------------
+
+    # Neural-relevant TF families from Perez 2025 classification.
+    # Score = 1.0 if TF class is neural-relevant, 0.5 if any TF class, 0.0 absent.
+    _PEREZ_NEURAL_CLASSES: frozenset[str] = frozenset({
+        "bhlh", "homeobox", "homeodomain", "pou", "c2h2 znf", "c2h2",
+        "zinc finger", "lhx", "pax", "nk", "sox", "fox", "otx", "prox",
+        "atonal", "neurogenin", "otp", "emx", "dlx",
+    })
+
+    def integrate_perez(self) -> None:
+        """Score all records using Perez 2025 TF lineage classification.
+
+        Adds EvidenceSource.PEREZ_LINEAGE to every record:
+          - 1.0  : TF class maps to a known neural-relevant family (bHLH, Homeobox, POU, etc.)
+          - 0.5  : Gene has a TF class in Perez but not neural-specific
+          - 0.0  : Gene absent from Perez MOESM5 or no TF class recorded
+        """
+        print("[integrate_perez] Perez 2025 lineage scoring...")
+        if not self.perez_tf_class:
+            print("  (Perez TF classification empty, skipping)")
+            return
+
+        matched_neural = 0
+        matched_other = 0
+        unmatched = 0
+
+        for v6_id, rec in self.all_records.items():
+            cls = self.perez_tf_class.get(v6_id, "")
+            if not cls:
+                # Also try without the _1 suffix variant
+                cls = self.perez_tf_class.get(v6_id.rstrip("_1"), "")
+            if not cls:
+                rec.add_score(EvidenceSource.PEREZ_LINEAGE, 0.0,
+                              note="absent_from_perez")
+                unmatched += 1
+                continue
+            cls_lower = cls.lower()
+            is_neural = any(nf in cls_lower for nf in self._PEREZ_NEURAL_CLASSES)
+            score = 1.0 if is_neural else 0.5
+            rec.add_score(EvidenceSource.PEREZ_LINEAGE, score,
+                          note=f"perez_class={cls}")
+            if is_neural:
+                matched_neural += 1
+            else:
+                matched_other += 1
+
+        print(f"  Perez scores: {matched_neural} neural-class, "
+              f"{matched_other} other-class, {unmatched} absent")
 
     # ------------------------------------------------------------------
     # RNAi phenotype table (mmc5)
@@ -735,16 +783,114 @@ class NeuralTFPipeline:
     # Main entry
     # ------------------------------------------------------------------
 
+    # ------------------------------------------------------------------
+    # Checkpointing helpers
+    # ------------------------------------------------------------------
+
+    def _write_checkpoint(self, name: str, df: pd.DataFrame) -> None:
+        """Write a pipeline checkpoint file for post-run auditability.
+
+        Parquet is preferred (preserves dtypes). Falls back to CSV if pyarrow
+        is not available. Files are written to ``self.out_dir``.
+        """
+        self.out_dir.mkdir(parents=True, exist_ok=True)
+        parquet_path = self.out_dir / f"{name}.parquet"
+        csv_path = self.out_dir / f"{name}.csv"
+        try:
+            df.to_parquet(parquet_path, index=False)
+            print(f"  [checkpoint] {parquet_path.name} ({len(df)} rows)")
+        except Exception:
+            df.to_csv(csv_path, index=False)
+            print(f"  [checkpoint] {csv_path.name} ({len(df)} rows)")
+
+    def _checkpoint_atlas_loads(self) -> None:
+        rows = []
+        for label, adata in [
+            ("fincher", self.adata_fincher),
+            ("plass", self.adata_plass),
+            ("cui", self.adata_cui),
+        ]:
+            if adata is not None:
+                rows.append({
+                    "atlas": label,
+                    "n_cells": adata.n_obs,
+                    "n_genes": adata.n_vars,
+                    "has_leiden": "leiden" in adata.obs.columns,
+                })
+        self._write_checkpoint("checkpoint_01_atlas_loads", pd.DataFrame(rows))
+
+    def _checkpoint_post_qc(self) -> None:
+        rows = []
+        for label, adata in [
+            ("fincher", self.adata_fincher),
+            ("plass", self.adata_plass),
+            ("cui", self.adata_cui),
+        ]:
+            if adata is not None:
+                n_hvg = int(adata.var.get("highly_variable", pd.Series()).sum()) \
+                    if "highly_variable" in adata.var.columns else 0
+                rows.append({
+                    "atlas": label,
+                    "n_cells_post_qc": adata.n_obs,
+                    "n_genes_post_qc": adata.n_vars,
+                    "n_hvg": n_hvg,
+                    "n_leiden_clusters": adata.obs["leiden"].nunique()
+                    if "leiden" in adata.obs.columns else 0,
+                })
+        self._write_checkpoint("checkpoint_02_post_qc", pd.DataFrame(rows))
+
+    def _checkpoint_king_records(self) -> None:
+        rows = [{"v6_id": gid, "n_streams": rec.supporting_streams(),
+                 "has_neural_enriched": EvidenceSource.NEURAL_ENRICHED in rec.scores}
+                for gid, rec in self.all_records.items()]
+        self._write_checkpoint("checkpoint_04_king_records", pd.DataFrame(rows))
+
+    def _checkpoint_perez_records(self) -> None:
+        rows = [{"v6_id": gid,
+                 "perez_score": rec.scores.get(EvidenceSource.PEREZ_LINEAGE, float("nan")),
+                 "perez_note": rec.notes.get(EvidenceSource.PEREZ_LINEAGE, "")}
+                for gid, rec in self.all_records.items()]
+        self._write_checkpoint("checkpoint_05_perez_records", pd.DataFrame(rows))
+
+    def _checkpoint_stream_matrix(self) -> None:
+        rows = []
+        for gid, rec in self.all_records.items():
+            row: dict = {"v6_id": gid, "gene_name": rec.gene_name or ""}
+            for src in EvidenceSource:
+                row[src.value] = rec.scores.get(src, float("nan"))
+            rows.append(row)
+        self._write_checkpoint("checkpoint_06_stream_matrix", pd.DataFrame(rows))
+
+    # ------------------------------------------------------------------
+    # Main entry
+    # ------------------------------------------------------------------
+
+    def _checkpoint_post_scoring(self) -> None:
+        """Checkpoint 03: records seeded from atlas DE after score_atlases()."""
+        rows = [{"v6_id": gid, "n_streams_so_far": rec.supporting_streams(),
+                 "has_expression": EvidenceSource.EXPRESSION in rec.scores,
+                 "has_specificity": EvidenceSource.SPECIFICITY in rec.scores}
+                for gid, rec in self.all_records.items()]
+        self._write_checkpoint("checkpoint_03_post_scoring", pd.DataFrame(rows))
+
     def run(self):
         self.load_datasets()
+        self._checkpoint_atlas_loads()          # checkpoint 01
         self.load_reference_tables()
         self.run_qc()
+        self._checkpoint_post_qc()              # checkpoint 02
         self.score_atlases()
+        self._checkpoint_post_scoring()         # checkpoint 03
         self.integrate_king_atlas()
+        self._checkpoint_king_records()         # checkpoint 04
+        self.integrate_perez()
+        self._checkpoint_perez_records()        # checkpoint 05
         self.integrate_rnai()
         self.integrate_correlations()
         self.assign_reproducibility()
+        self._checkpoint_stream_matrix()        # checkpoint 06
         self.write_outputs()
+
 
 
 def main():

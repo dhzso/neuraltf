@@ -30,6 +30,7 @@ class EvidenceSource(str, Enum):
     CORRELATION = "correlation"
     NEURAL_ENRICHED = "neural_enriched"
     NEURAL_SPECIFICITY = "neural_specificity"
+    PEREZ_LINEAGE = "perez_lineage"   # Perez 2025 lineage subcluster TF classification
 
 
 class ConfidenceTier(str, Enum):

@@ -64,8 +64,8 @@ from bioforge.projects.neuraltf.prioritize import attach_v4
 # Uniform (non-informative) prior — all streams equal
 ALPHA_UNIFORM = np.ones(len(STREAMS), dtype=float)
 
-# Default weights (for comparison only — NOT used in scoring)
-W_DEFAULT = np.array([0.211, 0.105, 0.158, 0.158, 0.105, 0.158, 0.105])
+# Default weights (expression=0.2, all others=0.1)
+W_DEFAULT = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
 
 
 # ---------------------------------------------------------------------------
