@@ -81,7 +81,7 @@ $$\text{Integrated Score} = \sum_{i \in \text{Present}} w_i \cdot s_i \Bigg/ \su
 |---|--------|------------------------|---------------------------------|
 | 1 | **Expression** | 0.200 | $\min(1.0, \max(\text{log}_2\text{FC})/5)$ across Fincher, Plass, and Cui scRNA-seq atlases |
 | 2 | **Specificity** | 0.100 | $1 / n_{\text{clusters}}$ supporting differential expression |
-| 3 | **Reproducibility** | 0.100 | $n_{\text{atlases supporting}} / 3$ (Fincher, Plass, Cui) |
+| 3 | **Reproducibility** | 0.100 | $n_{\text{atlases supporting}} / 5$ (Fincher, Plass, Cui, King, Perez) |
 | 4 | **RNAi** | 0.100 | Binary indicator (1.0) if functional phenotype observed in King mmc5 screen |
 | 5 | **Correlation** | 0.100 | $\min(1.0, \Delta r_{\text{G0-X1}} \times 3.0)$ co-expression gain from King mmc6 |
 | 6 | **Neural Enriched** | 0.100 | Binary indicator (1.0) for G0 neural subcluster log₂FC ≥ 2.0 (King mmc7) |

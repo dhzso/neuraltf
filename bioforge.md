@@ -139,7 +139,7 @@ NeuralTF unifies 5 independent planarian transcriptomic and regulatory atlases:
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ 1. Expression ($w_1=0.200$)         : Best log2FC / 5.0 across scRNA-seq atlases       │
 │ 2. Specificity ($w_2=0.100$)        : Inverse cluster breadth (1 / n_clusters)         │
-│ 3. Reproducibility ($w_3=0.100$)    : Cross-atlas concordance (n_supporting / 4)       │
+│ 3. Reproducibility ($w_3=0.100$)    : Cross-atlas concordance (n_supporting / 5)       │
 │ 4. RNAi ($w_4=0.100$)               : Functional phenotype in King mmc5 screen (1 / 0) │
 │ 5. Correlation ($w_5=0.100$)        : G0 vs X1 co-expression correlation gain         │
 │ 6. Neural Enriched ($w_6=0.100$)    : King G0 neural subcluster log2FC ≥ 2.0 (1 / 0)   │
@@ -194,8 +194,8 @@ Where default weights $\mathbf{w} = [0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0
    *Rationale*: Penalizes pleiotropic and ubiquitously expressed housekeeping TFs.
 
 3. **Reproducibility ($s_{\text{repro}}$)**:
-   $$s_{\text{repro}} = \frac{\min(n_{\text{supporting atlases}}, 4)}{4.0}$$
-   *Rationale*: Tallies concordant evidence across Fincher, Plass, Cui, and King datasets.
+   $$s_{\text{repro}} = \frac{\min(n_{\text{supporting atlases}}, 5)}{5.0}$$
+   *Rationale*: Tallies concordant evidence across all 5 atlases (Fincher, Plass, Cui, King, and Perez).
 
 4. **RNAi Phenotype ($s_{\text{rnai}}$)**:
    $$s_{\text{rnai}} = \mathbb{I}(g \in \text{King 2024 mmc5 RNAi phenotype table})$$

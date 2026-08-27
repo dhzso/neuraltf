@@ -549,6 +549,7 @@ class NeuralTFPipeline:
             score = 1.0 if is_neural else 0.5
             rec.add_score(EvidenceSource.PEREZ_LINEAGE, score,
                           note=f"perez_class={cls}")
+            self.atlas_membership.setdefault(v6_id, set()).add("perez")
             if is_neural:
                 matched_neural += 1
             else:
@@ -661,7 +662,9 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def assign_reproducibility(self):
-        n_atlases = 4  # Fincher, Plass, King, Cui
+        # Reproducibility across the 5 single-cell / TF regulatory atlases:
+        # Fincher 2018, Plass 2018, Cui 2023, King 2024, Perez 2025
+        n_atlases = 5
         for gene_id in self.all_records:
             atlases = self.atlas_membership.get(gene_id, set())
             n = min(len(atlases), n_atlases)
