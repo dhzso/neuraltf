@@ -955,6 +955,12 @@ def main() -> None:
         render_assistant_page()
 
 
+# Public aliases for pages
+render_run_page = _render_run_page
+render_results_page = _render_results_page
+
+
+
 if __name__ == "__main__":  # pragma: no cover — exercised via `streamlit run`
     if "--help" in sys.argv:
         print("Streamlit app. Launch with: bioforge ui  or  streamlit run src/bioforge/ui/app.py")
