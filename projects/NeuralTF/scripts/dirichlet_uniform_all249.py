@@ -1,21 +1,21 @@
 #!/usr/bin/env python
-"""Dirichlet-uniform prioritization on ALL 249 TF candidates (no neural filter).
+"""Dirichlet-uniform prioritization on ALL TF candidates (no neural filter).
 
-Unlike `dirichlet_uniform.py` (which scores only the 99 neural-filtered
+Unlike `dirichlet_uniform.py` (which scores only the neural-filtered
 candidates), this script runs the non-informative Dirichlet sampler on the
-**full 249-candidate atlas** — i.e., every TF with significant differential
+**full candidate atlas** — i.e., every TF with significant differential
 expression (p ≤ 0.05) in at least one atlas, regardless of neural signal.
 
 SCIENTIFIC RATIONALE:
-The 99-neural analysis asks "are the neural TF picks robust?". This 249-wide
+The neural analysis asks "are the neural TF picks robust?". This full-candidate
 analysis asks "are the best TFs overall robust, and do the neural ones
 emerge without any neural filtering?". If the same candidates rise to the
 top under both scopes, the neural filter is doing real work (selecting
 biologically meaningful candidates), not just cherry-picking.
 
 Method:
-    alpha_i = 1 for all 7 streams  (uniform over the 7-simplex)
-    Sample 1000 weight vectors, apply each to ALL 249 candidates
+    alpha_i = 1 for all 9 streams  (uniform over the 9-simplex)
+    Sample 1000 weight vectors, apply each to ALL candidates
     Take the median integrated score across draws.
 
 Track A/B selection still applies (RNAi-validated → A; TF-domain → B) but
@@ -125,7 +125,7 @@ def read_mmc5(path: Path) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 def main() -> int:
     print("== Dirichlet-UNIFORM (all-249) prioritization ==")
-    print(f"  Prior: Dirichlet(alpha_i=1) — uniform over 7-simplex")
+    print(f"  Prior: Dirichlet(alpha_i=1) — uniform over 9-simplex")
     print(f"  Draws: {N_DRAWS}, seed: {SEED}")
 
     # --- Load data ---------------------------------------------------------

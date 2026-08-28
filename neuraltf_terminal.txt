@@ -1,0 +1,673 @@
+PS D:\Test\neuraltf> git pull
+remote: Enumerating objects: 56, done.
+remote: Counting objects: 100% (56/56), done.
+remote: Compressing objects: 100% (24/24), done.
+remote: Total 56 (delta 31), reused 51 (delta 28), pack-reused 0 (from 0)
+Unpacking objects: 100% (56/56), 39.14 KiB | 233.00 KiB/s, done.
+From https://github.com/dhzso/neuraltf
+   31fa89a..29f23c6  main       -> origin/main
+Updating 31fa89a..29f23c6
+Fast-forward
+ README.md                                          | 486 +++++++--------------
+ bioforge.md                                        | 245 +++--------
+ datasets/MANIFEST.md                               |  45 +-
+ datasets/raw_data_manifest.md                      |  70 +++
+ docs/THRESHOLDS.md                                 |   7 +-
+ projects/NeuralTF/scripts/ananse_full_scan.py      | 279 ++++++++++++
+ projects/NeuralTF/scripts/convert_cui.py           | 201 +++++++--
+ .../NeuralTF/scripts/dirichlet_centered_all249.py  | 245 +++++++++++
+ projects/NeuralTF/scripts/dirichlet_prioritize.py  |   5 +-
+ projects/NeuralTF/scripts/dirichlet_uniform.py     |   4 +-
+ projects/NeuralTF/scripts/figures/style.py         |  29 +-
+ scripts/build_master_catalog.py                    | 299 +++++++++++++
+ scripts/generate_all.py                            |  39 +-
+ scripts/run_downstream.py                          | 132 ++++++
+ src/bioforge/evidence/schema.py                    |   1 +
+ src/bioforge/evidence/scoring.py                   |  19 +-
+ src/bioforge/projects/neuraltf/pipeline.py         | 148 ++++++-
+ src/bioforge/ui/app.py                             |   6 +
+ tests/unit/test_evidence.py                        |  14 +-
+ 19 files changed, 1669 insertions(+), 605 deletions(-)
+ create mode 100644 datasets/raw_data_manifest.md
+ create mode 100644 projects/NeuralTF/scripts/ananse_full_scan.py
+ create mode 100644 projects/NeuralTF/scripts/dirichlet_centered_all249.py
+ create mode 100644 scripts/build_master_catalog.py
+ create mode 100644 scripts/run_downstream.py
+PS D:\Test\neuraltf> .venv\scripts\activate
+(.venv) PS D:\Test\neuraltf> py scripts\generate_all.py --force
+== regenerate-all: D:\Test\neuraltf ==
+
+>>> Fincher h5ad  [python scripts\convert_fincher.py]
+Reading Fincher DGE header...
+  Cells: 50562
+Counting genes...
+  Genes: 26561
+Building sparse matrix...
+  Kept cells: 50562
+  Non-zero entries: 70973077
+  Matrix shape: (50562, 26561) (cells x genes)
+Saved: D:\Test\neuraltf\datasets\processed\fincher_subsample.h5ad
+
+>>> Plass h5ad  [python scripts\consolidate_plass.py]
+Using Plass tar: D:\Test\neuraltf\datasets\raw\GSE103633_GEO_Plass_atlas\GSE103633_RAW.tar
+  Found 11 sample DGE files
+  GSM2777013_ds25_01_live_: 1871 cells
+  GSM2777014_ds25_01_frozen_: 2330 cells
+  GSM2777015_plan1_: 4134 cells
+  GSM2777016_plan2_: 4181 cells
+  GSM2777017_h2b_: 2780 cells
+  GSM2777018_gfp_: 2147 cells
+  GSM2777019_x1_: 2497 cells
+  GSM2777020_p7_: 3040 cells
+  GSM2977587_cutd0_: 4702 cells
+  GSM2977588_cutd2_: 4996 cells
+  GSM2977589_cutd3_: 4829 cells
+  Total cells: 37507, total genes: 28674
+  Matrix shape: (37507, 28674), nnz: 12675346
+Saved: D:\Test\neuraltf\datasets\processed\plass_v6.h5ad
+
+>>> Cui atlas  [python projects\NeuralTF\scripts\convert_cui.py]
+Loading D:\Test\neuraltf\datasets\raw\OMIX003867_OMIX_Cui_atlas\OMIX003867-01\singlecell_h5ad\adata_scRNA_Annotated.h5ad ...
+  55,014 cells x 27,664 genes (SMED IDs)
+  obs columns: ['TimePoint', 'n_genes_by_counts', 'log1p_n_genes_by_counts', 'total_counts', 'log1p_total_counts', 'pct_counts_in_top_50_genes', 'pct_counts_in_top_100_genes', 'pct_counts_in_top_200_genes', 'pct_counts_in_top_500_genes', 'batch', 'scrublet_score', 'louvain', 'leiden', 'DBSCAN', 'Annotation', 'Annotation_Colors', 'L3', 'BigCellType']
+  Loading Rosetta Stone mapping ...
+  Rosetta Stone: 22,585 SMED IDs mapped
+  Mapped: 19,198 unique v6 IDs  |  unmapped SMED: 7,265
+  1-to-many deduplicated: 1,106  |  final genes: 19,198
+  Storing raw counts layer ...
+  Normalizing (target_sum=1e4) and log1p ...
+  Writing D:\Test\neuraltf\datasets\processed\cui_v6.h5ad ...
+
+[OK] Saved 19,198 genes (v6) x 55,014 cells to D:\Test\neuraltf\datasets\processed\cui_v6.h5ad  [217s]
+  Checkpoint written: D:\Test\neuraltf\datasets\processed\cui_conversion_checkpoint.parquet
+
+>>> Perez TF summary  [python projects\NeuralTF\scripts\preprocess_perez.py]
+Loading 41467_2025_65712_MOESM5_ESM.xlsx ...
+  58739 rows, 51 columns
+  TF class column: TF Class (Perez-Posada et al., 2025) (USE THIS)
+  RBH v6 column: 1:1 Reciprocal Best Hit ID dresden v6 dd_v6 PlanMine
+
+Saved 58739 genes to D:\Test\neuraltf\projects\NeuralTF\data\perez_tf_summary.csv
+  With TF class: 58739
+  With v6 ID: 58739
+
+>>> Master TF Catalog  [python scripts\build_master_catalog.py]
+  RNAi short IDs from mmc5: 68
+Reading King mmc4: 1-s2.0-S2211124724001712-mmc4.xlsx
+  King entries with v6 IDs: 716
+Reading Perez summary: perez_tf_summary.csv
+  Perez entries with v6 IDs: 14418
+
+[OK] Master TF Catalog written: D:\Test\neuraltf\projects\NeuralTF\data\master_tf_catalog.csv
+  Total unique v6 IDs : 14,682
+  Both King + Perez   : 137
+  King only           : 16
+  Perez only          : 14,529
+  FSTF flagged        : 77
+  RNAi screen targets : 70
+
+>>> Bridge CSV  [python scripts\build_bridge.py]
+  Rosetta stats:
+    v4 refs: 21910, v6 refs: 22585, common: 21868
+    v4-only: 42, v6-only: 717
+  52971 ref-paired v4<->v6 rows
+Bridge written to D:\Test\neuraltf\projects\NeuralTF\data\bridge.csv
+  46907 rows, 46907 with v4 mapping
+Mapping report written to D:\Test\neuraltf\projects\NeuralTF\data\bridge.mapping_report.json
+
+>>> King atlas TSV  [python scripts\build_king_atlas.py]
+Building King TF Atlas...
+  Name->v6 lookup: 21851 entries
+  Parsing G0 Progenitor...
+    612 mapped records
+  Parsing X1...
+    224 mapped records
+  Parsing X1 Major Tissue...
+    211 mapped records
+  Wrote 1046 records to D:\Test\neuraltf\projects\NeuralTF\data\king_atlas.tsv
+  G0 Progenitor: 612 records, 165 unique TFs
+  X1: 224 records, 98 unique TFs
+  X1 Major Tissue: 210 records, 140 unique TFs
+  Neural subclusters: 369 neural rows
+
+>>> Pipeline run  [python scripts\run.py]
+[1/9] Loading datasets...
+  Fincher: 50562 cells x 26561 genes (v4)
+  Plass:   37507 cells x 28674 genes (v6)
+  Cui:     55014 cells x 19198 genes (v6)
+  [checkpoint] checkpoint_01_atlas_loads.parquet (3 rows)
+[2/9] Reference tables...
+  Catalog: 418 entries (418 TFs)
+  RNAi: 75 rows, Correlations: 29 pairs
+  Perez TF classification: 14419 genes (from preprocessed CSV)
+[3/9] Bridge table...
+  46907 rows bridged
+  Mapping QC:
+    Rosetta: 22585 SMED -> 88920 v6 (1-to-many: SMED=22585, v6=14056)
+    MOESM5: 58739 h1SMcG -> 25066 v6 (h1SMcG->v6 rate: 26.48%, v6->h1SMcG rate: 100.00%)
+[4/9] QC + clustering (leiden)...
+  Fincher: norm+log neighbors leiden=16
+  Plass: D:\Test\neuraltf\src\bioforge\projects\neuraltf\pipeline.py:299: UserWarning: Some cells have zero counts
+  sc.pp.normalize_total(adata, target_sum=1e4)
+norm+log neighbors leiden=20
+  Cui: WARNING: adata.X seems to be already log-transformed.
+norm+log neighbors leiden=26
+  [checkpoint] checkpoint_02_post_qc.parquet (3 rows)
+
+[5/9] Scoring candidates per atlas ...
+  418 TF targets
+  fincher: wilcoxon DE (111s) scoring (30s)
+  plass: wilcoxon DE (77s) scoring (3s)
+  cui: wilcoxon DE D:\Test\neuraltf\.venv\Lib\site-packages\scanpy\tools\_rank_genes_groups.py:609: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "scores"] = scores[global_indices]
+D:\Test\neuraltf\.venv\Lib\site-packages\scanpy\tools\_rank_genes_groups.py:612: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals"] = pvals[global_indices]
+D:\Test\neuraltf\.venv\Lib\site-packages\scanpy\tools\_rank_genes_groups.py:622: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals_adj"] = pvals_adj[global_indices]
+D:\Test\neuraltf\.venv\Lib\site-packages\scanpy\tools\_rank_genes_groups.py:633: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "logfoldchanges"] = np.log2(
+(100s) scoring (2s)
+  Generated records: 224
+  [checkpoint] checkpoint_03_post_scoring.parquet (224 rows)
+[6/9] King TF Atlas...
+  [checkpoint] checkpoint_04_king_records.parquet (289 rows)
+[integrate_perez] Perez 2025 lineage scoring...
+  Perez scores: 100 neural-class, 157 other-class, 32 absent
+  [checkpoint] checkpoint_05_perez_records.parquet (289 rows)
+[8/9] RNAi phenotypes...
+  Parsed 72 RNAi targets from mmc5
+  RNAi match: 38 candidates
+[9/9] TF pair correlations...
+  Correlation match: 6 candidates
+  [checkpoint] checkpoint_06_stream_matrix.parquet (289 rows)
+
+======================================================================
+TIER           SCORE    GENE                   STATUS                 SOURCES
+======================================================================
+  high          0.8516  dd2946                known_rnai_validated  7
+  high          0.7896  dd16472               known_rnai_validated  7
+  high          0.7815  dd38342               known_rnai_validated  7
+  high          0.7795  dd4048                novel_candidate       6
+  high          0.7644  dd14115               known_rnai_validated  7
+  high          0.7604  dd11150               known_rnai_validated  7
+  high          0.7563  dd14824               known_rnai_validated  7
+  high          0.7530  dd19890               known_rnai_validated  7
+  high          0.7529  neuroD-2              novel_candidate       4
+  high          0.7509  dd31217               novel_candidate       6
+  high          0.7500  dd6626                known_rnai_validated  5
+  high          0.7385  dd13343               known_rnai_validated  7
+  high          0.7344  dd7033                novel_candidate       6
+  high          0.7339  dd11930               novel_candidate       6
+  high          0.7294  dd22163               known_rnai_validated  7
+  high          0.7222  dd9738                known_rnai_validated  5
+  high          0.7083  dd10201               novel_candidate       4
+  high          0.7071  dd28888               known_rnai_validated  7
+  high          0.7051  dd18207               known_rnai_validated  7
+  high          0.7032  dd16955               known_rnai_validated  5
+  high          0.7017  dd16007               known_rnai_validated  7
+  high          0.6914  dd9596                novel_candidate       6
+  high          0.6827  dd30562               known_rnai_validated  7
+  high          0.6737  dd26877               known_rnai_validated  6
+  high          0.6701  dd13474               novel_candidate       6
+  high          0.6690  dd29211               known_rnai_validated  7
+  high          0.6667  dd209                 novel_candidate       4
+  high          0.6659  Six1/2-2              prior_fstf_not_tested  6
+  high          0.6603  dd31784               known_rnai_validated  7
+  high          0.6541  dd12722               known_rnai_validated  7
+  high          0.6525  pitx                  prior_fstf_not_tested  7
+  high          0.6523  Schmidtea mediterranea Sp5 mRNA, partial cds  novel_candidate       4
+  high          0.6523  ascl-2                novel_candidate       6
+  high          0.6489  dd14712               known_rnai_validated  7
+  high          0.6446  dd36829               known_rnai_validated  7
+  high          0.6422  dd22331               known_rnai_validated  7
+  high          0.6411  dd33456               novel_candidate       6
+  high          0.6389  dd415                 novel_candidate       4
+  high          0.6348  dd28804               known_rnai_validated  6
+  high          0.6329  dd16524               novel_candidate       6
+
+Full rank: D:\Test\neuraltf\projects\NeuralTF\runs\pipeline_run\rank.csv (289 candidates)
+Neural rank: D:\Test\neuraltf\projects\NeuralTF\runs\pipeline_run\rank_neural.csv (102 candidates)
+Cards:   D:\Test\neuraltf\projects\NeuralTF\runs\pipeline_run\evidence_cards.md (289 cards)
+
+=== NEURAL CANDIDATES FOR VALIDATION ===
+  dd2946               0.852  known_rnai_validated
+  dd16472              0.790  known_rnai_validated
+  dd38342              0.782  known_rnai_validated
+  dd4048               0.780  novel_candidate
+  dd14115              0.764  known_rnai_validated
+  dd11150              0.760  known_rnai_validated
+  dd14824              0.756  known_rnai_validated
+  dd19890              0.753  known_rnai_validated
+  dd31217              0.751  novel_candidate
+  dd6626               0.750  known_rnai_validated
+  dd13343              0.739  known_rnai_validated
+  dd7033               0.734  novel_candidate
+  dd11930              0.734  novel_candidate
+  dd22163              0.729  known_rnai_validated
+  dd9738               0.722  known_rnai_validated
+  dd28888              0.707  known_rnai_validated
+  dd18207              0.705  known_rnai_validated
+  dd16955              0.703  known_rnai_validated
+  dd16007              0.702  known_rnai_validated
+  dd9596               0.691  novel_candidate
+  dd30562              0.683  known_rnai_validated
+  dd26877              0.674  known_rnai_validated
+  dd13474              0.670  novel_candidate
+  dd29211              0.669  known_rnai_validated
+  Six1/2-2             0.666  prior_fstf_not_tested
+  dd31784              0.660  known_rnai_validated
+  dd12722              0.654  known_rnai_validated
+  pitx                 0.653  prior_fstf_not_tested
+  ascl-2               0.652  novel_candidate
+  dd14712              0.649  known_rnai_validated
+JSON:    D:\Test\neuraltf\projects\NeuralTF\runs\pipeline_run\pipeline_results.json
+Done.
+
+>>> PlanMine parquet  [python scripts\query_planmine.py]
+PlanMine annotation query for 102 candidates
+  input : D:\Test\neuraltf\projects\NeuralTF\runs\pipeline_run\rank_neural.csv
+  output: D:\Test\neuraltf\datasets\processed\planmine_annotations.parquet
+          D:\Test\neuraltf\datasets\processed\planmine_transcripts.fasta
+[INFO] query_planmine: PlanMine client target: https://planmine.mpibpc.mpg.de/planmine/service
+  [10/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_6626_0_1
+  [20/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_9596_0_1
+  [30/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_14712_0_1
+  [40/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_17324_0_1
+  [50/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_18422_0_1
+  [60/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_8104_0_1
+  [70/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_25769_0_1
+  [80/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_20755_0_1
+  [90/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_13215_0_1
+  [100/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_15144_0_1
+  [102/102] done (GO/doms/blast, seq_len) last=dd_Smed_v6_16399_0_1
+
+=== PlanMine annotation coverage ===
+candidates:            102
+sequence retrieved:   100/102
+protein-domain hits:  97/102
+GO terms:             76/102
+BLAST hits:           86/102
+wrote:                D:\Test\neuraltf\datasets\processed\planmine_annotations.parquet
+wrote:                D:\Test\neuraltf\datasets\processed\planmine_transcripts.fasta (2707 seq lines)
+
+>>> Prioritization  [python scripts\prioritize_neural_tfs.py]
+== NeuralTF dual-track prioritization ==
+  rank      : D:\Test\neuraltf\projects\NeuralTF\runs\pipeline_run\rank_neural.csv
+  bridge    : D:\Test\neuraltf\projects\NeuralTF\data\bridge.csv
+  annotations: D:\Test\neuraltf\datasets\processed\planmine_annotations.parquet
+  candidates: 102  {'novel_candidate': 45, 'known_rnai_validated': 38, 'prior_fstf_not_tested': 19}
+  v6->v4 mapping: {'unique': 88, 'ambiguous': 12, 'unmapped': 2}
+  Track B after TF-domain filter: 39/45
+
+  === Track A (RNAi-validated) top 5 ===
+             gene_id gene_name  composite_score  integrated_score                                                               dna_binding_domains
+ dd_Smed_v6_2946_0_1    dd2946           0.9416          0.851562                                Znf_C2H2, Znf_C2H2-like, Znf_C2H2/integrase_DNA-bd
+dd_Smed_v6_38342_0_1   dd38342           0.9215          0.781547 Homeobox_CS, Homeobox_dom, Homeodomain-like, Lambda_DNA-bd_dom, POU, POU_specific
+dd_Smed_v6_14115_0_1   dd14115           0.9044          0.764420                              Homeobox_CS, Homeobox_dom, Homeodomain-like, Znf_LIM
+dd_Smed_v6_16472_0_1   dd16472           0.8996          0.789583                                 Homeobox_dom, Homeodomain-like, Lambda_DNA-bd_dom
+dd_Smed_v6_14824_0_1   dd14824           0.8963          0.756250                                Znf_C2H2, Znf_C2H2-like, Znf_C2H2/integrase_DNA-bd
+  === Track B (novel) top 5 ===
+             gene_id gene_name  composite_score  integrated_score                                                      dna_binding_domains
+dd_Smed_v6_31217_0_1   dd31217           0.8709          0.750910                                                                 bHLH_dom
+ dd_Smed_v6_4048_0_1    dd4048           0.8295          0.779516                                                                 bHLH_dom
+ dd_Smed_v6_7033_0_1    dd7033           0.8044          0.734375                  Homeobox_dom, Homeodomain-like, Znf_C2H2, Znf_C2H2-like
+dd_Smed_v6_11930_0_1   dd11930           0.7839          0.733910                                                  Znf_C2H2, Znf_C2H2-like
+ dd_Smed_v6_9596_0_1    dd9596           0.7814          0.691409 HTH_motif, Homeobox_CS, Homeobox_dom, Homeobox_metazoa, Homeodomain-like
+  wrote D:\Test\neuraltf\projects\NeuralTF\results\top10_neural_tfs_prioritized.csv (10 rows)
+D:\Test\neuraltf\scripts\prioritize_neural_tfs.py:152: UserWarning: Some cells have zero counts
+  sc.pp.normalize_total(adata, target_sum=1e4, inplace=True)
+D:\Test\neuraltf\scripts\prioritize_neural_tfs.py:156: FutureWarning: Argument `use_highly_variable` is deprecated, consider using the mask argument. Use_highly_variable=True can be called through mask_var="highly_variable". Use_highly_variable=False can be called through mask_var=None
+  sc.pp.pca(adata, n_comps=50, use_highly_variable=True)
+  wrote D:\Test\neuraltf\projects\NeuralTF\results\candidate_summary_report.md
+
+Done.
+
+>>> GO supp figures  [python projects\NeuralTF\scripts\make_supp_go_figures.py]
+Figures:
+  wrote fig_s1_go_gene_term_map.png
+  wrote fig_s2_go_top10_dotmatrix.png
+  wrote fig_s3_go_top_terms.png
+  wrote fig_s4_go_neural_focus.png
+  wrote go_gene_term_matrix_reduced.csv (102 x 21)
+  wrote go_term_reference.csv (767 terms)
+
+>>> Dirichlet-centered  [python projects\NeuralTF\scripts\dirichlet_prioritize.py]
+== Dirichlet-robust prioritization ==
+  rank       : D:\Test\neuraltf\projects\NeuralTF\runs\pipeline_run\rank_neural.csv
+  annotations: D:\Test\neuraltf\datasets\processed\planmine_annotations.parquet
+  candidates : 102
+  v6->v4 mapping: {'unique': 88, 'ambiguous': 12, 'unmapped': 2}
+  Dirichlet median scores: min=0.3019, max=0.8569, mean=0.5758
+  baseline: 10 entries from top10_neural_tfs_prioritized.csv
+  Track B after TF-domain filter: 39/45
+
+  === Track A (RNAi-validated) top 5 ===
+             gene_id gene_name  dirichlet_median_score  composite_score                                                               dna_binding_domains
+ dd_Smed_v6_2946_0_1    dd2946                0.856861           0.9469                                Znf_C2H2, Znf_C2H2-like, Znf_C2H2/integrase_DNA-bd
+dd_Smed_v6_38342_0_1   dd38342                0.782620           0.9226 Homeobox_CS, Homeobox_dom, Homeodomain-like, Lambda_DNA-bd_dom, POU, POU_specific
+dd_Smed_v6_14824_0_1   dd14824                0.762463           0.9025                                Znf_C2H2, Znf_C2H2-like, Znf_C2H2/integrase_DNA-bd
+dd_Smed_v6_14115_0_1   dd14115                0.762453           0.9025                              Homeobox_CS, Homeobox_dom, Homeodomain-like, Znf_LIM
+dd_Smed_v6_16472_0_1   dd16472                0.791622           0.9016                                 Homeobox_dom, Homeodomain-like, Lambda_DNA-bd_dom
+  === Track B (novel) top 5 ===
+             gene_id gene_name  dirichlet_median_score  composite_score                                                      dna_binding_domains
+dd_Smed_v6_31217_0_1   dd31217                0.759943           0.8799                                                                 bHLH_dom
+ dd_Smed_v6_4048_0_1    dd4048                0.790835           0.8408                                                                 bHLH_dom
+ dd_Smed_v6_7033_0_1    dd7033                0.741158           0.8112                  Homeobox_dom, Homeodomain-like, Znf_C2H2, Znf_C2H2-like
+dd_Smed_v6_11930_0_1   dd11930                0.741342           0.7913                                                  Znf_C2H2, Znf_C2H2-like
+ dd_Smed_v6_9596_0_1    dd9596                0.697429           0.7874 HTH_motif, Homeobox_CS, Homeobox_dom, Homeobox_metazoa, Homeodomain-like
+
+  === Overall top-10 by Dirichlet median score (all 99) ===
+      dd2946  dirichlet_median=0.8569  proof=known_rnai_validated  track=?
+     dd16472  dirichlet_median=0.7916  proof=known_rnai_validated  track=?
+      dd4048  dirichlet_median=0.7908  proof=novel_candidate  track=?
+     dd38342  dirichlet_median=0.7826  proof=known_rnai_validated  track=?
+     dd11150  dirichlet_median=0.7643  proof=known_rnai_validated  track=?
+     dd14824  dirichlet_median=0.7625  proof=known_rnai_validated  track=?
+     dd14115  dirichlet_median=0.7625  proof=known_rnai_validated  track=?
+     dd31217  dirichlet_median=0.7599  proof=novel_candidate  track=?
+     dd19890  dirichlet_median=0.7528  proof=known_rnai_validated  track=?
+      dd6626  dirichlet_median=0.7485  proof=known_rnai_validated  track=?
+
+  === Fixed-weight overall top-10 (for comparison) ===
+      dd2946  fixed_score=0.8516  proof=known_rnai_validated  track=?
+     dd16472  fixed_score=0.7896  proof=known_rnai_validated  track=?
+     dd38342  fixed_score=0.7815  proof=known_rnai_validated  track=?
+      dd4048  fixed_score=0.7795  proof=novel_candidate  track=?
+     dd14115  fixed_score=0.7644  proof=known_rnai_validated  track=?
+     dd11150  fixed_score=0.7604  proof=known_rnai_validated  track=?
+     dd14824  fixed_score=0.7563  proof=known_rnai_validated  track=?
+     dd19890  fixed_score=0.7530  proof=known_rnai_validated  track=?
+     dd31217  fixed_score=0.7509  proof=novel_candidate  track=?
+      dd6626  fixed_score=0.7500  proof=known_rnai_validated  track=?
+
+  Overall top-10 overlap: 10/10
+  Top-10 identical under both methods
+
+  wrote D:\Test\neuraltf\projects\NeuralTF\results\dirichlet_top10_prioritized.csv (10 rows)
+  wrote D:\Test\neuraltf\projects\NeuralTF\results\dirichlet_overall_top10.csv (track-based 5A+5B)
+  wrote D:\Test\neuraltf\projects\NeuralTF\results\dirichlet_overall_top10_byscore.csv (overall top-10 by score)
+  wrote D:\Test\neuraltf\projects\NeuralTF\results\dirichlet_centered_full_rank.csv (102 rows — all 99 candidates)
+D:\Test\neuraltf\projects\NeuralTF\scripts\dirichlet_prioritize.py:234: UserWarning: Some cells have zero counts
+  sc.pp.normalize_total(adata, target_sum=1e4, inplace=True)
+D:\Test\neuraltf\projects\NeuralTF\scripts\dirichlet_prioritize.py:238: FutureWarning: Argument `use_highly_variable` is deprecated, consider using the mask argument. Use_highly_variable=True can be called through mask_var="highly_variable". Use_highly_variable=False can be called through mask_var=None
+  sc.pp.pca(adata, n_comps=50, use_highly_variable=True)
+  wrote D:\Test\neuraltf\projects\NeuralTF\results\dirichlet_candidate_summary_report.md
+
+Done.
+
+>>> Dirichlet-uniform  [python projects\NeuralTF\scripts\dirichlet_uniform.py]
+== Dirichlet-UNIFORM (non-informative) prioritization ==
+  Prior: Dirichlet(alpha_i=1) — uniform over 7-simplex
+  Draws: 1000, seed: 2024
+  candidates: 102
+  Uniform median scores: min=0.2896, max=0.8406, mean=0.5543
+
+  === Overall top-10 by uniform-Dirichlet median ===
+      dd2946  uniform=0.8406  fixed=0.6813  proof=known_rnai_validated
+     dd38342  uniform=0.8330  fixed=0.6252  proof=known_rnai_validated
+      dd4048  uniform=0.8114  fixed=0.6236  proof=novel_candidate
+     dd19890  uniform=0.7693  fixed=0.6024  proof=known_rnai_validated
+     dd16472  uniform=0.7619  fixed=0.6317  proof=known_rnai_validated
+     dd31217  uniform=0.7445  fixed=0.6007  proof=novel_candidate
+     dd13343  uniform=0.7437  fixed=0.5908  proof=known_rnai_validated
+     dd11930  uniform=0.7354  fixed=0.5871  proof=novel_candidate
+     dd14115  uniform=0.7343  fixed=0.6115  proof=known_rnai_validated
+     dd28888  uniform=0.7287  fixed=0.5657  proof=known_rnai_validated
+
+  === Fixed-weight overall top-10 ===
+      dd2946  fixed=0.6813  uniform=0.8406
+     dd16472  fixed=0.6317  uniform=0.7619
+     dd38342  fixed=0.6252  uniform=0.8330
+      dd4048  fixed=0.6236  uniform=0.8114
+     dd14115  fixed=0.6115  uniform=0.7343
+     dd11150  fixed=0.6083  uniform=0.7258
+     dd14824  fixed=0.6050  uniform=0.7282
+     dd19890  fixed=0.6024  uniform=0.7693
+     dd31217  fixed=0.6007  uniform=0.7445
+     dd13343  fixed=0.5908  uniform=0.7437
+
+  Top-10 overlap (uniform vs fixed): 8/10
+  Fixed-only: ['dd14824', 'dd11150']
+  Uniform-only: ['dd11930', 'dd28888']
+
+  === Track-based top-5 per track (uniform prior) ===
+  Track B after TF-domain filter: 39/45
+
+  Track A top-5:
+     dd38342  composite=0.973  domain=Homeobox_CS, Homeobox_dom, Hom
+      dd2946  composite=0.931  domain=Znf_C2H2, Znf_C2H2-like, Znf_C
+     dd19890  composite=0.909  domain=TF_T-box, TF_T-box_CS, p53-lik
+     dd14115  composite=0.874  domain=Homeobox_CS, Homeobox_dom, Hom
+     dd16472  composite=0.872  domain=Homeobox_dom, Homeodomain-like
+
+  Track B top-5:
+     dd31217  composite=0.865  domain=bHLH_dom
+      dd4048  composite=0.861  domain=bHLH_dom
+     dd33456  composite=0.796  domain=Homeobox_CS, Homeobox_dom, Hom
+     dd16524  composite=0.792  domain=Homeobox_CS, Homeobox_dom, Hom
+     dd11930  composite=0.785  domain=Znf_C2H2, Znf_C2H2-like
+
+  wrote dirichlet_uniform_top10.csv (track-based 5A+5B, 10 rows)
+  wrote dirichlet_uniform_overall_top10.csv (overall top-10)
+  wrote dirichlet_uniform_full_rank.csv (all 102 candidates)
+
+  === 3-way comparison (fixed / centered / uniform) ===
+   dd38342 (Track A): fixed=0.625  centered=0.783  uniform=0.833  range=0.208
+    dd2946 (Track A): fixed=0.681  centered=0.857  uniform=0.841  range=0.176
+   dd19890 (Track A): fixed=0.602  centered=0.000  uniform=0.769  range=0.769
+   dd14115 (Track A): fixed=0.612  centered=0.762  uniform=0.734  range=0.151
+   dd16472 (Track A): fixed=0.632  centered=0.792  uniform=0.762  range=0.160
+   dd31217 (Track B): fixed=0.601  centered=0.760  uniform=0.745  range=0.159
+    dd4048 (Track B): fixed=0.624  centered=0.791  uniform=0.811  range=0.188
+   dd33456 (Track B): fixed=0.513  centered=0.000  uniform=0.676  range=0.676
+   dd16524 (Track B): fixed=0.506  centered=0.000  uniform=0.672  range=0.672
+   dd11930 (Track B): fixed=0.587  centered=0.741  uniform=0.735  range=0.154
+
+  wrote dirichlet_uniform_summary.txt
+
+Done.
+
+>>> Dirichlet-all249  [python projects\NeuralTF\scripts\dirichlet_uniform_all249.py]
+== Dirichlet-UNIFORM (all-249) prioritization ==
+  Prior: Dirichlet(alpha_i=1) — uniform over 7-simplex
+  Draws: 1000, seed: 2024
+  candidates: 289 (full atlas, no neural filter)
+  Uniform median scores: min=0.1056, max=0.8406, mean=0.4195
+  v6->v4 mapping: {'unique': 259, 'ambiguous': 27, 'unmapped': 3}
+  Track B after TF-domain filter: 201/208
+
+  === Track A top-5 (all 249) ===
+     dd38342  composite=0.973  domain=Homeobox_CS, Homeobox_dom, Hom  proof=known_rnai_validated
+      dd2946  composite=0.931  domain=Znf_C2H2, Znf_C2H2-like, Znf_C  proof=known_rnai_validated
+     dd19890  composite=0.909  domain=TF_T-box, TF_T-box_CS, p53-lik  proof=known_rnai_validated
+     dd14115  composite=0.874  domain=Homeobox_CS, Homeobox_dom, Hom  proof=known_rnai_validated
+     dd16472  composite=0.872  domain=Homeobox_dom, Homeodomain-like  proof=known_rnai_validated
+
+  === Track B top-5 (all 249) ===
+     dd31217  composite=0.865  domain=bHLH_dom  proof=novel_candidate
+      dd4048  composite=0.861  domain=bHLH_dom  proof=novel_candidate
+    neuroD-2  composite=0.814  domain=none  proof=novel_candidate
+     dd33456  composite=0.796  domain=Homeobox_CS, Homeobox_dom, Hom  proof=novel_candidate
+     dd16524  composite=0.792  domain=Homeobox_CS, Homeobox_dom, Hom  proof=novel_candidate
+
+  wrote dirichlet_uniform_all249_top10.csv (track-based 5A+5B, 10 rows)
+  wrote dirichlet_uniform_all249_overall_top10.csv (10 rows)
+  wrote dirichlet_uniform_all249_full_rank.csv (all 289 candidates)
+  wrote dirichlet_uniform_all249_summary.txt
+
+  9/10 overlap between 99-neural and 249-wide top-10
+  Only in 99-neural: {'dd_Smed_v6_11930_0_1'}
+  Only in 249-wide: {'dd_Smed_v6_9906_0_1'}
+
+Done.
+
+>>> Dirichlet-centered-all249  [python projects\NeuralTF\scripts\dirichlet_centered_all249.py]
+== Dirichlet-Centered (k=40) — All Candidates ==
+  rank       : D:\Test\neuraltf\projects\NeuralTF\runs\pipeline_run\rank.csv
+  annotations: D:\Test\neuraltf\datasets\processed\planmine_annotations.parquet
+  candidates : 289
+  v6->v4 mapping: {'unique': 259, 'ambiguous': 27, 'unmapped': 3}
+  Running Centered Dirichlet (k=40.0, 1000 draws) on 289 candidates...
+  Scores: min=0.1271, max=0.8569, mean=0.4597
+  Full rank written: D:\Test\neuraltf\projects\NeuralTF\results\dirichlet_centered_all249_full_rank.csv (289 rows)
+  Overall top-10 written: D:\Test\neuraltf\projects\NeuralTF\results\dirichlet_centered_all249_overall_top10.csv
+  Track top-10 (5A+5B) written: D:\Test\neuraltf\projects\NeuralTF\results\dirichlet_centered_all249_top10.csv
+  Summary written: D:\Test\neuraltf\projects\NeuralTF\results\dirichlet_centered_all249_summary.txt
+
+Done.
+
+>>> Export ranked FSTF  [python projects\NeuralTF\scripts\export_fstf_ranked.py]
+== Export ranked FSTF CSVs ==
+  FSTFs in catalog: 74
+  candidates: 289
+  wrote fstf_ranked_19_neural.csv (19 rows)
+  wrote fstf_ranked_43_all.csv (43 rows)
+  wrote fstf_ranked_74_catalog.csv (74 rows)
+
+  Done.
+
+>>> ANANSE full scan  [python projects\NeuralTF\scripts\ananse_full_scan.py]
+== ANANSE Full-Candidate GRN Scan ==
+  candidates: D:\Test\neuraltf\projects\NeuralTF\runs\pipeline_run\rank.csv
+  ANANSE    : 41467_2025_65712_MOESM22_ESM.xlsx
+  Loaded 289 candidates
+  Mapping v6 IDs â†’ h1SMcG ...
+  Mapped 279/289 v6 IDs to h1SMcG
+  Loading ANANSE network from 41467_2025_65712_MOESM22_ESM.xlsx ...
+  MOESM22 sheets: ['target_lists']
+  ANANSE total interactions: 13746
+  TF column: 'TF (gene ID)', Target column: 'Target gene (gene ID)'
+  Fates: ['basalgoblet', 'eep', 'epidermis', 'muscle', 'neuron', 'parenchyma', 'phagocytes', 'protonephridia', 'secretory']
+
+  Full network scan: D:\Test\neuraltf\projects\NeuralTF\results\ananse_network_full.csv (289 candidates)
+  Parquet backup: D:\Test\neuraltf\projects\NeuralTF\results\ananse_network_full.parquet
+  Top regulators (n=20): D:\Test\neuraltf\projects\NeuralTF\results\ananse_top_regulators.csv
+
+  Summary:
+    ANANSE TF nodes         : 30/289
+    ANANSE target genes      : 50/289
+    Both TF and target       : 12/289
+    Neither (not in network) : 221/289
+    h1SMcG mapping rate      : 279/289
+
+Done.
+
+>>> Generate supplementary tables  [python projects\NeuralTF\scripts\create_supplementary_tables.py]
+Created supplementary_table_S1_method_comparison.csv
+Created supplementary_table_S2_fixed_all249.csv
+Created supplementary_table_S3_centered_all99.csv
+Created supplementary_table_S4_uniform_all99.csv
+Created supplementary_table_S5_uniform_all249.csv
+Created FSTF supplementary tables
+  Skipping S9 (99vs249 comparison) — summary.txt is not a CSV
+All supplementary tables created in D:\Test\neuraltf\projects\NeuralTF\results
+
+>>> Weight sensitivity analysis  [python scripts\run_weight_sensitivity.py]
+102 neural candidates, 1000 random weight draws
+  100/1000
+  200/1000
+  300/1000
+  400/1000
+  500/1000
+  600/1000
+  700/1000
+  800/1000
+  900/1000
+  1000/1000
+
+Saved 102000 draw rows -> D:\Test\neuraltf\projects\NeuralTF\figures\weight_sensitivity_draws.csv
+Saved 46 challengers -> D:\Test\neuraltf\projects\NeuralTF\figures\weight_sensitivity_top10_challengers.csv
+
+>>> Generate publication figures  [python projects\NeuralTF\scripts\generate_publication_figures.py]
+
+  [1/21] Evidence stream coverage (249 TFs)
+    OK
+
+  [2/21] Integrated vs composite score
+    OK
+
+  [3/21] Score distribution 249 vs 99
+    OK
+
+  [4/21] Evidence heatmap (99 neural)
+    OK
+
+  [5/21] Top 10 candidate atlas
+    OK
+
+  [6/21] Weight sensitivity rank distributions
+    OK
+
+  [7/21] Weight sensitivity P(Top10)
+    OK
+
+  [8/21] Stream ablation global impact
+    OK
+
+  [9/21] Stream ablation candidate sensitivity
+    OK
+
+  [10/21] Centered Dirichlet top 10 scores
+    OK
+
+  [11/21] Fixed vs centered Dirichlet (99)
+    OK
+
+  [12/21] Uniform Dirichlet top 10 scores
+    OK
+
+  [13/21] Fixed vs uniform Dirichlet (99)
+    OK
+
+  [14/21] 99 vs 249 rank-rank comparison
+    OK
+
+  [15/21] 3-method rank comparison
+    OK
+
+  [16/21] 3-method score density
+    OK
+
+  [17/21] 3-method rank correlation
+    OK
+
+  [18/21] Composite bonus waterfall
+    OK
+
+  [19/21] Method consensus
+    OK
+
+  [20/21] Stream correlation matrix
+    OK
+
+  [21/21] Centered vs uniform Dirichlet
+    OK
+
+==================================================
+  Done: 21 generated, 0 failed, 23.4s
+
+=== summary ===
+  Fincher h5ad         OK
+  Plass h5ad           OK
+  Cui atlas            OK
+  Perez TF summary     OK
+  Master TF Catalog    OK
+  Bridge CSV           OK
+  King atlas TSV       OK
+  Pipeline run         OK
+  PlanMine parquet     OK
+  Prioritization       OK
+  GO supp figures      OK
+  Dirichlet-centered   OK
+  Dirichlet-uniform    OK
+  Dirichlet-all249     OK
+  Dirichlet-centered-all249 OK
+  Export ranked FSTF   OK
+  ANANSE full scan     OK
+  Generate supplementary tables OK
+  Weight sensitivity analysis OK
+  Generate publication figures OK
+
+All steps completed successfully.
+(.venv) PS D:\Test\neuraltf> deactivate
+PS D:\Test\neuraltf>

@@ -122,11 +122,11 @@ def fig_s5_go_heatmap_all99():
     ax.set_xlim(-0.5, len(go_ids_filtered) - 0.5)
 
     fig.tight_layout()
-    fig.savefig(SUP / "fig_s5_go_heatmap_all99.png", dpi=300, bbox_inches="tight", facecolor="white")
+    fig.savefig(SUP / "fig_s5_go_heatmap_neural.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
-    print("  wrote fig_s5_go_heatmap_all99.png")
+    print("  wrote fig_s5_go_heatmap_neural.png")
     plt.close(fig)
-    print("  wrote fig_s5_go_heatmap_all99.png")
+    print("  wrote fig_s5_go_heatmap_neural.png")
 
 
 def fig_s6_top10_go_profiles():

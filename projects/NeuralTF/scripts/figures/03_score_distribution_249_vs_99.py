@@ -1,4 +1,4 @@
-"""Score distribution: 249 full vs 99 neural-filtered candidates (histogram + KDE)."""
+"""Score distribution: all vs neural-filtered candidates (histogram + KDE)."""
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from style import *
@@ -32,6 +32,6 @@ def build():
                  "(Neural-enriched vs All candidates; KS test shown)", fontweight="bold", pad=8)
 
     ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
-    fig.tight_layout(); save(fig, "03_score_distribution_249_vs_99")
+    fig.tight_layout(); save(fig, "03_score_distribution_all_vs_neural")
 
 if __name__=="__main__": build()

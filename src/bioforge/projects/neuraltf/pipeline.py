@@ -446,7 +446,10 @@ class NeuralTFPipeline:
         neural_mask = king["subcluster"].astype(str).str.startswith("neural")
         neural_df = king[neural_mask & (king["log2fc"] >= _NEURAL_FC_THRESHOLD)]
 
-        overall_max = king["log2fc"].max()
+        # Expression normalization uses the same 5.0 divisor as the atlas DE
+        # path (Fincher/Plass/Cui). log2FC=5.0 = 32-fold upregulation, which
+        # maps the physiological TF enrichment range to [0, 1].
+        EXPR_CAP = 5.0
 
         # Seed records for all TFs enriched in neural G0 compartments.
         # Fincher/Plass subsampling may miss neuron-specific TFs (known
@@ -479,12 +482,12 @@ class NeuralTFPipeline:
                 fcm = hits["log2fc"].max()
                 nsub = hits.groupby(["compartment", "subcluster"]).ngroups
 
-                feat_expr = min(1.0, fcm / overall_max) if overall_max > 0 else 0.0
+                feat_expr = min(1.0, fcm / EXPR_CAP)
                 feat_spec = min(1.0, 1.0 / nsub) if nsub > 0 else 0.0
 
                 rec.add_score(EvidenceSource.EXPRESSION,
                               max(rec.scores.get(EvidenceSource.EXPRESSION, 0.0), feat_expr),
-                              note=f"king_maxFC={fcm:.2f}")
+                              note=f"king_l2fc={fcm:.2f}")
                 rec.add_score(EvidenceSource.SPECIFICITY,
                               max(rec.scores.get(EvidenceSource.SPECIFICITY, 0.0), feat_spec),
                               note=f"king_n_subs={nsub}")
@@ -559,11 +562,96 @@ class NeuralTFPipeline:
               f"{matched_other} other-class, {unmatched} absent")
 
     # ------------------------------------------------------------------
+    # Perez 2025 ANANSE regulatory influence (MOESM19)
+    # ------------------------------------------------------------------
+
+    def integrate_perez_influence(self) -> None:
+        """Score all records using Perez 2025 ANANSE regulatory influence.
+
+        Adds EvidenceSource.PEREZ_INFLUENCE to every record found as a
+        regulatory factor in the neuron fate ANANSE network (MOESM19).
+        The influence_score is a normalised 0-1 rank per fate, where 1.0
+        means the TF has the highest regulatory influence in that fate.
+        """
+        print("[integrate_perez_influence] Perez 2025 ANANSE influence...")
+        moesm19 = (
+            self.raw_dir / "Supplementary_Data_ Perez_2025"
+            / "41467_2025_65712_MOESM19_ESM.xlsx"
+        )
+        if not moesm19.exists():
+            print(f"  (MOESM19 not found at {moesm19}, skipping)")
+            return
+
+        try:
+            xl = pd.ExcelFile(moesm19)
+        except Exception as e:
+            print(f"  (MOESM19 read failed: {e}, skipping)")
+            return
+
+        # Find the neuron fate sheet
+        neuron_sheet = None
+        for name in xl.sheet_names:
+            if "neuron" in name.lower():
+                neuron_sheet = name
+                break
+        if neuron_sheet is None:
+            print("  (no neuron fate sheet found in MOESM19, skipping)")
+            return
+
+        try:
+            infl_df = pd.read_excel(moesm19, sheet_name=neuron_sheet, dtype=str)
+        except Exception as e:
+            print(f"  (MOESM19 neuron sheet read failed: {e}, skipping)")
+            return
+
+        print(f"  MOESM19 neuron sheet: {len(infl_df)} factors")
+
+        # Build h1SMcG -> influence_score lookup
+        infl_col = None
+        for c in infl_df.columns:
+            if "influence_score" in str(c).lower() and "raw" not in str(c).lower():
+                infl_col = c
+                break
+        if infl_col is None:
+            print("  (influence_score column not found, skipping)")
+            return
+
+        factor_col = infl_df.columns[0]  # 'factor' column (h1SMcG IDs)
+        h1_to_influence: dict[str, float] = {}
+        for _, row in infl_df.iterrows():
+            h1 = str(row[factor_col]).strip()
+            try:
+                score = float(row[infl_col])
+            except (ValueError, TypeError):
+                continue
+            if h1 and h1 != "nan" and 0.0 <= score <= 1.0:
+                h1_to_influence[h1] = score
+
+        print(f"  h1SMcG factors with influence scores: {len(h1_to_influence)}")
+
+        # Map v6 -> h1SMcG and score
+        from bioforge.projects.neuraltf.smapping import batch_v6_to_h1smcg
+        v6_ids = list(self.all_records.keys())
+        v6_to_h1 = batch_v6_to_h1smcg(v6_ids)
+
+        matched = 0
+        for v6_id, rec in self.all_records.items():
+            h1 = v6_to_h1.get(v6_id)
+            if h1 and h1 in h1_to_influence:
+                rec.add_score(EvidenceSource.PEREZ_INFLUENCE,
+                              h1_to_influence[h1],
+                              note=f"neuron_influence={h1_to_influence[h1]:.3f}")
+                self.atlas_membership.setdefault(v6_id, set()).add("perez")
+                matched += 1
+
+        print(f"  Perez influence match: {matched} candidates")
+
+    # ------------------------------------------------------------------
     # RNAi phenotype table (mmc5)
     # ------------------------------------------------------------------
 
     def integrate_rnai(self):
-        print("[8/9] RNAi phenotypes...")
+        print("[8/10] RNAi phenotypes...")
         if self.rnai_table is None:
             print("  (no table, skipping)")
             return
@@ -894,6 +982,7 @@ class NeuralTFPipeline:
         self._checkpoint_king_records()         # checkpoint 04
         self.integrate_perez()
         self._checkpoint_perez_records()        # checkpoint 05
+        self.integrate_perez_influence()
         self.integrate_rnai()
         self.integrate_correlations()
         self.assign_reproducibility()

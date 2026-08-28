@@ -10,20 +10,17 @@ Scoring
 ``composite_score`` (0-1) is the pipeline ``integrated_score`` plus small,
 fully documented bonuses:
 
-+----------------------+------+------------------------------------------------+
-| bonus                | wt   | conditions                                    |
-+----------------------+------+------------------------------------------------+
-| tf_domain            | 0.05 | DNA-binding domain (PlanMine) or TF flag in   |
-|                      |      | the King mmc4 catalog                         |
-+----------------------+------+------------------------------------------------+
-| go_neural            | 0.03 | any GO term flagged neural                    |
-+----------------------+------+------------------------------------------------+
-| go_tf                | 0.02 | any GO term flagged transcription-related     |
-+----------------------+------+------------------------------------------------+
-| human_ortholog       | 0.02 | clear human BLAST ortholog (PlanMine or mmc4) |
-+----------------------+------+------------------------------------------------+
-| brain_phenotype (A)  | 0.02 | RNAi screen phenotype in King mmc5            |
-+----------------------+------+------------------------------------------------+
++----------------------+------+
+| bonus                | wt   |
++----------------------+------+
+| tf_domain            | 0.05 |
++----------------------+------+
+| go_neural            | 0.03 |
++----------------------+------+
+| go_tf                | 0.02 |
++----------------------+------+
+| human_ortholog       | 0.02 |
++----------------------+------+
 
 Bonuses are small and additive; the pipeline score stays dominant.
 
@@ -47,7 +44,6 @@ BONUS_TF_DOMAIN = 0.05
 BONUS_GO_NEURAL = 0.03
 BONUS_GO_TF = 0.02
 BONUS_HUMAN_ORTHOLOG = 0.02
-BONUS_BRAIN_PHENOTYPE = 0.02
 
 MAX_COMPOSITE = 1.0
 
@@ -319,8 +315,6 @@ def _composite_score(row: pd.Series) -> float:
         bonus += BONUS_GO_TF
     if _has_ortholog(row):
         bonus += BONUS_HUMAN_ORTHOLOG
-    if str(row.get("proof_status", "")).strip() == "known_rnai_validated":
-        bonus += BONUS_BRAIN_PHENOTYPE
     return min(MAX_COMPOSITE, base + bonus)
 
 

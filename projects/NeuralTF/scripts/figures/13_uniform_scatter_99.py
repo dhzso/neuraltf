@@ -1,4 +1,4 @@
-"""Uniform Dirichlet — integrated score vs uniform median (all 249 candidates)."""
+"""Uniform Dirichlet — integrated score vs uniform median (all TF candidates)."""
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from style import *
@@ -25,7 +25,7 @@ def build():
             transform=ax.transAxes, fontsize=8, va="top",
             bbox=dict(boxstyle="round",fc="white",alpha=0.8))
     ax.set_xlabel("Fixed-weight integrated score")
-    ax.set_ylabel("Uniform Dirichlet median score (alpha=1)")
+    ax.set_ylabel("Uniform Dirichlet median score")
     ax.set_title(f"Fixed-weight and uniform Dirichlet scores are strongly correlated (rho = {rho:.2f})",
                  fontweight="bold", pad=8)
     from matplotlib.lines import Line2D
@@ -35,6 +35,6 @@ def build():
                       plt.Line2D([0],[0], color="#999", ls="--", lw=0.8, label="y = x")]
     ax.legend(handles=legend_handles, frameon=False, fontsize=7)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
-    fig.tight_layout(); save(fig, "13_uniform_scatter_99")
+    fig.tight_layout(); save(fig, "13_uniform_scatter_all")
 
 if __name__=="__main__": build()

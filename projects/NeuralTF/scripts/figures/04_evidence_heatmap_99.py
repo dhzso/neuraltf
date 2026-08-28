@@ -1,4 +1,4 @@
-"""Evidence heatmap for all 99 neural-filtered candidates × 7 streams."""
+"""Evidence heatmap for all neural-filtered candidates × 9 streams."""
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from style import *
@@ -42,6 +42,6 @@ def build():
     track_handles = [Line2D([0],[0], marker="o", color="w", markerfacecolor=C_A, markersize=6, label="RNAi-validated"),
                      Line2D([0],[0], marker="o", color="w", markerfacecolor="#333", markersize=6, label="Other")]
     ax.legend(handles=track_handles, loc="upper right", fontsize=6, frameon=True, title="Gene label color", title_fontsize=7)
-    fig.tight_layout(); save(fig, "04_evidence_heatmap_99")
+    fig.tight_layout(); save(fig, "04_evidence_heatmap_neural")
 
 if __name__=="__main__": build()

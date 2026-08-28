@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-"""Permutation baseline for NeuralTF pipeline.
+"""Full permutation test across all 9 evidence streams.
 
-Shuffles cluster labels in scRNA-seq atlases to generate null distribution
-of integrated scores. Computes empirical p-values for real candidates.
+Shuffles cluster labels in all available atlases to generate null
+distribution of integrated scores. Computes empirical p-values for
+real candidates.
 
 Usage:
-    python scripts/permutation_baseline.py --n-perm 10 --subsample 2000
+    python scripts/stats/permutation_test_full.py --n-perm 1000 --subsample 2000
 """
 
 import argparse
@@ -17,15 +18,17 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 RUN_DIR = REPO / "projects" / "NeuralTF" / "runs" / "pipeline_run"
 RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
+FIG_DIR = REPO / "projects" / "NeuralTF" / "figures"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 # Evidence sources (same as pipeline)
 STREAMS = ["expression", "specificity", "reproducibility", "rnai",
            "correlation", "neural_enriched", "neural_specificity",
            "perez_lineage", "perez_influence"]
-# Default weights: expression 0.2, all other 8 streams 0.1 each
 W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 
 # Paths
@@ -44,7 +47,7 @@ def load_tf_catalog():
 
 
 def load_bridge():
-    """Load bridge table as BridgeTable for v4<->v6 mapping."""
+    """Load bridge table for v4<->v6 mapping."""
     from bioforge.evidence import load_bridge as _load_bridge
     return _load_bridge(BRIDGE_PATH)
 
@@ -117,15 +120,15 @@ def integrated_score_with_renorm(S: np.ndarray, W: np.ndarray) -> float:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Permutation baseline for NeuralTF")
-    parser.add_argument("--n-perm", type=int, default=10, help="Number of permutations")
+    parser = argparse.ArgumentParser(description="Full permutation test for NeuralTF")
+    parser.add_argument("--n-perm", type=int, default=1000, help="Number of permutations")
     parser.add_argument("--subsample", type=int, default=2000, help="Subsample cells for speed")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     args = parser.parse_args()
 
     rng = np.random.default_rng(args.seed)
 
-    print(f"=== Permutation Baseline (n={args.n_perm}) ===")
+    print(f"=== Full Permutation Test (n={args.n_perm}) ===")
     print(f"Subsample: {args.subsample} cells per atlas")
 
     # Load data
@@ -156,8 +159,6 @@ def main():
     null_scores = {v6: [] for v6 in tf_ids_norm}
 
     for perm in range(args.n_perm):
-        print(f"\nPermutation {perm+1}/{args.n_perm}...")
-
         # Score Fincher
         fincher_scores = score_one_atlas_permuted(adata_fincher, "fincher", tf_ids_norm, bridge, rng)
         # Score Plass
@@ -166,7 +167,6 @@ def main():
         # Merge (best-atlas-wins for expression & specificity)
         for v6 in tf_ids_norm:
             S = np.full(9, np.nan)
-            # Expression: max of two atlases
             expr_vals = []
             spec_vals = []
             for scores in [fincher_scores, plass_scores]:
@@ -180,19 +180,11 @@ def main():
             if spec_vals:
                 S[1] = max(spec_vals)
 
-            # Other streams are 0/NaN in permutation (no King, Cui, RNAi, corr)
-            # Reproducibility = 0 (no atlas membership in permuted)
-            # Neural = 0
-            # RNAi = 0 (not permuted)
-            # Correlation = 0
-            # Perez lineage = 0 (not permuted)
-            # Perez influence = 0 (not permuted)
-
             score = integrated_score_with_renorm(S, W_DEFAULT)
             null_scores[v6].append(score)
 
-        if (perm + 1) % 5 == 0:
-            print(f"  Completed {perm+1} permutations")
+        if (perm + 1) % 100 == 0:
+            print(f"  Completed {perm+1}/{args.n_perm} permutations")
 
     # Load real scores for comparison
     real_rank_path = RUN_DIR / "rank.csv"
@@ -209,7 +201,6 @@ def main():
     for v6, real_s in real_scores.items():
         if v6 in null_scores and null_scores[v6]:
             null_dist = np.array(null_scores[v6])
-            # p = (n_null >= real + 1) / (n_perm + 1)
             p = (np.sum(null_dist >= real_s) + 1) / (len(null_dist) + 1)
             pvals[v6] = p
         else:
@@ -228,7 +219,7 @@ def main():
     real_names = dict(zip(real_rank["gene_id"], real_rank["gene_name"]))
     out_df["gene_name"] = out_df["gene_id"].map(real_names)
 
-    out_path = RESULTS_DIR / "permutation_pvalues.csv"
+    out_path = RESULTS_DIR / "permutation_pvalues_full.csv"
     out_df.to_csv(out_path, index=False)
     print(f"Saved permutation p-values to {out_path}")
 

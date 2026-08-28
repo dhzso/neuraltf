@@ -36,7 +36,7 @@ def build():
         ax.text(r["median_abs"]+0.05, i, f'ΔTop10={r["n_displaced"]}', fontsize=7, va="center",
                 color=C_HL if r["n_displaced"]>0 else "#999")
     ax.set_yticks(y); ax.set_yticklabels([STREAM_L[s] for s in stats["stream"]], fontsize=8)
-    ax.set_xlabel("Median |rank change| (99 candidates)"); ax.set_ylabel("Evidence stream removed")
+    ax.set_xlabel(f"Median |rank change| ({len(neural)} candidates)"); ax.set_ylabel("Evidence stream removed")
     ax.set_title("Removing expression or reproducibility causes largest rank shifts",
                  fontweight="bold", pad=8)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)

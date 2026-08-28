@@ -1,4 +1,4 @@
-"""Evidence stream coverage across all 249 TF candidates."""
+"""Evidence stream coverage across all TF candidates."""
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from style import *
@@ -30,6 +30,6 @@ def build():
     from matplotlib.patches import Patch
     ax.legend(handles=[Patch(facecolor=STREAM_C[s], label=STREAM_L[s]) for s in STREAM_COLS],
               loc="lower right", fontsize=6, frameon=True, title="Stream", title_fontsize=7)
-    fig.tight_layout(); save(fig, "01_stream_coverage_249")
+    fig.tight_layout(); save(fig, "01_stream_coverage_all")
 
 if __name__=="__main__": build()

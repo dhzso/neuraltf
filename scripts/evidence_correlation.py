@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Evidence stream correlation analysis for NeuralTF pipeline.
 
-Computes correlation matrix and PCA of the 7 evidence streams
+Computes correlation matrix and PCA of the 9 evidence streams
 to assess independence assumptions.
 
 Outputs:
@@ -26,7 +26,8 @@ RUN_DIR = REPO / "projects" / "NeuralTF" / "runs" / "pipeline_run"
 RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
 
 STREAMS = ["expression", "specificity", "reproducibility", "rnai",
-           "correlation", "neural_enriched", "neural_specificity"]
+           "correlation", "neural_enriched", "neural_specificity",
+           "perez_lineage", "perez_influence"]
 STREAM_LABELS = {
     "expression": "Expression",
     "specificity": "Specificity",
@@ -35,6 +36,8 @@ STREAM_LABELS = {
     "correlation": "Correlation",
     "neural_enriched": "Neural Enriched",
     "neural_specificity": "Neural Specificity",
+    "perez_lineage": "Perez Lineage",
+    "perez_influence": "Perez Influence",
 }
 
 

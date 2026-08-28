@@ -5,15 +5,15 @@ weight draws** instead of the single fixed-weight score, then selects the
 top 5 per track using the same composite-score bonus scheme.
 
 SCIENTIFIC RATIONALE:
-The pipeline's integrated score is a weighted sum of 7 evidence streams:
+The pipeline's integrated score is a weighted sum of 9 evidence streams:
   integrated_score = sum(w_i * stream_i)
-with fixed weights W = [0.211, 0.105, 0.158, 0.158, 0.105, 0.158, 0.105].
+with fixed weights W = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1].
 
 The weight choice is somewhat arbitrary. This script assesses robustness
 by sampling weight vectors from a Dirichlet distribution centered on W
 (concentration k=40, equivalent to ~40 pseudo-observations, giving
 ~95% of weight mass within ±0.1 of default weights). For each of 1000
-draws, all 99 candidates are re-scored with the sampled weights. The
+draws, all candidates are re-scored with the sampled weights. The
 median score across draws is the "Dirichlet-robust" score.
 
 This is a proper weight sensitivity analysis: the SAME weight vector is
@@ -64,9 +64,10 @@ KING_DIR = REPO / "datasets" / "raw" / "Supplementary_Data_ King_2024"
 # Constants (same as dirichlet_rank_analysis.py)
 # ---------------------------------------------------------------------------
 STREAMS = ["expression", "specificity", "reproducibility", "rnai",
-           "correlation", "neural_enriched", "neural_specificity", "perez_lineage"]
-# W_DEFAULT: expression=0.2, all 7 others=0.1 each (renormalized per candidate)
-W_DEFAULT = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
+           "correlation", "neural_enriched", "neural_specificity",
+           "perez_lineage", "perez_influence"]
+# W_DEFAULT: expression=0.2, all 8 others=0.1 each (renormalized per candidate)
+W_DEFAULT = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
 
 N_DRAWS = 1000
 K_DIR   = 40.0

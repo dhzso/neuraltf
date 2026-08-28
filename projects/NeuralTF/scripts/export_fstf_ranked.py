@@ -1,20 +1,20 @@
 #!/usr/bin/env python
-"""Export ranked FSTF (Planarian Stem Cell Transcription Factor) CSVs.
+"""Export ranked TF (Transcription Factor) CSVs.
 
-Three scope levels from King 2024 mmc4 TF catalog (FSTF? = yes):
+Three scope levels from King 2024 mmc4 TF catalog:
 
-  19 FSTFs — neural-filtered: FSTFs with King neural signal or RNAi evidence
-  43 FSTFs — candidates: FSTFs that passed expression filter (p ≤ 0.05)
-  74 FSTFs — catalog: all FSTFs from King mmc4 TF sheet
+  19 TFs — neural-filtered: TFs with King neural signal or RNAi evidence
+  43 TFs — candidates: TFs that passed expression filter (p ≤ 0.05)
+  74 TFs — catalog: all TFs from King mmc4 TF sheet
 
 All outputs sorted by composite score (descending), with rich columns:
   gene_id_v6, gene_id_v4, gene_name, track, rank, composite_score,
   proof_status, domains_all, human_ortholog, rnai_phenotype_notes
 
 Outputs:
-  projects/NeuralTF/results/fstf_ranked_19_neural.csv
-  projects/NeuralTF/results/fstf_ranked_43_all.csv
-  projects/NeuralTF/results/fstf_ranked_74_catalog.csv
+  projects/NeuralTF/results/tf_ranked_neural_top19.csv
+  projects/NeuralTF/results/tf_ranked_all_top43.csv
+  projects/NeuralTF/results/tf_ranked_catalog_top74.csv
 
 Usage:
     python projects/NeuralTF/scripts/export_fstf_ranked.py
@@ -158,20 +158,20 @@ def main() -> int:
         "human_ortholog", "rnai_phenotype_notes",
     ]
 
-    # --- Scope 1: 19 FSTFs in neural-filtered set --------------------------
+    # --- Scope 1: 19 TFs in neural-filtered set --------------------------
     neural_mask = cand["neural_enriched"].notna() | (cand["rnai"] > 0)
     fstf_19 = cand[neural_mask & cand["gene_id"].isin(fstf_ids_74)].copy()
     fstf_19["rank"] = range(1, len(fstf_19) + 1)
-    fstf_19[out_cols].to_csv(OUT / "fstf_ranked_19_neural.csv", index=False)
-    print(f"  wrote fstf_ranked_19_neural.csv ({len(fstf_19)} rows)")
+    fstf_19[out_cols].to_csv(OUT / "tf_ranked_neural_top19.csv", index=False)
+    print(f"  wrote tf_ranked_neural_top19.csv ({len(fstf_19)} rows)")
 
-    # --- Scope 2: 43 FSTFs in all candidates -------------------------------
+    # --- Scope 2: 43 TFs in all candidates -------------------------------
     fstf_43 = cand[cand["gene_id"].isin(fstf_ids_74)].copy()
     fstf_43["rank"] = range(1, len(fstf_43) + 1)
-    fstf_43[out_cols].to_csv(OUT / "fstf_ranked_43_all.csv", index=False)
-    print(f"  wrote fstf_ranked_43_all.csv ({len(fstf_43)} rows)")
+    fstf_43[out_cols].to_csv(OUT / "tf_ranked_all_top43.csv", index=False)
+    print(f"  wrote tf_ranked_all_top43.csv ({len(fstf_43)} rows)")
 
-    # --- Scope 3: 74 FSTFs from catalog (full list) ------------------------
+    # --- Scope 3: 74 TFs from catalog (full list) ------------------------
     # For catalog FSTFs not in 249 candidates, create rows with available data
     fstf_74_in_cand = cand[cand["gene_id"].isin(fstf_ids_74)].copy()
     fstf_74_in_cand["rank"] = range(1, len(fstf_74_in_cand) + 1)
@@ -198,8 +198,8 @@ def main() -> int:
     else:
         fstf_74 = fstf_74_in_cand[out_cols]
 
-    fstf_74.to_csv(OUT / "fstf_ranked_74_catalog.csv", index=False)
-    print(f"  wrote fstf_ranked_74_catalog.csv ({len(fstf_74)} rows)")
+    fstf_74.to_csv(OUT / "tf_ranked_catalog_top74.csv", index=False)
+    print(f"  wrote tf_ranked_catalog_top74.csv ({len(fstf_74)} rows)")
 
     print(f"\n  Done.")
     return 0

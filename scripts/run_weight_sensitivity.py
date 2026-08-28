@@ -26,7 +26,8 @@ FIG_DIR = ROOT / "projects" / "NeuralTF" / "figures"
 RESULTS_DIR = ROOT / "projects" / "NeuralTF" / "results"
 
 STREAMS = ["expression", "specificity", "reproducibility", "rnai",
-           "correlation", "neural_enriched", "neural_specificity"]
+           "correlation", "neural_enriched", "neural_specificity",
+           "perez_lineage", "perez_influence"]
 N_DRAWS = 1000
 SEED = 42
 

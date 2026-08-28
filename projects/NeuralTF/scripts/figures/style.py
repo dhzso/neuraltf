@@ -33,7 +33,8 @@ C_FIXED, C_CENTERED, C_UNIFORM = "#333333", "#56B4E9", "#CC79A7"
 C_NEURAL, C_ALL = "#999999", "#DDDDDD"
 C_HL = "#D55E00"
 STREAM_COLS = ["expression","specificity","reproducibility","rnai",
-               "correlation","neural_enriched","neural_specificity","perez_lineage"]
+               "correlation","neural_enriched","neural_specificity",
+               "perez_lineage","perez_influence"]
 STREAM_C = {"expression":   "#0072B2",
             "specificity":  "#E69F00",
             "reproducibility": "#009E73",
@@ -41,7 +42,8 @@ STREAM_C = {"expression":   "#0072B2",
             "correlation":  "#CC79A7",
             "neural_enriched": "#56B4E9",
             "neural_specificity": "#F0E442",
-            "perez_lineage": "#999933"}   # olive — Perez 2025 lineage evidence
+            "perez_lineage": "#999933",
+            "perez_influence": "#6699CC"}   # steel blue — Perez 2025 ANANSE influence
 STREAM_L = {"expression":   "Expression",
             "specificity":  "Specificity",
             "reproducibility": "Reproducibility",
@@ -49,9 +51,10 @@ STREAM_L = {"expression":   "Expression",
             "correlation":  "Correlation",
             "neural_enriched": "Neural enriched",
             "neural_specificity": "Neural specificity",
-            "perez_lineage": "Perez lineage"}
-# expression=0.2, all 7 others=0.1 (matches EvidenceScorer DEFAULT_WEIGHTS)
-W = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
+            "perez_lineage": "Perez lineage",
+            "perez_influence": "Perez influence"}
+# expression=0.2, all 8 others=0.1 (matches EvidenceScorer DEFAULT_WEIGHTS)
+W = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
 
 def _nid(df):
     if "gene_id_v6" in df.columns and "gene_id" not in df.columns:

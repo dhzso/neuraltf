@@ -244,7 +244,7 @@ def neuraltf() -> None:
          "(default: 0 = keep the complete atlases)",
 )
 def neuraltf_run(out_dir: str | None, subsample: int) -> None:
-    """Run the full NeuralTF pipeline (3 atlases, 7 evidence streams)."""
+    """Run the full NeuralTF pipeline (5 atlases, 9 evidence streams)."""
     from bioforge.projects.neuraltf.pipeline import NeuralTFPipeline
 
     pipe = NeuralTFPipeline(

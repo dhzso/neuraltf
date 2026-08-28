@@ -31,6 +31,7 @@ class EvidenceSource(str, Enum):
     NEURAL_ENRICHED = "neural_enriched"
     NEURAL_SPECIFICITY = "neural_specificity"
     PEREZ_LINEAGE = "perez_lineage"   # Perez 2025 lineage subcluster TF classification
+    PEREZ_INFLUENCE = "perez_influence"  # Perez 2025 ANANSE regulatory influence (MOESM19)
 
 
 class ConfidenceTier(str, Enum):
@@ -87,7 +88,7 @@ class EvidenceRecord:
 
         Returns a value in [0, 1] indicating data completeness. A record with
         all streams populated returns 1.0; one with only 3 streams returns
-        3/7 ≈ 0.43. This metadata does NOT affect the integrated score
+        3/9 ≈ 0.33. This metadata does NOT affect the integrated score
         (which renormalizes over available streams) but allows downstream
         analysis to weight by completeness if desired.
         """

@@ -74,6 +74,11 @@ def main():
         print(f"[INFO] perez_lineage column present: {n_perez} non-null values")
     else:
         print("[WARN] perez_lineage column MISSING from rank.csv — pipeline may not have included Perez stream")
+    if "perez_influence" in rank.columns:
+        n_infl = rank["perez_influence"].notna().sum()
+        print(f"[INFO] perez_influence column present: {n_infl} non-null values")
+    else:
+        print("[WARN] perez_influence column MISSING from rank.csv — pipeline may not have included Perez influence")
 
     errors = []
 
@@ -97,7 +102,7 @@ def main():
 
         ("Export ranked FSTF",
          ["projects", "NeuralTF", "scripts", "export_fstf_ranked.py"],
-         [RES / "fstf_ranked_19_neural.csv"]),
+         [RES / "tf_ranked_neural_top19.csv"]),
 
         ("ANANSE full scan",
          ["projects", "NeuralTF", "scripts", "ananse_full_scan.py"],
@@ -109,7 +114,11 @@ def main():
 
         ("Publication figures",
          ["projects", "NeuralTF", "scripts", "generate_publication_figures.py"],
-         [FIG / "01_stream_coverage_249.png"]),
+         [FIG / "01_stream_coverage_all.png"]),
+
+        ("Statistical tests",
+         ["scripts", "run_statistical_tests.py"],
+         [RES / "permutation_pvalues_full.csv"]),
     ]
 
     for label, script_parts, outputs in steps:

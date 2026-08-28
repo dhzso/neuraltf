@@ -1,4 +1,4 @@
-"""Uniform Dirichlet — 99 neural vs 249 wide (rank-rank comparison)."""
+"""Uniform Dirichlet — neural vs all TF candidates (rank-rank comparison)."""
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from style import *
@@ -38,6 +38,6 @@ def build():
                  fontweight="bold", pad=8)
     ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
 
-    fig.tight_layout(); save(fig, "14_uniform_99vs249_rankrank")
+    fig.tight_layout(); save(fig, "14_uniform_neural_vs_all_rankrank")
 
 if __name__=="__main__": build()

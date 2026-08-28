@@ -942,7 +942,7 @@ def main() -> None:
     st.title("BioForge · NeuralTF")
     st.caption(
         "Planarian neural-fate-specific transcription factor candidate "
-        "discovery (3 atlases, 7 evidence streams)."
+        "discovery (5 atlases, 9 evidence streams)."
     )
     page = st.sidebar.selectbox("Page", ["Run", "Results", "Prioritization", "Assistant"])
     if page == "Run":

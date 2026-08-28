@@ -76,14 +76,14 @@ def main() -> int:
     uniform_249.to_csv(IN_DIR / 'supplementary_table_S5_uniform_all249.csv', index=False)
     print('Created supplementary_table_S5_uniform_all249.csv')
 
-    # S6: FSTF rankings
-    fstf_19 = pd.read_csv(IN_DIR / 'fstf_ranked_19_neural.csv')
-    fstf_43 = pd.read_csv(IN_DIR / 'fstf_ranked_43_all.csv')
-    fstf_74 = pd.read_csv(IN_DIR / 'fstf_ranked_74_catalog.csv')
-    fstf_19.to_csv(IN_DIR / 'supplementary_table_S6_fstf_19_neural.csv', index=False)
-    fstf_43.to_csv(IN_DIR / 'supplementary_table_S7_fstf_43_all.csv', index=False)
-    fstf_74.to_csv(IN_DIR / 'supplementary_table_S8_fstf_74_catalog.csv', index=False)
-    print('Created FSTF supplementary tables')
+    # S6: TF rankings (neural, all, catalog)
+    tf_neural = pd.read_csv(IN_DIR / 'tf_ranked_neural_top19.csv')
+    tf_all = pd.read_csv(IN_DIR / 'tf_ranked_all_top43.csv')
+    tf_catalog = pd.read_csv(IN_DIR / 'tf_ranked_catalog_top74.csv')
+    tf_neural.to_csv(IN_DIR / 'supplementary_table_S6_tf_neural_top19.csv', index=False)
+    tf_all.to_csv(IN_DIR / 'supplementary_table_S7_tf_all_top43.csv', index=False)
+    tf_catalog.to_csv(IN_DIR / 'supplementary_table_S8_tf_catalog_top74.csv', index=False)
+    print('Created TF ranking supplementary tables')
 
     # S7: 99 vs 249 comparison
     # summary.txt is a text file, not a CSV — skip this table

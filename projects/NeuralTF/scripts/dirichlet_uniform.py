@@ -4,12 +4,12 @@
 Unlike `dirichlet_prioritize.py` (which centers the Dirichlet on the default
 weights), this script uses a **uniform Dirichlet** — no prior preference for
 any weighting. This answers: "If we knew nothing about the relative importance
-of the 7 evidence streams, which candidates emerge as best supported across
+of the 9 evidence streams, which candidates emerge as best supported across
 ALL plausible weightings?"
 
 Method:
-    alpha_i = 1 for all 7 streams  (uniform over the 7-simplex)
-    Sample 1000 weight vectors, apply each to ALL 99 candidates,
+    alpha_i = 1 for all 9 streams  (uniform over the 9-simplex)
+    Sample 1000 weight vectors, apply each to ALL candidates,
     take the median integrated score.
 
 SCIENTIFIC RATIONALE:
@@ -65,7 +65,7 @@ from bioforge.projects.neuraltf.prioritize import attach_v4
 ALPHA_UNIFORM = np.ones(len(STREAMS), dtype=float)
 
 # Default weights (expression=0.2, all others=0.1)
-W_DEFAULT = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
+W_DEFAULT = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +76,7 @@ def dirichlet_uniform_median_scores(S: np.ndarray,
                                     seed: int) -> np.ndarray:
     """Median integrated score across draws under uniform Dirichlet prior.
 
-    Each draw samples ONE weight vector uniformly from the 7-simplex
+    Each draw samples ONE weight vector uniformly from the 9-simplex
     (alpha_i = 1 for all streams). The SAME weight vector is applied to
     ALL candidates per draw.
     """
@@ -99,7 +99,7 @@ def dirichlet_uniform_median_scores(S: np.ndarray,
 # ---------------------------------------------------------------------------
 def main() -> int:
     print("== Dirichlet-UNIFORM (non-informative) prioritization ==")
-    print(f"  Prior: Dirichlet(alpha_i=1) — uniform over 7-simplex")
+    print(f"  Prior: Dirichlet(alpha_i=1) — uniform over 9-simplex")
     print(f"  Draws: {N_DRAWS}, seed: {SEED}")
 
     # Load data
@@ -322,7 +322,7 @@ def main() -> int:
             "Dirichlet-UNIFORM Prior: Summary Report",
             "=" * 50,
             "",
-            f"Method: Uniform Dirichlet prior (alpha_i=1) over 7-simplex",
+            f"Method: Uniform Dirichlet prior (alpha_i=1) over 9-simplex",
             f"Draws: {N_DRAWS}, Seed: {SEED}",
             "",
             "Interpretation: Non-informative prior — no preference for any",
