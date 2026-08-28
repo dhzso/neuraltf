@@ -141,12 +141,12 @@ def test_atlas_harmonizer_unknown_atlas_raises() -> None:
 
 
 def test_default_weights_valid_and_positive() -> None:
-    # 8 streams in total: expression=0.200 (highest priority), other 7=0.100 each.
+    # 9 streams in total: expression=0.200 (highest priority), other 8=0.100 each.
     # EvidenceScorer renormalizes over streams present per record.
     assert len(DEFAULT_WEIGHTS) == len(EvidenceSource)
     assert all(w > 0 for w in DEFAULT_WEIGHTS.values())
     assert DEFAULT_WEIGHTS[EvidenceSource.EXPRESSION] > DEFAULT_WEIGHTS[EvidenceSource.SPECIFICITY]
-    assert abs(sum(DEFAULT_WEIGHTS.values()) - 0.900) < 1e-9
+    assert abs(sum(DEFAULT_WEIGHTS.values()) - 1.000) < 1e-9
 
 
 

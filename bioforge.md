@@ -101,7 +101,7 @@ python projects/NeuralTF/scripts/ananse_full_scan.py
 python scripts/query_planmine.py --skip-cache
 python scripts/prioritize_neural_tfs.py
 
-# Supplementary tables & 21 publication figures
+# Supplementary tables & 33 publication figures
 python projects/NeuralTF/scripts/generate_publication_figures.py
 ```
 

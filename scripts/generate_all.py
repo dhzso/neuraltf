@@ -159,6 +159,9 @@ def _ready(root: Path, step: str) -> str | None:
             and (root / "datasets" / "raw" / "Supplementary_Data_ Perez_2025"
                  / "41467_2025_65712_MOESM22_ESM.xlsx").exists(),
             "rank.csv or Perez MOESM22 missing"),
+        "Statistical tests": (
+            (run / "rank.csv").exists(),
+            "rank.csv missing (run the pipeline first)"),
     }
     ok, why = rules[step]
     return None if ok else why

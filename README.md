@@ -1,8 +1,8 @@
 # BioForge · NeuralTF
 
-A reproducible pipeline for **planarian neural-fate-specific transcription factor** discovery. Integrates **five single-cell and regulatory atlases** (Fincher 2018, Plass 2018, Cui 2023, King 2024, Perez 2025) with 8 evidence streams, Bayesian Dirichlet uncertainty quantification, and ANANSE gene regulatory network validation to prioritize high-confidence targets for RNAi and functional validation.
+A reproducible pipeline for **planarian neural-fate-specific transcription factor** discovery. Integrates **five single-cell and regulatory atlases** (Fincher 2018, Plass 2018, Cui 2023, King 2024, Perez 2025) with 9 evidence streams, Bayesian Dirichlet uncertainty quantification, and ANANSE gene regulatory network validation to prioritize high-confidence targets for RNAi and functional validation.
 
-> **Latest Pipeline Status:** 289 candidate TFs scored across 8 evidence streams → 102 neural-enriched candidates → top-10 consensus across fixed-weight, centered Dirichlet, and uniform Dirichlet methods.
+> **Latest Pipeline Status:** 289 candidate TFs scored across 9 evidence streams → 102 neural-enriched candidates → top-10 consensus across fixed-weight, centered Dirichlet, and uniform Dirichlet methods.
 
 ---
 
@@ -25,7 +25,7 @@ python scripts/generate_all.py
 
 # 3. Or run the pipeline and downstream analyses step-by-step:
 python scripts/run.py                        # Core pipeline (Fincher, Plass, Cui, King, Perez)
-python scripts/run_downstream.py             # Dirichlet UQ, ANANSE scan, tables & 21 figures
+python scripts/run_downstream.py             # Dirichlet UQ, ANANSE scan, tables & 33 figures
 
 # 4. Launch the interactive Streamlit UI
 bioforge ui                                  # http://localhost:8501
@@ -35,7 +35,7 @@ bioforge ui                                  # http://localhost:8501
 
 | File | Content |
 |------|---------|
-| `rank.csv` | All **289 candidates** with scores across all 8 evidence streams |
+| `rank.csv` | All **289 candidates** with scores across all 9 evidence streams |
 | `rank_neural.csv` | **102 neural-enriched candidates** with proof status |
 | `evidence_cards.md` | Per-candidate markdown evidence summary (289 cards) |
 | `pipeline_results.json` | Machine-readable candidate metadata |
@@ -51,13 +51,16 @@ bioforge ui                                  # http://localhost:8501
 | `dirichlet_top10_prioritized.csv` | Dual-track top-10 shortlist (5 Track A + 5 Track B) |
 | `ananse_network_full.csv` | ANANSE GRN scan across all 289 candidates & 9 cell fates |
 | `ananse_top_regulators.csv` | Top planarian neural regulators ranked by out-degree |
-| `supplementary_table_S1` – `S5` | Method comparison, full rank tables, and Dirichlet analyses |
+| `tf_ranked_neural_top19.csv` | Top 19 TFs: neural-filtered candidates |
+| `tf_ranked_all_top43.csv` | Top 43 TFs: all expression-filtered candidates |
+| `tf_ranked_catalog_top74.csv` | Top 74 TFs: full King mmc4 catalog |
+| `supplementary_table_S1` – `S12` | Method comparison, rank tables, Dirichlet analyses, and statistical tests |
 
 ---
 
 ## What It Does
 
-The pipeline seeds candidate TFs across five single-cell and regulatory atlases, computes an 8-stream multi-evidence matrix, evaluates scoring stability under Dirichlet uncertainty sampling, and maps candidates into cell-fate regulatory circuits.
+The pipeline seeds candidate TFs across five single-cell and regulatory atlases, computes a 9-stream multi-evidence matrix, evaluates scoring stability under Dirichlet uncertainty sampling, and maps candidates into cell-fate regulatory circuits.
 
 ### Atlases Integrated (5)
 
@@ -67,11 +70,11 @@ The pipeline seeds candidate TFs across five single-cell and regulatory atlases,
 | **Plass** | 2018 | scRNA-seq (37.5K cells, v6 IDs) | Independent whole-anatomy replication & X1 dynamics |
 | **Cui** | 2023 | scRNA-seq (55.0K cells, 8 time points) | High-resolution regeneration time-course expression |
 | **King** | 2024 | Single-cell TF catalog + RNAi screen | G0/X1 cluster enrichment, RNAi phenotypes (mmc5), TF pair correlations (mmc6) |
-| **Perez** | 2025 | Lineage atlas + ANANSE GRNs | Lineage TF classification (MOESM5) & ANANSE GRN target validation (MOESM22) |
+| **Perez** | 2025 | Lineage atlas + ANANSE GRNs | Lineage TF classification (MOESM5), ANANSE GRN validation (MOESM22), regulatory influence (MOESM19) |
 
 ---
 
-## Evidence Streams & Scoring Model (8 Streams)
+## Evidence Streams & Scoring Model (9 Streams)
 
 Scoring utilizes a transparent, weighted multi-evidence integration model. Weights renormalize over streams present for each candidate:
 
@@ -79,20 +82,21 @@ $$\text{Integrated Score} = \sum_{i \in \text{Present}} w_i \cdot s_i \Bigg/ \su
 
 | # | Stream | Default Weight ($w_i$) | Biological Basis & Computation |
 |---|--------|------------------------|---------------------------------|
-| 1 | **Expression** | 0.200 | $\min(1.0, \max(\text{log}_2\text{FC})/5)$ across Fincher, Plass, and Cui scRNA-seq atlases |
+| 1 | **Expression** | 0.200 | $\min(1.0, \max(\text{log}_2\text{FC})/5)$ across Fincher, Plass, Cui, and King scRNA-seq atlases |
 | 2 | **Specificity** | 0.100 | $1 / n_{\text{clusters}}$ supporting differential expression |
 | 3 | **Reproducibility** | 0.100 | $n_{\text{atlases supporting}} / 5$ (Fincher, Plass, Cui, King, Perez) |
 | 4 | **RNAi** | 0.100 | Binary indicator (1.0) if functional phenotype observed in King mmc5 screen |
 | 5 | **Correlation** | 0.100 | $\min(1.0, \Delta r_{\text{G0-X1}} \times 3.0)$ co-expression gain from King mmc6 |
 | 6 | **Neural Enriched** | 0.100 | Binary indicator (1.0) for G0 neural subcluster log₂FC ≥ 2.0 (King mmc7) |
 | 7 | **Neural Specificity** | 0.100 | $1 / n_{\text{neural subclusters}}$ present in King atlas |
-| 8 | **Perez Lineage** | 0.100 | Perez 2025 lineage TF class: **1.0** for neural-class (bHLH, Homeobox, POU, C2H2, ETS, etc.), **0.5** for other TF classes, **0.0** if absent |
+| 8 | **Perez Lineage** | 0.100 | Perez 2025 lineage TF class: **1.0** for neural-class, **0.5** for other TF classes, **0.0** if absent |
+| 9 | **Perez Influence** | 0.100 | Perez 2025 ANANSE regulatory influence in neuron fate (MOESM19), normalized 0–1 rank |
 
 ### Confidence Tiers & Proof Status
 
 - **Tier Assignment**:
-  - **HIGH**: RNAi-validated OR (supporting streams $\ge 3$ AND score $\ge 0.45$)
-  - **MEDIUM**: supporting streams $\ge 2$ AND score $\ge 0.25$
+  - **HIGH**: RNAi-validated OR (supporting streams ≥ 3 AND score ≥ 0.45)
+  - **MEDIUM**: supporting streams ≥ 2 AND score ≥ 0.25
   - **LOW**: All other candidates
 - **Proof Status**:
   - `known_rnai_validated` — Confirmed neural/regeneration phenotype in King et al. RNAi screen
@@ -131,20 +135,85 @@ To test sensitivity against arbitrary weighting assumptions, we employ Monte Car
    - `python projects/NeuralTF/scripts/dirichlet_prioritize.py` (102 neural candidates)
 
 2. **Uniform Dirichlet ($\alpha_i = 1$)**:
-   $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_8)$$
-   Samples uniformly across the entire 8-simplex to discover robust data-driven signals without prior preference.
+   $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
+   Samples uniformly across the entire 9-simplex to discover robust data-driven signals without prior preference.
    - `python projects/NeuralTF/scripts/dirichlet_uniform_all249.py` (all 289 candidates)
    - `python projects/NeuralTF/scripts/dirichlet_uniform.py` (102 neural candidates)
 
 ---
 
-## ANANSE Gene Regulatory Network Scan
+## Statistical Validation Suite (14 Tests)
 
-Validates candidates against the Perez 2025 ANANSE computational GRN (13,746 interactions across 9 cell fates):
-- **30 / 289 candidates** act as primary upstream TF regulators
-- **50 / 289 candidates** are downstream target genes in neural/differentiation pathways
-- **12 candidates** function as core feedback hubs (both TF regulator and target)
-- Output: `projects/NeuralTF/results/ananse_network_full.csv`
+The pipeline includes a comprehensive statistical validation suite to ensure publication-grade rigor:
+
+| # | Test | Script | Key Metrics |
+|---|------|--------|-------------|
+| 1 | **Full Permutation Test** | `scripts/stats/permutation_test_full.py` | Empirical p-values (n=1,000 permutations) |
+| 2 | **Bootstrap Confidence Intervals** | `scripts/stats/bootstrap_confidence.py` | 95% CI on integrated scores |
+| 3 | **Overlap Significance** | `scripts/stats/overlap_significance.py` | Hypergeometric, Fisher's exact, binomial tests |
+| 4 | **Precision-Recall Analysis** | `scripts/stats/precision_recall.py` | Precision@5, Precision@10, PR-AUC |
+| 5 | **Negative Controls** | `scripts/stats/negative_controls.py` | Random non-TF & non-neural TF distributions |
+| 6 | **Effect Sizes** | `scripts/stats/effect_sizes.py` | Cliff's delta, Cohen's d, Mann-Whitney U |
+| 7 | **Leave-One-Atlas-Out** | `scripts/stats/leave_one_atlas_out.py` | Top-10 stability per excluded atlas |
+| 8 | **Meta-Analytic P-values** | `scripts/stats/meta_analytic_pvalue.py` | Fisher's & Stouffer's combined p-values |
+| 9 | **Power Analysis** | `scripts/stats/power_analysis.py` | Convergence & power curves |
+| 10 | **Mann-Whitney U (Top-10)** | `scripts/stats/mann_whitney_top10.py` | Rank-biserial correlation |
+| 11 | **Calibration Analysis** | `scripts/stats/calibration.py` | Empirical positive rates per decile |
+| 12 | **Brier Score** | `scripts/stats/brier_score.py` | Probabilistic classification accuracy |
+| 13 | **Cross-Method Correction** | `scripts/stats/cross_method_correction.py` | Bonferroni/BH-FDR for 3-method consensus |
+| 14 | **Score Shuffling Permutation** | `scripts/stats/score_shuffling_permutation.py` | Stream-assignment null model |
+
+Run all tests:
+```bash
+python scripts/run_statistical_tests.py
+```
+
+---
+
+## Publication Figures (33 Figures)
+
+### Main Figures (1–21)
+
+| # | File | Description |
+|---|------|-------------|
+| 01 | `01_stream_coverage_all.png` | Evidence stream coverage across all TF candidates |
+| 02 | `02_integrated_vs_composite.png` | Integrated vs composite score distribution |
+| 03 | `03_score_distribution_all_vs_neural.png` | Score distribution: all vs neural-filtered |
+| 04 | `04_evidence_heatmap_neural.png` | Evidence heatmap for neural candidates |
+| 05 | `05_top10_candidate_atlas.png` | Top-10 candidate atlas visualization |
+| 06 | `06_weight_sensitivity_ranks.png` | Weight sensitivity rank distributions |
+| 07 | `07_weight_sensitivity_ptop10.png` | Weight sensitivity P(Top10) |
+| 08 | `08_stream_ablation_global.png` | Stream ablation global impact |
+| 09 | `09_stream_ablation_candidate.png` | Stream ablation candidate sensitivity |
+| 10 | `10_centered_top10_scores.png` | Centered Dirichlet top-10 scores |
+| 11 | `11_centered_scatter_neural.png` | Fixed vs centered Dirichlet scatter |
+| 12 | `12_uniform_top10_scores.png` | Uniform Dirichlet top-10 scores |
+| 13 | `13_uniform_scatter_all.png` | Fixed vs uniform Dirichlet scatter |
+| 14 | `14_uniform_neural_vs_all_rankrank.png` | Neural vs all rank-rank comparison |
+| 15 | `15_method_bumpchart.png` | 3-method rank comparison |
+| 16 | `16_method_score_density.png` | 3-method score density |
+| 17 | `17_method_rank_correlation.png` | 3-method rank correlation |
+| 18 | `18_composite_bonus_waterfall.png` | Composite bonus waterfall |
+| 19 | `19_method_consensus.png` | Method consensus |
+| 20 | `20_stream_correlation.png` | Stream correlation matrix |
+| 21 | `21_centered_vs_uniform_scatter.png` | Centered vs uniform Dirichlet |
+
+### New Statistical Figures (22–33)
+
+| # | File | Description |
+|---|------|-------------|
+| 22 | `22_pipeline_schematic.png` | Conceptual pipeline diagram |
+| 23 | `23_roc_pr_curve.png` | ROC and PR curves (RNAi ground truth) |
+| 24 | `24_negative_controls.png` | Negative control distributions |
+| 25 | `25_bootstrap_ci.png` | Bootstrap confidence intervals |
+| 26 | `26_permutation_null.png` | Permutation null distribution |
+| 27 | `27_loo_atlas_stability.png` | Leave-one-atlas-out stability |
+| 28 | `28_effect_sizes.png` | Effect size annotations |
+| 29 | `29_convergence_analysis.png` | Convergence analysis |
+| 30 | `30_calibration.png` | Calibration reliability diagram |
+| 31 | `31_score_distribution_all9.png` | Score distribution (9 streams) |
+| 32 | `32_perez_influence_comparison.png` | Perez influence comparison |
+| 33 | `33_method_agreement_summary.png` | Method agreement summary |
 
 ---
 
@@ -158,7 +227,7 @@ Bioinformatics/
 │
 ├── src/bioforge/                             BioForge Core Framework
 │   ├── evidence/                             Multi-stream evidence engine
-│   │   ├── schema.py                         EvidenceRecord & 8-stream EvidenceSource enum
+│   │   ├── schema.py                         EvidenceRecord & 9-stream EvidenceSource enum
 │   │   ├── scoring.py                        Weighted score integration & DEFAULT_WEIGHTS
 │   │   ├── confidence.py                     Tier classification (HIGH/MEDIUM/LOW)
 │   │   └── cards.py                          Markdown evidence card generation
@@ -191,23 +260,39 @@ Bioinformatics/
 │   │   ├── dirichlet_centered_all249.py      Centered Dirichlet k=40 (all 289 candidates)
 │   │   ├── dirichlet_uniform_all249.py       Uniform Dirichlet α=1 (all 289 candidates)
 │   │   ├── ananse_full_scan.py               ANANSE GRN scan across all 289 candidates
-│   │   ├── export_fstf_ranked.py             Export ranked FSTF tables
-│   │   ├── create_supplementary_tables.py    Generate supplementary tables S1–S5
-│   │   ├── generate_publication_figures.py   Generate 21 publication figures
-│   │   └── figures/                          21 modular figure generation scripts & style.py
+│   │   ├── export_fstf_ranked.py             Export ranked TF tables
+│   │   ├── create_supplementary_tables.py    Generate supplementary tables S1–S12
+│   │   ├── generate_publication_figures.py   Generate 33 publication figures
+│   │   └── figures/                          33 modular figure generation scripts & style.py
 │   ├── results/                              Dirichlet, ANANSE, and supplementary tables (gitignored)
-│   ├── figures/                              21 publication-ready PNG figures (gitignored)
+│   ├── figures/                              33 publication-ready PNG figures (gitignored)
 │   └── runs/pipeline_run/                    rank.csv, rank_neural.csv, 6 checkpoint parquets
 │
 └── scripts/                                  Master Orchestration & Build Scripts
     ├── generate_all.py                       End-to-end multi-step master pipeline runner
-    ├── run_downstream.py                     Post-pipeline runner (Dirichlet, ANANSE, figures)
+    ├── run_downstream.py                     Post-pipeline runner (Dirichlet, ANANSE, figures, stats)
+    ├── run_statistical_tests.py              Run all 14 statistical tests
     ├── run.py                                Core pipeline execution entry point
     ├── build_bridge.py                       Build v4↔v6 gene ID bridge from Rosetta Stone
     ├── build_king_atlas.py                   Build king_atlas.tsv from King mmc7
     ├── build_master_catalog.py               Merge King mmc4 + Perez MOESM5 TF catalog
     ├── convert_fincher.py                    Convert Fincher DGE to H5AD
-    └── consolidate_plass.py                  Consolidate Plass RAW.tar to H5AD
+    ├── consolidate_plass.py                  Consolidate Plass RAW.tar to H5AD
+    └── stats/                                14 statistical test scripts
+        ├── permutation_test_full.py
+        ├── bootstrap_confidence.py
+        ├── overlap_significance.py
+        ├── precision_recall.py
+        ├── negative_controls.py
+        ├── effect_sizes.py
+        ├── leave_one_atlas_out.py
+        ├── meta_analytic_pvalue.py
+        ├── power_analysis.py
+        ├── mann_whitney_top10.py
+        ├── calibration.py
+        ├── brier_score.py
+        ├── cross_method_correction.py
+        └── score_shuffling_permutation.py
 ```
 
 ---
@@ -216,6 +301,7 @@ Bioinformatics/
 
 - **Deterministic Seeds**: All Dirichlet simulations run with `seed=2024` for 1,000 draws.
 - **Fail-Fast Checkpoints**: Six Parquet checkpoints are recorded at each pipeline stage (`checkpoint_01` through `checkpoint_06`) in `projects/NeuralTF/runs/pipeline_run/`.
+- **Statistical Validation**: 14 comprehensive tests ensure publication-grade rigor.
 - **Unit Tests**: Full test suite passes:
   ```bash
   python -m pytest tests/

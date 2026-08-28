@@ -11,7 +11,8 @@ This document records the biological, statistical, and mathematical justificatio
 $$\text{Score}_{\text{expression}} = \min\left(1.0, \frac{\max(\text{log}_2\text{FC})}{5.0}\right)$$
 
 - **Biological Rationale**: In planarian single-cell RNA sequencing (*Schmidtea mediterranea*), a $\text{log}_2\text{FC} = 5.0$ corresponds to a $2^5 = 32$-fold linear upregulation relative to background non-target cells. Transcription factor (TF) steady-state transcript abundance in whole-animal or tissue clusters reaches saturation in target promoter occupancy well before 32-fold upregulation. Setting the divisor at 5.0 maps the physiological range $[0, 5.0]$ linearly to $[0, 1.0]$. This avoids outlier compression where a single extreme fold-change (e.g., $\text{log}_2\text{FC} = 12$) would compress biologically meaningful, moderately expressed lineage master regulators ($\text{log}_2\text{FC} \in [2.0, 4.0]$) into near-zero scores.
-- **Location**: `src/bioforge/projects/neuraltf/pipeline.py:413-416`
+- **Note**: This normalization is now **unified** across all 4 expression atlases (Fincher, Plass, Cui, King). Previously King used a different normalization; the constant `EXPR_CAP = 5.0` ensures consistency.
+- **Location**: `src/bioforge/projects/neuraltf/pipeline.py:413-416` (Fincher/Plass/Cui), `pipeline.py:482-484` (King)
 - **Sensitivity Analysis**:
   | Divisor | Total Candidates | Top-10 Jaccard vs 5.0 | Biological Behavior |
   |:---:|:---:|:---:|:---|
@@ -96,14 +97,14 @@ $$\text{Score}_{\text{perez\_lineage}} = \begin{cases} 1.0 & \text{if TF class }
 
 $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(k \cdot \mathbf{w}_{\text{default}}), \quad m = 1, \dots, 1000$$
 
-- **Mathematical Rationale**: Fixed-weight scoring models assume exact certainty in parameter weights. The centered Dirichlet model formalizes weight uncertainty by drawing 1,000 weight vectors centered on $\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$. Setting the concentration parameter to $k = 40.0$ corresponds to 40 pseudo-observations of evidence reliability, yielding a 95% credible interval of approximately $\pm 0.10$ around each baseline weight.
+- **Mathematical Rationale**: Fixed-weight scoring models assume exact certainty in parameter weights. The centered Dirichlet model formalizes weight uncertainty by drawing 1,000 weight vectors centered on $\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$. Setting the concentration parameter to $k = 40.0$ corresponds to 40 pseudo-observations of evidence reliability, yielding a 95% credible interval of approximately $\pm 0.10$ around each baseline weight.
 - **Location**: `projects/NeuralTF/scripts/dirichlet_prioritize.py:71`, `dirichlet_centered_all249.py`
 
 ### 3.2 Uniform Dirichlet Prior ($\alpha_i = 1.0, \, \forall i$)
 
-$$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_8)$$
+$$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
 
-- **Mathematical Rationale**: To prove that candidate rankings are driven by intrinsic biological signal rather than investigator weight choices, the uniform Dirichlet samples uniformly across the 8-dimensional probability simplex ($\alpha_i = 1$). Concordance between uniform Dirichlet medians and fixed-weight rankings (**10/10 top-10 overlap**) confirms extreme robustness.
+- **Mathematical Rationale**: To prove that candidate rankings are driven by intrinsic biological signal rather than investigator weight choices, the uniform Dirichlet samples uniformly across the 9-dimensional probability simplex ($\alpha_i = 1$). Concordance between uniform Dirichlet medians and fixed-weight rankings (**10/10 top-10 overlap**) confirms extreme robustness.
 - **Location**: `projects/NeuralTF/scripts/dirichlet_uniform.py`, `dirichlet_uniform_all249.py`
 
 ---
@@ -126,7 +127,7 @@ $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_8)$$
                                 ▼ + King mmc5 RNAi screen targets
 ┌─────────────────────────────────────────────────────────────────┐
 │ 289 Total Candidate TFs (rank.csv)                              │
-│ Scored across all 8 evidence streams                            │
+│ Scored across all 9 evidence streams                            │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │ Neural Gate:
                                 │ (neural_enriched > 0) | (rnai > 0)
@@ -136,3 +137,26 @@ $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_8)$$
 │ (96 G0 neural subcluster hits ∪ 6 RNAi-validated TFs)           │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 5. Evidence Stream Weight Normalization
+
+The 9 evidence streams are weighted as follows:
+
+$$\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$$
+
+- **Expression** (0.2): Highest weight — direct evidence of transcriptional activity
+- **All other 8 streams** (0.1 each): Equal weight — supporting evidence streams
+
+The EvidenceScorer always renormalizes over **present** streams per candidate, so the effective weight depends on which streams have data for each candidate. This ensures that missing evidence does not penalize candidates.
+
+---
+
+## 6. Perez Regulatory Influence Score (Stream 9)
+
+$$\text{Score}_{\text{perez\_influence}} = \text{influence\_score}_{\text{neuron fate}}$$
+
+- **Biological Rationale**: Perez et al. (*Nat. Commun.* 2025) computed ANANSE regulatory influence scores across 9 cell fates (MOESM19). The neuron fate influence score represents the normalized rank of each TF's regulatory impact in neural differentiation. A score of 1.0 means the TF has the highest regulatory influence in neuron fate specification.
+- **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k`
+- **Location**: `src/bioforge/projects/neuraltf/pipeline.py:integrate_perez_influence()`

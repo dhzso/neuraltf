@@ -36,6 +36,7 @@ Thumbs.db
 # recreate every processed artifact. No data files are committed.
 datasets/raw/*
 !datasets/raw/.gitkeep
+datasets/raw.zip
 datasets/reference/*
 !datasets/reference/.gitkeep
 datasets/cache/*
