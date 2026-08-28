@@ -63,7 +63,7 @@ def main():
         if num not in FIGURES:
             print(f"  [SKIP] Figure {num}"); continue
         fname, desc = FIGURES[num]
-        print(f"\n  [{num}/21] {desc}")
+        print(f"\n  [{num}/{len(nums)}] {desc}")
         try:
             mod = _load(FIGURES_DIR / fname, f"fig{num}")
             mod.build()
