@@ -28,7 +28,7 @@ from bioforge.evidence.confidence import assign_tiers
 from bioforge.evidence.cards import build_cards_for_records, render_cards_markdown
 
 
-DATA_ROOT = Path.cwd()
+DATA_ROOT = Path(__file__).resolve().parents[4]
 
 _RE_DD_ID = re.compile(r"(dd\D*?\d+)")
 _NEURAL_FC_THRESHOLD = 2.0
@@ -126,7 +126,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def load_datasets(self):
-        print("[1/9] Loading datasets...")
+        print("[1/10] Loading datasets...")
         self.adata_fincher = ad.read_h5ad(self.fincher_path)
         print(f"  Fincher: {self.adata_fincher.n_obs} cells x {self.adata_fincher.n_vars} genes (v4)")
         self.adata_plass = ad.read_h5ad(self.plass_path)
@@ -145,7 +145,7 @@ class NeuralTFPipeline:
                     print(f"  Subsampled {name} to {adata.n_obs} cells")
 
     def load_reference_tables(self):
-        print("[2/9] Reference tables...")
+        print("[2/10] Reference tables...")
         self.tf_catalog = pd.read_excel(self.mmc4, sheet_name="TF")
         self.rnai_table = pd.read_excel(self.mmc5, header=None)
         self.correlations = pd.read_excel(self.mmc6, header=None)
@@ -162,12 +162,17 @@ class NeuralTFPipeline:
         if perez_csv.exists():
             try:
                 perez = pd.read_csv(perez_csv, dtype=str)
-                for _, r in perez.iterrows():
-                    v6 = str(r.get("v6_id", "")).strip()
-                    cls = str(r.get("tf_class", "")).strip()
-                    if v6 and v6 != "nan" and cls and cls != "nan":
-                        self.perez_tf_class[v6] = cls
-                print(f"  Perez TF classification: {len(self.perez_tf_class)} genes (from preprocessed CSV)")
+                pcols = perez.columns.tolist()
+                if "v6_id" not in pcols or "tf_class" not in pcols:
+                    print(f"  WARNING: perez_tf_summary.csv missing expected columns "
+                          f"(have {pcols[:5]}..., need 'v6_id' and 'tf_class')")
+                else:
+                    for _, r in perez.iterrows():
+                        v6 = str(r.get("v6_id", "")).strip()
+                        cls = str(r.get("tf_class", "")).strip()
+                        if v6 and v6 != "nan" and cls and cls != "nan":
+                            self.perez_tf_class[v6] = cls
+                    print(f"  Perez TF classification: {len(self.perez_tf_class)} genes (from preprocessed CSV)")
             except Exception as e:
                 print(f"  (Perez TF classification load failed: {e})")
         else:
@@ -182,6 +187,10 @@ class NeuralTFPipeline:
                     cols = perez.columns.tolist()
                     tf_class_col = next((c for c in cols if "TF Class" in c and "Perez" in c), None)
                     rbh_col = next((c for c in cols if "1:1" in c and "v6" in c.lower()), None)
+                    if not tf_class_col:
+                        print(f"  WARNING: MOESM5 missing 'TF Class' column. Available: {cols[:8]}...")
+                    if not rbh_col:
+                        print(f"  WARNING: MOESM5 missing '1:1 v6' column. Available: {cols[:8]}...")
                     if tf_class_col and rbh_col:
                         for _, r in perez.iterrows():
                             v6 = str(r.get(rbh_col, "")).strip()
@@ -192,7 +201,7 @@ class NeuralTFPipeline:
                 except Exception as e:
                     print(f"  (Perez TF classification load failed: {e})")
 
-        print("[3/9] Bridge table...")
+        print("[3/10] Bridge table...")
         self.bridge = load_bridge(self.bridge_path)
         self._enrich_bridge_names()
         print(f"  {len(self.bridge.df)} rows bridged")
@@ -289,7 +298,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def run_qc(self):
-        print("[4/9] QC + clustering (leiden)...")
+        print("[4/10] QC + clustering (leiden)...")
         atlases = [(self.adata_fincher, "Fincher"), (self.adata_plass, "Plass")]
         if self.adata_cui is not None:
             atlases.append((self.adata_cui, "Cui"))
@@ -319,7 +328,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def score_atlases(self):
-        print("\n[5/9] Scoring candidates per atlas ...")
+        print("\n[5/10] Scoring candidates per atlas ...")
         print(f"  {len(self.tf_ids)} TF targets")
 
         atlases = [(self.adata_fincher, "fincher"), (self.adata_plass, "plass")]
@@ -436,7 +445,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def integrate_king_atlas(self):
-        print("[6/9] King TF Atlas...")
+        print("[6/10] King TF Atlas...")
         if not self.king_atlas_path.exists():
             print("  (missing, skipping)")
             return
@@ -528,7 +537,7 @@ class NeuralTFPipeline:
           - 0.5  : Gene has a TF class in Perez but not neural-specific
           - 0.0  : Gene absent from Perez MOESM5 or no TF class recorded
         """
-        print("[integrate_perez] Perez 2025 lineage scoring...")
+        print("[7/10] Perez TF classification...")
         if not self.perez_tf_class:
             print("  (Perez TF classification empty, skipping)")
             return
@@ -573,7 +582,7 @@ class NeuralTFPipeline:
         The influence_score is a normalised 0-1 rank per fate, where 1.0
         means the TF has the highest regulatory influence in that fate.
         """
-        print("[integrate_perez_influence] Perez 2025 ANANSE influence...")
+        print("[8/10] Perez 2025 ANANSE influence...")
         moesm19 = (
             self.raw_dir / "Supplementary_Data_ Perez_2025"
             / "41467_2025_65712_MOESM19_ESM.xlsx"
@@ -651,7 +660,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def integrate_rnai(self):
-        print("[8/10] RNAi phenotypes...")
+        print("[9/10] RNAi phenotypes...")
         if self.rnai_table is None:
             print("  (no table, skipping)")
             return
@@ -699,7 +708,7 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def integrate_correlations(self):
-        print("[9/9] TF pair correlations...")
+        print("[10/10] TF pair correlations...")
         if self.correlations is None or self.correlations.shape[1] < 4:
             print("  No correlations available")
             return
