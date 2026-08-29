@@ -222,9 +222,9 @@ def main() -> int:
     lines = [
         f"== Dirichlet Robustness 3-Way Comparison ==",
         f"",
-        f"Centered k=40, n=99 (neural filtered):  {neural_path.name if neural_path.exists() else 'MISSING'}",
-        f"Uniform  α=1,  n=249+ (all candidates): {uniform249_path.name if uniform249_path.exists() else 'MISSING'}",
-        f"Centered k=40, n=249+ (all candidates): {full_rank_path.name}",
+        f"Centered k=40, neural-filtered (rank_neural.csv):  {neural_path.name if neural_path.exists() else 'MISSING'}",
+        f"Uniform  α=1,  all candidates (rank.csv):          {uniform249_path.name if uniform249_path.exists() else 'MISSING'}",
+        f"Centered k=40, all candidates (rank.csv):          {full_rank_path.name}",
         f"",
         f"Full set ({n_all} candidates) top-10 by Centered Dirichlet median:",
     ]

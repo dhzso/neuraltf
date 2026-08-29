@@ -61,54 +61,84 @@ def _nid(df):
         df = df.rename(columns={"gene_id_v6": "gene_id"})
     return df
 
+
 def _csv(path):
-    return pd.read_csv(path)
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(
+            f"\n[style.py] Required data file not found:\n  {p}\n"
+            "Run the upstream pipeline step that generates this file first.\n"
+            "  Full pipeline : python scripts/run.py\n"
+            "  Downstream    : python scripts/run_downstream.py"
+        )
+    return pd.read_csv(p)
+
 
 def load_all():
-    return _csv(RUN/"rank.csv")
+    return _csv(RUN / "rank.csv")
+
 
 def load_neural():
-    return _csv(RUN/"rank_neural.csv")
+    return _csv(RUN / "rank_neural.csv")
+
 
 def load_top10(f="top10_neural_tfs_prioritized.csv"):
-    return _nid(_csv(RES/f))
+    return _nid(_csv(RES / f))
+
 
 def load_centered():
-    return _nid(_csv(RES/"dirichlet_top10_prioritized.csv"))
+    """Load Dirichlet-centered top-10 (5A + 5B) from dirichlet_prioritize.py output."""
+    return _nid(_csv(RES / "dirichlet_top10_prioritized.csv"))
+
 
 def load_uniform():
-    return _nid(_csv(RES/"dirichlet_uniform_top10.csv"))
+    """Load Dirichlet-uniform top-10 (5A + 5B) from dirichlet_uniform.py output."""
+    return _nid(_csv(RES / "dirichlet_uniform_top10.csv"))
+
 
 def load_unif99():
-    return _nid(_csv(RES/"dirichlet_uniform_full_rank.csv"))
+    """Load Dirichlet-uniform full rank (neural-filtered candidates)."""
+    return _nid(_csv(RES / "dirichlet_uniform_full_rank.csv"))
+
 
 def load_unif249():
-    return _nid(_csv(RES/"dirichlet_uniform_all249_full_rank.csv"))
+    """Load Dirichlet-uniform full rank (all candidates, rank.csv)."""
+    return _nid(_csv(RES / "dirichlet_uniform_all249_full_rank.csv"))
+
 
 def load_centered99():
-    return _nid(_csv(RES/"dirichlet_centered_full_rank.csv"))
+    """Load Dirichlet-centered full rank (neural-filtered candidates)."""
+    return _nid(_csv(RES / "dirichlet_centered_full_rank.csv"))
+
 
 def load_centered249():
-    return _nid(_csv(RES/"dirichlet_centered_all249_full_rank.csv"))
+    """Load Dirichlet-centered full rank (all candidates, rank.csv)."""
+    return _nid(_csv(RES / "dirichlet_centered_all249_full_rank.csv"))
+
 
 def load_sens_draws():
-    return _csv(FIG/"weight_sensitivity_draws.csv")
+    return _csv(FIG / "weight_sensitivity_draws.csv")
+
 
 def load_sens_top10():
-    return _csv(FIG/"weight_sensitivity_top10_challengers.csv")
+    return _csv(FIG / "weight_sensitivity_top10_challengers.csv")
+
 
 def save(fig, name, dpi=300):
-    fig.savefig(FIG/f"{name}.png", dpi=dpi, bbox_inches="tight", facecolor="white")
+    fig.savefig(FIG / f"{name}.png", dpi=dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
+
 def save_sup(fig, name, dpi=300):
-    fig.savefig(SUP/f"{name}.png", dpi=dpi, bbox_inches="tight", facecolor="white")
+    fig.savefig(SUP / f"{name}.png", dpi=dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
+
 
 def label(df, gid):
     if "gene_name" in df.columns:
-        r = df[df["gene_id"]==gid]
-        if len(r)>0:
-            n = r.iloc[0].get("gene_name","")
-            if pd.notna(n) and str(n).strip(): return str(n)
+        r = df[df["gene_id"] == gid]
+        if len(r) > 0:
+            n = r.iloc[0].get("gene_name", "")
+            if pd.notna(n) and str(n).strip():
+                return str(n)
     return gid

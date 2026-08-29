@@ -38,9 +38,10 @@ _FDR_THRESHOLD = 0.1  # Benjamini-Hochberg q-value threshold
 class NeuralTFPipeline:
     """End-to-end neural TF candidate discovery pipeline.
 
-    Integrates 4 atlases (Fincher, Plass, King, Cui) plus King TF catalog,
-    RNAi phenotype table, and neural TF-pair correlations. Produces a
-    full ranking and a neural-filtered ranking.
+    Integrates 5 atlases (Fincher 2018, Plass 2018, Cui 2023, King 2024,
+    Perez 2025) plus the King TF catalog, RNAi phenotype table,
+    neural TF-pair correlations, and Perez 2025 ANANSE regulatory networks.
+    Produces a full ranking and a neural-filtered ranking.
 
     Parameters
     ----------
@@ -153,7 +154,31 @@ class NeuralTFPipeline:
             self.tf_catalog.loc[self.tf_catalog["TF?"].notna(), "Gene ID"].astype(str)
         )
         self.tf_ids_norm = self.tf_ids | {tid[:-2] for tid in self.tf_ids if tid.endswith("_1")}
-        print(f"  Catalog: {len(self.tf_catalog)} entries ({len(self.tf_ids)} TFs)")
+        print(f"  King catalog: {len(self.tf_catalog)} entries ({len(self.tf_ids)} TFs)")
+
+        # Expand candidate seed with the unified master TF catalog (King + Perez MOESM5).
+        # Without this, any TF annotated only in Perez 2025 (up to ~14k genes) would
+        # never be tested for de novo cluster DE in Fincher, Plass, or Cui.
+        master_path = self.data_dir / "master_tf_catalog.csv"
+        if master_path.exists():
+            try:
+                master = pd.read_csv(master_path, dtype=str)
+                if "v6_id" in master.columns:
+                    perez_ids = set(master["v6_id"].dropna().str.strip()) - {"", "nan"}
+                    n_before = len(self.tf_ids)
+                    self.tf_ids |= perez_ids
+                    self.tf_ids_norm = (
+                        self.tf_ids
+                        | {tid[:-2] for tid in self.tf_ids if tid.endswith("_1")}
+                    )
+                    print(
+                        f"  Expanded TF seed: {n_before} (King) → {len(self.tf_ids)} IDs "
+                        f"(+{len(self.tf_ids) - n_before} from Perez MOESM5 / master catalog)"
+                    )
+            except Exception as e:
+                print(f"  (master_tf_catalog expansion failed: {e}; using King seed only)")
+        else:
+            print(f"  (master_tf_catalog not found at {master_path}; using King seed only)")
         print(f"  RNAi: {len(self.rnai_table)} rows, Correlations: {len(self.correlations)} pairs")
 
         # Load Perez 2025 TF classification (preprocessed CSV)
@@ -360,42 +385,57 @@ class NeuralTFPipeline:
             v6_of = {}
             score_genes = [v for v in adata.var_names if v in self.tf_ids_norm]
 
-        n_clusters = len(adata.obs["leiden"].cat.categories)
         clusters = result["names"].dtype.names
 
-        # Collect all p-values per gene per cluster for FDR correction
+        # Collect all p-values per gene per cluster for global BH-FDR correction
         all_pvals = []
         gene_cluster_keys = []
         for cl in clusters:
-            for g, lfc, pval in zip(result["names"][cl], result["logfoldchanges"][cl], result["pvals"][cl]):
+            for g, lfc, pval in zip(
+                result["names"][cl],
+                result["logfoldchanges"][cl],
+                result["pvals"][cl],
+            ):
                 all_pvals.append(float(pval))
                 gene_cluster_keys.append((str(g), cl))
 
-        # Benjamini-Hochberg FDR correction
+        # Benjamini-Hochberg FDR correction (global, across all genes × clusters)
         if all_pvals:
             _, qvals, _, _ = multipletests(all_pvals, alpha=_FDR_THRESHOLD, method="fdr_bh")
         else:
             qvals = []
 
-        # Build gene_best using q-values
-        gene_best: dict[str, tuple[float, float, float]] = {}  # (abs_lfc, pval, qval)
-        # Pre-build lookup dicts for each cluster to avoid O(N²) index() calls
+        # Pre-build per-cluster index lookups to avoid O(N²) scans
         cluster_lookups: dict[str, dict[str, int]] = {}
         for cl in clusters:
             cluster_lookups[cl] = {str(g): i for i, g in enumerate(result["names"][cl])}
+
+        # gene_best: (pos_lfc, pval, qval) — one-tailed: only upregulated signal counts.
+        # A repressed gene (lfc < 0) is set to 0.0 so it never inflates the expression
+        # score. We track the cluster with the highest positive fold-change.
+        gene_best: dict[str, tuple[float, float, float]] = {}
+        # gene_sig_clusters: clusters where the gene is significantly upregulated
+        # (qval ≤ threshold AND pos_lfc > 0). Used to compute per-gene specificity.
+        gene_sig_clusters: dict[str, set[str]] = {}
+
         for (key, cl), qval in zip(gene_cluster_keys, qvals):
             idx = cluster_lookups[cl].get(key)
             if idx is None:
                 continue
-            abs_lfc = abs(float(result["logfoldchanges"][cl][idx]))
+            # One-tailed: only positive fold-changes count as activation evidence
+            pos_lfc = max(0.0, float(result["logfoldchanges"][cl][idx]))
             pval = float(result["pvals"][cl][idx])
-            if key not in gene_best or abs_lfc > abs(gene_best[key][0]):
-                gene_best[key] = (abs_lfc, pval, qval)
+            # Track best-scoring cluster per gene
+            if key not in gene_best or pos_lfc > gene_best[key][0]:
+                gene_best[key] = (pos_lfc, pval, qval)
+            # Track all significantly upregulated clusters for breadth / specificity
+            if qval <= _FDR_THRESHOLD and pos_lfc > 0:
+                gene_sig_clusters.setdefault(key, set()).add(cl)
 
         for gene in score_genes:
             best_l2fc, best_p, best_q = gene_best.get(gene, (0.0, 1.0, 1.0))
 
-            if best_q > _FDR_THRESHOLD:
+            if best_q > _FDR_THRESHOLD or best_l2fc <= 0:
                 continue
 
             if atlas_name == "fincher":
@@ -422,21 +462,28 @@ class NeuralTFPipeline:
             if gn_from_bridge and not rec.gene_name:
                 rec.gene_name = gn_from_bridge
 
-            # Expression: best (max) per-atlas log2FC across the atlases the
-            # gene is enriched in — per-atlas values accumulate (never
-            # overwrite an earlier atlas's stronger signal).
-            rec.add_score(EvidenceSource.EXPRESSION,
-                          max(rec.scores.get(EvidenceSource.EXPRESSION, 0.0),
-                              min(1.0, best_l2fc / 5.0)),
-                          note=f"log2FC={best_l2fc:.2f},p={best_p:.2g},q={best_q:.2g}")
+            # Expression: best (max) positive log2FC across atlases.
+            # Uses one-tailed scoring: min(1, pos_lfc / 5.0) so that a 5-fold
+            # upregulation saturates the score at 1.0. Repressed genes (lfc<0)
+            # get 0 and do not enter this branch.
+            rec.add_score(
+                EvidenceSource.EXPRESSION,
+                max(rec.scores.get(EvidenceSource.EXPRESSION, 0.0),
+                    min(1.0, best_l2fc / 5.0)),
+                note=f"log2FC={best_l2fc:.2f},p={best_p:.2g},q={best_q:.2g}",
+            )
 
-            # specificity [ crude = 1/n_clusters ] — best (most specific)
-            # atlas wins; per-atlas values accumulate.
-            clusters_here = n_clusters
-            rec.add_score(EvidenceSource.SPECIFICITY,
-                          max(rec.scores.get(EvidenceSource.SPECIFICITY, 0.0),
-                              1.0 / clusters_here if clusters_here > 0 else 0.0),
-                          note=f"atlas={atlas_name}")
+            # Specificity: 1 / n_sig_clusters (clusters where gene is significantly
+            # upregulated). A TF expressed in 1 of 16 Leiden clusters scores 1.0;
+            # one expressed in all 16 scores 0.0625. This correctly rewards narrow,
+            # cell-type-specific activation rather than broad housekeeping expression.
+            n_sig = len(gene_sig_clusters.get(gene, {1}))  # default 1 if no cluster set
+            rec.add_score(
+                EvidenceSource.SPECIFICITY,
+                max(rec.scores.get(EvidenceSource.SPECIFICITY, 0.0),
+                    1.0 / n_sig if n_sig > 0 else 0.0),
+                note=f"atlas={atlas_name},n_sig_clusters={n_sig}",
+            )
 
             self.atlas_membership.setdefault(v6_id, set()).add(atlas_name)
 
@@ -459,6 +506,13 @@ class NeuralTFPipeline:
         # path (Fincher/Plass/Cui). log2FC=5.0 = 32-fold upregulation, which
         # maps the physiological TF enrichment range to [0, 1].
         EXPR_CAP = 5.0
+
+        # Pre-compute total subcluster counts for fractional breadth specificity.
+        # Fractional breadth: spec = 1 - (n-1)/(N-1) gives 1.0 for n=1 (maximally
+        # specific), smoothly declining to 0.0 for n=N (expressed everywhere).
+        # This avoids the steep 50% penalty cliff of 1/n when going from n=1→2.
+        N_KING_TOTAL = max(king["subcluster"].nunique(), 2)
+        N_NEURAL_TOTAL = max(king[neural_mask]["subcluster"].nunique(), 2)
 
         # Seed records for all TFs enriched in neural G0 compartments.
         # Fincher/Plass subsampling may miss neuron-specific TFs (known
@@ -492,14 +546,17 @@ class NeuralTFPipeline:
                 nsub = hits.groupby(["compartment", "subcluster"]).ngroups
 
                 feat_expr = min(1.0, fcm / EXPR_CAP)
-                feat_spec = min(1.0, 1.0 / nsub) if nsub > 0 else 0.0
+                # Fractional breadth specificity: 1 - (n-1)/(N-1)
+                # Smooth and biologically graded; avoids the steep 50% cliff of 1/n.
+                feat_spec = 1.0 - (nsub - 1) / (N_KING_TOTAL - 1) if nsub > 0 else 0.0
+                feat_spec = max(0.0, min(1.0, feat_spec))
 
                 rec.add_score(EvidenceSource.EXPRESSION,
                               max(rec.scores.get(EvidenceSource.EXPRESSION, 0.0), feat_expr),
                               note=f"king_l2fc={fcm:.2f}")
                 rec.add_score(EvidenceSource.SPECIFICITY,
                               max(rec.scores.get(EvidenceSource.SPECIFICITY, 0.0), feat_spec),
-                              note=f"king_n_subs={nsub}")
+                              note=f"king_n_subs={nsub},N_total={N_KING_TOTAL}")
 
             # Neural-specific signal
             nHits = neural_df[neural_df["v6_id"] == gene_id]
@@ -508,9 +565,12 @@ class NeuralTFPipeline:
                               note=f"neural_max_l2fc={nHits['log2fc'].max():.2f}")
 
                 unique_ns = nHits["subcluster"].nunique()
+                # Fractional breadth for neural subclusters specifically.
+                neural_spec = 1.0 - (unique_ns - 1) / (N_NEURAL_TOTAL - 1) if unique_ns > 0 else 0.0
+                neural_spec = max(0.0, min(1.0, neural_spec))
                 rec.add_score(EvidenceSource.NEURAL_SPECIFICITY,
-                              1.0 / unique_ns if unique_ns > 0 else 0.0,
-                              note=f"n_neural_subclusters={unique_ns}")
+                              neural_spec,
+                              note=f"n_neural_subclusters={unique_ns},N_neural={N_NEURAL_TOTAL}")
 
             # King-atlas support only when the gene actually has hits there
             # (a Fincher/Plass-only candidate must not gain king membership).
@@ -561,7 +621,11 @@ class NeuralTFPipeline:
             score = 1.0 if is_neural else 0.5
             rec.add_score(EvidenceSource.PEREZ_LINEAGE, score,
                           note=f"perez_class={cls}")
-            self.atlas_membership.setdefault(v6_id, set()).add("perez")
+            # Gate atlas membership: only genes with a confirmed TF class (score ≥ 0.5)
+            # count as supported by Perez atlas. Absent genes (score = 0.0) would
+            # otherwise inflate the reproducibility denominator incorrectly.
+            if score >= 0.5:
+                self.atlas_membership.setdefault(v6_id, set()).add("perez")
             if is_neural:
                 matched_neural += 1
             else:
@@ -742,15 +806,30 @@ class NeuralTFPipeline:
             if len(sub) == 0:
                 continue
             try:
-                x1 = pd.to_numeric(sub["x1_corr"], errors="coerce").mean()
-                g0 = pd.to_numeric(sub["g0_corr"], errors="coerce").mean()
+                x1_vals = pd.to_numeric(sub["x1_corr"], errors="coerce").dropna().values
+                g0_vals = pd.to_numeric(sub["g0_corr"], errors="coerce").dropna().values
             except (ValueError, TypeError):
                 continue
-            if pd.isna(x1) or pd.isna(g0):
+            if len(x1_vals) == 0 or len(g0_vals) == 0:
                 continue
-            gain = max(0.0, float(g0) - float(x1))
-            rec.add_score(EvidenceSource.CORRELATION, min(1.0, gain * 3.0),
-                          note=f"x1={x1:.2f},g0={g0:.2f}")
+            # Use max(Δr) across all tested partner pairs rather than mean.
+            # A TF may form a tight heterodimeric complex with one specific partner
+            # (high Δr) while being uncorrelated with other tested partners (Δr≈0).
+            # Averaging dilutes this authentic signal; max captures the best evidence
+            # of post-mitotic G0 co-activation for any single functional partnership.
+            min_len = min(len(x1_vals), len(g0_vals))
+            pair_gains = g0_vals[:min_len] - x1_vals[:min_len]
+            best_gain = float(np.max(pair_gains))
+            gain = max(0.0, best_gain)
+            # Find the corresponding x1/g0 pair for the note
+            best_idx = int(np.argmax(pair_gains))
+            rec.add_score(
+                EvidenceSource.CORRELATION,
+                min(1.0, gain * 3.0),
+                note=f"best_pair_x1={x1_vals[best_idx]:.2f},"
+                     f"g0={g0_vals[best_idx]:.2f},"
+                     f"delta_r={best_gain:.2f},n_pairs={min_len}",
+            )
             matched += 1
         print(f"  Correlation match: {matched} candidates")
 

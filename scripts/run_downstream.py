@@ -83,20 +83,28 @@ def main():
     errors = []
 
     steps = [
+        # Step 0: Fixed-weight dual-track prioritization — generates
+        # top10_neural_tfs_prioritized.csv which the Dirichlet scripts load
+        # as baseline reference. Must run FIRST.
+        ("Fixed-weight prioritization",
+         ["scripts", "prioritize_neural_tfs.py"],
+         [RES / "top10_neural_tfs_prioritized.csv",
+          RES / "candidate_summary_report.md"]),
+
         # (label, script_parts, output_files)
-        ("Dirichlet Centered (n=99)",
+        ("Dirichlet Centered (n=neural)",
          ["projects", "NeuralTF", "scripts", "dirichlet_prioritize.py"],
          [RES / "dirichlet_centered_full_rank.csv"]),
 
-        ("Dirichlet Uniform (n=99)",
+        ("Dirichlet Uniform (n=neural)",
          ["projects", "NeuralTF", "scripts", "dirichlet_uniform.py"],
          [RES / "dirichlet_uniform_full_rank.csv"]),
 
-        ("Dirichlet Uniform All-249",
+        ("Dirichlet Uniform All",
          ["projects", "NeuralTF", "scripts", "dirichlet_uniform_all249.py"],
          [RES / "dirichlet_uniform_all249_full_rank.csv"]),
 
-        ("Dirichlet Centered All-249",
+        ("Dirichlet Centered All",
          ["projects", "NeuralTF", "scripts", "dirichlet_centered_all249.py"],
          [RES / "dirichlet_centered_all249_full_rank.csv"]),
 
@@ -119,6 +127,12 @@ def main():
         ("Statistical tests",
          ["scripts", "run_statistical_tests.py"],
          [RES / "permutation_pvalues_full.csv"]),
+
+        # Negative control benchmarking — requires rank.csv from the main pipeline.
+        # Computes empirical FPR, ROC-AUC and PR-AUC against non-neural FSTF set.
+        ("Negative control benchmarks",
+         ["projects", "NeuralTF", "scripts", "negative_controls.py"],
+         [RES / "negative_control_benchmarks.csv"]),
     ]
 
     for label, script_parts, outputs in steps:

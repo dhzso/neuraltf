@@ -154,7 +154,11 @@ def test_select_top_respects_composite_ties():
 
 
 def test_composite_bonus_once_per_category():
-    # many neural GO terms must not farm multiple bonuses
+    # many neural GO terms must not farm multiple bonuses.
+    # NOTE: BONUS_TF_DOMAIN (0.05) was removed because EvidenceSource.PEREZ_LINEAGE
+    # (pipeline stream 8, w=0.10) already rewards DNA-binding domain class with
+    # a score of 0.5–1.0, making an additional composite bonus double-counting.
+    # The composite now only applies go_neural (+0.03) and human_ortholog (+0.02).
     df = pd.DataFrame({
         "gene_id": ["g"], "gene_name": ["g"],
         "integrated_score": [0.7], "n_streams": [5],
@@ -166,8 +170,8 @@ def test_composite_bonus_once_per_category():
         "planmine_human_ortholog_desc": [""],
     })
     out = compute_composite(df)
-    # domain + neural-GO + human-ortholog (no TF-GO terms in the list)
-    expected = 0.7 + 0.05 + 0.03 + 0.02
+    # neural-GO + human-ortholog only (domain bonus removed — covered by stream 8)
+    expected = 0.7 + 0.03 + 0.02
     assert abs(out["composite_score"].iloc[0] - expected) < 1e-9
     assert out["composite_score"].iloc[0] < 1.0
 

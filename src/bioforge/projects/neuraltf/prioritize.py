@@ -10,17 +10,19 @@ Scoring
 ``composite_score`` (0-1) is the pipeline ``integrated_score`` plus small,
 fully documented bonuses:
 
-+----------------------+------+
-| bonus                | wt   |
-+----------------------+------+
-| tf_domain            | 0.05 |
-+----------------------+------+
-| go_neural            | 0.03 |
-+----------------------+------+
-| go_tf                | 0.02 |
-+----------------------+------+
-| human_ortholog       | 0.02 |
-+----------------------+------+
++----------------------+------+---------------------------------------------------+
+| bonus                | wt   | rationale                                         |
++----------------------+------+---------------------------------------------------+
+| go_neural            | 0.03 | GO term annotated to a neural biological process  |
++----------------------+------+---------------------------------------------------+
+| go_tf                | 0.02 | GO term annotated to transcription regulator      |
++----------------------+------+---------------------------------------------------+
+| human_ortholog       | 0.02 | Confirmed human ortholog in mmc4 or PlanMine BLAST|
++----------------------+------+---------------------------------------------------+
+
+Note: A DNA-binding domain bonus was removed because EvidenceSource.PEREZ_LINEAGE
+(weight 0.10 in the pipeline) already rewards structural TF domain class with a
+score of 0.5–1.0, making an additional composite bonus double-counting.
 
 Bonuses are small and additive; the pipeline score stays dominant.
 
@@ -40,7 +42,6 @@ from bioforge.projects.neuraltf.planmine import (
 )
 
 # bonus weights (see docstring)
-BONUS_TF_DOMAIN = 0.05
 BONUS_GO_NEURAL = 0.03
 BONUS_GO_TF = 0.02
 BONUS_HUMAN_ORTHOLOG = 0.02
@@ -292,13 +293,10 @@ def _composite_score(row: pd.Series) -> float:
     except (TypeError, ValueError):
         base = 0.0
     bonus = 0.0
-    doms = str(row.get("dna_binding_domains", "") or "").strip()
-    if doms and doms.lower() not in ("nan", "none"):
-        bonus += BONUS_TF_DOMAIN
-    elif str(row.get("mmc4_tf_flag", "")).strip().upper() == "TF":
-        bonus += BONUS_TF_DOMAIN
-    elif str(row.get("perez_tf_class", "")).strip().lower() not in ("", "nan", "none"):
-        bonus += BONUS_TF_DOMAIN
+    # NOTE: No TF-domain bonus here.  EvidenceSource.PEREZ_LINEAGE (w=0.10)
+    # already grants 0.5–1.0 for confirmed structural TF domain class in the
+    # pipeline scoring layer.  Adding a separate +0.05 bonus here would double-
+    # reward the same domain evidence, biasing the composite score.
     has_neural_go = has_go_tf = False
     seen: set[str] = set()
     for term in str(row.get("go_terms", "") or "").split(";"):
