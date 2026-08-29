@@ -23,7 +23,7 @@ steps are skipped, never aborted:
   9. dirichlet_prioritize.py            -> projects/NeuralTF/results/dirichlet_*.csv|md
   10. dirichlet_uniform.py              -> projects/NeuralTF/results/dirichlet_uniform_*.csv|txt
   11. dirichlet_uniform_all249.py       -> projects/NeuralTF/results/dirichlet_uniform_all249_*.csv|txt
-  12. export_fstf_ranked.py             -> projects/NeuralTF/results/fstf_ranked_*.csv
+  12. export_fstf_ranked.py             -> projects/NeuralTF/results/tf_ranked_*.csv
   13. generate_publication_figures.py   -> projects/NeuralTF/figures/01-17_*.png (17 figs)
 """
 from __future__ import annotations
@@ -114,12 +114,11 @@ def _ready(root: Path, step: str) -> str | None:
             and (root / "projects" / "NeuralTF" / "results"
                  / "dirichlet_uniform_top10.csv").exists(),
             "rank.csv / rank_neural.csv / dirichlet_uniform_top10.csv missing"),
-        "Export ranked FSTF": (
+        "Export ranked TFs": (
             (run / "rank.csv").exists(),
             "rank.csv missing (run the pipeline first)"),
         "Generate supplementary tables": (
-            (root / "projects" / "NeuralTF" / "results"
-             / "top10_neural_tfs_prioritized.csv").exists()
+            (run / "rank.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
                  / "dirichlet_top10_prioritized.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
@@ -127,11 +126,10 @@ def _ready(root: Path, step: str) -> str | None:
             and (root / "projects" / "NeuralTF" / "results"
                  / "dirichlet_uniform_all249_full_rank.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
-                 / "fstf_ranked_19_neural.csv").exists(),
-            "prioritization CSVs / FSTF CSVs missing"),
+                 / "tf_ranked_neural_top19.csv").exists(),
+            "rank.csv / Dirichlet CSVs / TF ranking CSVs missing"),
         "Generate publication figures": (
-            (root / "projects" / "NeuralTF" / "results"
-             / "top10_neural_tfs_prioritized.csv").exists()
+            (run / "rank.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
                  / "dirichlet_top10_prioritized.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
@@ -139,8 +137,8 @@ def _ready(root: Path, step: str) -> str | None:
             and (root / "projects" / "NeuralTF" / "results"
                  / "dirichlet_uniform_all249_full_rank.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
-                 / "fstf_ranked_19_neural.csv").exists(),
-            "prioritization CSVs / FSTF CSVs missing"),
+                 / "tf_ranked_neural_top19.csv").exists(),
+            "rank.csv / Dirichlet CSVs / TF ranking CSVs missing"),
         "Weight sensitivity analysis": (
             (run / "rank_neural.csv").exists(),
             "rank_neural.csv missing (run the pipeline first)"),
