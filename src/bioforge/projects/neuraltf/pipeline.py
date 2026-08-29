@@ -581,12 +581,41 @@ class NeuralTFPipeline:
     # Perez 2025 TF lineage classification (EvidenceSource.PEREZ_LINEAGE)
     # ------------------------------------------------------------------
 
-    # Neural-relevant TF families from Perez 2025 classification.
-    # Score = 1.0 if TF class is neural-relevant, 0.5 if any TF class, 0.0 absent.
+    # Neural-relevant TF structural families from Perez 2025 classification.
+    # These are the EXACT tf_class strings used in perez_tf_summary.csv (case-insensitive
+    # substring match). Selected by literature cross-reference: each family includes
+    # conserved planarian neural TFs from King 2024 / Plass 2018 annotation.
+    #   bHLH          → Atonal, neurogenin, NeuroD (planarian proneural genes)
+    #   Homeodomain   → HD-containing: Otp, Emx, Dlx, Prox, NK, IRX, CUT, MEIS, HOX, PBX
+    #   LHX           → LIM-homeodomain: Lhx1, Lhx2, Lhx3, Lhx5 (neural commissure TFs)
+    #   POU           → Oct-class: brain2, nub-1 (neoblast neural fate TFs)
+    #   Forkhead      → Fox: planarian nervous system FoxG, FoxO
+    #   PAX           → Pax3/7, Pax6 (neural progenitor specification)
+    #   NKX           → Nkx2.1, Nkx6 (ventral neural patterning)
+    #   SIX           → Six3, Six6 (anterior neural regionalization)
+    #   EGR           → Egr1 (activity-dependent neural gene)
+    #   GLI           → Hedgehog signaling, planarian brain patterning
+    #   IRX           → Iroquois, planarian brain segment patterning
+    #   COE           → Collier/OLF/EBF (planarian neural identity TFs)
+    #   HMG           → SOX-class (all SOX factors have HMG DNA-binding domain)
+    #   HOX           → Hox cluster, planarian axis/neural identity
+    #   ISL           → Islet-class LIM-homeodomain (motor/sensory neuron fate)
     _PEREZ_NEURAL_CLASSES: frozenset[str] = frozenset({
-        "bhlh", "homeobox", "homeodomain", "pou", "c2h2 znf", "c2h2",
-        "zinc finger", "lhx", "pax", "nk", "sox", "fox", "otx", "prox",
-        "atonal", "neurogenin", "otp", "emx", "dlx",
+        "bhlh",         # proneural: atonal, neurogenin, neurod
+        "homeodomain",  # broad HD family: otp, emx, dlx, prox, nk, meis, hox, pbx, cut
+        "lhx",          # LIM-homeodomain: lhx1/2/3/5 neural
+        "pou",          # POU-domain: brain2, nub-1
+        "forkhead",     # FOX-domain: foxg, foxo neural
+        "pax",          # PAX-domain: pax3/7, pax6
+        "nkx",          # NK-homeodomain: nkx2.1, nkx6
+        "six",          # SIX-domain: six3, six6 (anterior neural)
+        "egr",          # EGR zinc finger (activity-dependent neural)
+        "gli",          # GLI hedgehog effectors (brain patterning)
+        "irx",          # Iroquois homeodomain (neural segment identity)
+        "coe",          # Collier/EBF/OLF (neural identity TFs)
+        "hmg",          # HMG-box: SOX factors (neuronal differentiation)
+        "hox",          # HOX cluster (axial/neural identity)
+        "isl",          # Islet LIM-homeodomain (motor/sensory neuron fate)
     })
 
     def integrate_perez(self) -> None:
@@ -909,10 +938,12 @@ class NeuralTFPipeline:
 
         rank_df = pd.DataFrame(rank_rows).sort_values("integrated_score", ascending=False)
 
-        # Neural-specific output
+        # Neural-specific output: genes with neural enrichment evidence OR RNAi phenotype.
+        # The .fillna(0) guard prevents ValueError when the rnai column is all-NaN
+        # (which can happen on small subsampled dev runs where no RNAi targets were scored).
         neural_df = rank_df[
             (rank_df["neural_enriched"].notna() & (rank_df["neural_enriched"] > 0))
-            | (rank_df["rnai"] > 0)
+            | (rank_df["rnai"].fillna(0) > 0)
         ]
         if len(neural_df) == 0:
             neural_df = rank_df.head(25)
