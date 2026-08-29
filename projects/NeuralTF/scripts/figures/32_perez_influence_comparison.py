@@ -22,23 +22,29 @@ def build():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.5))
 
+    has_labels = False
+
     # Panel A: Classification distributions
+    score_col = "composite_score" if "composite_score" in df_class.columns else "integrated_score"
     if "classification" in df_class.columns:
         groups = df_class["classification"].unique()
         for grp in groups:
             subset = df_class[df_class["classification"] == grp]
-            if "composite_score" in subset.columns:
-                ax1.hist(subset["composite_score"].dropna(), bins=20, alpha=0.5, label=grp)
+            if score_col in subset.columns:
+                ax1.hist(subset[score_col].dropna(), bins=20, alpha=0.5, label=grp)
+                has_labels = True
     elif "track" in df_class.columns:
         for track in df_class["track"].unique():
             subset = df_class[df_class["track"] == track]
-            if "composite_score" in subset.columns:
-                ax1.hist(subset["composite_score"].dropna(), bins=15, alpha=0.5, label=f"Track {track}")
+            if score_col in subset.columns:
+                ax1.hist(subset[score_col].dropna(), bins=15, alpha=0.5, label=f"Track {track}")
+                has_labels = True
 
-    ax1.set_xlabel("Composite score")
+    ax1.set_xlabel("Score")
     ax1.set_ylabel("Count")
     ax1.set_title("Score distribution by TF classification", fontweight="bold")
-    ax1.legend(fontsize=7)
+    if has_labels:
+        ax1.legend(fontsize=7)
     ax1.spines["top"].set_visible(False)
     ax1.spines["right"].set_visible(False)
 

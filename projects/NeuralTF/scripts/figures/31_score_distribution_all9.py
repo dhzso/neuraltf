@@ -9,7 +9,7 @@ import pandas as pd
 def build():
     try:
         df = load_all()
-        df = df.sort_values("composite_score", ascending=False).head(50)
+        df = df.sort_values("integrated_score", ascending=False).head(50)
 
         streams = STREAM_COLS
         matrix = df[streams].values
