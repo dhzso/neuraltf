@@ -114,6 +114,6 @@ Place the 67 MB table at
 
 ## Gene-identifier bridge problem
 
-Fincher uses **dd_Smed_v4** gene IDs; Plass and King use **dd_Smed_v6**. The
-8B Evidence Integration Framework requires an explicit v4→v6 bridge table to
-unify TF candidates across all three atlases.
+Fincher uses **dd_Smed_v4** gene IDs; Plass, Cui, and King use **dd_Smed_v6**. The
+evidence integration framework requires an explicit v4→v6 bridge table to
+unify TF candidates across all atlases.
