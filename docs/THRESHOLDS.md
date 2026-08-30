@@ -108,7 +108,7 @@ $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
 
 ---
 
-## 4. Candidate Selection Funnel Audit
+## 4. Candidate Selection Funnel
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
