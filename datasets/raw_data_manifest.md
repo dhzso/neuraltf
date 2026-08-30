@@ -1,5 +1,4 @@
 # NeuralTF Raw Data Manifest
-*Verified Pipeline Audit & Dataset Inventory*
 
 > **Note:** All processed outputs are generated deterministically from the raw downloads listed below.
 > Raw files must never be modified. See `datasets/MANIFEST.md` for SHA-256 checksums and download URLs.
