@@ -193,7 +193,7 @@ python scripts/run_statistical_tests.py
 | 20 | `20_stream_correlation.png` | Stream correlation matrix |
 | 21 | `21_centered_vs_uniform_scatter.png` | Centered vs uniform Dirichlet |
 
-### New Statistical Figures (22–33)
+### Statistical Figures (22–33)
 
 | # | File | Description |
 |---|------|-------------|
@@ -287,18 +287,6 @@ Bioinformatics/
         ├── cross_method_correction.py
         └── score_shuffling_permutation.py
 ```
-
----
-
-## Reproducibility & Verification
-
-- **Deterministic Seeds**: All Dirichlet simulations run with `seed=2024` for 1,000 draws.
-- **Fail-Fast Checkpoints**: Six Parquet checkpoints are recorded at each pipeline stage (`checkpoint_01` through `checkpoint_06`) in `projects/NeuralTF/runs/pipeline_run/`.
-- **Statistical Validation**: 14 comprehensive tests ensure publication-grade rigor.
-- **Unit Tests**: Full test suite passes:
-  ```bash
-  python -m pytest tests/
-  ```
 
 ---
 
