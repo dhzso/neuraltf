@@ -2,8 +2,6 @@
 
 A reproducible pipeline for **planarian neural-fate-specific transcription factor** discovery. Integrates **five single-cell and regulatory atlases** (Fincher 2018, Plass 2018, Cui 2023, King 2024, Perez 2025) with 9 evidence streams, Bayesian Dirichlet uncertainty quantification, and ANANSE gene regulatory network validation to prioritize high-confidence targets for RNAi and functional validation.
 
-> **Latest Pipeline Status:** 278 candidate TFs scored across 9 evidence streams → 101 neural-enriched candidates → top-10 consensus across fixed-weight, centered Dirichlet, and uniform Dirichlet methods.
-
 ---
 
 ## Quick Start
