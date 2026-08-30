@@ -2,7 +2,7 @@
 
 A reproducible pipeline for **planarian neural-fate-specific transcription factor** discovery. Integrates **five single-cell and regulatory atlases** (Fincher 2018, Plass 2018, Cui 2023, King 2024, Perez 2025) with 9 evidence streams, Bayesian Dirichlet uncertainty quantification, and ANANSE gene regulatory network validation to prioritize high-confidence targets for RNAi and functional validation.
 
-> **Latest Pipeline Status:** 289 candidate TFs scored across 9 evidence streams → 102 neural-enriched candidates → top-10 consensus across fixed-weight, centered Dirichlet, and uniform Dirichlet methods.
+> **Latest Pipeline Status:** 278 candidate TFs scored across 9 evidence streams → 101 neural-enriched candidates → top-10 consensus across fixed-weight, centered Dirichlet, and uniform Dirichlet methods.
 
 ---
 
@@ -35,9 +35,9 @@ bioforge ui                                  # http://localhost:8501
 
 | File | Content |
 |------|---------|
-| `rank.csv` | All **289 candidates** with scores across all 9 evidence streams |
-| `rank_neural.csv` | **102 neural-enriched candidates** with proof status |
-| `evidence_cards.md` | Per-candidate markdown evidence summary (289 cards) |
+| `rank.csv` | All **278 candidates** with scores across all 9 evidence streams |
+| `rank_neural.csv` | **101 neural-enriched candidates** with proof status |
+| `evidence_cards.md` | Per-candidate markdown evidence summary (278 cards) |
 | `pipeline_results.json` | Machine-readable candidate metadata |
 | `checkpoint_0*.parquet` | 6 incremental audit checkpoints (atlas loads, post-QC, post-scoring, King, Perez, stream matrix) |
 
@@ -46,15 +46,16 @@ bioforge ui                                  # http://localhost:8501
 | File | Content |
 |------|---------|
 | `master_tf_catalog.csv` | Unified King + Perez TF catalog (14,682 unique v6 TFs) |
-| `dirichlet_centered_all249_full_rank.csv` | Full Dirichlet-centered (k=40) rank list (289 candidates) |
-| `dirichlet_uniform_all249_full_rank.csv` | Full Dirichlet-uniform (α=1) rank list (289 candidates) |
-| `dirichlet_top10_prioritized.csv` | Dual-track top-10 shortlist (5 Track A + 5 Track B) |
-| `ananse_network_full.csv` | ANANSE GRN scan across all 289 candidates & 9 cell fates |
+| `dirichlet_centered_full_rank.csv` | Full Dirichlet-centered (k=40) rank list (278 candidates) |
+| `dirichlet_uniform_full_rank.csv` | Full Dirichlet-uniform (α=1) rank list (278 candidates) |
+| `dirichlet_centered_top10.csv` | Dual-track top-10 shortlist under centered Dirichlet (5 Track A + 5 Track B) |
+| `dirichlet_uniform_top10.csv` | Dual-track top-10 shortlist under uniform Dirichlet (5 Track A + 5 Track B) |
+| `ananse_network_full.csv` | ANANSE GRN scan across all 278 candidates & 9 cell fates |
 | `ananse_top_regulators.csv` | Top planarian neural regulators ranked by out-degree |
 | `tf_ranked_neural_top19.csv` | Top 19 TFs: neural-filtered candidates |
 | `tf_ranked_all_top43.csv` | Top 43 TFs: all expression-filtered candidates |
 | `tf_ranked_catalog_top74.csv` | Top 74 TFs: full King mmc4 catalog |
-| `supplementary_table_S1` – `S12` | Method comparison, rank tables, Dirichlet analyses, and statistical tests |
+| `supplementary_table_S1` – `S4` | Method comparison, fixed rank tables, and Dirichlet analyses across candidates |
 
 ---
 
@@ -66,11 +67,11 @@ The pipeline seeds candidate TFs across five single-cell and regulatory atlases,
 
 | Atlas | Year | Modality / Data Type | Role in Pipeline |
 |-------|------|----------------------|------------------|
-| **Fincher** | 2018 | scRNA-seq (50.5K cells, v4 IDs) | Whole-animal cell-type expression & neural specificity |
-| **Plass** | 2018 | scRNA-seq (37.5K cells, v6 IDs) | Independent whole-anatomy replication & X1 dynamics |
-| **Cui** | 2023 | scRNA-seq (55.0K cells, 8 time points) | High-resolution regeneration time-course expression |
-| **King** | 2024 | Single-cell TF catalog + RNAi screen | G0/X1 cluster enrichment, RNAi phenotypes (mmc5), TF pair correlations (mmc6) |
-| **Perez** | 2025 | Lineage atlas + ANANSE GRNs | Lineage TF classification (MOESM5), ANANSE GRN validation (MOESM22), regulatory influence (MOESM19) |
+| **Fincher** | 2018 | scRNA-seq (50.5K cells, v4 IDs) | Whole-animal cell-type expression & neural specificity ([GSE111764](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111764)) |
+| **Plass** | 2018 | scRNA-seq (37.5K cells, v6 IDs) | Independent whole-anatomy replication & X1 dynamics ([GSE103633](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633)) |
+| **Cui** | 2023 | scRNA-seq (55.0K cells, 8 time points) | High-resolution regeneration time-course expression ([OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867)) |
+| **King** | 2024 | Single-cell TF catalog + RNAi screen | G0/X1 cluster enrichment, RNAi phenotypes (mmc5), TF pair correlations (mmc6) ([Cell Reports](https://doi.org/10.1016/j.celrep.2024.113947)) |
+| **Perez** | 2025 | Lineage atlas + ANANSE GRNs | Lineage TF classification (MOESM5), ANANSE regulatory influence (MOESM19), and ANANSE GRN (MOESM22) ([Multimodal single cell analyses reveal gene networks of planarian stem cell differentiation \| Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)) |
 
 ---
 
@@ -110,35 +111,31 @@ $$\text{Integrated Score} = \sum_{i \in \text{Present}} w_i \cdot s_i \Bigg/ \su
 | Rank | Gene ID (v6) | Gene Name | Integrated Score | Dirichlet Median | Proof Status | Primary DNA-Binding Domain / Family |
 |:---:|:---|:---|:---:|:---:|:---|:---|
 | 1 | `dd_Smed_v6_2946_0_1` | **dd2946** | 0.852 | 0.857 | `known_rnai_validated` | C2H2 Zinc Finger |
-| 2 | `dd_Smed_v6_16472_0_1` | **dd16472** | 0.790 | 0.792 | `known_rnai_validated` | Homeobox |
-| 3 | `dd_Smed_v6_38342_0_1` | **dd38342** | 0.782 | 0.783 | `known_rnai_validated` | POU / Homeobox |
-| 4 | `dd_Smed_v6_4048_0_1` | **dd4048** | 0.780 | 0.791 | `novel_candidate` | bHLH |
-| 5 | `dd_Smed_v6_14115_0_1` | **dd14115** | 0.764 | 0.762 | `known_rnai_validated` | Homeobox / LIM |
-| 6 | `dd_Smed_v6_11150_0_1` | **dd11150** | 0.760 | 0.764 | `known_rnai_validated` | C2H2 Zinc Finger |
-| 7 | `dd_Smed_v6_14824_0_1` | **dd14824** | 0.756 | 0.762 | `known_rnai_validated` | C2H2 Zinc Finger |
-| 8 | `dd_Smed_v6_19890_0_1` | **dd19890** | 0.753 | 0.753 | `known_rnai_validated` | T-box |
-| 9 | `dd_Smed_v6_31217_0_1` | **dd31217** | 0.751 | 0.760 | `novel_candidate` | bHLH |
-| 10 | `dd_Smed_v6_6626_0_1` | **dd6626** | 0.750 | 0.749 | `known_rnai_validated` | Nuclear Hormone Receptor |
-
-> **Key Finding:** **10/10 overlap** in top-10 candidates across fixed-weight, centered Dirichlet, and uniform Dirichlet methods confirms that candidate ranking is highly robust to parameter choices.
+| 2 | `dd_Smed_v6_38342_0_1` | **dd38342** | 0.782 | 0.783 | `known_rnai_validated` | POU / Homeobox |
+| 3 | `dd_Smed_v6_14115_0_1` | **dd14115** | 0.764 | 0.762 | `known_rnai_validated` | Homeobox / LIM |
+| 4 | `dd_Smed_v6_14824_0_1` | **dd14824** | 0.756 | 0.762 | `known_rnai_validated` | C2H2 Zinc Finger |
+| 5 | `dd_Smed_v6_19890_0_1` | **dd19890** | 0.753 | 0.753 | `known_rnai_validated` | T-box |
+| 6 | `dd_Smed_v6_31217_0_1` | **dd31217** | 0.751 | 0.760 | `novel_candidate` | bHLH |
+| 7 | `dd_Smed_v6_7033_0_1` | **dd7033** | 0.734 | 0.734 | `novel_candidate` | Homeobox / C2H2 ZNF |
+| 8 | `dd_Smed_v6_4048_0_1` | **dd4048** | 0.750 | 0.749 | `novel_candidate` | bHLH |
+| 9 | `dd_Smed_v6_11930_0_1` | **dd11930** | 0.734 | 0.734 | `novel_candidate` | C2H2 Zinc Finger |
+| 10 | `dd_Smed_v6_9596_0_1` | **dd9596** | 0.691 | 0.691 | `novel_candidate` | Homeobox |
 
 ---
 
 ## Uncertainty Quantification & Sensitivity (Dirichlet Sampling)
 
-To test sensitivity against arbitrary weighting assumptions, we employ Monte Carlo Dirichlet weight perturbation (1,000 draws, seed=2024):
+To test sensitivity against arbitrary weighting assumptions, we employ Monte Carlo Dirichlet weight perturbation (1,000 draws, seed=2024 across all candidates in `rank.csv`):
 
 1. **Centered Dirichlet ($k = 40$)**:
    $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(k \cdot \mathbf{w}_{\text{default}})$$
    Perturbs weights locally around default parameters ($\sim 95\%$ of draws within $\pm 0.10$ of baseline).
-   - `python projects/NeuralTF/scripts/dirichlet_centered_all249.py` (all 289 candidates)
-   - `python projects/NeuralTF/scripts/dirichlet_prioritize.py` (102 neural candidates)
+   - `python projects/NeuralTF/scripts/dirichlet_centered.py`
 
 2. **Uniform Dirichlet ($\alpha_i = 1$)**:
    $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
    Samples uniformly across the entire 9-simplex to discover robust data-driven signals without prior preference.
-   - `python projects/NeuralTF/scripts/dirichlet_uniform_all249.py` (all 289 candidates)
-   - `python projects/NeuralTF/scripts/dirichlet_uniform.py` (102 neural candidates)
+   - `python projects/NeuralTF/scripts/dirichlet_uniform.py`
 
 ---
 
@@ -255,13 +252,11 @@ Bioinformatics/
 │   ├── scripts/
 │   │   ├── convert_cui.py                    Cui SMED → v6 H5AD (optional --subsample N)
 │   │   ├── preprocess_perez.py               Parse Perez MOESM5 TF classes
-│   │   ├── dirichlet_prioritize.py           Centered Dirichlet k=40 (102 neural TFs)
-│   │   ├── dirichlet_uniform.py              Uniform Dirichlet α=1 (102 neural TFs)
-│   │   ├── dirichlet_centered_all249.py      Centered Dirichlet k=40 (all 289 candidates)
-│   │   ├── dirichlet_uniform_all249.py       Uniform Dirichlet α=1 (all 289 candidates)
-│   │   ├── ananse_full_scan.py               ANANSE GRN scan across all 289 candidates
+│   │   ├── dirichlet_centered.py             Centered Dirichlet k=40 (all candidates)
+│   │   ├── dirichlet_uniform.py              Uniform Dirichlet α=1 (all candidates)
+│   │   ├── ananse_full_scan.py               ANANSE GRN scan across all candidates
 │   │   ├── export_fstf_ranked.py             Export ranked TF tables
-│   │   ├── create_supplementary_tables.py    Generate supplementary tables S1–S12
+│   │   ├── create_supplementary_tables.py    Generate supplementary tables S1–S4
 │   │   ├── generate_publication_figures.py   Generate 33 publication figures
 │   │   └── figures/                          33 modular figure generation scripts & style.py
 │   ├── results/                              Dirichlet, ANANSE, and supplementary tables (gitignored)

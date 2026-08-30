@@ -18,6 +18,7 @@
 | `1-s2.0-S2211124724001712-mmc6.xlsx` | King (2024) | TF pair correlations (X1/G0) | .xlsx ~10 KB | `pipeline.py` (Correlation stream) | `runs/pipeline_run/rank.csv` |
 | `1-s2.0-S2211124724001712-mmc7.xlsx` | King (2024) | Neural G0 subcluster log2FC table | .xlsx ~96 KB | `scripts/build_king_atlas.py` | `projects/NeuralTF/data/king_atlas.tsv` |
 | `41467_2025_65712_MOESM5_ESM.xlsx` | Perez (2025) | TF classification + h1SMcG↔v6 orthology | .xlsx ~16 MB | `scripts/preprocess_perez.py`, `pipeline.py` | `projects/NeuralTF/data/perez_tf_summary.csv` |
+| `41467_2025_65712_MOESM19_ESM.xlsx` | Perez (2025) | ANANSE regulatory influence scores (9 fates) | .xlsx ~500 KB | `pipeline.py` (Perez influence stream) | `runs/pipeline_run/rank.csv` |
 | `41467_2025_65712_MOESM22_ESM.xlsx` | Perez (2025) | ANANSE TF-target regulatory network (13,746 edges) | .xlsx ~859 KB | `projects/NeuralTF/scripts/ananse_full_scan.py` | `projects/NeuralTF/results/ananse_network_full.csv` |
 | `smed_20140614.mapping.rosettastone.2020.txt` | PLANOSPHERE | Cross-assembly gene ID bridge (SMED ↔ v4 ↔ v6) | .txt ~67 MB | `scripts/build_bridge.py`, `convert_cui.py` | `projects/NeuralTF/data/bridge.csv` |
 | `go.obo` | Gene Ontology | GO term definitions & namespaces | .obo ~37 MB | `projects/NeuralTF/scripts/make_supp_go_figures.py` | Supplementary figures |
@@ -54,7 +55,7 @@ The following files exist in `datasets/raw/` from upstream repository downloads 
 |-------|---------------|-----------------|------------------------|----------------------------|
 | **Fincher 2018** | Science 2018 | [GSE111764](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111764) | 50,587 cells × 28,069 genes (v4) | ✅ Processed (`fincher_subsample.h5ad`) |
 | **Plass 2018** | Science 2018 | [GSE103633](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633) | 21,612 cells × 27,614 genes (v6) | ✅ Processed (`plass_v6.h5ad`) |
-| **Cui 2023** | Nat Commun 2023 | [OMIX003867](https://ngdc.cncb.ac.cn/omix/release/OMIX003867) | 55,014 cells × 19,198 genes (v6) | ✅ Processed (`cui_v6.h5ad`, 2.05 GB) |
+| **Cui 2023** | Nat Commun 2023 | [OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867) | 55,014 cells × 19,198 genes (v6) | ✅ Processed (`cui_v6.h5ad`, 2.05 GB) |
 | **King 2024** | Cell Reports 2024 | [DOI:10.1016/j.celrep.2024.113947](https://doi.org/10.1016/j.celrep.2024.113947) | G0/X1 FACS single-cell TF atlas | ✅ Processed (`king_atlas.tsv`, mmc4–mmc7) |
-| **Perez 2025** | Nat Commun 2025 | [DOI:10.1038/s41467-025-65712-0](https://doi.org/10.1038/s41467-025-65712-0) | TF classification + ANANSE GRN | ✅ Processed (`perez_tf_summary.csv`, `ananse_network_full.csv`) |
+| **Perez 2025** | Nat Commun 2025 | [Multimodal single cell analyses reveal gene networks of planarian stem cell differentiation | Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94) | TF classification + ANANSE GRN & influence | ✅ Processed (`perez_tf_summary.csv`, `ananse_network_full.csv`) |
 

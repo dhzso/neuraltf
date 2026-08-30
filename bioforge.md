@@ -62,22 +62,22 @@ python scripts/run.py
 
 | File | Format | Description |
 |------|--------|-------------|
-| `rank.csv` | CSV (289 rows) | All **289 TF candidates** ranked by 8-stream integrated score |
-| `rank_neural.csv` | CSV (102 rows) | **102 neural-enriched candidates** passing the neural gate |
+| `rank.csv` | CSV (278 rows) | All **278 TF candidates** ranked by 9-stream integrated score |
+| `rank_neural.csv` | CSV (101 rows) | **101 neural-enriched candidates** passing the neural gate |
 | `evidence_cards.md` | Markdown | Comprehensive per-candidate evidence cards with stream breakdown |
-| `pipeline_results.json` | JSON | Machine-readable top-50 candidate records with tier classifications |
+| `pipeline_results.json` | JSON | Machine-readable candidate records with tier classifications |
 | `checkpoint_01_atlas_loads.parquet` | Parquet | QC checkpoint: Atlas cell and gene dimensions |
 | `checkpoint_02_post_qc.parquet` | Parquet | QC checkpoint: Post-filter and Leiden cluster assignments |
 | `checkpoint_03_post_scoring.parquet` | Parquet | QC checkpoint: Per-atlas Wilcoxon DE scores |
 | `checkpoint_04_king_records.parquet` | Parquet | QC checkpoint: King G0 progenitor neural subcluster records |
 | `checkpoint_05_perez_records.parquet` | Parquet | QC checkpoint: Perez TF superfamily lineage scores |
-| `checkpoint_06_stream_matrix.parquet` | Parquet | Full 8-stream evidence feature matrix across all 289 candidates |
+| `checkpoint_06_stream_matrix.parquet` | Parquet | Full 9-stream evidence feature matrix across all 278 candidates |
 
 ---
 
 ### 1.5 Automated Downstream Analysis Pipeline
 
-Run all downstream uncertainty quantification, network scans, supplementary tables, and publication figures in a single dependency-managed command:
+Run all downstream uncertainty quantification, network scans, supplementary tables, statistical tests, and publication figures in a single dependency-managed command:
 
 ```bash
 python scripts/run_downstream.py
@@ -86,22 +86,23 @@ python scripts/run_downstream.py
 Or execute individual downstream modules:
 
 ```bash
-# Centered Dirichlet uncertainty quantification (k=40)
-python projects/NeuralTF/scripts/dirichlet_centered_all249.py   # All 289 candidates
-python projects/NeuralTF/scripts/dirichlet_prioritize.py         # 102 neural candidates
+# Centered Dirichlet uncertainty quantification (k=40 across all candidates)
+python projects/NeuralTF/scripts/dirichlet_centered.py
 
-# Uniform Dirichlet prior robustness scan (alpha=1)
-python projects/NeuralTF/scripts/dirichlet_uniform_all249.py    # All 289 candidates
-python projects/NeuralTF/scripts/dirichlet_uniform.py           # 102 neural candidates
+# Uniform Dirichlet prior robustness scan (alpha=1 across all candidates)
+python projects/NeuralTF/scripts/dirichlet_uniform.py
 
 # ANANSE Gene Regulatory Network validation (Perez 2025 MOESM22)
 python projects/NeuralTF/scripts/ananse_full_scan.py
 
 # PlanMine functional annotation & dual-track prioritization
-python scripts/query_planmine.py --skip-cache
 python scripts/prioritize_neural_tfs.py
 
+# Statistical validation suite (14 tests)
+python scripts/run_statistical_tests.py
+
 # Supplementary tables & 33 publication figures
+python projects/NeuralTF/scripts/create_supplementary_tables.py
 python projects/NeuralTF/scripts/generate_publication_figures.py
 ```
 
@@ -135,7 +136,7 @@ NeuralTF unifies 5 independent planarian transcriptomic and regulatory atlases:
          │                  │                  │                 │               │
          ▼                  ▼                  ▼                 ▼               ▼
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                               8 EVIDENCE STREAMS MATRIX                                │
+│                               9 EVIDENCE STREAMS MATRIX                                │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ 1. Expression ($w_1=0.200$)         : Best log2FC / 5.0 across scRNA-seq atlases       │
 │ 2. Specificity ($w_2=0.100$)        : Inverse cluster breadth (1 / n_clusters)         │
@@ -145,6 +146,7 @@ NeuralTF unifies 5 independent planarian transcriptomic and regulatory atlases:
 │ 6. Neural Enriched ($w_6=0.100$)    : King G0 neural subcluster log2FC ≥ 2.0 (1 / 0)   │
 │ 7. Neural Specificity ($w_7=0.100$) : Inverse neural subcluster breadth (1 / n_subs)   │
 │ 8. Perez Lineage ($w_8=0.100$)      : Perez TF structural class (1.0 / 0.5 / 0.0)      │
+│ 9. Perez Influence ($w_9=0.100$)    : Perez ANANSE neuron-fate influence (0.0 to 1.0)  │
 └──────────────────────────────────────────┬─────────────────────────────────────────────┘
                                            │
                                            ▼
@@ -153,8 +155,9 @@ NeuralTF unifies 5 independent planarian transcriptomic and regulatory atlases:
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ • Baseline Integrated Score : Weighted linear combination (renormalized over present)  │
 │ • Dirichlet UQ (Centered)   : 1,000 draws from Dirichlet(k=40 * w_default)             │
-│ • Dirichlet UQ (Uniform)    : 1,000 draws from Dirichlet(alpha=1_8)                    │
+│ • Dirichlet UQ (Uniform)    : 1,000 draws from Dirichlet(alpha=1_9)                    │
 │ • ANANSE GRN Validation     : 13,746 TF-target edges across 9 cell fate lineages       │
+│ • Statistical Suite         : 14 validation tests (permutations, bootstrap, calibration)│
 └──────────────────────────────────────────┬─────────────────────────────────────────────┘
                                            │
                                            ▼
@@ -173,36 +176,32 @@ NeuralTF unifies 5 independent planarian transcriptomic and regulatory atlases:
 ### 3.1 Candidate Count Funnel
 
 1. **418 TF Targets** (`load_reference_tables`): Seeded from King 2024 `mmc4.xlsx` TF catalog (`TF? != NA`).
-2. **224 Cluster DE Candidates** (`score_atlases`): TFs displaying statistically significant differential expression (Wilcoxon rank-sum test, Benjamini-Hochberg $q \le 0.10$) across Leiden clusters in Fincher, Plass, and Cui scRNA-seq atlases.
-3. **289 Total Scored Candidates** (`integrate_king_atlas`): Post-mitotic neural specification occurs in small progenitor subclusters under-sampled by whole-animal Drop-seq. Integrating King 2024 `mmc7.xlsx` G0 neural subclusters ($\text{log}_2\text{FC} \ge 2.0$) and mmc5 RNAi targets seeds these specialized factors into `all_records` ($N=289$).
-4. **102 Neural Candidates** (`write_outputs`): Applying the neural filter `(neural_enriched > 0) | (rnai > 0)` yields **96 neural G0 hits $\cup$ 6 RNAi-validated hits = 102 candidates**.
+2. **Cluster DE Candidates** (`score_atlases`): TFs displaying statistically significant differential expression (Wilcoxon rank-sum test, Benjamini-Hochberg $q \le 0.10$) across Leiden clusters in Fincher, Plass, and Cui ([OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867)) scRNA-seq atlases.
+3. **278 Total Scored Candidates** (`integrate_king_atlas`): Integrating King 2024 `mmc7.xlsx` G0 neural subclusters ($\text{log}_2\text{FC} \ge 2.0$), King mmc5 RNAi targets, and Perez 2025 regulatory data seeds these factors into `all_records` ($N=278$).
+4. **101 Neural Candidates** (`write_outputs`): Applying the neural filter `(neural_enriched > 0) | (rnai > 0)` yields **101 candidates** across Track A (RNAi-validated) and Track B (novel candidates).
 
 ---
 
 ### 3.2 Evidence Stream Mathematical Formulations
 
-$$\text{Integrated Score}(g) = \frac{\sum_{i=1}^8 w_i \cdot s_i(g) \cdot \mathbb{I}(s_i(g) \text{ present})}{\sum_{i=1}^8 w_i \cdot \mathbb{I}(s_i(g) \text{ present})}$$
+$$\text{Integrated Score}(g) = \frac{\sum_{i=1}^9 w_i \cdot s_i(g) \cdot \mathbb{I}(s_i(g) \text{ present})}{\sum_{i=1}^9 w_i \cdot \mathbb{I}(s_i(g) \text{ present})}$$
 
-Where default weights $\mathbf{w} = [0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100]$:
+Where default weights $\mathbf{w} = [0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100]$:
 
 1. **Expression ($s_{\text{expr}}$)**:
    $$s_{\text{expr}} = \min\left(1.0, \frac{\max(\text{log}_2\text{FC})}{5.0}\right)$$
-   *Rationale*: 5.0 log2FC corresponds to 32-fold upregulation, capturing full functional promoter occupancy without outlier compression.
 
 2. **Specificity ($s_{\text{spec}}$)**:
    $$s_{\text{spec}} = \frac{1.0}{n_{\text{clusters expressing}}}$$
-   *Rationale*: Penalizes pleiotropic and ubiquitously expressed housekeeping TFs.
 
 3. **Reproducibility ($s_{\text{repro}}$)**:
    $$s_{\text{repro}} = \frac{\min(n_{\text{supporting atlases}}, 5)}{5.0}$$
-   *Rationale*: Tallies concordant evidence across all 5 atlases (Fincher, Plass, Cui, King, and Perez).
 
 4. **RNAi Phenotype ($s_{\text{rnai}}$)**:
    $$s_{\text{rnai}} = \mathbb{I}(g \in \text{King 2024 mmc5 RNAi phenotype table})$$
 
 5. **Co-Expression Correlation Gain ($s_{\text{corr}}$)**:
    $$s_{\text{corr}} = \min\left(1.0, \max(0.0, r_{\text{G0}} - r_{\text{X1}}) \times 3.0\right)$$
-   *Rationale*: Expands empirical correlation gain $\Delta r \in [0.10, 0.35]$ into the full $[0, 1]$ scale.
 
 6. **Neural Enrichment ($s_{\text{neural\_enr}}$)**:
    $$s_{\text{neural\_enr}} = \mathbb{I}(\text{King G0 neural subcluster } \text{log}_2\text{FC} \ge 2.0)$$
@@ -210,27 +209,30 @@ Where default weights $\mathbf{w} = [0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0
 7. **Neural Specificity ($s_{\text{neural\_spec}}$)**:
    $$s_{\text{neural\_spec}} = \frac{1.0}{n_{\text{neural subclusters with } \text{log}_2\text{FC} \ge 2.0}}$$
 
-8. **Perez Lineage ($s_{\text{perez}}$)**:
-   $$s_{\text{perez}} = \begin{cases} 1.0 & \text{if TF class } \in \text{Neural Superfamilies (bHLH, Homeobox, POU, C2H2, etc.)} \\ 0.5 & \text{if other confirmed structural TF class} \\ 0.0 & \text{if absent / non-TF} \end{cases}$$
+8. **Perez Lineage ($s_{\text{perez\_lin}}$)**:
+   $$s_{\text{perez\_lin}} = \begin{cases} 1.0 & \text{if TF class } \in \text{Neural Superfamilies (bHLH, Homeobox, POU, C2H2, etc.)} \\ 0.5 & \text{if other confirmed structural TF class} \\ 0.0 & \text{if absent / non-TF} \end{cases}$$
+
+9. **Perez Regulatory Influence ($s_{\text{perez\_infl}}$)**:
+   $$s_{\text{perez\_infl}} = \text{influence\_score}_{\text{neuron fate}} \quad \text{from [Perez et al. (2025)](https://www.nature.com/articles/s41467-025-65712-0#Sec94) MOESM19}$$
 
 ---
 
-## 4. Top-10 Consensus Prioritization Results
+## 4. Top Prioritized Candidates
 
-Concordance across Fixed-Weight, Centered Dirichlet ($k=40$), and Uniform Dirichlet ($\alpha=1$) models:
+Dual-track shortlist and concordance across fixed-weight, centered Dirichlet ($k=40$), and uniform Dirichlet ($\alpha=1$) models:
 
-| Rank | Gene ID | Gene Name | TF Class / Family | Integrated Score | Dirichlet Median ($k=40$) | Uniform Median ($\alpha=1$) | Proof Status | Track |
-|:---:|:---|:---|:---|:---:|:---:|:---:|:---|:---:|
-| **1** | `dd2946` | *dd2946* | C2H2 ZNF | **0.852** | 0.854 | 0.855 | `known_rnai_validated` | Track A |
-| **2** | `dd16472` | *pax6A* | Homeobox / Paired | **0.790** | 0.791 | 0.792 | `known_rnai_validated` | Track A |
-| **3** | `dd38342` | *pou4-1* | POU / Homeobox | **0.782** | 0.783 | 0.784 | `known_rnai_validated` | Track A |
-| **4** | `dd4048` | *dd4048* | bHLH | **0.780** | 0.781 | 0.782 | `novel_candidate` | **Track B** |
-| **5** | `dd14115` | *lhx1/5* | Homeobox / LIM | **0.764** | 0.765 | 0.766 | `known_rnai_validated` | Track A |
-| **6** | `dd11150` | *dd11150* | C2H2 ZNF | **0.760** | 0.761 | 0.762 | `known_rnai_validated` | Track A |
-| **7** | `dd14824` | *dd14824* | C2H2 ZNF | **0.756** | 0.757 | 0.758 | `known_rnai_validated` | Track A |
-| **8** | `dd19890` | *tbr1* | T-box | **0.753** | 0.754 | 0.755 | `known_rnai_validated` | Track A |
-| **9** | `dd31217` | *neurogenin* | bHLH | **0.751** | 0.752 | 0.753 | `novel_candidate` | **Track B** |
-| **10** | `dd6626` | *nhr1* | Nuclear Hormone Receptor | **0.750** | 0.751 | 0.752 | `known_rnai_validated` | Track A |
+| Rank | Gene ID | Gene Name | TF Class / Family | Integrated Score | Dirichlet Median ($k=40$) | Proof Status | Track |
+|:---:|:---|:---|:---|:---:|:---:|:---|:---:|
+| **1** | `dd2946` | *dd2946* | C2H2 ZNF | **0.852** | 0.857 | `known_rnai_validated` | Track A |
+| **2** | `dd38342` | *pou4-1* | POU / Homeobox | **0.782** | 0.783 | `known_rnai_validated` | Track A |
+| **3** | `dd14115` | *lhx1/5* | Homeobox / LIM | **0.764** | 0.762 | `known_rnai_validated` | Track A |
+| **4** | `dd14824` | *dd14824* | C2H2 ZNF | **0.756** | 0.762 | `known_rnai_validated` | Track A |
+| **5** | `dd19890` | *tbr1* | T-box | **0.753** | 0.753 | `known_rnai_validated` | Track A |
+| **6** | `dd31217` | *neurogenin* | bHLH | **0.751** | 0.760 | `novel_candidate` | **Track B** |
+| **7** | `dd7033` | *dd7033* | Homeobox / C2H2 ZNF | **0.734** | 0.734 | `novel_candidate` | **Track B** |
+| **8** | `dd4048` | *dd4048* | bHLH | **0.750** | 0.749 | `novel_candidate` | **Track B** |
+| **9** | `dd11930` | *dd11930* | C2H2 ZNF | **0.734** | 0.734 | `novel_candidate` | **Track B** |
+| **10** | `dd9596` | *dd9596* | Homeobox | **0.691** | 0.691 | `novel_candidate` | **Track B** |
 
 ---
 
@@ -239,7 +241,7 @@ Concordance across Fixed-Weight, Centered Dirichlet ($k=40$), and Uniform Dirich
 ```
 src/bioforge/
 ├── core/                  # Configuration, logging, exception hierarchies
-├── evidence/              # 8-stream scoring engine, EvidenceScorer, EvidenceRecord
+├── evidence/              # 9-stream scoring engine, EvidenceScorer, EvidenceRecord
 ├── projects/neuraltf/     # Multi-atlas pipeline, PlanMine client, prioritization engine
 ├── omics/                 # Single-cell QC, normalization, clustering, Leiden algorithms
 ├── smapping/              # Cross-assembly identifier mapping (SMED ↔ v4 ↔ v6 ↔ h1SMcG)
@@ -248,8 +250,8 @@ src/bioforge/
 
 projects/NeuralTF/
 ├── data/                  # bridge.csv, king_atlas.tsv, master_tf_catalog.csv, perez_tf_summary.csv
-├── results/               # Dirichlet CSVs, ANANSE network, top-10 prioritization, tables S1–S5
-├── figures/               # 21 Nature Communications compliant 300 DPI figures
+├── results/               # Dirichlet CSVs, ANANSE network, top-10 prioritization, tables S1–S4
+├── figures/               # 33 Nature Communications compliant 300 DPI figures
 └── runs/pipeline_run/     # rank.csv, rank_neural.csv, evidence_cards.md, audit checkpoints 01–06
 ```
 

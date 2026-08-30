@@ -11,8 +11,8 @@ python scripts/generate_all.py --skip-planmine   # offline use
 The generated outputs live in `datasets/processed/` (fincher/plass/cui h5ads,
 PlanMine parquet + fasta), `projects/NeuralTF/data/` (bridge.csv,
 king_atlas.tsv, master_tf_catalog.csv), `projects/NeuralTF/results/`
-(Dirichlet CSVs, ANANSE network, supplementary tables S1–S5),
-`projects/NeuralTF/figures/` (21 publication figures) and
+(Dirichlet CSVs, ANANSE network, supplementary tables S1–S4),
+`projects/NeuralTF/figures/` (33 publication figures) and
 `projects/NeuralTF/runs/pipeline_run/` (rank.csv, rank_neural.csv,
 evidence_cards.md, 6 checkpoint parquets).
 
@@ -24,13 +24,13 @@ datasets/
     GSE103633_GEO_Plass_atlas/      # Plass et al., Science 2018 — GSE103633_RAW.tar, ~2 GB
     GSE111764_GEO_Fincher_atlas/    # Fincher et al., Science 2018 — DGE .txt.gz
     Supplementary_Data_King_2024/   # King et al., Cell Reports 2024 — mmc2–mmc7 xlsx
-    OMIX003867_OMIX_Cui_atlas/      # Cui et al., 2023 — single‑cell h5ad (~55 GB) (download: https://ngdc.cncb.ac.cn/omix/release/OMIX003867)
+    OMIX003867_OMIX_Cui_atlas/      # Cui et al., 2023 — single‑cell h5ad (~55 GB) (download: [OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867))
       OMIX003867-01/
         singlecell_h5ad/
           adata_scRNA_Annotated.h5ad   # Cui annotated h5ad used by the pipeline
     smed_20140614.mapping.rosettastone.2020.txt    # Rosetta Stone gene-ID bridge, 67 MB
     go.obo                          # Gene Ontology, current release, ~40 MB
-    Supplementary_Data_Perez_2025/   # Perez et al., 2025 — MOESM5 (TF classification) & MOESM22 (ANANSE validation) xlsx (download: https://www.nature.com/articles/s41467-025-65712-0#Sec94)
+    Supplementary_Data_Perez_2025/   # Perez et al., 2025 — MOESM5 (TF classification), MOESM19 (ANANSE influence), MOESM22 (ANANSE GRN) (download: [Multimodal single cell analyses reveal gene networks of planarian stem cell differentiation | Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94))
   processed/                        # GENERATED: fincher_subsample.h5ad, plass_v6.h5ad, cui_v6.h5ad,
                                      # planmine_annotations.parquet, planmine_transcripts.fasta
   references/
@@ -43,18 +43,19 @@ datasets/
 | GSE103633 (Plass 2018) | *Schmidtea mediterranea* | dd_Smed_v6 | Whole-anatomy atlas |
 | GSE111764 (Fincher 2018) | *S. mediterranea* | dd_Smed_v4 | Brain/principal/sexual clusterings |
 | King 2024 supplementary | *S. mediterranea* | dd_Smed_v6 | TF atlas + RNAi phenotypes (S4) + cluster log2FC (S6) |
-| Cui 2023 atlas | *S. mediterranea* | dd_Smed_v6 | Regeneration time‑course (8 time points, ~55 K cells) |
-| Perez 2025 supplementary | *S. mediterranea* | — | TF classification (MOESM5) & ANANSE validation (MOESM22) |
+| Cui 2023 atlas | *S. mediterranea* | dd_Smed_v6 | Regeneration time‑course (8 time points, ~55 K cells; [OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867)) |
+| Perez 2025 supplementary | *S. mediterranea* | — | TF classification (MOESM5), ANANSE influence (MOESM19), & ANANSE GRN validation (MOESM22) ([Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)) |
 | Gene Ontology (go.obo) | model-organism-agnostic | — | Canonical GO term names/namespaces for PlanMine annotation figures |
 
 ## Source accessions
 
-| Dataset | GEO | SRA | NCBI BioProject |
+| Dataset | GEO | SRA | NCBI BioProject / Accession |
 |---------|-----|-----|-----------------|
 | Plass 2018 | [GSE103633](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633) | SRP117156 | PRJNA403817 |
 | Fincher 2018 | [GSE111764](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111764) | SRP135258 | PRJNA438083 |
-| King 2024 | Cell Reports [supplementary](https://www.sciencedirect.com/science/article/pii/S2211124724001712) (mmc4–mmc7) | — | — |
-| Perez 2025 | — | — | — |
+| Cui 2023 | — | — | [OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867) |
+| King 2024 | Cell Reports [supplementary](https://www.sciencedirect.com/science/article/pii/S2211124724001712) (mmc4–mmc7) | — | [DOI:10.1016/j.celrep.2024.113947](https://doi.org/10.1016/j.celrep.2024.113947) |
+| Perez 2025 | — | — | [Multimodal single cell analyses reveal gene networks of planarian stem cell differentiation | Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94) |
 
 ## Data Integrity Checksums (SHA256)
 
@@ -74,9 +75,9 @@ datasets/
 | `datasets/raw/Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM22_ESM.xlsx` | `9EDED529AC7E0D8AD0F5D6CD73B2102C59F3E829CC69DDB9200A530EADE5E458` | ~0.86 MB | Perez 2025 supplementary |
 | `datasets/raw/OMIX003867_OMIX_Cui_atlas/OMIX003867-01/singlecell_h5ad/adata_scRNA_Annotated.h5ad` | `415B45A0A01C04DA616AA1909ADD605F05A13D514F1FAD72A2E622C5BD5DF414` | ~55 GB | Cui 2023 atlas annotated h5ad |
 
-> **Note**: Replace `PENDING` with actual SHA256 after downloading. Run `sha256sum <file>` on Linux/macOS or `Get-FileHash -Algorithm SHA256 <file>` on Windows PowerShell.
+> **Note**: Verify checksums after download with `python scripts/verify_data.py` or `sha256sum <file>` (Linux/macOS) / `Get-FileHash -Algorithm SHA256 <file>` (Windows PowerShell).
 > 
-> **NOTE**: The pipeline now integrates **five** atlases (Fincher, Plass, Cui, King, Perez). The 8th evidence stream (`perez_lineage`) scores TF family classification from Perez 2025. Scoring weights: expression=0.200, all 7 others=0.100. Older runs used a 7-stream schema and will show score shifts after a fresh run.
+> **NOTE**: The pipeline integrates **five** atlases (Fincher, Plass, Cui, King, Perez) across **9 evidence streams**. Scoring weights: expression=0.200, all 8 others=0.100.
 
 ## Gene Ontology (go.obo)
 

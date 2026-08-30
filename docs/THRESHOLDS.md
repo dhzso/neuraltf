@@ -98,14 +98,14 @@ $$\text{Score}_{\text{perez\_lineage}} = \begin{cases} 1.0 & \text{if TF class }
 $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(k \cdot \mathbf{w}_{\text{default}}), \quad m = 1, \dots, 1000$$
 
 - **Mathematical Rationale**: Fixed-weight scoring models assume exact certainty in parameter weights. The centered Dirichlet model formalizes weight uncertainty by drawing 1,000 weight vectors centered on $\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$. Setting the concentration parameter to $k = 40.0$ corresponds to 40 pseudo-observations of evidence reliability, yielding a 95% credible interval of approximately $\pm 0.10$ around each baseline weight.
-- **Location**: `projects/NeuralTF/scripts/dirichlet_prioritize.py:71`, `dirichlet_centered_all249.py`
+- **Location**: `projects/NeuralTF/scripts/dirichlet_centered.py` (evaluated across all candidates in `rank.csv`)
 
 ### 3.2 Uniform Dirichlet Prior ($\alpha_i = 1.0, \, \forall i$)
 
 $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
 
-- **Mathematical Rationale**: To prove that candidate rankings are driven by intrinsic biological signal rather than investigator weight choices, the uniform Dirichlet samples uniformly across the 9-dimensional probability simplex ($\alpha_i = 1$). Concordance between uniform Dirichlet medians and fixed-weight rankings (**10/10 top-10 overlap**) confirms extreme robustness.
-- **Location**: `projects/NeuralTF/scripts/dirichlet_uniform.py`, `dirichlet_uniform_all249.py`
+- **Mathematical Rationale**: To demonstrate that candidate rankings are driven by intrinsic biological signal rather than investigator weight choices, the uniform Dirichlet samples uniformly across the 9-dimensional probability simplex ($\alpha_i = 1$). Concordance between uniform Dirichlet medians and fixed-weight rankings confirms high stability across all candidates without prior weighting assumptions.
+- **Location**: `projects/NeuralTF/scripts/dirichlet_uniform.py` (evaluated across all candidates in `rank.csv`)
 
 ---
 
@@ -120,21 +120,21 @@ $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
                                 │ in Fincher, Plass, and Cui atlases
                                 ▼ (FDR q ≤ 0.10)
 ┌─────────────────────────────────────────────────────────────────┐
-│ 224 TFs with significant single-cell cluster DE                 │
+│ TFs with significant single-cell cluster DE                     │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │ Integration of King 2024 mmc7
                                 │ G0 progenitor neural subclusters (log2FC ≥ 2)
                                 ▼ + King mmc5 RNAi screen targets
 ┌─────────────────────────────────────────────────────────────────┐
-│ 289 Total Candidate TFs (rank.csv)                              │
+│ 278 Total Candidate TFs (rank.csv)                              │
 │ Scored across all 9 evidence streams                            │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │ Neural Gate:
                                 │ (neural_enriched > 0) | (rnai > 0)
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 102 Neural-Enriched Candidate TFs (rank_neural.csv)             │
-│ (96 G0 neural subcluster hits ∪ 6 RNAi-validated TFs)           │
+│ 101 Neural-Enriched Candidate TFs (rank_neural.csv)             │
+│ (Dual-track shortlist: 5 Track A + 5 Track B)                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -157,6 +157,6 @@ The EvidenceScorer always renormalizes over **present** streams per candidate, s
 
 $$\text{Score}_{\text{perez\_influence}} = \text{influence\_score}_{\text{neuron fate}}$$
 
-- **Biological Rationale**: Perez et al. (*Nat. Commun.* 2025) computed ANANSE regulatory influence scores across 9 cell fates (MOESM19). The neuron fate influence score represents the normalized rank of each TF's regulatory impact in neural differentiation. A score of 1.0 means the TF has the highest regulatory influence in neuron fate specification.
-- **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k`
+- **Biological Rationale**: [Perez et al. (2025)](https://www.nature.com/articles/s41467-025-65712-0#Sec94) computed ANANSE regulatory influence scores across 9 cell fates (MOESM19). The neuron fate influence score represents the normalized rank of each TF's regulatory impact in neural differentiation. A score of 1.0 means the TF has the highest regulatory influence in neuron fate specification.
+- **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k` from [Multimodal single cell analyses reveal gene networks of planarian stem cell differentiation | Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:integrate_perez_influence()`
