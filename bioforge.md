@@ -212,8 +212,8 @@ Where default weights $\mathbf{w} = [0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0
 8. **Perez Lineage ($s_{\text{perez-lin}}$)**:
    $$
    s_{\text{perez-lin}} = \begin{cases}
-   1.0 & \text{if TF class is in Neural Superfamilies (bHLH, Homeobox, POU, C2H2, etc.)} \\
-   0.5 & \text{if other confirmed structural TF class} \\
+   1.0 & \text{if TF class is in Neural Superfamilies (bHLH, Homeobox, POU, C2H2, etc.)} \\\\
+   0.5 & \text{if other confirmed structural TF class} \\\\
    0.0 & \text{if absent or non-TF}
    \end{cases}
    $$

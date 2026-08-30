@@ -71,8 +71,8 @@ $$\text{Score}_{\text{specificity}} = \frac{1.0}{n_{\text{clusters supporting}}}
 
 $$
 \text{Score}_{\text{perez-lineage}} = \begin{cases}
-1.0 & \text{if TF class is in Neural Superfamilies (bHLH, Homeobox, POU, C2H2, SOX, FOX, etc.)} \\
-0.5 & \text{if TF class is another confirmed structural TF family} \\
+1.0 & \text{if TF class is in Neural Superfamilies (bHLH, Homeobox, POU, C2H2, SOX, FOX, etc.)} \\\\
+0.5 & \text{if TF class is another confirmed structural TF family} \\\\
 0.0 & \text{if unclassified or absent from Perez MOESM5 catalog}
 \end{cases}
 $$
