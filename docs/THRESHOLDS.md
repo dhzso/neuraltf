@@ -10,8 +10,7 @@ This document records the biological, statistical, and mathematical justificatio
 
 $$\text{Score}_{\text{expression}} = \min\left(1.0, \frac{\max(\text{log}_2\text{FC})}{5.0}\right)$$
 
-- **Biological Rationale**: In planarian single-cell RNA sequencing (*Schmidtea mediterranea*), a $\text{log}_2\text{FC} = 5.0$ corresponds to a $2^5 = 32$-fold linear upregulation relative to background non-target cells. Transcription factor (TF) steady-state transcript abundance in whole-animal or tissue clusters reaches saturation in target promoter occupancy well before 32-fold upregulation. Setting the divisor at 5.0 maps the physiological range $[0, 5.0]$ linearly to $[0, 1.0]$. This avoids outlier compression where a single extreme fold-change (e.g., $\text{log}_2\text{FC} = 12$) would compress biologically meaningful, moderately expressed lineage master regulators ($\text{log}_2\text{FC} \in [2.0, 4.0]$) into near-zero scores.
-- **Note**: This normalization is now **unified** across all 4 expression atlases (Fincher, Plass, Cui, King). Previously King used a different normalization; the constant `EXPR_CAP = 5.0` ensures consistency.
+- **Biological Rationale**: In planarian (*Schmidtea mediterranea*) single-cell RNA (scRNA) sequencing, a $\text{log}_2\text{FC} = 5.0$ corresponds to a $2^5 = 32$-fold of linear upregulation which is relative to background non-target cells. Sometimes, transcription factor (TF) steady-state transcript abundance in whole-animal or tissue clusters reaches saturation in target promoter occupancy well before 32-fold upregulation. Setting the divisor at 5.0 maps the physiological range $[0, 5.0]$ linearly to $[0, 1.0]$. This avoids outlier compression where a single extreme fold-change (e.g., $\text{log}_2\text{FC} = 12$) would compress biologically meaningful, moderately expressed lineage master regulators ($\text{log}_2\text{FC} \in [2.0, 4.0]$) into near-zero scores.
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:413-416` (Fincher/Plass/Cui), `pipeline.py:482-484` (King)
 - **Sensitivity Analysis**:
   | Divisor | Total Candidates | Top-10 Jaccard vs 5.0 | Biological Behavior |
@@ -149,7 +148,7 @@ $$\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$$
 - **Expression** (0.2): Highest weight — direct evidence of transcriptional activity
 - **All other 8 streams** (0.1 each): Equal weight — supporting evidence streams
 
-The EvidenceScorer always renormalizes over **present** streams per candidate, so the effective weight depends on which streams have data for each candidate. This ensures that missing evidence does not penalize candidates.
+The EvidenceScorer always renormalizes over **present** streams per candidate, so the effective weight depends on which streams have data for each candidate. This ensures that missing evidence does not penalize candidates as *absence of evidence is not evidence of absence*.
 
 ---
 
