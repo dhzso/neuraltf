@@ -74,7 +74,7 @@ $$\text{Score}_{\text{specificity}} = \frac{1.0}{n_{\text{clusters supporting}}}
 
 ### 1.6 Perez Lineage TF Superfamily Classification
 
-$$\text{Score}_{\text{perez\_lineage}} = \begin{cases} 1.0 & \text{if TF class } \in \text{Neural Superfamilies (bHLH, Homeobox, POU, C2H2, SOX, FOX, etc.)} \\ 0.5 & \text{if TF class is another confirmed structural TF family} \\ 0.0 & \text{if unclassified or absent from Perez MOESM5 catalog} \end{cases}$$
+$$\text{Score}_{\text{perez-lineage}} = \begin{cases} 1.0 & \text{if TF class } \in \text{Neural Superfamilies (bHLH, Homeobox, POU, C2H2, SOX, FOX, etc.)} \\ 0.5 & \text{if TF class is another confirmed structural TF family} \\ 0.0 & \text{if unclassified or absent from Perez MOESM5 catalog} \end{cases}$$
 
 - **Biological Rationale**: Perez et al. (*Nat. Commun.* 2025) structurally classified the *S. mediterranea* transcription factor repertoire across differentiation trajectories. Comparative genomics demonstrates that metazoan neural specification is governed by conserved DNA-binding domain families (bHLH, POU-homeodomain, LIM-homeobox, C2H2 zinc fingers). Weighting known neural families at 1.0, general TFs at 0.5, and non-TFs at 0.0 injects established structural biology priors without discarding novel TF families.
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:508-550`
@@ -163,7 +163,7 @@ The EvidenceScorer always renormalizes over **present** streams per candidate, s
 
 ## 6. Perez Regulatory Influence Score (Stream 9)
 
-$$\text{Score}_{\text{perez\_influence}} = \text{influence\_score}_{\text{neuron fate}}$$
+$$\text{Score}_{\text{perez-influence}} = \text{Influence}_{\text{neuron fate}}$$
 
 - **Biological Rationale**: [Perez et al. (2025)](https://www.nature.com/articles/s41467-025-65712-0#Sec94) computed ANANSE regulatory influence scores across 9 cell fates (MOESM19). The neuron fate influence score represents the normalized rank of each TF's regulatory impact in neural differentiation. A score of 1.0 means the TF has the highest regulatory influence in neuron fate specification.
 - **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k` from [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)
