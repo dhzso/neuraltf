@@ -74,7 +74,13 @@ $$\text{Score}_{\text{specificity}} = \frac{1.0}{n_{\text{clusters supporting}}}
 
 ### 1.6 Perez Lineage TF Superfamily Classification
 
-$$\text{Score}_{\text{perez-lineage}} = \begin{cases} 1.0 & \text{if TF class } \in \text{Neural Superfamilies (bHLH, Homeobox, POU, C2H2, SOX, FOX, etc.)} \\ 0.5 & \text{if TF class is another confirmed structural TF family} \\ 0.0 & \text{if unclassified or absent from Perez MOESM5 catalog} \end{cases}$$
+$$
+\text{Score}_{\text{perez-lineage}} = \begin{cases}
+1.0 & \text{if TF class is in Neural Superfamilies (bHLH, Homeobox, POU, C2H2, SOX, FOX, etc.)} \\
+0.5 & \text{if TF class is another confirmed structural TF family} \\
+0.0 & \text{if unclassified or absent from Perez MOESM5 catalog}
+\end{cases}
+$$
 
 - **Biological Rationale**: Perez et al. (*Nat. Commun.* 2025) structurally classified the *S. mediterranea* transcription factor repertoire across differentiation trajectories. Comparative genomics demonstrates that metazoan neural specification is governed by conserved DNA-binding domain families (bHLH, POU-homeodomain, LIM-homeobox, C2H2 zinc fingers). Weighting known neural families at 1.0, general TFs at 0.5, and non-TFs at 0.0 injects established structural biology priors without discarding novel TF families.
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:508-550`
