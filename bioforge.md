@@ -210,17 +210,13 @@ Where default weights $\mathbf{w} = [0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0
    $$s_{\text{neural-spec}} = \frac{1.0}{n_{\text{neural subclusters with } \text{log}_2\text{FC} \ge 2.0}}$$
 
 8. **Perez Lineage ($s_{\text{perez-lin}}$)**:
-   $$
-   s_{\text{perez-lin}} = \begin{cases}
-   1.0 & \text{if TF class is in Neural Superfamilies (bHLH, Homeobox, POU, C2H2, etc.)} \\\\
-   0.5 & \text{if other confirmed structural TF class} \\\\
-   0.0 & \text{if absent or non-TF}
-   \end{cases}
-   $$
+   - **1.0**: Assigned if TF class belongs to Neural Superfamilies (bHLH, Homeobox, POU, C2H2, SOX, FOX, etc.)
+   - **0.5**: Assigned if TF class is another confirmed structural TF family
+   - **0.0**: Assigned if unclassified or absent from Perez 2025 catalog
 
 9. **Perez Regulatory Influence ($s_{\text{perez-infl}}$)**:
-   $$s_{\text{perez-infl}} = \text{Influence}_{\text{neuron fate}}$$
-   *(Data source: [Perez et al. 2025](https://www.nature.com/articles/s41467-025-65712-0#Sec94), MOESM19 neuron fate influence score)*
+   - Evaluated as the normalized ANANSE regulatory influence score in neuron fate specification (range $[0.0, 1.0]$).
+   - *Data source: [Perez et al. (2025)](https://www.nature.com/articles/s41467-025-65712-0#Sec94) MOESM19.*
 
 ---
 
