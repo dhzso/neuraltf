@@ -118,7 +118,7 @@ Accessible at `http://localhost:8501` with four specialized tabs:
 1. **Run Page**: Real-time dataset discovery, QC monitoring, and pipeline execution controls.
 2. **Results Page**: Interactive rank tables, dynamic filtering, scatter/density plots, and evidence cards.
 3. **Prioritization Page**: Dual-track candidate evaluation (Track A: RNAi-validated vs Track B: Novel discovery).
-4. **AI Assistant**: Conversational biology assistant for hypothesis generation and candidate interpretation.
+4. **AI Assistant**: Conversational biology assistant for hypothesis generation and candidate interpretation (Need *API_Key* config).
 
 ---
 
