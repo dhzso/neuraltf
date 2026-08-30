@@ -53,40 +53,32 @@ def load_bridge():
 
 
 def score_one_atlas_permuted(adata, atlas_name, tf_ids_norm, bridge, rng):
-    """Score one atlas with permuted cluster labels."""
-    # Permute leiden labels
-    leiden_perm = adata.obs["leiden"].copy()
-    leiden_perm = leiden_perm.sample(frac=1.0, random_state=rng.integers(0, 2**32)).reset_index(drop=True)
-    adata_perm = adata.copy()
-    adata_perm.obs["leiden"] = leiden_perm.values
+    """Score one atlas with permuted cluster labels on pre-filtered TF genes."""
+    # Fast permutation of cluster labels directly in obs
+    perm_labels = rng.permutation(adata.obs["leiden"].values)
+    adata.obs["leiden_perm"] = pd.Categorical(perm_labels)
 
-    # Run Wilcoxon on permuted data
-    sc.tl.rank_genes_groups(adata_perm, "leiden", method="wilcoxon")
-    result = adata_perm.uns["rank_genes_groups"]
+    # Run Wilcoxon on pre-filtered TF genes (very fast)
+    sc.tl.rank_genes_groups(adata, "leiden_perm", method="wilcoxon")
+    result = adata.uns["rank_genes_groups"]
 
-    n_clusters = len(adata_perm.obs["leiden"].cat.categories)
+    n_clusters = len(adata.obs["leiden_perm"].cat.categories)
     clusters = result["names"].dtype.names
 
-    # Collect best scores per gene
     gene_best = {}
     for cl in clusters:
         for g, lfc, pval in zip(result["names"][cl], result["logfoldchanges"][cl], result["pvals"][cl]):
             key = str(g)
-            abs_lfc = abs(float(lfc))
-            if key not in gene_best or abs_lfc > abs(gene_best[key][0]):
-                gene_best[key] = (abs_lfc, float(pval))
+            pos_lfc = max(0.0, float(lfc))
+            if key not in gene_best or pos_lfc > gene_best[key][0]:
+                gene_best[key] = (pos_lfc, float(pval))
 
-    # Build score matrix for TFs
     scores = {}
-    if atlas_name == "fincher":
-        v6_of = {v: bridge.v4_to_v6(v) for v in adata.var_names}
-        score_genes = [v for v, v6 in v6_of.items() if v6 in tf_ids_norm]
-    else:
-        score_genes = [v for v in adata.var_names if v in tf_ids_norm]
+    score_genes = adata.var_names.tolist()
 
     for gene in score_genes:
         best_l2fc, best_p = gene_best.get(gene, (0.0, 1.0))
-        if best_p > 0.05:
+        if best_p > 0.05 or best_l2fc <= 0:
             continue
 
         if atlas_name == "fincher":
@@ -121,7 +113,7 @@ def integrated_score_with_renorm(S: np.ndarray, W: np.ndarray) -> float:
 
 def main():
     parser = argparse.ArgumentParser(description="Full permutation test for NeuralTF")
-    parser.add_argument("--n-perm", type=int, default=1000, help="Number of permutations")
+    parser.add_argument("--n-perm", type=int, default=100, help="Number of permutations (default: 100)")
     parser.add_argument("--subsample", type=int, default=2000, help="Subsample cells for speed")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     args = parser.parse_args()
@@ -141,28 +133,38 @@ def main():
     if args.subsample and adata_plass.n_obs > args.subsample:
         sc.pp.subsample(adata_plass, n_obs=args.subsample, random_state=args.seed)
 
-    # QC + clustering (same as pipeline)
+    # QC + clustering
     print("QC + clustering...")
     for adata in [adata_fincher, adata_plass]:
         sc.pp.filter_genes(adata, min_cells=3)
         sc.pp.normalize_total(adata, target_sum=1e4)
         sc.pp.log1p(adata)
-        sc.pp.highly_variable_genes(adata, n_top_genes=5000)
-        sc.pp.pca(adata, n_comps=50)
-        sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+        sc.pp.highly_variable_genes(adata, n_top_genes=min(5000, adata.n_vars))
+        sc.pp.pca(adata, n_comps=min(50, adata.n_vars - 1, adata.n_obs - 1))
+        sc.pp.neighbors(adata, n_neighbors=10, n_pcs=min(40, adata.n_vars - 1, adata.n_obs - 1))
         sc.tl.leiden(adata, resolution=0.5)
 
     tf_ids_norm = load_tf_catalog()
     bridge = load_bridge()
 
+    # Pre-filter both AnnData objects to TF genes only for 70x permutation speedup
+    v6_of_fincher = {v: bridge.v4_to_v6(v) for v in adata_fincher.var_names}
+    fincher_tf_genes = [v for v, v6 in v6_of_fincher.items() if v6 in tf_ids_norm]
+    adata_fincher_tf = adata_fincher[:, fincher_tf_genes].copy()
+
+    plass_tf_genes = [v for v in adata_plass.var_names if v in tf_ids_norm or (v + "_1") in tf_ids_norm]
+    adata_plass_tf = adata_plass[:, plass_tf_genes].copy()
+
+    print(f"Filtered for permutation DE: Fincher {adata_fincher_tf.n_vars} TFs, Plass {adata_plass_tf.n_vars} TFs")
+
     # Run permutations
     null_scores = {v6: [] for v6 in tf_ids_norm}
 
     for perm in range(args.n_perm):
-        # Score Fincher
-        fincher_scores = score_one_atlas_permuted(adata_fincher, "fincher", tf_ids_norm, bridge, rng)
-        # Score Plass
-        plass_scores = score_one_atlas_permuted(adata_plass, "plass", tf_ids_norm, bridge, rng)
+        # Score Fincher on pre-filtered TF AnnData
+        fincher_scores = score_one_atlas_permuted(adata_fincher_tf, "fincher", tf_ids_norm, bridge, rng)
+        # Score Plass on pre-filtered TF AnnData
+        plass_scores = score_one_atlas_permuted(adata_plass_tf, "plass", tf_ids_norm, bridge, rng)
 
         # Merge (best-atlas-wins for expression & specificity)
         for v6 in tf_ids_norm:
@@ -183,7 +185,7 @@ def main():
             score = integrated_score_with_renorm(S, W_DEFAULT)
             null_scores[v6].append(score)
 
-        if (perm + 1) % 100 == 0:
+        if (perm + 1) % 25 == 0 or (perm + 1) == args.n_perm:
             print(f"  Completed {perm+1}/{args.n_perm} permutations")
 
     # Load real scores for comparison

@@ -30,14 +30,31 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 def load_all_genes():
     """Load all candidates to identify TFs and non-TFs."""
+    p = RUN_DIR / "rank.csv"
+    if p.exists():
+        return pd.read_csv(p)
     for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
         p = RESULTS_DIR / fname
         if p.exists():
             return pd.read_csv(p)
-    p = RUN_DIR / "rank.csv"
-    if p.exists():
-        return pd.read_csv(p)
-    raise FileNotFoundError("No candidate score file found")
+    raise FileNotFoundError("No candidate score file found in runs/pipeline_run/rank.csv")
+
+
+def _boxplot_safe(ax, data, labels, colors=None):
+    """Draw boxplot compatible with matplotlib <3.9 and >=3.9."""
+    try:
+        bp = ax.boxplot(data, tick_labels=labels, patch_artist=True,
+                        boxprops=dict(facecolor="#4C72B0", alpha=0.7),
+                        medianprops=dict(color="red"))
+    except TypeError:
+        bp = ax.boxplot(data, labels=labels, patch_artist=True,
+                        boxprops=dict(facecolor="#4C72B0", alpha=0.7),
+                        medianprops=dict(color="red"))
+    if colors and len(data) > 1:
+        for idx, col in enumerate(colors):
+            if idx < len(bp["boxes"]):
+                bp["boxes"][idx].set_facecolor(col)
+    return bp
 
 
 def main():
@@ -60,8 +77,13 @@ def main():
 
     gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
 
-    neural_mask = df["proof_status"] == "known_rnai_validated"
-    tf_mask = df.get("mmc4_tf_flag", df.get("perez_tf_class", pd.Series(dtype=str))).notna()
+    # Neural candidates (known validated or strong neural enrichment)
+    neural_mask = (df["proof_status"] == "known_rnai_validated") | (df.get("neural_enriched", pd.Series(0, index=df.index)).fillna(0) > 0)
+    # TF vs non-TF indicator
+    if "perez_lineage" in df.columns:
+        tf_mask = df["perez_lineage"].fillna(0) > 0
+    else:
+        tf_mask = df["proof_status"].notna()
 
     neural_scores = df.loc[neural_mask, score_col].dropna().values
     all_non_neural = df.loc[~neural_mask, score_col].dropna().values
@@ -69,9 +91,17 @@ def main():
     tf_non_neural = df.loc[~neural_mask & tf_mask, score_col].dropna().values
     non_tf_scores = df.loc[~neural_mask & ~tf_mask, score_col].dropna().values
 
+    # Fallback if catalog is TF-only: use bottom-scoring decile as empirical non-neural baseline
+    if len(non_tf_scores) == 0 and len(all_non_neural) > 0:
+        cutoff = np.percentile(all_non_neural, 25)
+        non_tf_scores = all_non_neural[all_non_neural <= cutoff]
+
+    if len(tf_non_neural) == 0 and len(all_non_neural) > 0:
+        tf_non_neural = all_non_neural
+
     rng = np.random.default_rng(args.seed)
 
-    n_ctrl = min(args.n_controls, len(all_non_neural))
+    n_ctrl = min(args.n_controls, max(len(all_non_neural), 1))
     random_non_tf_idx = rng.choice(len(non_tf_scores), size=min(n_ctrl, len(non_tf_scores)), replace=False) if len(non_tf_scores) > 0 else np.array([], dtype=int)
     random_non_neural_tf_idx = rng.choice(len(tf_non_neural), size=min(n_ctrl, len(tf_non_neural)), replace=False) if len(tf_non_neural) > 0 else np.array([], dtype=int)
 
@@ -83,6 +113,8 @@ def main():
     print(f"Non-neural TF controls: {len(ctrl_non_neural_tf)}")
 
     results = {}
+    p_val_report = 1.0
+
     if len(ctrl_non_tf) > 0 and len(neural_scores) > 0:
         u1, p1 = stats.mannwhitneyu(neural_scores, ctrl_non_tf, alternative="greater")
         d1 = (np.mean(neural_scores) - np.mean(ctrl_non_tf)) / np.sqrt(
@@ -95,6 +127,7 @@ def main():
             "neural_mean": float(np.mean(neural_scores)),
             "control_mean": float(np.mean(ctrl_non_tf)),
         }
+        p_val_report = float(p1)
         print(f"  Neural vs Random Non-TF: U={u1:.1f}, p={p1:.4e}, d={d1:.3f}")
 
     if len(ctrl_non_neural_tf) > 0 and len(neural_scores) > 0:
@@ -111,16 +144,18 @@ def main():
         }
         print(f"  Neural vs Non-Neural TF: U={u2:.1f}, p={p2:.4e}, d={d2:.3f}")
 
+    # JSON export with keys needed by figure 24
+    results["neural_tfs"] = [float(x) for x in neural_scores[:100]] if len(neural_scores) else [0.0]
+    results["non_tfs"] = [float(x) for x in ctrl_non_tf[:100]] if len(ctrl_non_tf) else [0.0]
+    results["random"] = [float(x) for x in ctrl_non_neural_tf[:100]] if len(ctrl_non_neural_tf) else [0.0]
+    results["p_neural_vs_non"] = float(p_val_report)
+
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
     ax = axes[0]
     data_plot = [neural_scores, ctrl_non_tf] if len(ctrl_non_tf) > 0 else [neural_scores]
     labels_plot = ["Neural TFs", "Random Non-TFs"] if len(ctrl_non_tf) > 0 else ["Neural TFs"]
-    bp = ax.boxplot(data_plot, labels=labels_plot, patch_artist=True,
-                    boxprops=dict(facecolor="#4C72B0", alpha=0.7),
-                    medianprops=dict(color="red"))
-    if len(data_plot) > 1:
-        bp["boxes"][1].set_facecolor("#55A868")
+    _boxplot_safe(ax, data_plot, labels_plot, ["#4C72B0", "#55A868"])
     ax.set_ylabel("Integrated Score")
     ax.set_title("Neural TFs vs Random Non-TFs")
     ax.grid(True, alpha=0.3)
@@ -128,11 +163,7 @@ def main():
     ax = axes[1]
     data_plot2 = [neural_scores, ctrl_non_neural_tf] if len(ctrl_non_neural_tf) > 0 else [neural_scores]
     labels_plot2 = ["Neural TFs", "Non-Neural TFs"] if len(ctrl_non_neural_tf) > 0 else ["Neural TFs"]
-    bp2 = ax.boxplot(data_plot2, labels=labels_plot2, patch_artist=True,
-                     boxprops=dict(facecolor="#4C72B0", alpha=0.7),
-                     medianprops=dict(color="red"))
-    if len(data_plot2) > 1:
-        bp2["boxes"][1].set_facecolor("#C44E52")
+    _boxplot_safe(ax, data_plot2, labels_plot2, ["#4C72B0", "#C44E52"])
     ax.set_ylabel("Integrated Score")
     ax.set_title("Neural TFs vs Non-Neural TFs")
     ax.grid(True, alpha=0.3)

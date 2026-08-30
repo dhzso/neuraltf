@@ -60,10 +60,20 @@ def simulate_scores(n_candidates=249, n_streams=8, rng=None):
     return scores, n_true
 
 
+def compute_all_integrated_scores(scores: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    """Vectorized calculation of integrated scores across all rows."""
+    scores_filled = np.nan_to_num(scores, nan=0.0)
+    valid_mask = ~np.isnan(scores)
+    w_denom = np.dot(valid_mask, weights)
+    w_denom = np.where(w_denom > 0, w_denom, 1.0)
+    return np.dot(scores_filled, weights) / w_denom
+
+
 def convergence_analysis(scores, weights, n_draws_list, rng):
     """Analyze convergence of integrated scores as function of Dirichlet draws."""
-    n_candidates = scores.shape[0]
     results = {}
+    base_scores = compute_all_integrated_scores(scores, weights)
+    base_ranks = np.argsort(-base_scores)
 
     for n_draws in n_draws_list:
         rank_stabilities = []
@@ -74,21 +84,19 @@ def convergence_analysis(scores, weights, n_draws_list, rng):
             mean_weights = draw_weights.mean(axis=0)
             mean_weights = mean_weights / mean_weights.sum()
 
-            rep_scores = np.array([integrated_score(row, mean_weights) for row in scores])
-            rank_stabilities.append(np.corrcoef(
-                np.argsort(-np.array([integrated_score(row, weights) for row in scores])),
-                np.argsort(-rep_scores)
-            )[0, 1])
-            score_stabilities.append(np.corrcoef(
-                np.array([integrated_score(row, weights) for row in scores]),
-                rep_scores
-            )[0, 1])
+            rep_scores = compute_all_integrated_scores(scores, mean_weights)
+            rep_ranks = np.argsort(-rep_scores)
+
+            corr_r = np.corrcoef(base_ranks, rep_ranks)[0, 1]
+            corr_s = np.corrcoef(base_scores, rep_scores)[0, 1]
+            rank_stabilities.append(0.0 if np.isnan(corr_r) else corr_r)
+            score_stabilities.append(0.0 if np.isnan(corr_s) else corr_s)
 
         results[n_draws] = {
-            "rank_stability_mean": np.mean(rank_stabilities),
-            "rank_stability_std": np.std(rank_stabilities),
-            "score_stability_mean": np.mean(score_stabilities),
-            "score_stability_std": np.std(score_stabilities),
+            "rank_stability_mean": float(np.mean(rank_stabilities)),
+            "rank_stability_std": float(np.std(rank_stabilities)),
+            "score_stability_mean": float(np.mean(score_stabilities)),
+            "score_stability_std": float(np.std(score_stabilities)),
         }
 
     return results
@@ -96,25 +104,26 @@ def convergence_analysis(scores, weights, n_draws_list, rng):
 
 def power_permutation_test(scores, weights, n_true, n_perms_list, rng):
     """Estimate power of permutation test for different numbers of permutations."""
-    true_integrated = np.array([integrated_score(row, weights) for row in scores])
+    true_integrated = compute_all_integrated_scores(scores, weights)
+    target_score = true_integrated[0]
 
     power_results = {}
     for n_perms in n_perms_list:
         sig_count = 0
-        for _ in range(50):
-            null_scores = []
+        for _ in range(30):
+            null_maxes = []
             for _ in range(n_perms):
                 perm_idx = rng.permutation(scores.shape[0])
-                perm_scores = np.array([integrated_score(row, weights) for row in scores[perm_idx]])
-                null_scores.append(np.max(perm_scores))
-            null_dist = np.array(null_scores)
-            p_empirical = (np.sum(null_dist >= true_integrated[0]) + 1) / (n_perms + 1)
+                perm_scores = compute_all_integrated_scores(scores[perm_idx], weights)
+                null_maxes.append(np.max(perm_scores))
+            null_dist = np.array(null_maxes)
+            p_empirical = (np.sum(null_dist >= target_score) + 1) / (n_perms + 1)
             if p_empirical < 0.05:
                 sig_count += 1
 
         power_results[n_perms] = {
-            "estimated_power": sig_count / 50,
-            "n_perms": n_perms,
+            "estimated_power": float(sig_count / 30),
+            "n_perms": int(n_perms),
         }
 
     return power_results

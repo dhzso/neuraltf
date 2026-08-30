@@ -83,31 +83,24 @@ def main():
     errors = []
 
     steps = [
-        # Step 0: Fixed-weight dual-track prioritization — generates
-        # top10_neural_tfs_prioritized.csv which the Dirichlet scripts load
-        # as baseline reference. Must run FIRST.
+        # Step 0: Fixed-weight dual-track prioritization
         ("Fixed-weight prioritization",
          ["scripts", "prioritize_neural_tfs.py"],
          [RES / "top10_neural_tfs_prioritized.csv",
           RES / "candidate_summary_report.md"]),
 
-        # (label, script_parts, output_files)
-        ("Dirichlet Centered (n=neural)",
-         ["projects", "NeuralTF", "scripts", "dirichlet_prioritize.py"],
-         [RES / "dirichlet_centered_full_rank.csv"]),
+        # Step 1: Dirichlet robustness analyses across all candidates
+        ("Dirichlet Centered",
+         ["projects", "NeuralTF", "scripts", "dirichlet_centered.py"],
+         [RES / "dirichlet_centered_full_rank.csv",
+          RES / "dirichlet_centered_top10.csv"]),
 
-        ("Dirichlet Uniform (n=neural)",
+        ("Dirichlet Uniform",
          ["projects", "NeuralTF", "scripts", "dirichlet_uniform.py"],
-         [RES / "dirichlet_uniform_full_rank.csv"]),
+         [RES / "dirichlet_uniform_full_rank.csv",
+          RES / "dirichlet_uniform_top10.csv"]),
 
-        ("Dirichlet Uniform All",
-         ["projects", "NeuralTF", "scripts", "dirichlet_uniform_all249.py"],
-         [RES / "dirichlet_uniform_all249_full_rank.csv"]),
-
-        ("Dirichlet Centered All",
-         ["projects", "NeuralTF", "scripts", "dirichlet_centered_all249.py"],
-         [RES / "dirichlet_centered_all249_full_rank.csv"]),
-
+        # Step 2: TF catalog exports and regulatory networks
         ("Export ranked FSTF",
          ["projects", "NeuralTF", "scripts", "export_fstf_ranked.py"],
          [RES / "tf_ranked_neural_top19.csv"]),
@@ -116,23 +109,29 @@ def main():
          ["projects", "NeuralTF", "scripts", "ananse_full_scan.py"],
          [RES / "ananse_network_full.csv"]),
 
+        # Step 3: Statistical validation suite (must run before figures 23-30)
+        ("Statistical tests",
+         ["scripts", "run_statistical_tests.py"],
+         [RES / "permutation_pvalues_full.csv",
+          RES / "bootstrap_scores_ci.csv",
+          RES / "calibration_stats.json",
+          RES / "loo_atlas_stability.csv"]),
+
+        # Step 4: Negative control benchmarks
+        ("Negative control benchmarks",
+         ["projects", "NeuralTF", "scripts", "negative_controls.py"],
+         [RES / "negative_control_benchmarks.csv"]),
+
+        # Step 5: Supplementary tables
         ("Supplementary tables",
          ["projects", "NeuralTF", "scripts", "create_supplementary_tables.py"],
          [RES / "supplementary_table_S1_method_comparison.csv"]),
 
+        # Step 6: Publication figures (all 33 figures)
         ("Publication figures",
          ["projects", "NeuralTF", "scripts", "generate_publication_figures.py"],
-         [FIG / "01_stream_coverage_all.png"]),
-
-        ("Statistical tests",
-         ["scripts", "run_statistical_tests.py"],
-         [RES / "permutation_pvalues_full.csv"]),
-
-        # Negative control benchmarking — requires rank.csv from the main pipeline.
-        # Computes empirical FPR, ROC-AUC and PR-AUC against non-neural FSTF set.
-        ("Negative control benchmarks",
-         ["projects", "NeuralTF", "scripts", "negative_controls.py"],
-         [RES / "negative_control_benchmarks.csv"]),
+         [FIG / "01_stream_coverage_all.png",
+          FIG / "33_method_agreement_summary.png"]),
     ]
 
     for label, script_parts, outputs in steps:

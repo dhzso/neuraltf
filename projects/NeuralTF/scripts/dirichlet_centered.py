@@ -1,18 +1,18 @@
 #!/usr/bin/env python
-"""Dirichlet-Uniform robustness analysis on all candidates.
+"""Dirichlet-Centered robustness analysis on all candidates.
 
-Evaluates ranking stability under Uniform Dirichlet weight resampling
-(alpha_i = 1 for all streams, 1,000 draws, seed=2024) across all candidates
-detected by the pipeline.
+Evaluates ranking stability under Centered Dirichlet weight resampling
+(k=40, 1,000 draws, seed=2024) across all candidates detected by the pipeline.
 
 Outputs (in `projects/NeuralTF/results/`):
-  - dirichlet_uniform_full_rank.csv      — all candidates sorted by Uniform Dirichlet median
-  - dirichlet_uniform_top10.csv          — 5 Track A + 5 Track B dual-track shortlist
-  - dirichlet_uniform_overall_top10.csv  — overall top-10 by Uniform Dirichlet median score
-  - dirichlet_uniform_summary.txt        — summary of top ranked candidates
+  - dirichlet_centered_full_rank.csv      — all candidates sorted by Dirichlet median
+  - dirichlet_centered_top10.csv          — 5 Track A + 5 Track B dual-track shortlist
+  - dirichlet_centered_overall_top10.csv  — overall top-10 by Dirichlet median score
+  - dirichlet_centered_summary.txt        — summary of top ranked candidates
+  - dirichlet_top10_prioritized.csv       — backward-compatible alias of top-10 shortlist
 
 Usage:
-    python projects/NeuralTF/scripts/dirichlet_uniform.py
+    python projects/NeuralTF/scripts/dirichlet_centered.py
 """
 from __future__ import annotations
 
@@ -53,7 +53,9 @@ STREAMS = [
     "perez_lineage",
     "perez_influence",
 ]
+W_DEFAULT = np.array([0.20, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10])
 N_DRAWS = 1000
+K_DIR = 40.0
 SEED = 2024
 
 REPO = Path(__file__).resolve().parents[3]
@@ -113,17 +115,18 @@ def rnai_marker_notes(row: pd.Series, mmc5_v4s: set[str]) -> str:
     return "; ".join(notes) if notes else "Novel candidate identified by multi-atlas integration"
 
 
-def dirichlet_uniform_median_scores(
+def dirichlet_median_scores(
     S: np.ndarray,
+    W: np.ndarray,
     n_draws: int = N_DRAWS,
+    k: float = K_DIR,
     rng: np.random.Generator | None = None,
 ) -> np.ndarray:
-    """Draw Dirichlet weights with alpha_i = 1 for all streams (uniform over simplex)."""
+    """Draw Dirichlet weights centered at W, compute median score per candidate."""
     if rng is None:
         rng = np.random.default_rng(SEED)
 
-    n_streams = S.shape[1]
-    alpha = np.ones(n_streams)
+    alpha = k * W
     draws = rng.dirichlet(alpha, size=n_draws)  # shape (n_draws, n_streams)
 
     valid_mask = ~np.isnan(S)                   # shape (n_cand, n_streams)
@@ -172,7 +175,7 @@ def build_csv(top: pd.DataFrame) -> pd.DataFrame:
         "gene_symbol",
         "human_ortholog",
         "composite_score",
-        "uniform_median_score",
+        "dirichlet_median_score",
         "proof_status",
         "rnai_screen_or_marker_notes",
     ]
@@ -181,7 +184,7 @@ def build_csv(top: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> int:
-    print("=== Dirichlet Uniform Robustness Analysis (All Candidates) ===")
+    print("=== Dirichlet Centered Robustness Analysis (All Candidates) ===")
 
     rank_path = RUN / "rank.csv"
     if not rank_path.exists():
@@ -202,24 +205,23 @@ def main() -> int:
 
     # Validate streams
     available_streams = [s for s in STREAMS if s in cand.columns]
+    w = W_DEFAULT[:len(available_streams)]
+    w = w / w.sum()
+
     S = cand[available_streams].to_numpy(dtype=float)
     rng = np.random.default_rng(SEED)
 
-    print(f"Running Uniform Dirichlet (alpha=1, n_draws={N_DRAWS})...")
-    median_scores = dirichlet_uniform_median_scores(S, N_DRAWS, rng)
-    cand["uniform_median_score"] = median_scores
-    cand["composite_score"] = cand["uniform_median_score"]
-    cand["rank"] = cand["uniform_median_score"].rank(ascending=False, method="min").astype(int)
+    print(f"Running Centered Dirichlet (k={K_DIR}, n_draws={N_DRAWS})...")
+    median_scores = dirichlet_median_scores(S, w, N_DRAWS, K_DIR, rng)
+    cand["dirichlet_median_score"] = median_scores
+    cand["composite_score"] = cand["dirichlet_median_score"]
+    cand["rank"] = cand["dirichlet_median_score"].rank(ascending=False, method="min").astype(int)
 
     # Save full rank
-    full_rank = cand.sort_values("uniform_median_score", ascending=False).reset_index(drop=True)
-    full_rank_path = OUT / "dirichlet_uniform_full_rank.csv"
+    full_rank = cand.sort_values("dirichlet_median_score", ascending=False).reset_index(drop=True)
+    full_rank_path = OUT / "dirichlet_centered_full_rank.csv"
     full_rank.to_csv(full_rank_path, index=False)
     print(f"Saved full ranking ({len(full_rank)} candidates): {full_rank_path}")
-
-    # Backward compatibility alias
-    alias_249 = OUT / "dirichlet_uniform_all249_full_rank.csv"
-    full_rank.to_csv(alias_249, index=False)
 
     # Dual-track top 10 selection (5 Track A + 5 Track B)
     track_a, track_b = assign_tracks(cand)
@@ -235,31 +237,35 @@ def main() -> int:
     overall_top10 = full_rank.head(10)
 
     top10_csv = build_csv(top10)
-    top10_path = OUT / "dirichlet_uniform_top10.csv"
+    top10_path = OUT / "dirichlet_centered_top10.csv"
     top10_csv.to_csv(top10_path, index=False)
     print(f"Saved top-10 shortlist (5 Track A + 5 Track B): {top10_path}")
 
-    overall_path = OUT / "dirichlet_uniform_overall_top10.csv"
+    # Backward-compatibility alias
+    alias_path = OUT / "dirichlet_top10_prioritized.csv"
+    top10_csv.to_csv(alias_path, index=False)
+
+    overall_path = OUT / "dirichlet_centered_overall_top10.csv"
     overall_csv = build_csv(overall_top10)
     overall_csv.to_csv(overall_path, index=False)
     print(f"Saved overall top-10: {overall_path}")
 
     # Summary text
-    summary_path = OUT / "dirichlet_uniform_summary.txt"
+    summary_path = OUT / "dirichlet_centered_summary.txt"
     lines = [
-        "DIRICHLET UNIFORM (alpha=1) ROBUSTNESS SUMMARY",
+        "DIRICHLET CENTERED (k=40) ROBUSTNESS SUMMARY",
         f"Total candidates evaluated: {len(full_rank)}",
         "",
         "Top-10 Shortlist (5 Track A + 5 Track B):",
     ]
     for _, r in top10_csv.iterrows():
         lines.append(f"  [{r.get('track','?')}] {r.get('gene_symbol','?'):<12} (v6: {r.get('gene_id_v6','?')}) "
-                     f"score={r.get('uniform_median_score', 0):.4f}")
+                     f"score={r.get('dirichlet_median_score', 0):.4f}")
     lines.append("")
-    lines.append("Overall Top-10 by Uniform Dirichlet Median Score:")
+    lines.append("Overall Top-10 by Dirichlet Median Score:")
     for _, r in overall_csv.iterrows():
         lines.append(f"  {r.get('gene_symbol','?'):<12} (v6: {r.get('gene_id_v6','?')}) "
-                     f"score={r.get('uniform_median_score', 0):.4f}")
+                     f"score={r.get('dirichlet_median_score', 0):.4f}")
 
     with open(summary_path, "w") as f:
         f.write("\n".join(lines) + "\n")

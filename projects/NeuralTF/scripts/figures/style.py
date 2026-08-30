@@ -71,7 +71,13 @@ def _csv(path):
             "  Full pipeline : python scripts/run.py\n"
             "  Downstream    : python scripts/run_downstream.py"
         )
-    return pd.read_csv(p)
+    df = pd.read_csv(p)
+    # Ensure stream columns exist in candidate tables
+    if any(s in df.columns for s in ["expression", "specificity", "rnai"]):
+        for c in STREAM_COLS:
+            if c not in df.columns:
+                df[c] = np.nan
+    return df
 
 
 def load_all():
@@ -87,33 +93,41 @@ def load_top10(f="top10_neural_tfs_prioritized.csv"):
 
 
 def load_centered():
-    """Load Dirichlet-centered top-10 (5A + 5B) from dirichlet_prioritize.py output."""
-    return _nid(_csv(RES / "dirichlet_top10_prioritized.csv"))
+    """Load Dirichlet-centered top-10 (5A + 5B)."""
+    for fname in ("dirichlet_centered_top10.csv", "dirichlet_top10_prioritized.csv"):
+        p = RES / fname
+        if p.exists():
+            return _nid(_csv(p))
+    return _nid(_csv(RES / "dirichlet_centered_top10.csv"))
 
 
 def load_uniform():
-    """Load Dirichlet-uniform top-10 (5A + 5B) from dirichlet_uniform.py output."""
+    """Load Dirichlet-uniform top-10 (5A + 5B)."""
     return _nid(_csv(RES / "dirichlet_uniform_top10.csv"))
 
 
-def load_unif99():
-    """Load Dirichlet-uniform full rank (neural-filtered candidates)."""
-    return _nid(_csv(RES / "dirichlet_uniform_full_rank.csv"))
-
-
-def load_unif249():
-    """Load Dirichlet-uniform full rank (all candidates, rank.csv)."""
-    return _nid(_csv(RES / "dirichlet_uniform_all249_full_rank.csv"))
-
-
-def load_centered99():
-    """Load Dirichlet-centered full rank (neural-filtered candidates)."""
+def load_centered_full():
+    """Load Dirichlet-centered full rank (all candidates)."""
+    for fname in ("dirichlet_centered_full_rank.csv", "dirichlet_centered_all249_full_rank.csv"):
+        p = RES / fname
+        if p.exists():
+            return _nid(_csv(p))
     return _nid(_csv(RES / "dirichlet_centered_full_rank.csv"))
 
 
-def load_centered249():
-    """Load Dirichlet-centered full rank (all candidates, rank.csv)."""
-    return _nid(_csv(RES / "dirichlet_centered_all249_full_rank.csv"))
+def load_uniform_full():
+    """Load Dirichlet-uniform full rank (all candidates)."""
+    for fname in ("dirichlet_uniform_full_rank.csv", "dirichlet_uniform_all249_full_rank.csv"):
+        p = RES / fname
+        if p.exists():
+            return _nid(_csv(p))
+    return _nid(_csv(RES / "dirichlet_uniform_full_rank.csv"))
+
+
+load_centered99 = load_centered_full
+load_centered249 = load_centered_full
+load_unif99 = load_uniform_full
+load_unif249 = load_uniform_full
 
 
 def load_sens_draws():

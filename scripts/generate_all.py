@@ -95,50 +95,30 @@ def _ready(root: Path, step: str) -> str | None:
             and (raw / "go.obo").exists(),
             "top10 shortlist (prioritization) or go.obo missing"),
         "Dirichlet-centered": (
-            (run / "rank_neural.csv").exists()
-            and (proc / "planmine_annotations.parquet").exists()
-            and (data / "bridge.csv").exists()
-            and any(king.glob("*mmc4*.xlsx"))
-            and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
-            "rank_neural.csv / PlanMine parquet / bridge.csv / King mmc4-5 xlsx missing"),
-        "Dirichlet-uniform": (
-            (run / "rank_neural.csv").exists()
-            and (proc / "planmine_annotations.parquet").exists()
-            and (data / "bridge.csv").exists()
-            and any(king.glob("*mmc4*.xlsx"))
-            and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
-            "rank_neural.csv / PlanMine parquet / bridge.csv / King mmc4-5 xlsx missing"),
-        "Dirichlet-all249": (
             (run / "rank.csv").exists()
-            and (run / "rank_neural.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_uniform_top10.csv").exists(),
-            "rank.csv / rank_neural.csv / dirichlet_uniform_top10.csv missing"),
+            and (data / "bridge.csv").exists(),
+            "rank.csv / bridge.csv missing"),
+        "Dirichlet-uniform": (
+            (run / "rank.csv").exists()
+            and (data / "bridge.csv").exists(),
+            "rank.csv / bridge.csv missing"),
         "Export ranked TFs": (
             (run / "rank.csv").exists(),
             "rank.csv missing (run the pipeline first)"),
         "Generate supplementary tables": (
             (run / "rank.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_top10_prioritized.csv").exists()
+                 / "dirichlet_centered_full_rank.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_uniform_top10.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_uniform_all249_full_rank.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "tf_ranked_neural_top19.csv").exists(),
-            "rank.csv / Dirichlet CSVs / TF ranking CSVs missing"),
+                 / "dirichlet_uniform_full_rank.csv").exists(),
+            "rank.csv / Dirichlet full rank CSVs missing"),
         "Generate publication figures": (
             (run / "rank.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_top10_prioritized.csv").exists()
+                 / "dirichlet_centered_full_rank.csv").exists()
             and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_uniform_top10.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "dirichlet_uniform_all249_full_rank.csv").exists()
-            and (root / "projects" / "NeuralTF" / "results"
-                 / "tf_ranked_neural_top19.csv").exists(),
-            "rank.csv / Dirichlet CSVs / TF ranking CSVs missing"),
+                 / "dirichlet_uniform_full_rank.csv").exists(),
+            "rank.csv / Dirichlet full rank CSVs missing"),
         "Weight sensitivity analysis": (
             (run / "rank_neural.csv").exists(),
             "rank_neural.csv missing (run the pipeline first)"),
@@ -196,29 +176,16 @@ STEPS = [
       ["projects", "NeuralTF", "figures", "supplementary",
        "go_gene_term_matrix_reduced.csv"],
       ["projects", "NeuralTF", "figures", "go_term_reference.csv"]]),
-    ("Dirichlet-centered", ["projects/NeuralTF/scripts/dirichlet_prioritize.py"], [],
-     [["projects", "NeuralTF", "results", "dirichlet_top10_prioritized.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_overall_top10.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_overall_top10_byscore.csv"],
+    ("Dirichlet-centered", ["projects/NeuralTF/scripts/dirichlet_centered.py"], [],
+     [["projects", "NeuralTF", "results", "dirichlet_centered_top10.csv"],
+      ["projects", "NeuralTF", "results", "dirichlet_centered_overall_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_centered_full_rank.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_candidate_summary_report.md"]]),
+      ["projects", "NeuralTF", "results", "dirichlet_centered_summary.txt"]]),
     ("Dirichlet-uniform", ["projects/NeuralTF/scripts/dirichlet_uniform.py"], [],
      [["projects", "NeuralTF", "results", "dirichlet_uniform_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_overall_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_full_rank.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_summary.txt"]]),
-    ("Dirichlet-all249",
-     ["projects/NeuralTF/scripts/dirichlet_uniform_all249.py"], [],
-     [["projects", "NeuralTF", "results", "dirichlet_uniform_all249_top10.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_overall_top10.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_full_rank.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_uniform_all249_summary.txt"]]),
-    ("Dirichlet-centered-all249",
-     ["projects/NeuralTF/scripts/dirichlet_centered_all249.py"], [],
-     [["projects", "NeuralTF", "results", "dirichlet_centered_all249_full_rank.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_centered_all249_top10.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_centered_all249_overall_top10.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_centered_all249_summary.txt"]]),
     ("Export ranked TFs",
      ["projects/NeuralTF/scripts/export_fstf_ranked.py"], [],
      [["projects", "NeuralTF", "results", "tf_ranked_neural_top19.csv"],

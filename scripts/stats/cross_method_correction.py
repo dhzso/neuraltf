@@ -44,6 +44,13 @@ def benjamini_hochberg(pvalues, alpha=0.05):
     return adjusted
 
 
+def _binom_p(k, n, p):
+    """Compute binomial test p-value compatible with SciPy <1.12 and >=1.12."""
+    if hasattr(stats, "binomtest"):
+        return float(stats.binomtest(k, n, p, alternative="greater").pvalue)
+    return float(stats.binom_test(k, n, p, alternative="greater"))
+
+
 def load_method_top10():
     """Load top-10 from each method."""
     methods = {}
@@ -62,11 +69,13 @@ def load_method_top10():
         score_col = "uniform_median_score" if "uniform_median_score" in df.columns else "integrated_score"
         methods["uniform"] = set(df.sort_values(score_col, ascending=False)[gene_col].head(10).values)
 
-    fixed_path = RESULTS_DIR / "supplementary_table_S2_fixed_all249.csv"
+    fixed_path = RUN_DIR / "rank.csv"
+    if not fixed_path.exists():
+        fixed_path = RESULTS_DIR / "supplementary_table_S2_fixed_all249.csv"
     if fixed_path.exists():
         df = pd.read_csv(fixed_path)
         gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
-        score_col = "integrated_score"
+        score_col = "integrated_score" if "integrated_score" in df.columns else df.columns[-1]
         methods["fixed"] = set(df.sort_values(score_col, ascending=False)[gene_col].head(10).values)
 
     return methods
@@ -97,7 +106,7 @@ def main():
         p_obs = k / n_methods
         p_random = 1.0 / n_methods
 
-        binom_p = stats.binom_test(k, n_methods, p_random, alternative="greater")
+        binom_p = _binom_p(k, n_methods, p_random)
         consensus_data.append({
             "gene_id": gene,
             "n_methods_present": k,

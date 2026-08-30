@@ -51,9 +51,10 @@ def _load_moism5() -> pd.DataFrame:
     tf_class_col = next((c for c in cols if "TF Class" in c and "Perez" in c), None)
     tf_module_col = next((c for c in cols if "module of TF" in c and "Perez" in c), None)
 
+    records = raw.to_dict(orient="records")
     rows = []
-    for _, r in raw.iterrows():
-        h1 = str(r[gene_col]).strip()
+    for r in records:
+        h1 = str(r.get(gene_col, "")).strip()
         if not h1 or h1 == "nan":
             continue
         v6_rbh = str(r.get(rbh_col, "")).strip() if rbh_col else ""
@@ -75,6 +76,24 @@ def _load_moism5() -> pd.DataFrame:
             "tf_module": tf_mod if tf_mod != "nan" else "",
         })
     return pd.DataFrame(rows)
+
+
+@lru_cache(maxsize=1)
+def _get_v6_maps() -> tuple[dict[str, str], dict[str, str]]:
+    """Build fast O(1) hash maps for v6 -> h1SMcG and h1SMcG -> TF Class."""
+    df = _load_moism5()
+    v6_to_h1: dict[str, str] = {}
+    h1_to_class: dict[str, str] = {}
+    for r in df.itertuples(index=False):
+        h1 = r.h1smcg_id
+        if r.tf_class:
+            h1_to_class[h1] = r.tf_class
+        if r.v6_rbh:
+            v6_to_h1[r.v6_rbh] = h1
+        for v in r.v6_all:
+            if v not in v6_to_h1:
+                v6_to_h1[v] = h1
+    return v6_to_h1, h1_to_class
 
 
 def smed_to_v6(smed_id: str) -> list[str]:
@@ -101,29 +120,16 @@ def h1smcg_to_v6(h1smcg_id: str) -> list[str]:
 
 
 def v6_to_h1smcg(v6_id: str) -> str | None:
-    """Map a dd_Smed_v6 ID to its h1SMcG ID."""
-    df = _load_moism5()
-    v6 = v6_id.strip()
-    rbh = df[df["v6_rbh"] == v6]
-    if not rbh.empty:
-        return rbh.iloc[0]["h1smcg_id"]
-    for _, row in df.iterrows():
-        if v6 in row["v6_all"]:
-            return row["h1smcg_id"]
-    return None
+    """Map a dd_Smed_v6 ID to its h1SMcG ID in O(1) time."""
+    v6_to_h1, _ = _get_v6_maps()
+    return v6_to_h1.get(v6_id.strip())
 
 
 def v6_to_perez_tf_class(v6_id: str) -> str | None:
-    """Look up the Perez 2025 TF class for a dd_Smed_v6 gene."""
-    h1 = v6_to_h1smcg(v6_id)
-    if not h1:
-        return None
-    df = _load_moism5()
-    row = df[df["h1smcg_id"] == h1]
-    if row.empty:
-        return None
-    cls = row.iloc[0]["tf_class"]
-    return cls if cls else None
+    """Look up the Perez 2025 TF class for a dd_Smed_v6 gene in O(1) time."""
+    v6_to_h1, h1_to_class = _get_v6_maps()
+    h1 = v6_to_h1.get(v6_id.strip())
+    return h1_to_class.get(h1) if h1 else None
 
 
 def is_perez_tf(v6_id: str) -> bool:
@@ -133,16 +139,8 @@ def is_perez_tf(v6_id: str) -> bool:
 
 
 def batch_v6_to_h1smcg(v6_ids: list[str]) -> dict[str, str | None]:
-    """Map a list of dd_Smed_v6 IDs to h1SMcG IDs."""
-    df = _load_moism5()
-    v6_to_h1: dict[str, str] = {}
-    for _, row in df.iterrows():
-        h1 = row["h1smcg_id"]
-        if row["v6_rbh"]:
-            v6_to_h1[row["v6_rbh"]] = h1
-        for v in row["v6_all"]:
-            if v not in v6_to_h1:
-                v6_to_h1[v] = h1
+    """Map a list of dd_Smed_v6 IDs to h1SMcG IDs in O(1) time."""
+    v6_to_h1, _ = _get_v6_maps()
     return {v6: v6_to_h1.get(v6) for v6 in v6_ids}
 
 

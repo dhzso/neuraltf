@@ -12,13 +12,14 @@ def build():
     else:
         order = neural.index
     df = neural.loc[order]
-    mat = df[STREAM_COLS].fillna(0).values
+    streams = [s for s in STREAM_COLS if s in df.columns]
+    mat = df[streams].fillna(0).values
 
     fig, ax = plt.subplots(figsize=(10, 12))
     cmap = plt.cm.YlOrRd; cmap.set_bad("#F0F0F0")
     im = ax.imshow(mat, aspect="auto", cmap=cmap, vmin=0, vmax=1, interpolation="nearest")
-    ax.set_xticks(range(len(STREAM_COLS)))
-    ax.set_xticklabels([STREAM_L[s] for s in STREAM_COLS], rotation=45, ha="right", fontsize=8)
+    ax.set_xticks(range(len(streams)))
+    ax.set_xticklabels([STREAM_L[s] for s in streams], rotation=45, ha="right", fontsize=8)
     ax.set_xlabel("Evidence stream")
     ax.xaxis.set_label_position("top")
     ylabels = [label(neural, gid) for gid in df["gene_id"]]

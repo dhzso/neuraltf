@@ -55,6 +55,42 @@ def compute_pr_curve(y_true, y_scores):
     return np.array(recalls), np.array(precisions)
 
 
+def _trapezoid(y, x):
+    """Trapezoid rule integration compatible with NumPy <2.0 and >=2.0."""
+    if hasattr(np, "trapezoid"):
+        return float(np.trapezoid(y, x))
+    if hasattr(np, "trapz"):
+        return float(np.trapz(y, x))
+    # Manual fallback
+    y = np.asanyarray(y)
+    x = np.asanyarray(x)
+    return float(np.sum((x[1:] - x[:-1]) * (y[1:] + y[:-1]) / 2.0))
+
+
+def compute_roc_curve(y_true, y_scores):
+    """Compute ROC curve manually without mandatory sklearn dependency."""
+    try:
+        from sklearn.metrics import roc_curve
+        fpr, tpr, _ = roc_curve(y_true, y_scores)
+        return fpr, tpr
+    except Exception:
+        order = np.argsort(-y_scores)
+        y_sorted = y_true[order]
+        n_pos = int(y_true.sum())
+        n_neg = int(len(y_true) - n_pos)
+        tpr = [0.0]
+        fpr = [0.0]
+        tp = fp = 0
+        for label in y_sorted:
+            if label:
+                tp += 1
+            else:
+                fp += 1
+            tpr.append(tp / n_pos if n_pos > 0 else 0.0)
+            fpr.append(fp / n_neg if n_neg > 0 else 0.0)
+        return np.array(fpr), np.array(tpr)
+
+
 def main():
     print("=== Precision-Recall Analysis ===")
 
@@ -78,12 +114,14 @@ def main():
     y_true = (df["proof_status"] == "known_rnai_validated").astype(int).values
     y_scores = df[score_col].fillna(0).values
 
-    n_pos = y_true.sum()
-    n_total = len(y_true)
+    n_pos = int(y_true.sum())
+    n_total = int(len(y_true))
     print(f"Ground truth: {n_pos}/{n_total} RNAi-validated TFs")
 
     recalls, precisions = compute_pr_curve(y_true, y_scores)
-    ap = np.mean(precisions[y_true[np.argsort(-y_scores)] == 1]) if n_pos > 0 else 0
+    fpr, tpr = compute_roc_curve(y_true, y_scores)
+
+    ap = float(np.mean(precisions[y_true[np.argsort(-y_scores)] == 1])) if n_pos > 0 else 0.0
 
     k_values = [5, 10, 15, 20]
     prec_at_k = {}
@@ -94,10 +132,16 @@ def main():
         print(f"  Precision@{k}: {top_k_true.sum()}/{k} = {top_k_true.sum()/k:.4f}")
 
     if len(recalls) > 1:
-        pr_auc = np.trapz(precisions, recalls)
+        pr_auc = _trapezoid(precisions, recalls)
     else:
         pr_auc = 0.0
-    baseline = n_pos / n_total if n_total > 0 else 0
+
+    if len(fpr) > 1:
+        roc_auc = _trapezoid(tpr, fpr)
+    else:
+        roc_auc = 0.5
+
+    baseline = float(n_pos / n_total) if n_total > 0 else 0.0
 
     results = {
         "n_candidates": int(n_total),
@@ -105,10 +149,23 @@ def main():
         "baseline_rate": float(baseline),
         "average_precision": float(ap),
         "pr_auc": float(pr_auc),
+        "roc_auc": float(roc_auc),
         "precision_at_k": prec_at_k,
         "score_column": score_col,
+        "roc": {
+            "fpr": [float(x) for x in fpr],
+            "tpr": [float(x) for x in tpr],
+            "auc": float(roc_auc),
+        },
+        "pr": {
+            "recall": [float(x) for x in recalls],
+            "precision": [float(x) for x in precisions],
+            "auc": float(pr_auc),
+            "baseline": float(baseline),
+        },
     }
     print(f"  PR-AUC: {pr_auc:.4f}")
+    print(f"  ROC-AUC: {roc_auc:.4f}")
     print(f"  Average Precision: {ap:.4f}")
     print(f"  Baseline (prevalence): {baseline:.4f}")
 

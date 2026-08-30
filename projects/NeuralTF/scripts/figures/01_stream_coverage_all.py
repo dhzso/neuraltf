@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt, numpy as np
 def build():
     df = load_all()
     total = len(df)
-    counts = {s: ((df[s]>0) & df[s].notna()).sum() for s in STREAM_COLS}
+    streams = [s for s in STREAM_COLS if s in df.columns]
+    counts = {s: ((df[s]>0) & df[s].notna()).sum() for s in streams}
     fracs = {s: c/total for s,c in counts.items()}
-    streams = list(STREAM_COLS)
     vals = [fracs[s]*100 for s in streams]
     colors = [STREAM_C[s] for s in streams]
     labels = [STREAM_L[s] for s in streams]
@@ -28,7 +28,7 @@ def build():
 
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     from matplotlib.patches import Patch
-    ax.legend(handles=[Patch(facecolor=STREAM_C[s], label=STREAM_L[s]) for s in STREAM_COLS],
+    ax.legend(handles=[Patch(facecolor=STREAM_C[s], label=STREAM_L[s]) for s in streams],
               loc="lower right", fontsize=6, frameon=True, title="Stream", title_fontsize=7)
     fig.tight_layout(); save(fig, "01_stream_coverage_all")
 

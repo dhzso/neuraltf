@@ -28,9 +28,9 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 STREAMS = [
     "expression", "specificity", "reproducibility", "rnai",
     "correlation", "neural_enriched", "neural_specificity",
-    "perez_lineage",
+    "perez_lineage", "perez_influence",
 ]
-W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2])
+W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 
 
 def integrated_score(S, W):
@@ -46,35 +46,26 @@ def integrated_score(S, W):
 def main():
     print("=== Leave-One-Atlas-Out Analysis ===")
 
-    for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
-        p = RESULTS_DIR / fname
-        if p.exists():
-            df = pd.read_csv(p)
-            break
-    else:
-        p = RUN_DIR / "rank.csv"
-        if p.exists():
-            df = pd.read_csv(p)
-        else:
-            print("Error: no candidate score file found")
-            return 1
+    p = RUN_DIR / "rank.csv"
+    if not p.exists():
+        for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
+            cand = RESULTS_DIR / fname
+            if cand.exists():
+                p = cand
+                break
+    if not p.exists():
+        print("Error: no candidate score file found")
+        return 1
+
+    df = pd.read_csv(p)
 
     gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
-    name_col = "gene_name" if "gene_name" in df.columns else None
-    score_col = None
-    for c in ["integrated_score", "composite_score"]:
-        if c in df.columns:
-            score_col = c
-            break
+    name_col = "gene_name" if "gene_name" in df.columns else gene_col
+    score_col = "integrated_score" if "integrated_score" in df.columns else "composite_score"
 
     stream_cols = [s for s in STREAMS if s in df.columns]
     if len(stream_cols) < 3:
-        print(f"Warning: only {len(stream_cols)} stream columns found: {stream_cols}")
-        print("Using available numeric evidence columns instead")
-        stream_cols = [c for c in df.columns if c in STREAMS or (
-            df[c].dtype in [np.float64, np.float32, np.int64] and
-            c not in [gene_col, name_col, score_col, "rank", "n_streams", "completeness"]
-        )]
+        stream_cols = [c for c in df.columns if c in STREAMS]
 
     scores_matrix = df[stream_cols].values.astype(float)
     weights = W_DEFAULT[:len(stream_cols)]
@@ -82,13 +73,21 @@ def main():
 
     baseline_scores = np.array([integrated_score(row, weights) for row in scores_matrix])
     baseline_order = np.argsort(-baseline_scores)
-    baseline_top10 = set(df[gene_col].values[baseline_order[:10]])
+    top10_indices = baseline_order[:10]
+    top10_ids = df[gene_col].values[top10_indices]
+    top10_names = df[name_col].fillna(df[gene_col]).values[top10_indices]
 
     print(f"Candidates: {len(df)}, Streams: {len(stream_cols)}")
-    print(f"Baseline top-10: {sorted(baseline_top10)}")
+    print(f"Baseline top-10: {list(top10_names)}")
 
     results = []
-    loo_top10_sets = {}
+    # Rank matrix for heatmap: rows = top10 candidates, cols = excluded streams
+    rank_matrix_dict = {
+        "gene_id": list(top10_ids),
+        "gene_name": list(top10_names),
+        "full_rank": list(range(1, 11)),
+        "full_score": [float(baseline_scores[idx]) for idx in top10_indices],
+    }
 
     for i, stream in enumerate(stream_cols):
         loo_streams = [s for j, s in enumerate(stream_cols) if j != i]
@@ -98,14 +97,16 @@ def main():
         loo_matrix = scores_matrix[:, loo_idx]
 
         loo_scores = np.array([integrated_score(row, loo_weights) for row in loo_matrix])
+        loo_ranks = pd.Series(loo_scores).rank(ascending=False, method="min").values
         loo_order = np.argsort(-loo_scores)
         loo_top10 = set(df[gene_col].values[loo_order[:10]])
 
-        overlap = baseline_top10 & loo_top10
-        jaccard = len(overlap) / len(baseline_top10 | loo_top10) if len(baseline_top10 | loo_top10) > 0 else 0
+        overlap = set(top10_ids) & loo_top10
+        jaccard = len(overlap) / len(set(top10_ids) | loo_top10) if len(set(top10_ids) | loo_top10) > 0 else 0
         rank_corr = pd.Series(baseline_scores).corr(pd.Series(loo_scores), method="spearman")
 
-        loo_top10_sets[stream] = loo_top10
+        # Record ranks of baseline top-10 when this stream is excluded
+        rank_matrix_dict[stream] = [int(loo_ranks[idx]) for idx in top10_indices]
 
         results.append({
             "excluded_atlas": stream,
@@ -114,16 +115,23 @@ def main():
             "top10_jaccard": float(jaccard),
             "spearman_correlation": float(rank_corr),
             "overlap_genes": sorted(list(overlap)),
-            "new_in_top10": sorted(list(loo_top10 - baseline_top10)),
-            "dropped_from_top10": sorted(list(baseline_top10 - loo_top10)),
+            "new_in_top10": sorted(list(loo_top10 - set(top10_ids))),
+            "dropped_from_top10": sorted(list(set(top10_ids) - loo_top10)),
         })
         print(f"  Exclude {stream:>20s}: overlap={len(overlap)}/10, "
               f"Jaccard={jaccard:.3f}, rho={rank_corr:.4f}")
 
-    out_df = pd.DataFrame(results)
+    # Write rank matrix to loo_atlas_stability.csv for figure 27
+    matrix_df = pd.DataFrame(rank_matrix_dict)
     out_path = RESULTS_DIR / "loo_atlas_stability.csv"
-    out_df.to_csv(out_path, index=False)
-    print(f"\nSaved: {out_path}")
+    matrix_df.to_csv(out_path, index=False)
+    print(f"\nSaved stability matrix: {out_path}")
+
+    # Write summary metrics to loo_atlas_summary.csv
+    summary_df = pd.DataFrame(results)
+    summary_path = RESULTS_DIR / "loo_atlas_summary.csv"
+    summary_df.to_csv(summary_path, index=False)
+    print(f"Saved summary metrics: {summary_path}")
 
     avg_overlap = np.mean([r["top10_overlap"] for r in results])
     avg_jaccard = np.mean([r["top10_jaccard"] for r in results])

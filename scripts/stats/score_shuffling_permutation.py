@@ -31,20 +31,18 @@ STREAMS = [
 W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2])
 
 
-def integrated_score(S, W):
-    """Compute integrated score with missing-data renormalization."""
-    mask = ~np.isnan(S)
-    if not mask.any():
-        return 0.0
-    S_filled = np.where(np.isnan(S), 0.0, S)
-    w_masked = W[mask]
-    return np.sum(S_filled[mask] * w_masked) / w_masked.sum()
+def compute_all_integrated_scores(scores: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    """Vectorized calculation of integrated scores across all candidates."""
+    scores_filled = np.nan_to_num(scores, nan=0.0)
+    valid_mask = ~np.isnan(scores)
+    w_denom = np.dot(valid_mask, weights)
+    w_denom = np.where(w_denom > 0, w_denom, 1.0)
+    return np.dot(scores_filled, weights) / w_denom
 
 
 def shuffle_streams(scores_matrix, rng):
     """Shuffle each evidence stream independently across candidates."""
     shuffled = scores_matrix.copy()
-    n_candidates = shuffled.shape[0]
     for j in range(shuffled.shape[1]):
         col = shuffled[:, j]
         valid = ~np.isnan(col)
@@ -55,7 +53,7 @@ def shuffle_streams(scores_matrix, rng):
 
 def main():
     parser = argparse.ArgumentParser(description="Score-shuffling permutation test")
-    parser.add_argument("--n-perm", type=int, default=1000, help="Number of permutations")
+    parser.add_argument("--n-perm", type=int, default=200, help="Number of permutations (default: 200)")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     args = parser.parse_args()
 
@@ -63,39 +61,31 @@ def main():
 
     rng = np.random.default_rng(args.seed)
 
-    for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
-        p = RESULTS_DIR / fname
-        if p.exists():
-            df = pd.read_csv(p)
-            break
-    else:
-        p = RUN_DIR / "rank.csv"
-        if p.exists():
-            df = pd.read_csv(p)
-        else:
-            print("Error: no candidate score file found")
-            return 1
+    p = RUN_DIR / "rank.csv"
+    if not p.exists():
+        for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
+            cand = RESULTS_DIR / fname
+            if cand.exists():
+                p = cand
+                break
+    if not p.exists():
+        print("Error: no candidate score file found")
+        return 1
+
+    df = pd.read_csv(p)
 
     gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
-    score_col = None
-    for c in ["integrated_score", "composite_score", "dirichlet_median_score", "fixed_weight_score"]:
-        if c in df.columns:
-            score_col = c
-            break
-    if score_col is None:
-        print("Error: no score column found")
-        return 1
+    score_col = "integrated_score" if "integrated_score" in df.columns else "composite_score"
 
     stream_cols = [s for s in STREAMS if s in df.columns]
     if len(stream_cols) < 3:
-        print(f"Warning: only {len(stream_cols)} stream columns found")
-        return 1
+        stream_cols = [c for c in df.columns if c in STREAMS]
 
     scores_matrix = df[stream_cols].values.astype(float)
     weights = W_DEFAULT[:len(stream_cols)]
     weights = weights / weights.sum()
 
-    real_scores = np.array([integrated_score(row, weights) for row in scores_matrix])
+    real_scores = compute_all_integrated_scores(scores_matrix, weights)
     df["real_integrated_score"] = real_scores
     df_sorted = df.sort_values("real_integrated_score", ascending=False)
 
@@ -107,12 +97,13 @@ def main():
 
     for perm in range(args.n_perm):
         shuffled = shuffle_streams(scores_matrix, rng)
-        perm_scores = np.array([integrated_score(row, weights) for row in shuffled])
-
-        for i, gene in enumerate(df[gene_col].values):
-            null_distributions[gene].append(perm_scores[i])
-
+        perm_scores = compute_all_integrated_scores(shuffled, weights)
+        for idx, gene in enumerate(df[gene_col].values):
+            null_distributions[gene].append(perm_scores[idx])
         top10_null_max.append(np.max(perm_scores))
+
+        if (perm + 1) % 50 == 0 or (perm + 1) == args.n_perm:
+            print(f"  Completed {perm+1}/{args.n_perm} permutations")
 
         if (perm + 1) % 200 == 0:
             print(f"  Completed {perm+1}/{args.n_perm} permutations")

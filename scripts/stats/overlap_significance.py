@@ -50,14 +50,25 @@ def fishers_exact(k, n, overlap_total):
     return oddsratio, pval
 
 
+def _binom_p(k, n, p):
+    """Compute binomial test p-value compatible with SciPy <1.12 and >=1.12."""
+    if hasattr(stats, "binomtest"):
+        return float(stats.binomtest(k, n, p, alternative="greater").pvalue)
+    return float(stats.binom_test(k, n, p, alternative="greater"))
+
+
 def main():
     print("=== Overlap Significance Tests ===")
 
     centered_path = RESULTS_DIR / "dirichlet_centered_full_rank.csv"
     uniform_path = RESULTS_DIR / "dirichlet_uniform_full_rank.csv"
-    fixed_path = RESULTS_DIR / "supplementary_table_S2_fixed_all249.csv"
+    fixed_path = RUN_DIR / "rank.csv"
+    if not fixed_path.exists():
+        fixed_path = RESULTS_DIR / "supplementary_table_S2_fixed_all249.csv"
 
     methods = {}
+    total_centered = total_uniform = total_fixed = 0
+
     if centered_path.exists():
         df_c = pd.read_csv(centered_path)
         gene_col = "gene_id" if "gene_id" in df_c.columns else "gene_id_v6"
@@ -67,7 +78,6 @@ def main():
     else:
         print(f"Warning: {centered_path} not found")
         methods["centered"] = set()
-        total_centered = 0
 
     if uniform_path.exists():
         df_u = pd.read_csv(uniform_path)
@@ -78,23 +88,21 @@ def main():
     else:
         print(f"Warning: {uniform_path} not found")
         methods["uniform"] = set()
-        total_uniform = 0
 
     if fixed_path.exists():
         df_f = pd.read_csv(fixed_path)
         gene_col = "gene_id" if "gene_id" in df_f.columns else "gene_id_v6"
-        score_col = "integrated_score"
+        score_col = "integrated_score" if "integrated_score" in df_f.columns else df_f.columns[-1]
         methods["fixed"] = set(df_f.sort_values(score_col, ascending=False)[gene_col].head(10).values)
         total_fixed = len(df_f)
     else:
         print(f"Warning: {fixed_path} not found")
         methods["fixed"] = set()
-        total_fixed = 0
 
     N = max(total_centered, total_uniform, total_fixed, 249)
     n = 10
 
-    results = {"pairwise": {}, "three_way": {}, "binomial": {}}
+    results = {"pairwise": {}, "three_way": {}, "binomial": {}, "overlaps": {}}
 
     method_names = list(methods.keys())
     print(f"\nMethods found: {method_names}")
@@ -103,24 +111,37 @@ def main():
 
     print("\n--- Pairwise Overlaps ---")
     for i in range(len(method_names)):
-        for j in range(i + 1, len(method_names)):
+        for j in range(len(method_names)):
+            if i == j:
+                continue
             m1, m2 = method_names[i], method_names[j]
             overlap = methods[m1] & methods[m2]
+            union = methods[m1] | methods[m2]
             k = len(overlap)
-
+            jaccard = float(k / len(union)) if union else 0.0
             hg_p = hypergeometric_test(k, n, n, N)
 
-            results["pairwise"][f"{m1}_vs_{m2}"] = {
+            key = f"{m1}_vs_{m2}"
+            results["pairwise"][key] = {
                 "overlap_count": k,
+                "jaccard": jaccard,
                 "overlap_genes": sorted(list(overlap)),
                 "hypergeometric_p": float(hg_p),
                 "N_population": N,
             }
-            print(f"  {m1} vs {m2}: {k}/10 overlap, hypergeom p={hg_p:.4e}")
+            if i < j:
+                print(f"  {m1} vs {m2}: {k}/10 overlap (Jaccard={jaccard:.2f}), hypergeom p={hg_p:.4e}")
+
+    for k, v in results["pairwise"].items():
+        results["overlaps"][k] = {
+            "count": v["overlap_count"],
+            "jaccard": v["jaccard"],
+            "p_value": v["hypergeometric_p"],
+        }
 
     print("\n--- Three-way Overlap ---")
     if len(methods) == 3:
-        three_way = methods["centered"] & methods["uniform"] & methods["fixed"]
+        three_way = methods.get("centered", set()) & methods.get("uniform", set()) & methods.get("fixed", set())
         k3 = len(three_way)
         hg_p3 = hypergeometric_test(k3, n, n, N)
         results["three_way"] = {
@@ -129,17 +150,23 @@ def main():
             "hypergeometric_p": float(hg_p3),
             "N_population": N,
         }
+        results["overlaps"]["three_way"] = {
+            "count": k3,
+            "p_value": float(hg_p3),
+        }
         print(f"  Three-way overlap: {k3}/10, hypergeom p={hg_p3:.4e}")
 
     print("\n--- Binomial Test ---")
-    total_possible_pairs = len(method_names) * (len(method_names) - 1) // 2
+    unique_pairs = [(method_names[i], method_names[j]) for i in range(len(method_names)) for j in range(i+1, len(method_names))]
+    total_possible_pairs = len(unique_pairs)
     total_overlap_count = sum(
-        results["pairwise"][k]["overlap_count"]
-        for k in results["pairwise"]
+        results["pairwise"][f"{m1}_vs_{m2}"]["overlap_count"]
+        for m1, m2 in unique_pairs
+        if f"{m1}_vs_{m2}" in results["pairwise"]
     )
     max_possible = total_possible_pairs * n
     if max_possible > 0:
-        binom_p = stats.binom_test(total_overlap_count, max_possible, 1.0 / N * n, alternative="greater")
+        binom_p = _binom_p(total_overlap_count, max_possible, 1.0 / N * n)
         results["binomial"] = {
             "total_overlaps": total_overlap_count,
             "max_possible": max_possible,

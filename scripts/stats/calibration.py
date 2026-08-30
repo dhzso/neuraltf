@@ -27,26 +27,26 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def load_all_genes():
+    """Load candidate table."""
+    p = RUN_DIR / "rank.csv"
+    if p.exists():
+        return pd.read_csv(p)
+    for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
+        cand = RESULTS_DIR / fname
+        if cand.exists():
+            return pd.read_csv(cand)
+    raise FileNotFoundError("No candidate score file found in runs/pipeline_run/rank.csv")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Calibration analysis for integrated scores")
-    parser.add_argument("--n-bins", type=int, default=10, help="Number of score deciles")
+    parser.add_argument("--n-bins", type=int, default=10, help="Number of score bins (default 10)")
     args = parser.parse_args()
 
     print("=== Calibration Analysis ===")
 
-    for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
-        p = RESULTS_DIR / fname
-        if p.exists():
-            df = pd.read_csv(p)
-            break
-    else:
-        p = RUN_DIR / "rank.csv"
-        if p.exists():
-            df = pd.read_csv(p)
-        else:
-            print("Error: no candidate score file found")
-            return 1
-
+    df = load_all_genes()
     score_col = None
     for c in ["integrated_score", "composite_score", "dirichlet_median_score", "fixed_weight_score"]:
         if c in df.columns:
@@ -56,16 +56,19 @@ def main():
         print("Error: no score column found")
         return 1
 
-    gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
-    df = df.dropna(subset=[score_col])
+    if "proof_status" not in df.columns:
+        print("Error: proof_status column not found")
+        return 1
+
+    df = df.dropna(subset=[score_col]).copy()
     df["is_positive"] = (df["proof_status"] == "known_rnai_validated").astype(int)
 
-    n_total = len(df)
     n_pos = df["is_positive"].sum()
+    n_total = len(df)
     prevalence = n_pos / n_total if n_total > 0 else 0
     print(f"Candidates: {n_total}, Positives: {n_pos}, Prevalence: {prevalence:.4f}")
 
-    df["decile"] = pd.qcut(df[score_col], q=args.n_bins, labels=False, duplicates="drop")
+    df["decile"] = pd.qcut(df[score_col].rank(method="first"), q=args.n_bins, labels=False)
     df["decile"] = args.n_bins - 1 - df["decile"]
 
     bin_stats = []
@@ -104,6 +107,11 @@ def main():
         "prevalence": float(prevalence),
         "mean_calibration_error": float(cal_error),
         "max_calibration_error": float(max_cal_error),
+        "ece": float(cal_error),
+        "bin_centers": [float(b["mean_score"]) for b in bin_stats],
+        "observed_fractions": [float(b["empirical_positive_rate"]) for b in bin_stats],
+        "expected_fractions": [float(b["mean_score"]) for b in bin_stats],
+        "bin_counts": [int(b["n_candidates"]) for b in bin_stats],
         "bin_stats": bin_stats,
     }
     print(f"\nMean calibration error: {cal_error:.4f}")

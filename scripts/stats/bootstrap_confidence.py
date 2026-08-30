@@ -97,8 +97,11 @@ def main():
 
     out = df[["gene_id", "gene_name"]].copy() if "gene_name" in df.columns else df[["gene_id"]].copy()
     out["bootstrap_mean"] = means
+    out["mean_score"] = means
     out["ci_95_lo"] = ci_lo
+    out["ci_low"] = ci_lo
     out["ci_95_hi"] = ci_hi
+    out["ci_high"] = ci_hi
     out["ci_width"] = ci_hi - ci_lo
     out = out.sort_values("bootstrap_mean", ascending=False)
 

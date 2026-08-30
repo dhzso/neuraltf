@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt, numpy as np
 from scipy.stats import spearmanr
 
 def build():
-    full = load_centered99()
-    neural = load_neural()
+    full = load_centered_full()
+    fixed_col = "fixed_weight_score" if "fixed_weight_score" in full.columns else ("integrated_score" if "integrated_score" in full.columns else "composite_score")
     fig, ax = plt.subplots(figsize=(6, 5))
-    x = full["fixed_weight_score"].values
+    x = full[fixed_col].values
     y = full["dirichlet_median_score"].values
     mask = ~(np.isnan(x) | np.isnan(y))
     x, y = x[mask], y[mask]

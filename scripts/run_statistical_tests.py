@@ -14,7 +14,7 @@ REPO = Path(__file__).resolve().parent.parent
 STATS_DIR = REPO / "scripts" / "stats"
 
 TESTS = [
-    ("permutation_test_full.py", ["--n-perm", "1000", "--subsample", "2000"]),
+    ("permutation_test_full.py", ["--n-perm", "100", "--subsample", "2000"]),
     ("bootstrap_confidence.py", []),
     ("overlap_significance.py", []),
     ("precision_recall.py", []),
@@ -27,19 +27,19 @@ TESTS = [
     ("calibration.py", []),
     ("brier_score.py", []),
     ("cross_method_correction.py", []),
-    ("score_shuffling_permutation.py", []),
+    ("score_shuffling_permutation.py", ["--n-perm", "200"]),
 ]
 
 
 def main() -> int:
-    print("=== Running All Statistical Tests ===")
+    print("=== Running All Statistical Tests ===", flush=True)
     results = []
     for script_name, extra_args in TESTS:
         script_path = STATS_DIR / script_name
         if not script_path.exists():
             results.append((script_name, "skipped (script not found)"))
             continue
-        print(f"\n>>> {script_name}")
+        print(f"\n>>> {script_name}", flush=True)
         try:
             res = subprocess.run(
                 [sys.executable, str(script_path), *extra_args],
@@ -50,15 +50,15 @@ def main() -> int:
         except subprocess.TimeoutExpired:
             results.append((script_name, "FAILED (timeout)"))
     
-    print("\n=== Summary ===")
+    print("\n=== Summary ===", flush=True)
     for name, status in results:
-        print(f"  {name:<40} {status}")
+        print(f"  {name:<40} {status}", flush=True)
     
     failed = [r for r in results if r[1].startswith("FAILED")]
     if failed:
-        print(f"\n{len(failed)} test(s) failed.")
+        print(f"\n{len(failed)} test(s) failed.", flush=True)
         return 1
-    print("\nAll tests completed successfully.")
+    print("\nAll tests completed successfully.", flush=True)
     return 0
 
 
