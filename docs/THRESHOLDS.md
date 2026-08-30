@@ -27,8 +27,8 @@ $$\text{Score}_{\text{expression}} = \min\left(1.0, \frac{\max(\text{log}_2\text
 $$\text{Score}_{\text{reproducibility}} = \frac{\min(n_{\text{supporting atlases}}, 5)}{5.0}$$
 
 - **Biological Rationale**: True lineage specification drivers exhibit consistent transcriptional induction across independent experimental protocols, cell dissociation methods, and sequencing technologies. The pipeline interrogates all 5 single-cell/regulatory atlases:
-  1. **Fincher 2018** (Drop-seq, whole-animal, dd_Smed_v4 transcript model)
-  2. **Plass 2018** (Drop-seq, whole-animal, dd_Smed_v6 transcript model)
+  1. **Fincher 2018** (Drop-seq, whole-animal, `dd_Smed_v4` transcript model)
+  2. **Plass 2018** (Drop-seq, whole-animal, `dd_Smed_v6` transcript model)
   3. **Cui 2023** (10x Genomics Chromium, regeneration single-cell atlas, 55,014 cells)
   4. **King 2024** (FACS-purified G0/X1 progenitor single-cell atlas & TF catalog)
   5. **Perez 2025** (Lineage Single-Cell Differentiation Atlas & TF Domain Family Classification)
