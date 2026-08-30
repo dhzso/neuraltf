@@ -95,6 +95,21 @@ $$\text{Score}_{\text{perez-influence}} = \text{Influence}_{\text{neuron fate}}$
 - **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k` from [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:integrate_perez_influence()`
 
+---
+
+### 1.8 Evidence Stream Weight Normalization
+
+The 9 evidence streams are weighted as follows:
+
+$$\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$$
+
+- **Expression** (0.2): Highest weight — direct evidence of transcriptional activity
+- **All other 8 streams** (0.1 each): Equal weight — supporting evidence streams
+
+The EvidenceScorer always renormalizes over **present** streams per candidate, so the effective weight depends on which streams have data for each candidate. This ensures that missing evidence does not penalize candidates as *absence of evidence is not evidence of absence*.
+
+---
+
 ## 2. Statistical Testing & False Discovery Rate Control
 
 ### 2.1 Benjamini-Hochberg Multiple Testing Correction ($\text{FDR } q \le 0.10$)
@@ -159,16 +174,3 @@ $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
 │ (Dual-track shortlist: Track A + Track B)                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## 5. Evidence Stream Weight Normalization
-
-The 9 evidence streams are weighted as follows:
-
-$$\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$$
-
-- **Expression** (0.2): Highest weight — direct evidence of transcriptional activity
-- **All other 8 streams** (0.1 each): Equal weight — supporting evidence streams
-
-The EvidenceScorer always renormalizes over **present** streams per candidate, so the effective weight depends on which streams have data for each candidate. This ensures that missing evidence does not penalize candidates as *absence of evidence is not evidence of absence*.
