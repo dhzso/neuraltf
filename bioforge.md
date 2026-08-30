@@ -176,7 +176,7 @@ NeuralTF unifies 5 independent planarian transcriptomic and regulatory atlases:
 ### 3.1 Candidate Count Funnel
 
 1. **418 TF Targets** (`load_reference_tables`): Seeded from King 2024 `mmc4.xlsx` TF catalog (`TF? != NA`).
-2. **Cluster DE Candidates** (`score_atlases`): TFs displaying statistically significant differential expression (Wilcoxon rank-sum test, Benjamini-Hochberg $q \le 0.10$) across Leiden clusters in Fincher, Plass, and Cui ([OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867)) scRNA-seq atlases.
+2. **Cluster DE Candidates** (`score_atlases`): TFs displaying statistically significant differential expression (Wilcoxon rank-sum test, Benjamini-Hochberg $q \le 0.10$) across Leiden clusters in Fincher, Plass, and Cui's scRNA-seq atlases.
 3. **278 Total Scored Candidates** (`integrate_king_atlas`): Integrating King 2024 `mmc7.xlsx` G0 neural subclusters ($\text{log}_2\text{FC} \ge 2.0$), King mmc5 RNAi targets, and Perez 2025 regulatory data seeds these factors into `all_records` ($N=278$).
 4. **101 Neural Candidates** (`write_outputs`): Applying the neural filter `(neural_enriched > 0) | (rnai > 0)` yields **101 candidates** across Track A (RNAi-validated) and Track B (novel candidates).
 
