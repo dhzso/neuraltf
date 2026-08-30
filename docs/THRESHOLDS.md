@@ -1,6 +1,7 @@
 # NeuralTF Pipeline — Parameter Scientific Rationale & Sensitivity Documentation
 
 This document records the biological, statistical, and mathematical justifications for all parameters, thresholds, and scoring formulations used in the `NeuralTF` pipeline.
+
 ---
 
 ## 1. Multi-Atlas Evidence Stream Scoring Formulations
