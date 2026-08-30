@@ -158,5 +158,5 @@ The EvidenceScorer always renormalizes over **present** streams per candidate, s
 $$\text{Score}_{\text{perez\_influence}} = \text{influence\_score}_{\text{neuron fate}}$$
 
 - **Biological Rationale**: [Perez et al. (2025)](https://www.nature.com/articles/s41467-025-65712-0#Sec94) computed ANANSE regulatory influence scores across 9 cell fates (MOESM19). The neuron fate influence score represents the normalized rank of each TF's regulatory impact in neural differentiation. A score of 1.0 means the TF has the highest regulatory influence in neuron fate specification.
-- **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k` from [Multimodal single cell analyses reveal gene networks of planarian stem cell differentiation | Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)
+- **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k` from [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:integrate_perez_influence()`

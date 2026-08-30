@@ -30,7 +30,7 @@ datasets/
           adata_scRNA_Annotated.h5ad   # Cui annotated h5ad used by the pipeline
     smed_20140614.mapping.rosettastone.2020.txt    # Rosetta Stone gene-ID bridge, 67 MB
     go.obo                          # Gene Ontology, current release, ~40 MB
-    Supplementary_Data_Perez_2025/   # Perez et al., 2025 — MOESM5 (TF classification), MOESM19 (ANANSE influence), MOESM22 (ANANSE GRN) (download: [Multimodal single cell analyses reveal gene networks of planarian stem cell differentiation | Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94))
+    Supplementary_Data_Perez_2025/   # Perez et al., 2025 — MOESM5 (TF classification), MOESM19 (ANANSE influence), MOESM22 (ANANSE GRN) (download: [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94))
   processed/                        # GENERATED: fincher_subsample.h5ad, plass_v6.h5ad, cui_v6.h5ad,
                                      # planmine_annotations.parquet, planmine_transcripts.fasta
   references/
@@ -55,7 +55,7 @@ datasets/
 | Fincher 2018 | [GSE111764](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111764) | SRP135258 | PRJNA438083 |
 | Cui 2023 | — | — | [OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867) |
 | King 2024 | Cell Reports [supplementary](https://www.sciencedirect.com/science/article/pii/S2211124724001712) (mmc4–mmc7) | — | [DOI:10.1016/j.celrep.2024.113947](https://doi.org/10.1016/j.celrep.2024.113947) |
-| Perez 2025 | — | — | [Multimodal single cell analyses reveal gene networks of planarian stem cell differentiation | Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94) |
+| Perez 2025 | — | — | [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94) |
 
 ## Data Integrity Checksums (SHA256)
 

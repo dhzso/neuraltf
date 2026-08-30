@@ -70,8 +70,8 @@ The pipeline seeds candidate TFs across five single-cell and regulatory atlases,
 | **Fincher** | 2018 | scRNA-seq (50.5K cells, v4 IDs) | Whole-animal cell-type expression & neural specificity ([GSE111764](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111764)) |
 | **Plass** | 2018 | scRNA-seq (37.5K cells, v6 IDs) | Independent whole-anatomy replication & X1 dynamics ([GSE103633](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633)) |
 | **Cui** | 2023 | scRNA-seq (55.0K cells, 8 time points) | High-resolution regeneration time-course expression ([OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867)) |
-| **King** | 2024 | Single-cell TF catalog + RNAi screen | G0/X1 cluster enrichment, RNAi phenotypes (mmc5), TF pair correlations (mmc6) ([Cell Reports](https://doi.org/10.1016/j.celrep.2024.113947)) |
-| **Perez** | 2025 | Lineage atlas + ANANSE GRNs | Lineage TF classification (MOESM5), ANANSE regulatory influence (MOESM19), and ANANSE GRN (MOESM22) ([Multimodal single cell analyses reveal gene networks of planarian stem cell differentiation \| Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)) |
+| **King** | 2024 | Single-cell TF catalog + RNAi screen | G0/X1 cluster enrichment, RNAi phenotypes (mmc5), TF pair correlations (mmc6) ([Cell Reports](https://www.sciencedirect.com/science/article/pii/S2211124724001712)) |
+| **Perez** | 2025 | Lineage atlas + ANANSE GRNs | Lineage TF classification (MOESM5), ANANSE regulatory influence (MOESM19), and ANANSE GRN (MOESM22) ([Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)) |
 
 ---
 

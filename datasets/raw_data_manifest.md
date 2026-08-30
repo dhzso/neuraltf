@@ -56,6 +56,6 @@ The following files exist in `datasets/raw/` from upstream repository downloads 
 | **Fincher 2018** | Science 2018 | [GSE111764](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111764) | 50,587 cells × 28,069 genes (v4) | ✅ Processed (`fincher_subsample.h5ad`) |
 | **Plass 2018** | Science 2018 | [GSE103633](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103633) | 21,612 cells × 27,614 genes (v6) | ✅ Processed (`plass_v6.h5ad`) |
 | **Cui 2023** | Nat Commun 2023 | [OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867) | 55,014 cells × 19,198 genes (v6) | ✅ Processed (`cui_v6.h5ad`, 2.05 GB) |
-| **King 2024** | Cell Reports 2024 | [DOI:10.1016/j.celrep.2024.113947](https://doi.org/10.1016/j.celrep.2024.113947) | G0/X1 FACS single-cell TF atlas | ✅ Processed (`king_atlas.tsv`, mmc4–mmc7) |
-| **Perez 2025** | Nat Commun 2025 | [Multimodal single cell analyses reveal gene networks of planarian stem cell differentiation | Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94) | TF classification + ANANSE GRN & influence | ✅ Processed (`perez_tf_summary.csv`, `ananse_network_full.csv`) |
+| **King 2024** | Cell Reports 2024 | [Cell Reports](https://www.sciencedirect.com/science/article/pii/S2211124724001712) | G0/X1 FACS single-cell TF atlas | ✅ Processed (`king_atlas.tsv`, mmc4–mmc7) |
+| **Perez 2025** | Nat Commun 2025 | [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94) | TF classification + ANANSE GRN & influence | ✅ Processed (`perez_tf_summary.csv`, `ananse_network_full.csv`) |
 
