@@ -20,7 +20,6 @@ $$\text{Score}_{\text{expression}} = \min\left(1.0, \frac{\max(\text{log}_2\text
   | 8.0 | 289 | 0.95 | Down-weights moderately expressed but functional TFs |
   | 10.0 | 289 | 0.90 | Biases towards high-copy transcripts at the expense of regulatory factors |
 
----
 
 ### 1.2 Multi-Atlas Reproducibility Denominator ($N_{\text{atlases}} = 5$)
 
@@ -35,7 +34,6 @@ $$\text{Score}_{\text{reproducibility}} = \frac{\min(n_{\text{supporting atlases
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:663-672`
 - **Scientific Impact**: Candidate TFs supported across all 5 atlases achieve $s_{\text{repro}} = 1.0$, while single-atlas detections receive $s_{\text{repro}} = 0.20$.
 
----
 
 ### 1.3 King Atlas Neural Subcluster Enrichment Threshold ($\text{log}_2\text{FC} \ge 2.0$)
 
@@ -52,7 +50,6 @@ $$\text{Neural Gate} = \mathbb{I}\left(\text{subcluster} \in \text{Neural} \land
   | 2.5 | 78 | 0.76 | Overly stringent; excludes validated neural TFs with modest basal expression |
   | 3.0 | 60 | 0.62 | Severe loss of known RNAi-validated regulators |
 
----
 
 ### 1.4 Co-Expression Correlation Gain Multiplier ($\text{Multiplier} = 3.0$)
 
@@ -61,7 +58,6 @@ $$\text{Score}_{\text{correlation}} = \min\left(1.0, \max(0.0, r_{\text{G0}} - r
 - **Biological Rationale**: In pluripotent X1 neoblasts, neural TF pairs display negligible co-expression correlation ($r_{\text{X1}} \approx 0$). Upon lineage commitment in G0 progenitors, cooperative TF regulons are co-activated, causing a significant correlation gain ($\Delta r = r_{\text{G0}} - r_{\text{X1}} > 0$). In empirical single-cell datasets, raw Pearson correlation gains between TF pairs typically span $\Delta r \in [0.10, 0.35]$. Multiplying by $3.0\times$ expands this dynamic range such that a gain of $\Delta r \ge 0.33$ achieves maximum score (1.0), reflecting complete regulatory recruitment.
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:654`
 
----
 
 ### 1.5 Cluster Specificity Formulation ($\text{Inverse Breadth}$)
 
@@ -70,7 +66,6 @@ $$\text{Score}_{\text{specificity}} = \frac{1.0}{n_{\text{clusters supporting}}}
 - **Biological Rationale**: Genuine neural master regulators are confined to neural and neural-progenitor clusters. Broadly expressed transcriptional machinery, ubiquitous chromatin modifiers, and pleiotropic TFs show multi-cluster expression ($n_{\text{clusters}} \gg 1$). The reciprocal cluster count acts as an explicit penalty against pleiotropic expression.
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:421-424`
 
----
 
 ### 1.6 Perez Lineage TF Superfamily Classification
 
@@ -85,7 +80,6 @@ $$
 - **Biological Rationale**: Perez et al. (*Nat. Commun.* 2025) structurally classified the *S. mediterranea* transcription factor repertoire across differentiation trajectories. Comparative genomics demonstrates that metazoan neural specification is governed by conserved DNA-binding domain families (bHLH, POU-homeodomain, LIM-homeobox, C2H2 zinc fingers). Weighting known neural families at 1.0, general TFs at 0.5, and non-TFs at 0.0 injects established structural biology priors without discarding novel TF families.
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:508-550`
 
----
 
 ### 1.7 Perez Regulatory Influence Score
 
@@ -95,7 +89,6 @@ $$\text{Score}_{\text{perez-influence}} = \text{Influence}_{\text{neuron fate}}$
 - **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k` from [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:integrate_perez_influence()`
 
----
 
 ### 1.8 Evidence Stream Weight Normalization
 
