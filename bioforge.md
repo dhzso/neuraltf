@@ -203,17 +203,17 @@ Where default weights $\mathbf{w} = [0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0
 5. **Co-Expression Correlation Gain ($s_{\text{corr}}$)**:
    $$s_{\text{corr}} = \min\left(1.0, \max(0.0, r_{\text{G0}} - r_{\text{X1}}) \times 3.0\right)$$
 
-6. **Neural Enrichment ($s_{\text{neural_enr}}$)**:
-   $$s_{\text{neural_enr}} = \mathbb{I}(\text{King G0 neural subcluster } \text{log}_2\text{FC} \ge 2.0)$$
+6. **Neural Enrichment ($s_{\text{neural\_enr}}$)**:
+   $$s_{\text{neural\_enr}} = \mathbb{I}(\text{King G0 neural subcluster } \text{log}_2\text{FC} \ge 2.0)$$
 
-7. **Neural Specificity ($s_{\text{neural_spec}}$)**:
-   $$s_{\text{neural_spec}} = \frac{1.0}{n_{\text{neural subclusters with } \text{log}_2\text{FC} \ge 2.0}}$$
+7. **Neural Specificity ($s_{\text{neural\_spec}}$)**:
+   $$s_{\text{neural\_spec}} = \frac{1.0}{n_{\text{neural subclusters with } \text{log}_2\text{FC} \ge 2.0}}$$
 
-8. **Perez Lineage ($s_{\text{perez_lin}}$)**:
-   $$s_{\text{perez_lin}} = \begin{cases} 1.0 & \text{if TF class } \in \text{Neural Superfamilies (bHLH, Homeobox, POU, C2H2, etc.)} \\ 0.5 & \text{if other confirmed structural TF class} \\ 0.0 & \text{if absent / non-TF} \end{cases}$$
+8. **Perez Lineage ($s_{\text{perez\_lin}}$)**:
+   $$s_{\text{perez\_lin}} = \begin{cases} 1.0 & \text{if TF class } \in \text{Neural Superfamilies (bHLH, Homeobox, POU, C2H2, etc.)} \\ 0.5 & \text{if other confirmed structural TF class} \\ 0.0 & \text{if absent / non-TF} \end{cases}$$
 
-9. **Perez Regulatory Influence ($s_{\text{perez_infl}}$)**:
-   $$s_{\text{perez_infl}} = \text{influence_score}_{\text{neuron fate}} \quad \text{from [Perez et al. (2025)](https://www.nature.com/articles/s41467-025-65712-0#Sec94) MOESM19}$$
+9. **Perez Regulatory Influence ($s_{\text{perez\_infl}}$)**:
+   $$s_{\text{perez\_infl}} = \text{influence\_score}_{\text{neuron fate}} \quad \text{from [Perez et al. (2025)](https://www.nature.com/articles/s41467-025-65712-0#Sec94) MOESM19}$$
 
 ---
 
