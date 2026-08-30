@@ -87,6 +87,14 @@ $$
 
 ---
 
+### 1.7 Perez Regulatory Influence Score
+
+$$\text{Score}_{\text{perez-influence}} = \text{Influence}_{\text{neuron fate}}$$
+
+- **Biological Rationale**: [Perez et al. (2025)](https://www.nature.com/articles/s41467-025-65712-0#Sec94) computed ANANSE regulatory influence scores across 9 cell fates (MOESM19). The neuron fate influence score represents the normalized rank of each TF's regulatory impact in neural differentiation. A score of 1.0 means the TF has the highest regulatory influence in neuron fate specification.
+- **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k` from [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)
+- **Location**: `src/bioforge/projects/neuraltf/pipeline.py:integrate_perez_influence()`
+
 ## 2. Statistical Testing & False Discovery Rate Control
 
 ### 2.1 Benjamini-Hochberg Multiple Testing Correction ($\text{FDR } q \le 0.10$)
@@ -164,13 +172,3 @@ $$\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$$
 - **All other 8 streams** (0.1 each): Equal weight — supporting evidence streams
 
 The EvidenceScorer always renormalizes over **present** streams per candidate, so the effective weight depends on which streams have data for each candidate. This ensures that missing evidence does not penalize candidates as *absence of evidence is not evidence of absence*.
-
----
-
-## 6. Perez Regulatory Influence Score (Stream 9)
-
-$$\text{Score}_{\text{perez-influence}} = \text{Influence}_{\text{neuron fate}}$$
-
-- **Biological Rationale**: [Perez et al. (2025)](https://www.nature.com/articles/s41467-025-65712-0#Sec94) computed ANANSE regulatory influence scores across 9 cell fates (MOESM19). The neuron fate influence score represents the normalized rank of each TF's regulatory impact in neural differentiation. A score of 1.0 means the TF has the highest regulatory influence in neuron fate specification.
-- **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k` from [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)
-- **Location**: `src/bioforge/projects/neuraltf/pipeline.py:integrate_perez_influence()`
