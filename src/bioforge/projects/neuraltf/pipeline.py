@@ -20,7 +20,6 @@ import pandas as pd
 import scanpy as sc
 from statsmodels.stats.multitest import multipletests
 
-from bioforge.evidence.readers import king as king_reader
 from bioforge.evidence import load_bridge
 from bioforge.evidence.schema import EvidenceRecord, EvidenceSource
 from bioforge.evidence.scoring import EvidenceScorer
@@ -30,9 +29,16 @@ from bioforge.evidence.cards import build_cards_for_records, render_cards_markdo
 
 DATA_ROOT = Path(__file__).resolve().parents[4]
 
-_RE_DD_ID = re.compile(r"(dd\D*?\d+)")
+# Two gene-ID dialects appear across the King tables and bridge:
+#   structured : dd_Smed_v6_11150_0_1   (the numeric gene field is field 3)
+#   short      : dd11150                 (King mmc5/mmc6 free-text style)
+# The old lazy regex `(dd\D*?\d+)` matched "dd_Smed_v6" on structured IDs
+# (digits="6") and silently corrupted short-ID extraction.
+_RE_DD_STRUCTURED = re.compile(r"dd_Smed_v[46]_(\d+)")
+_RE_DD_SHORT = re.compile(r"\bdd(\d+)\b")
 _NEURAL_FC_THRESHOLD = 2.0
 _FDR_THRESHOLD = 0.1  # Benjamini-Hochberg q-value threshold
+_L2FC_EPS = 1e-9  # pseudocount for true-log2FC means
 
 
 class NeuralTFPipeline:
@@ -96,8 +102,11 @@ class NeuralTFPipeline:
         self.bridge = None
         self.tf_ids: set[str] = set()
         self.tf_ids_norm: set[str] = set()
+        self.tf_ids_king: set[str] = set()  # King mmc4-only seed (HVG forcing)
         self.all_records: dict[str, EvidenceRecord] = {}
         self.atlas_membership: dict[str, set[str]] = {}
+        # per-gene best DE (p, lfc) per atlas, for downstream meta-analysis
+        self.de_pvals: dict[str, dict[str, tuple[float, float]]] = {}
 
     @staticmethod
     def _resolve_king_xlsx(king_dir: Path, mmc_name: str) -> Path:
@@ -153,12 +162,19 @@ class NeuralTFPipeline:
         self.tf_ids = set(
             self.tf_catalog.loc[self.tf_catalog["TF?"].notna(), "Gene ID"].astype(str)
         )
+        # King-only seed for HVG forcing: the 14k master catalog would
+        # override the data-driven 5,000-HVG selection almost entirely and
+        # cluster the atlases in TF space (biasing DE + BH-FDR geometry).
+        # The master catalog still seeds records (below) but never HVGs.
+        self.tf_ids_king = set(self.tf_ids)
         self.tf_ids_norm = self.tf_ids | {tid[:-2] for tid in self.tf_ids if tid.endswith("_1")}
         print(f"  King catalog: {len(self.tf_catalog)} entries ({len(self.tf_ids)} TFs)")
 
         # Expand candidate seed with the unified master TF catalog (King + Perez MOESM5).
         # Without this, any TF annotated only in Perez 2025 (up to ~14k genes) would
         # never be tested for de novo cluster DE in Fincher, Plass, or Cui.
+        # NOTE: the expanded set seeds records only — run_qc forces just the
+        # King mmc4 subset into HVGs (self.tf_ids_king).
         master_path = self.data_dir / "master_tf_catalog.csv"
         if master_path.exists():
             try:
@@ -195,7 +211,7 @@ class NeuralTFPipeline:
                     for _, r in perez.iterrows():
                         v6 = str(r.get("v6_id", "")).strip()
                         cls = str(r.get("tf_class", "")).strip()
-                        if v6 and v6 != "nan" and cls and cls != "nan":
+                        if v6 and v6 != "nan" and self._valid_perez_class(cls):
                             self.perez_tf_class[v6] = cls
                     print(f"  Perez TF classification: {len(self.perez_tf_class)} genes (from preprocessed CSV)")
             except Exception as e:
@@ -220,7 +236,7 @@ class NeuralTFPipeline:
                         for _, r in perez.iterrows():
                             v6 = str(r.get(rbh_col, "")).strip()
                             cls = str(r.get(tf_class_col, "")).strip()
-                            if v6 and v6 != "nan" and cls and cls != "nan":
+                            if v6 and v6 != "nan" and self._valid_perez_class(cls):
                                 self.perez_tf_class[v6] = cls
                         print(f"  Perez TF classification: {len(self.perez_tf_class)} genes (from raw MOESM5)")
                 except Exception as e:
@@ -292,15 +308,21 @@ class NeuralTFPipeline:
 
     @staticmethod
     def _short_id(gene_id: str) -> str | None:
-        """Extract 'dd_Smed_v6_10201_0_1' -> 'dd10201' (or 'dd11150' -> 'dd11150')."""
+        """Extract 'dd_Smed_v6_10201_0_1' or 'dd11150' -> 'dd11150'.
+
+        Tries the structured dd_Smed_v[46]_<digits> field first; falls back
+        to a short dd<digits> token. Returns None when neither pattern is
+        present (non-dd identifiers are never coerced).
+        """
         if not gene_id or not isinstance(gene_id, str):
             return None
-        m = _RE_DD_ID.search(gene_id)
-        if not m:
-            return None
-        raw = m.group(1)
-        digits = re.sub(r"\D+", "", raw)
-        return f"dd{digits}" if digits else None
+        m = _RE_DD_STRUCTURED.search(gene_id)
+        if m:
+            return f"dd{m.group(1)}"
+        m = _RE_DD_SHORT.search(gene_id)
+        if m:
+            return f"dd{m.group(1)}"
+        return None
 
     def _all_ids_for_record(self, record: EvidenceRecord) -> set[str]:
         """Collect every string someone might use to name this gene."""
@@ -335,7 +357,11 @@ class NeuralTFPipeline:
             sc.pp.log1p(adata)
             print("norm+log ", end="", flush=True)
             sc.pp.highly_variable_genes(adata, n_top_genes=5000, batch_key=None)
-            tf_in_mask = [v for v in adata.var_names if v in self.tf_ids_norm]
+            # Force only the King mmc4 TF catalog (418 genes) into the HVG
+            # panel so known TFs enter the clustering; the 14k master catalog
+            # would swamp the data-driven HVG selection and cluster in pure
+            # TF space (biased DE null + BH-FDR geometry).
+            tf_in_mask = [v for v in adata.var_names if v in self.tf_ids_king]
             adata.var.loc[tf_in_mask, "highly_variable"] = True
             adata.raw = adata
             hvg = adata[:, adata.var.highly_variable].copy()
@@ -375,6 +401,43 @@ class NeuralTFPipeline:
 
         print(f"  Generated records: {len(self.all_records)}")
 
+    # ------------------------------------------------------------------
+    # True log2FC helper
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _cluster_log2fc(adata, gene: str, cluster: str | None) -> float:
+        """True log2 fold-change of ``gene`` in ``cluster`` vs all other cells.
+
+        Computed from linear-space normalized expression (``adata.raw``
+        holds log1p data; we undo it with expm1, restoring the normalized
+        counts-per-10k scale) so the value is a real log2FC, directly
+        comparable with King's mmc7 log2FC. A small pseudocount keeps the
+        ratio finite for zero-mean denominators.
+        """
+        if cluster is None:
+            return 0.0
+        try:
+            gene_idx = adata.var_names.get_loc(gene)
+        except (KeyError, ValueError):
+            return 0.0
+        labels = adata.obs["leiden"].astype(str).values
+        src = adata.raw if adata.raw is not None else adata
+        col = src.X[:, gene_idx]
+        vals = np.asarray(col.todense()).ravel() if hasattr(col, "todense") \
+            else np.asarray(col).ravel()
+        # undo log1p -> linear normalized counts
+        lin = np.expm1(vals.astype(np.float64))
+        lin = np.where(lin < 0, 0.0, lin)
+        in_cl = labels == str(cluster)
+        n_in, n_out = int(in_cl.sum()), int((~in_cl).sum())
+        if n_in == 0 or n_out == 0:
+            return 0.0
+        mean_in = float(lin[in_cl].mean())
+        mean_out = float(lin[~in_cl].mean())
+        fc = (mean_in + _L2FC_EPS) / (mean_out + _L2FC_EPS)
+        return float(np.log2(fc)) if fc > 0 else 0.0
+
     def _score_one_atlas(self, adata, atlas_name, result):
         bridge = self.bridge
 
@@ -411,9 +474,14 @@ class NeuralTFPipeline:
             cluster_lookups[cl] = {str(g): i for i, g in enumerate(result["names"][cl])}
 
         # gene_best: (pos_lfc, pval, qval) — one-tailed: only upregulated signal counts.
-        # A repressed gene (lfc < 0) is set to 0.0 so it never inflates the expression
-        # score. We track the cluster with the highest positive fold-change.
+        # A repressed gene (lfc < 0) is set to 0.0 so it never inflates the
+        # expression score. The best cluster is chosen among SIGNIFICANTLY
+        # upregulated clusters (q ≤ threshold); a gene whose largest lfc is
+        # non-significant but which has a significant cluster elsewhere is
+        # scored on the significant evidence, not dropped entirely.
         gene_best: dict[str, tuple[float, float, float]] = {}
+        # gene_best_cluster: argmax significant cluster per gene (for true log2FC)
+        gene_best_cluster: dict[str, str] = {}
         # gene_sig_clusters: clusters where the gene is significantly upregulated
         # (qval ≤ threshold AND pos_lfc > 0). Used to compute per-gene specificity.
         gene_sig_clusters: dict[str, set[str]] = {}
@@ -425,12 +493,17 @@ class NeuralTFPipeline:
             # One-tailed: only positive fold-changes count as activation evidence
             pos_lfc = max(0.0, float(result["logfoldchanges"][cl][idx]))
             pval = float(result["pvals"][cl][idx])
-            # Track best-scoring cluster per gene
-            if key not in gene_best or pos_lfc > gene_best[key][0]:
-                gene_best[key] = (pos_lfc, pval, qval)
-            # Track all significantly upregulated clusters for breadth / specificity
             if qval <= _FDR_THRESHOLD and pos_lfc > 0:
+                # Track all significantly upregulated clusters for specificity
                 gene_sig_clusters.setdefault(key, set()).add(cl)
+                # Track best significant cluster per gene (max lfc among hits)
+                if key not in gene_best or pos_lfc > gene_best[key][0]:
+                    gene_best[key] = (pos_lfc, pval, qval)
+                    gene_best_cluster[key] = cl
+                # per-atlas DE p-value for downstream meta-analysis
+                prev = self.de_pvals.get(key, {}).get(atlas_name, (1.0, 0.0))
+                if pval < prev[0]:
+                    self.de_pvals.setdefault(key, {})[atlas_name] = (pval, pos_lfc)
 
         for gene in score_genes:
             best_l2fc, best_p, best_q = gene_best.get(gene, (0.0, 1.0, 1.0))
@@ -462,22 +535,28 @@ class NeuralTFPipeline:
             if gn_from_bridge and not rec.gene_name:
                 rec.gene_name = gn_from_bridge
 
+            # True log2FC from linear-space cluster means (Scanpy's
+            # `logfoldchanges` are a difference of log1p values, not a real
+            # log2 fold change). Computed on the best significant cluster
+            # so it is directly comparable with King's log2FC.
+            true_l2fc = self._cluster_log2fc(adata, gene, gene_best_cluster.get(gene))
+
             # Expression: best (max) positive log2FC across atlases.
-            # Uses one-tailed scoring: min(1, pos_lfc / 5.0) so that a 5-fold
-            # upregulation saturates the score at 1.0. Repressed genes (lfc<0)
-            # get 0 and do not enter this branch.
+            # Uses one-tailed scoring: min(1, pos_lfc / 5.0) so that a 32-fold
+            # upregulation (log2FC=5) saturates the score at 1.0. Repressed
+            # genes (lfc<0) get 0 and do not enter this branch.
             rec.add_score(
                 EvidenceSource.EXPRESSION,
                 max(rec.scores.get(EvidenceSource.EXPRESSION, 0.0),
-                    min(1.0, best_l2fc / 5.0)),
-                note=f"log2FC={best_l2fc:.2f},p={best_p:.2g},q={best_q:.2g}",
+                    min(1.0, true_l2fc / 5.0)),
+                note=f"log2FC={true_l2fc:.2f},p={best_p:.2g},q={best_q:.2g}",
             )
 
             # Specificity: 1 / n_sig_clusters (clusters where gene is significantly
             # upregulated). A TF expressed in 1 of 16 Leiden clusters scores 1.0;
             # one expressed in all 16 scores 0.0625. This correctly rewards narrow,
             # cell-type-specific activation rather than broad housekeeping expression.
-            n_sig = len(gene_sig_clusters.get(gene, {1}))  # default 1 if no cluster set
+            n_sig = len(gene_sig_clusters.get(gene, set()))
             rec.add_score(
                 EvidenceSource.SPECIFICITY,
                 max(rec.scores.get(EvidenceSource.SPECIFICITY, 0.0),
@@ -511,8 +590,14 @@ class NeuralTFPipeline:
         # Fractional breadth: spec = 1 - (n-1)/(N-1) gives 1.0 for n=1 (maximally
         # specific), smoothly declining to 0.0 for n=N (expressed everywhere).
         # This avoids the steep 50% penalty cliff of 1/n when going from n=1→2.
-        N_KING_TOTAL = max(king["subcluster"].nunique(), 2)
-        N_NEURAL_TOTAL = max(king[neural_mask]["subcluster"].nunique(), 2)
+        # Units: (compartment, subcluster) PAIRS on both sides of the fraction —
+        # 5 subcluster names (e.g. intestine_*) exist in both G0 and X1, so
+        # counting bare names in the denominator against pairs in the numerator
+        # mixed units (175 names vs 180 pairs).
+        N_KING_TOTAL = max(king.groupby(["compartment", "subcluster"]).ngroups, 2)
+        N_NEURAL_TOTAL = max(
+            king[neural_mask].groupby(["compartment", "subcluster"]).ngroups, 2
+        )
 
         # Seed records for all TFs enriched in neural G0 compartments.
         # Fincher/Plass subsampling may miss neuron-specific TFs (known
@@ -564,8 +649,9 @@ class NeuralTFPipeline:
                 rec.add_score(EvidenceSource.NEURAL_ENRICHED, 1.0,
                               note=f"neural_max_l2fc={nHits['log2fc'].max():.2f}")
 
-                unique_ns = nHits["subcluster"].nunique()
-                # Fractional breadth for neural subclusters specifically.
+                unique_ns = nHits.groupby(["compartment", "subcluster"]).ngroups
+                # Fractional breadth for neural subclusters specifically
+                # (same pair units as N_NEURAL_TOTAL).
                 neural_spec = 1.0 - (unique_ns - 1) / (N_NEURAL_TOTAL - 1) if unique_ns > 0 else 0.0
                 neural_spec = max(0.0, min(1.0, neural_spec))
                 rec.add_score(EvidenceSource.NEURAL_SPECIFICITY,
@@ -580,6 +666,12 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
     # Perez 2025 TF lineage classification (EvidenceSource.PEREZ_LINEAGE)
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _valid_perez_class(cls: str) -> bool:
+        """True only for a real Perez TF class. MOESM5 uses '-' (and blanks)
+        for the 58k non-TF genes — those must never count as TF evidence."""
+        return bool(cls) and cls.lower() not in ("nan", "none", "-", "na", "n/a")
 
     # Neural-relevant TF structural families from Perez 2025 classification.
     # These are the EXACT tf_class strings used in perez_tf_summary.csv (case-insensitive
@@ -637,9 +729,10 @@ class NeuralTFPipeline:
 
         for v6_id, rec in self.all_records.items():
             cls = self.perez_tf_class.get(v6_id, "")
-            if not cls:
-                # Also try without the _1 suffix variant
-                cls = self.perez_tf_class.get(v6_id.rstrip("_1"), "")
+            if not cls and v6_id.endswith("_1"):
+                # Also try without the _1 suffix variant (strip the exact
+                # suffix; rstrip("_1") would strip any trailing {_,1} chars)
+                cls = self.perez_tf_class.get(v6_id.removesuffix("_1"), "")
             if not cls:
                 rec.add_score(EvidenceSource.PEREZ_LINEAGE, 0.0,
                               note="absent_from_perez")
@@ -731,10 +824,12 @@ class NeuralTFPipeline:
 
         print(f"  h1SMcG factors with influence scores: {len(h1_to_influence)}")
 
-        # Map v6 -> h1SMcG and score
+        # Map v6 -> h1SMcG and score. RBH-restricted: the collapsed
+        # `Similar` mapping claims 14.4k of 25k v6 IDs for >1 h1SMcG, so
+        # first-wins picks would attribute influence arbitrarily.
         from bioforge.projects.neuraltf.smapping import batch_v6_to_h1smcg
         v6_ids = list(self.all_records.keys())
-        v6_to_h1 = batch_v6_to_h1smcg(v6_ids)
+        v6_to_h1 = batch_v6_to_h1smcg(v6_ids, rbh_only=True)
 
         matched = 0
         for v6_id, rec in self.all_records.items():
@@ -791,9 +886,9 @@ class NeuralTFPipeline:
             clean = val.split(" (")[0].strip()
             if clean and not clean.startswith("All"):
                 targets.add(clean)
-            m = _RE_DD_ID.search(val)
+            m = _RE_DD_SHORT.search(val) or _RE_DD_STRUCTURED.search(val)
             if m:
-                targets.add(m.group(1))
+                targets.add(f"dd{m.group(1)}")
         return targets
 
     # ------------------------------------------------------------------
@@ -816,9 +911,9 @@ class NeuralTFPipeline:
             out = {s}
             if " (" in s:
                 out.add(s.split(" (", 1)[0].strip())
-            m = _RE_DD_ID.search(s)
+            m = _RE_DD_STRUCTURED.search(s) or _RE_DD_SHORT.search(s)
             if m:
-                out.add(f"dd{re.sub(r'\\D+', '', m.group(1))}")
+                out.add(f"dd{m.group(1)}")
             return out
 
         # Pre-compute normalization once (not per candidate)
@@ -834,30 +929,29 @@ class NeuralTFPipeline:
             sub = data[mask]
             if len(sub) == 0:
                 continue
-            try:
-                x1_vals = pd.to_numeric(sub["x1_corr"], errors="coerce").dropna().values
-                g0_vals = pd.to_numeric(sub["g0_corr"], errors="coerce").dropna().values
-            except (ValueError, TypeError):
-                continue
-            if len(x1_vals) == 0 or len(g0_vals) == 0:
+            # Joint NaN masking: x1/g0 for the SAME pair row must align.
+            # Dropping NaNs independently per column can silently re-pair
+            # an x1 value with a different row's g0 value.
+            x1_num = pd.to_numeric(sub["x1_corr"], errors="coerce")
+            g0_num = pd.to_numeric(sub["g0_corr"], errors="coerce")
+            pair = pd.DataFrame({"x1": x1_num, "g0": g0_num}).dropna()
+            if pair.empty:
                 continue
             # Use max(Δr) across all tested partner pairs rather than mean.
             # A TF may form a tight heterodimeric complex with one specific partner
             # (high Δr) while being uncorrelated with other tested partners (Δr≈0).
             # Averaging dilutes this authentic signal; max captures the best evidence
             # of post-mitotic G0 co-activation for any single functional partnership.
-            min_len = min(len(x1_vals), len(g0_vals))
-            pair_gains = g0_vals[:min_len] - x1_vals[:min_len]
+            pair_gains = (pair["g0"] - pair["x1"]).to_numpy()
             best_gain = float(np.max(pair_gains))
             gain = max(0.0, best_gain)
-            # Find the corresponding x1/g0 pair for the note
             best_idx = int(np.argmax(pair_gains))
             rec.add_score(
                 EvidenceSource.CORRELATION,
                 min(1.0, gain * 3.0),
-                note=f"best_pair_x1={x1_vals[best_idx]:.2f},"
-                     f"g0={g0_vals[best_idx]:.2f},"
-                     f"delta_r={best_gain:.2f},n_pairs={min_len}",
+                note=f"best_pair_x1={pair['x1'].iloc[best_idx]:.2f},"
+                     f"g0={pair['g0'].iloc[best_idx]:.2f},"
+                     f"delta_r={best_gain:.2f},n_pairs={len(pair)}",
             )
             matched += 1
         print(f"  Correlation match: {matched} candidates")
@@ -872,10 +966,9 @@ class NeuralTFPipeline:
         n_atlases = 5
         for gene_id in self.all_records:
             atlases = self.atlas_membership.get(gene_id, set())
-            n = min(len(atlases), n_atlases)
             self.all_records[gene_id].add_score(
                 EvidenceSource.REPRODUCIBILITY,
-                n / float(n_atlases),
+                len(atlases) / float(n_atlases),
                 note=f"atlases={sorted(atlases)}",
             )
 
@@ -972,7 +1065,6 @@ class NeuralTFPipeline:
             print(f"  {nm:<20} {row['integrated_score']:.3f}  {st}")
 
         # JSON
-        from typing import Dict
         top_50: list[dict[str, Any]] = []
         for rec, tier, score in tiered[:50]:
             top_50.append({
@@ -994,10 +1086,6 @@ class NeuralTFPipeline:
         json_path.write_text(json.dumps(payload, indent=2))
         print(f"JSON:    {json_path}")
         print("Done.")
-
-    # ------------------------------------------------------------------
-    # Main entry
-    # ------------------------------------------------------------------
 
     # ------------------------------------------------------------------
     # Checkpointing helpers
@@ -1082,12 +1170,36 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def _checkpoint_post_scoring(self) -> None:
-        """Checkpoint 03: records seeded from atlas DE after score_atlases()."""
+        """Checkpoint 03: records seeded from atlas DE after score_atlases().
+
+        Also persists per-gene best DE (p, lfc) per atlas for downstream
+        meta-analysis (scripts/stats/meta_analytic_pvalue.py).
+        """
         rows = [{"v6_id": gid, "n_streams_so_far": rec.supporting_streams(),
                  "has_expression": EvidenceSource.EXPRESSION in rec.scores,
                  "has_specificity": EvidenceSource.SPECIFICITY in rec.scores}
                 for gid, rec in self.all_records.items()]
         self._write_checkpoint("checkpoint_03_post_scoring", pd.DataFrame(rows))
+
+        de_rows = []
+        for gene, per_atlas in self.de_pvals.items():
+            if self.bridge is None:
+                v6_id = gene if gene in self.tf_ids else gene + "_1" \
+                    if gene + "_1" in self.tf_ids else ""
+            else:
+                v6_id = self.bridge.v4_to_v6(gene) if gene.startswith("dd_Smed_v4") \
+                    else (gene if gene in self.tf_ids else
+                          (gene + "_1" if gene + "_1" in self.tf_ids else ""))
+            if not v6_id:
+                continue
+            row = {"v6_id": v6_id, "gene_id_atlas": gene}
+            for atlas in ("fincher", "plass", "cui"):
+                if atlas in per_atlas:
+                    row[f"{atlas}_p"] = per_atlas[atlas][0]
+                    row[f"{atlas}_lfc"] = per_atlas[atlas][1]
+            de_rows.append(row)
+        if de_rows:
+            self._write_checkpoint("de_pvalues", pd.DataFrame(de_rows))
 
     def run(self):
         self.load_datasets()
@@ -1107,7 +1219,6 @@ class NeuralTFPipeline:
         self.assign_reproducibility()
         self._checkpoint_stream_matrix()        # checkpoint 06
         self.write_outputs()
-
 
 
 def main():

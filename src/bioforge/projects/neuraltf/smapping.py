@@ -96,6 +96,23 @@ def _get_v6_maps() -> tuple[dict[str, str], dict[str, str]]:
     return v6_to_h1, h1_to_class
 
 
+@lru_cache(maxsize=1)
+def _get_v6_maps_rbh() -> dict[str, str]:
+    """RBH-restricted v6 -> h1SMcG map.
+
+    ~14.4k of 25k v6 IDs are claimed by more than one h1SMcG via the
+    collapsed (`Similar`) column; first-wins picks are arbitrary there.
+    The 1:1 reciprocal-best-hit column is unambiguous, so influence and
+    lineage attribution should use only these rows.
+    """
+    df = _load_moism5()
+    v6_to_h1: dict[str, str] = {}
+    for r in df.itertuples(index=False):
+        if r.v6_rbh and r.v6_rbh not in v6_to_h1:
+            v6_to_h1[r.v6_rbh] = r.h1smcg_id
+    return v6_to_h1
+
+
 def smed_to_v6(smed_id: str) -> list[str]:
     """Map a SMED300* ID to a list of dd_Smed_v6 IDs."""
     df = _load_rosetta()
@@ -138,9 +155,16 @@ def is_perez_tf(v6_id: str) -> bool:
     return bool(cls and cls.lower() not in ("", "nan", "none"))
 
 
-def batch_v6_to_h1smcg(v6_ids: list[str]) -> dict[str, str | None]:
-    """Map a list of dd_Smed_v6 IDs to h1SMcG IDs in O(1) time."""
-    v6_to_h1, _ = _get_v6_maps()
+def batch_v6_to_h1smcg(v6_ids: list[str], *, rbh_only: bool = False) -> dict[str, str | None]:
+    """Map a list of dd_Smed_v6 IDs to h1SMcG IDs in O(1) time.
+
+    Set ``rbh_only=True`` to restrict to unambiguous 1:1 reciprocal best
+    hits (recommended for scoring evidence streams).
+    """
+    if rbh_only:
+        v6_to_h1 = _get_v6_maps_rbh()
+    else:
+        v6_to_h1, _ = _get_v6_maps()
     return {v6: v6_to_h1.get(v6) for v6 in v6_ids}
 
 
