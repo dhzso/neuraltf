@@ -10,12 +10,17 @@ def build():
     uniform_top10 = load_uniform()
     neural = load_neural()
 
-    # Build rank lookup from each top-10 file (within-track ranks 1-5)
+    # Build rank lookup from each top-10 file (within-track ranks 1-5).
+    # Centered/uniform shortlists carry `rank_within_track` (not `rank`),
+    # so fall back to it — otherwise their bars silently render as NaN.
     def rank_lookup(df):
         d = {}
         for _, row in df.iterrows():
             gid = row["gene_id"]
-            d[gid] = row.get("rank", np.nan)
+            v = row.get("rank", np.nan)
+            if pd.isna(v):
+                v = row.get("rank_within_track", np.nan)
+            d[gid] = v
         return d
 
     fixed_r = rank_lookup(fixed_top10)
@@ -47,6 +52,10 @@ def build():
 
     for method, lbl in zip(methods, labels):
         vals = df[method].values
+        n_missing = int(pd.isna(vals).sum())
+        if n_missing == len(vals):
+            print(f"[fig15] WARNING: no ranks resolved for method "
+                  f"'{method}' — bars would be empty")
         bars = ax.barh(y + offsets[method], vals, height=bw*0.9, color=colors[method],
                        alpha=0.85, edgecolor="white", lw=0.3, label=lbl)
         for i, v in enumerate(vals):

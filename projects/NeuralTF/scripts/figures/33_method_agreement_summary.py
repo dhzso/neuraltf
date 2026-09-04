@@ -9,18 +9,30 @@ import json
 from matplotlib.patches import Patch
 
 def build():
-    try:
-        data_path = RES / "overlap_significance.json"
-        with open(data_path) as f:
-            data = json.load(f)
+    data_path = RES / "overlap_significance.json"
+    if not data_path.exists():
+        raise FileNotFoundError(
+            f"{data_path} missing — run scripts/stats/overlap_significance.py first"
+        )
+    with open(data_path) as f:
+        data = json.load(f)
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
-        # Panel A: Upset-style overlap counts
-        overlaps = data.get("overlaps", {})
-        labels = list(overlaps.keys())
-        counts = [overlaps[k]["count"] for k in labels]
-        pvals = [overlaps[k].get("p_value", None) for k in labels]
+    # Panel A: Upset-style overlap counts (dedup keys so centered_vs_uniform
+    # and uniform_vs_centered don't double-render)
+    overlaps = data.get("overlaps", {})
+    seen = set()
+    labels, counts, pvals = [], [], []
+    for k, v in overlaps.items():
+        parts = k.split("_vs_")
+        canonical = tuple(sorted(parts)) if len(parts) == 2 else (k,)
+        if canonical in seen:
+            continue
+        seen.add(canonical)
+        labels.append(k)
+        counts.append(v["count"])
+        pvals.append(v.get("p_value"))
 
         y = np.arange(len(labels))
         colors = [C_A if c > 0 else C_NEURAL for c in counts]
@@ -68,9 +80,6 @@ def build():
 
         fig.tight_layout()
         save(fig, "33_method_agreement_summary")
-    except FileNotFoundError as e:
-        print(f"  [SKIP] {__file__}: {e}")
-        return
 
 if __name__ == "__main__":
     build()

@@ -22,9 +22,13 @@ def build():
         ax.barh(y[i]-0.15, comp, height=0.3, color=tc, alpha=0.85, edgecolor="white", lw=0.3)
         ax.barh(y[i]+0.15, base, height=0.3, color=tc, alpha=0.35, edgecolor="white", lw=0.3)
         ax.text(max(comp, base)+0.005, y[i], nm, fontsize=7, va="center", color=tc, fontweight="bold")
-        # Show bonus
-        bonus = comp - base if pd.notna(comp) and pd.notna(base) else 0
-        ax.text(comp + 0.02, y[i] - 0.15, f"+{bonus:.3f}", fontsize=5, va="center", color="#666")
+        # Show bonus (from the transparent per-component columns; falls
+        # back to comp-base when absent)
+        bonus = row.get("bonus_total", np.nan)
+        if pd.isna(bonus) and pd.notna(comp) and pd.notna(base):
+            bonus = comp - base
+        if pd.notna(bonus) and bonus > 0:
+            ax.text(comp + 0.02, y[i] - 0.15, f"+{bonus:.3f}", fontsize=5, va="center", color="#666")
     ax.set_yticks(y); ax.set_yticklabels(names, fontsize=7)
     ax.set_xlabel("Score (composite = dark, Dirichlet median = light)")
     ax.set_ylabel("Top-10 TF candidate (ranked by composite score)")

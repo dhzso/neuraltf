@@ -125,8 +125,6 @@ def fig_s5_go_heatmap_all99():
     fig.savefig(SUP / "fig_s5_go_heatmap_neural.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print("  wrote fig_s5_go_heatmap_neural.png")
-    plt.close(fig)
-    print("  wrote fig_s5_go_heatmap_neural.png")
 
 
 def fig_s6_top10_go_profiles():

@@ -15,7 +15,12 @@ def build():
         fig, ax = plt.subplots(figsize=(6, 5))
 
         groups = ["neural_tfs", "non_tfs", "random"]
-        labels = ["Neural TFs\n(validated)", "Non-TFs\n(catalog)", "Random\n(permutation)"]
+        # Labels match the WS3 relabel in scripts/stats/negative_controls.py:
+        # "random" holds TF-classified non-RNAi-validated candidates
+        # (NOT permutations), and "non_tfs" are candidates without a
+        # Perez TF class.
+        labels = ["Neural TFs\n(RNAi-validated)", "No TF class\n(Perez)",
+                  "TF-classified,\nnot RNAi-validated"]
         colors = [C_A, C_B, C_NEURAL]
         positions = [1, 2, 3]
 

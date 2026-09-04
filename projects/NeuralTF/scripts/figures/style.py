@@ -72,11 +72,22 @@ def _csv(path):
             "  Downstream    : python scripts/run_downstream.py"
         )
     df = pd.read_csv(p)
-    # Ensure stream columns exist in candidate tables
-    if any(s in df.columns for s in ["expression", "specificity", "rnai"]):
-        for c in STREAM_COLS:
-            if c not in df.columns:
-                df[c] = np.nan
+    # Guard: candidate tables must be one row per gene (an upstream
+    # annotation-join explosion would silently duplicate every point).
+    if "gene_id" in df.columns and not df["gene_id"].is_unique:
+        n = df["gene_id"].nunique()
+        print(f"[style.py] WARNING: {p.name} has {len(df)} rows but only {n} "
+              f"unique gene_id — dropping duplicates (upstream join bug)")
+        df = df.drop_duplicates(subset="gene_id", keep="first")
+    # Only pad stream columns that the CURRENT pipeline actually defines.
+    # (Padding phantom columns renders blank axes and NaN "nan" cells in
+    # figures 04/20/31 when a run predates a stream.)
+    present_any = any(s in df.columns for s in ["expression", "specificity", "rnai"])
+    if present_any:
+        base_streams = [s for s in STREAM_COLS if s in df.columns]
+        if len(base_streams) < 9:
+            print(f"[style.py] NOTE: {p.name} carries only {len(base_streams)} "
+                  f"of 9 streams: {base_streams} (run predates a stream?)")
     return df
 
 
@@ -94,10 +105,6 @@ def load_top10(f="top10_neural_tfs_prioritized.csv"):
 
 def load_centered():
     """Load Dirichlet-centered top-10 (5A + 5B)."""
-    for fname in ("dirichlet_centered_top10.csv", "dirichlet_top10_prioritized.csv"):
-        p = RES / fname
-        if p.exists():
-            return _nid(_csv(p))
     return _nid(_csv(RES / "dirichlet_centered_top10.csv"))
 
 
@@ -108,26 +115,12 @@ def load_uniform():
 
 def load_centered_full():
     """Load Dirichlet-centered full rank (all candidates)."""
-    for fname in ("dirichlet_centered_full_rank.csv", "dirichlet_centered_all249_full_rank.csv"):
-        p = RES / fname
-        if p.exists():
-            return _nid(_csv(p))
     return _nid(_csv(RES / "dirichlet_centered_full_rank.csv"))
 
 
 def load_uniform_full():
     """Load Dirichlet-uniform full rank (all candidates)."""
-    for fname in ("dirichlet_uniform_full_rank.csv", "dirichlet_uniform_all249_full_rank.csv"):
-        p = RES / fname
-        if p.exists():
-            return _nid(_csv(p))
     return _nid(_csv(RES / "dirichlet_uniform_full_rank.csv"))
-
-
-load_centered99 = load_centered_full
-load_centered249 = load_centered_full
-load_unif99 = load_uniform_full
-load_unif249 = load_uniform_full
 
 
 def load_sens_draws():

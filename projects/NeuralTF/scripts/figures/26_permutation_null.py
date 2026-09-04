@@ -18,7 +18,6 @@ def build():
 
         df = pd.read_csv(p_path)
         real_scores = df["real_integrated_score"].dropna().values if "real_integrated_score" in df.columns else df.get("real_score", pd.Series()).dropna().values
-
         # Load or generate empirical null distribution
         all_cand = load_all()
         stream_cols = [s for s in STREAM_COLS if s in all_cand.columns]
@@ -44,10 +43,12 @@ def build():
                 label="Null distribution (shuffled streams)")
 
         if len(real_scores) > 0:
-            top_real = real_scores[:10]
+            # Top-10 BY SCORE (not by p-value ordering — the old head(10)
+            # on a p-sorted file marked low-scoring genes)
+            top_real = np.sort(real_scores)[-10:]
             for rs in top_real:
                 ax.axvline(x=rs, color=C_HL, lw=1.2, linestyle="--", alpha=0.8)
-            ax.axvline(x=top_real[0], color=C_HL, lw=1.5, linestyle="--",
+            ax.axvline(x=top_real[-1], color=C_HL, lw=1.5, linestyle="--",
                        label="Top-10 observed candidates")
 
         p_empirical = df["empirical_p"].min() if "empirical_p" in df.columns else (df["empirical_p_shuffled"].min() if "empirical_p_shuffled" in df.columns else 0.001)

@@ -5,7 +5,7 @@ Runs all scoring, Dirichlet, ANANSE, supplementary table, and figure
 generation steps in dependency order after the main pipeline completes.
 
 Usage:
-    .venv\Scripts\python.exe scripts\run_downstream.py [--force]
+    python scripts/run_downstream.py [--force]
 """
 from __future__ import annotations
 
@@ -25,12 +25,12 @@ def run(script_parts: list, label: str, force: bool = False, outputs: list[Path]
     """Run a script; skip if all outputs already exist (unless --force)."""
     if not force and outputs:
         if all(p.exists() and p.stat().st_size > 0 for p in outputs):
-            print(f"  [SKIP] {label} — all outputs present")
+            print(f"  [SKIP] {label} â€” all outputs present")
             return True
 
     script = ROOT.joinpath(*script_parts)
     if not script.exists():
-        print(f"  [WARN] {label} — script not found: {script}")
+        print(f"  [WARN] {label} â€” script not found: {script}")
         return False
 
     print(f"\n>>> {label}")
@@ -73,12 +73,12 @@ def main():
         n_perez = rank["perez_lineage"].notna().sum()
         print(f"[INFO] perez_lineage column present: {n_perez} non-null values")
     else:
-        print("[WARN] perez_lineage column MISSING from rank.csv — pipeline may not have included Perez stream")
+        print("[WARN] perez_lineage column MISSING from rank.csv â€” pipeline may not have included Perez stream")
     if "perez_influence" in rank.columns:
         n_infl = rank["perez_influence"].notna().sum()
         print(f"[INFO] perez_influence column present: {n_infl} non-null values")
     else:
-        print("[WARN] perez_influence column MISSING from rank.csv — pipeline may not have included Perez influence")
+        print("[WARN] perez_influence column MISSING from rank.csv â€” pipeline may not have included Perez influence")
 
     errors = []
 
@@ -93,12 +93,14 @@ def main():
         ("Dirichlet Centered",
          ["projects", "NeuralTF", "scripts", "dirichlet_centered.py"],
          [RES / "dirichlet_centered_full_rank.csv",
-          RES / "dirichlet_centered_top10.csv"]),
+          RES / "dirichlet_centered_top10.csv",
+          RES / "dirichlet_centered_draw_scores.csv"]),
 
         ("Dirichlet Uniform",
          ["projects", "NeuralTF", "scripts", "dirichlet_uniform.py"],
          [RES / "dirichlet_uniform_full_rank.csv",
-          RES / "dirichlet_uniform_top10.csv"]),
+          RES / "dirichlet_uniform_top10.csv",
+          RES / "dirichlet_uniform_draw_scores.csv"]),
 
         # Step 2: TF catalog exports and regulatory networks
         ("Export ranked FSTF",
@@ -117,10 +119,22 @@ def main():
           RES / "calibration_stats.json",
           RES / "loo_atlas_stability.csv"]),
 
-        # Step 4: Negative control benchmarks
-        ("Negative control benchmarks",
-         ["projects", "NeuralTF", "scripts", "negative_controls.py"],
+        # Step 4: Negative control benchmarks (curated-FSTF benchmark)
+        ("Negative control benchmarks (FSTF)",
+         ["projects", "NeuralTF", "scripts", "negative_controls_fstf.py"],
          [RES / "negative_control_benchmarks.csv"]),
+
+        # Step 4b: Weight sensitivity (figures 06/07 inputs)
+        ("Weight sensitivity analysis",
+         ["scripts", "run_weight_sensitivity.py"],
+         [FIG / "weight_sensitivity_draws.csv",
+          FIG / "weight_sensitivity_top10_challengers.csv"]),
+
+        # Step 4c: Supplementary GO figures (fig_s1-s7)
+        ("Supplementary GO figures",
+         ["projects", "NeuralTF", "scripts", "make_supp_go_figures.py"],
+         [FIG / "supplementary" / "fig_s1_go_gene_term_map.png",
+          FIG / "supplementary" / "go_term_reference.csv"]),
 
         # Step 5: Supplementary tables
         ("Supplementary tables",
