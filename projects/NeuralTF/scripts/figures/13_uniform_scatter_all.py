@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt, numpy as np, pandas as pd
 from scipy.stats import spearmanr
 
 def build():
-    unif249 = load_unif249()
+    unif249 = load_uniform_full()
     all249 = load_all()
     merged = all249[["gene_id","integrated_score","proof_status"]].merge(
         unif249[["gene_id","uniform_median_score"]], on="gene_id", how="inner")

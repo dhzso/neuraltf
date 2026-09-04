@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt, numpy as np
 from scipy.stats import spearmanr
 
 def build():
-    centered = load_centered99()
-    uniform = load_unif99()
+    centered = load_centered_full()
+    uniform = load_uniform_full()
     neural = load_neural()
 
     merged = centered[["gene_id","dirichlet_median_score","proof_status"]].merge(

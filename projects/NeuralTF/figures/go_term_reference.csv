@@ -106,15 +106,15 @@ GO:0006355,regulation of DNA-templated transcription,biological_process,no,no,,6
 GO:0003677,DNA binding,molecular_function,no,yes,go_tf +0.02,60,yes,yes,yes,yes,no,no
 GO:0043565,sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,50,yes,yes,yes,yes,no,no
 GO:0006351,DNA-templated transcription,biological_process,no,no,,46,yes,yes,yes,yes,no,no
-GO:0045944,positive regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,32,yes,yes,yes,yes,no,no
+GO:0045944,positive regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,32,no,yes,yes,yes,no,no
 GO:0005515,protein binding,molecular_function,no,no,,30,yes,yes,yes,yes,no,no
 GO:0007275,multicellular organism development,biological_process,no,no,,29,yes,yes,yes,yes,no,no
-GO:0045893,positive regulation of DNA-templated transcription,biological_process,no,no,,23,yes,yes,no,yes,no,no
+GO:0045893,positive regulation of DNA-templated transcription,biological_process,no,no,,23,no,yes,no,yes,no,no
 GO:0000122,negative regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,21,yes,yes,no,yes,no,no
 GO:0006357,regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,20,no,yes,no,yes,no,no
 GO:0005622,intracellular anatomical structure,cellular_component,no,no,,17,no,no,no,yes,no,no
 GO:0005667,transcription regulator complex,cellular_component,no,no,,17,no,no,no,yes,no,no
-GO:0008270,zinc ion binding,molecular_function,no,no,,16,no,no,no,yes,no,no
+GO:0008270,zinc ion binding,molecular_function,no,no,,16,yes,no,no,yes,no,no
 GO:0005737,cytoplasm,cellular_component,no,no,,15,no,no,no,no,no,no
 GO:0044212,transcription cis-regulatory region binding,molecular_function,no,no,,13,no,no,no,no,no,no
 GO:0045892,negative regulation of DNA-templated transcription,biological_process,no,no,,13,no,no,no,no,no,no
@@ -139,7 +139,7 @@ GO:0008285,negative regulation of cell population proliferation,biological_proce
 GO:0031016,pancreas development,biological_process,no,no,,7,no,no,no,no,no,no
 GO:0005829,cytosol,cellular_component,no,no,,6,no,no,no,no,no,no
 GO:0007498,mesoderm development,biological_process,no,no,,6,no,no,no,no,no,no
-GO:0008283,cell population proliferation,biological_process,no,no,,6,no,no,no,no,no,no
+GO:0008283,cell population proliferation,biological_process,no,no,,6,yes,no,no,no,no,no
 GO:0009953,dorsal/ventral pattern formation,biological_process,no,no,,6,no,no,no,no,no,no
 GO:0060042,retina morphogenesis in camera-type eye,biological_process,no,no,,6,no,no,no,no,no,no
 GO:0000976,transcription cis-regulatory region binding,molecular_function,no,no,,5,no,no,no,no,no,no

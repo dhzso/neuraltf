@@ -188,7 +188,7 @@ class NeuralTFPipeline:
                         | {tid[:-2] for tid in self.tf_ids if tid.endswith("_1")}
                     )
                     print(
-                        f"  Expanded TF seed: {n_before} (King) → {len(self.tf_ids)} IDs "
+                        f"  Expanded TF seed: {n_before} (King) -> {len(self.tf_ids)} IDs "
                         f"(+{len(self.tf_ids) - n_before} from Perez MOESM5 / master catalog)"
                     )
             except Exception as e:
@@ -1199,7 +1199,18 @@ class NeuralTFPipeline:
                     row[f"{atlas}_lfc"] = per_atlas[atlas][1]
             de_rows.append(row)
         if de_rows:
-            self._write_checkpoint("de_pvalues", pd.DataFrame(de_rows))
+            # Aggregate to ONE row per v6_id: different atlases refer to
+            # the same v6 gene via different local IDs (v4 vs v6 vs
+            # suffix variants), so a naive concat leaves one row per
+            # (gene, atlas) and a keep-first dedup would silently drop
+            # two of the three atlases' p-values.
+            df = pd.DataFrame(de_rows)
+            agg = {"gene_id_atlas": "first"}
+            for atlas in ("fincher", "plass", "cui"):
+                agg[f"{atlas}_p"] = "min"    # best (smallest) p per atlas
+                agg[f"{atlas}_lfc"] = "first"
+            df = df.groupby("v6_id", as_index=False).agg(agg)
+            self._write_checkpoint("de_pvalues", df)
 
     def run(self):
         self.load_datasets()
