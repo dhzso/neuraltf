@@ -32,15 +32,15 @@ def bonferroni_correction(pvalues, alpha=0.05):
 
 
 def benjamini_hochberg(pvalues, alpha=0.05):
-    """Benjamini-Hochberg FDR correction."""
-    p = np.array(pvalues)
+    """Benjamini-Hochberg FDR correction (step-up, monotone enforced)."""
+    p = np.asarray(pvalues, dtype=float)
     n = len(p)
     order = np.argsort(p)
+    ranked = p[order] * n / np.arange(1, n + 1)
+    # enforce monotonicity from the largest p downwards
+    ranked = np.minimum.accumulate(ranked[::-1])[::-1]
     adjusted = np.zeros(n)
-    adjusted[order] = p * n / np.arange(1, n + 1)
-
-    adjusted[order] = np.minimum.accumulate(adjusted[order][::-1])[::-1]
-    adjusted = np.minimum(adjusted, 1.0)
+    adjusted[order] = np.minimum(ranked, 1.0)
     return adjusted
 
 
@@ -57,26 +57,29 @@ def load_method_top10():
 
     centered_path = RESULTS_DIR / "dirichlet_centered_full_rank.csv"
     if centered_path.exists():
-        df = pd.read_csv(centered_path)
+        df = pd.read_csv(centered_path).drop_duplicates(subset="gene_id", keep="first")
         gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
-        score_col = "dirichlet_median_score" if "dirichlet_median_score" in df.columns else "integrated_score"
+        score_col = "composite_score" if "composite_score" in df.columns \
+            else "dirichlet_median_score"
         methods["centered"] = set(df.sort_values(score_col, ascending=False)[gene_col].head(10).values)
 
     uniform_path = RESULTS_DIR / "dirichlet_uniform_full_rank.csv"
     if uniform_path.exists():
-        df = pd.read_csv(uniform_path)
+        df = pd.read_csv(uniform_path).drop_duplicates(subset="gene_id", keep="first")
         gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
-        score_col = "uniform_median_score" if "uniform_median_score" in df.columns else "integrated_score"
+        score_col = "composite_score" if "composite_score" in df.columns \
+            else "uniform_median_score"
         methods["uniform"] = set(df.sort_values(score_col, ascending=False)[gene_col].head(10).values)
 
     fixed_path = RUN_DIR / "rank.csv"
-    if not fixed_path.exists():
-        fixed_path = RESULTS_DIR / "supplementary_table_S2_fixed_all249.csv"
     if fixed_path.exists():
         df = pd.read_csv(fixed_path)
         gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
-        score_col = "integrated_score" if "integrated_score" in df.columns else df.columns[-1]
-        methods["fixed"] = set(df.sort_values(score_col, ascending=False)[gene_col].head(10).values)
+        score_col = "composite_score" if "composite_score" in df.columns \
+            else "integrated_score"
+        methods["fixed"] = set(
+            df.sort_values(score_col, ascending=False)[gene_col].head(10).values
+        )
 
     return methods
 

@@ -49,18 +49,11 @@ def cohens_d(x, y):
 def main():
     print("=== Effect Size Analysis ===")
 
-    for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
-        p = RESULTS_DIR / fname
-        if p.exists():
-            df = pd.read_csv(p)
-            break
-    else:
-        p = RUN_DIR / "rank.csv"
-        if p.exists():
-            df = pd.read_csv(p)
-        else:
-            print("Error: no candidate score file found")
-            return 1
+    p = RUN_DIR / "rank.csv"
+    if not p.exists():
+        print("Error: run the pipeline first (rank.csv missing)")
+        return 1
+    df = pd.read_csv(p).drop_duplicates(subset="gene_id", keep="first")
 
     score_col = None
     for c in ["integrated_score", "composite_score", "dirichlet_median_score", "fixed_weight_score"]:

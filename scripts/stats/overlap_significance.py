@@ -41,15 +41,6 @@ def hypergeometric_test(k, n, K, N):
     return p
 
 
-def fishers_exact(k, n, overlap_total):
-    """2x2 Fisher's exact test for overlap."""
-    table = [[k, n - k], [overlap_total - k, (n - n) - (overlap_total - k) + n - k]]
-    table = np.array([[k, n - k], [overlap_total - k, (n * 2 - k) - (n - k)]])
-    table = np.array([[k, n - k], [overlap_total - k, (n - k)]])
-    oddsratio, pval = stats.fisher_exact([[k, n - k], [overlap_total - k, 50]])
-    return oddsratio, pval
-
-
 def _binom_p(k, n, p):
     """Compute binomial test p-value compatible with SciPy <1.12 and >=1.12."""
     if hasattr(stats, "binomtest"):
@@ -63,16 +54,15 @@ def main():
     centered_path = RESULTS_DIR / "dirichlet_centered_full_rank.csv"
     uniform_path = RESULTS_DIR / "dirichlet_uniform_full_rank.csv"
     fixed_path = RUN_DIR / "rank.csv"
-    if not fixed_path.exists():
-        fixed_path = RESULTS_DIR / "supplementary_table_S2_fixed_all249.csv"
 
     methods = {}
     total_centered = total_uniform = total_fixed = 0
 
     if centered_path.exists():
-        df_c = pd.read_csv(centered_path)
+        df_c = pd.read_csv(centered_path).drop_duplicates(subset="gene_id", keep="first")
         gene_col = "gene_id" if "gene_id" in df_c.columns else "gene_id_v6"
-        score_col = "dirichlet_median_score" if "dirichlet_median_score" in df_c.columns else "integrated_score"
+        score_col = "composite_score" if "composite_score" in df_c.columns \
+            else "dirichlet_median_score"
         methods["centered"] = set(df_c.sort_values(score_col, ascending=False)[gene_col].head(10).values)
         total_centered = len(df_c)
     else:
@@ -80,9 +70,10 @@ def main():
         methods["centered"] = set()
 
     if uniform_path.exists():
-        df_u = pd.read_csv(uniform_path)
+        df_u = pd.read_csv(uniform_path).drop_duplicates(subset="gene_id", keep="first")
         gene_col = "gene_id" if "gene_id" in df_u.columns else "gene_id_v6"
-        score_col = "uniform_median_score" if "uniform_median_score" in df_u.columns else "integrated_score"
+        score_col = "composite_score" if "composite_score" in df_u.columns \
+            else "uniform_median_score"
         methods["uniform"] = set(df_u.sort_values(score_col, ascending=False)[gene_col].head(10).values)
         total_uniform = len(df_u)
     else:
@@ -90,16 +81,19 @@ def main():
         methods["uniform"] = set()
 
     if fixed_path.exists():
-        df_f = pd.read_csv(fixed_path)
+        df_f = pd.read_csv(fixed_path).drop_duplicates(subset="gene_id", keep="first")
         gene_col = "gene_id" if "gene_id" in df_f.columns else "gene_id_v6"
-        score_col = "integrated_score" if "integrated_score" in df_f.columns else df_f.columns[-1]
+        score_col = "composite_score" if "composite_score" in df_f.columns \
+            else "integrated_score"
         methods["fixed"] = set(df_f.sort_values(score_col, ascending=False)[gene_col].head(10).values)
         total_fixed = len(df_f)
     else:
         print(f"Warning: {fixed_path} not found")
         methods["fixed"] = set()
 
-    N = max(total_centered, total_uniform, total_fixed, 249)
+    # Population size: the SHARED candidate universe — one row per gene in
+    # rank.csv (never the row-exploded Dirichlet CSVs).
+    N = total_fixed if total_fixed else max(total_centered, total_uniform)
     n = 10
 
     results = {"pairwise": {}, "three_way": {}, "binomial": {}, "overlaps": {}}

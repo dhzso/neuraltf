@@ -1,199 +1,151 @@
 #!/usr/bin/env python
-"""Power analysis and convergence diagnostics.
+"""Power analysis and convergence diagnostics (REAL draw matrices).
 
-Analyzes convergence of Dirichlet weight draws and statistical power
-of the permutation test framework.
+Panel 1 — Convergence: how many Dirichlet draws are needed before the
+rank list stabilizes? Computed from the pipeline's actual persisted draw
+matrices (results/dirichlet_centered_draw_scores.csv): for prefix sizes
+10..1000, Spearman-correlate the prefix-median ranking against the
+full-1000-draw ranking (20 bootstrap repetitions of prefix choice).
+
+Panel 2 — Power: Monte-Carlo estimate of the permutation test's power as
+a function of n_perm, using the real observed score distribution and the
+same (count+1)/(n+1) p-value estimator the permutation test uses.
+
+Writes the inputs consumed by figure 29:
+  results/convergence_draws.csv
+  results/permutation_power.csv
+(and no standalone figure — the numbered publication script renders it).
 
 Usage:
-    python scripts/stats/power_analysis.py --n-draws 500 --n-perm-test 200 --seed 42
+    python scripts/stats/power_analysis.py [--n-perm-test 200] [--seed 42]
 """
 
 import argparse
 import sys
 from pathlib import Path
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 REPO = Path(__file__).resolve().parents[2]
 RUN_DIR = REPO / "projects" / "NeuralTF" / "runs" / "pipeline_run"
 RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
-FIG_DIR = REPO / "projects" / "NeuralTF" / "figures"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-FIG_DIR.mkdir(parents=True, exist_ok=True)
 
-STREAMS = [
-    "expression", "specificity", "reproducibility", "rnai",
-    "correlation", "neural_enriched", "neural_specificity",
-    "perez_lineage",
-]
+DRAW_PATH = RESULTS_DIR / "dirichlet_centered_draw_scores.csv"
 
 
-def integrated_score(S, W):
-    """Compute integrated score with missing-data renormalization."""
-    mask = ~np.isnan(S)
-    if not mask.any():
-        return 0.0
-    S_filled = np.where(np.isnan(S), 0.0, S)
-    w_masked = W[mask]
-    return np.sum(S_filled[mask] * w_masked) / w_masked.sum()
+def load_draw_matrix() -> tuple[np.ndarray, np.ndarray] | None:
+    if not DRAW_PATH.exists():
+        return None
+    draws = pd.read_csv(DRAW_PATH).drop_duplicates(subset="gene_id", keep="first")
+    gene_col = "gene_id" if "gene_id" in draws.columns else draws.columns[0]
+    draw_cols = [c for c in draws.columns if c.startswith("draw_")]
+    if len(draw_cols) < 50:
+        return None
+    return draws[gene_col].astype(str).to_numpy(), \
+        draws[draw_cols].to_numpy(dtype=float)
 
 
-def simulate_scores(n_candidates=249, n_streams=8, rng=None):
-    """Simulate evidence stream scores for power analysis."""
-    if rng is None:
-        rng = np.random.default_rng(42)
-
-    scores = rng.uniform(0, 1, size=(n_candidates, n_streams))
-
-    n_true = 20
-    for i in range(n_true):
-        scores[i, :] = rng.uniform(0.5, 1.0, size=n_streams)
-
-    missing_rate = 0.15
-    missing_mask = rng.random(size=scores.shape) < missing_rate
-    scores[missing_mask] = np.nan
-
-    return scores, n_true
-
-
-def compute_all_integrated_scores(scores: np.ndarray, weights: np.ndarray) -> np.ndarray:
-    """Vectorized calculation of integrated scores across all rows."""
-    scores_filled = np.nan_to_num(scores, nan=0.0)
-    valid_mask = ~np.isnan(scores)
-    w_denom = np.dot(valid_mask, weights)
-    w_denom = np.where(w_denom > 0, w_denom, 1.0)
-    return np.dot(scores_filled, weights) / w_denom
-
-
-def convergence_analysis(scores, weights, n_draws_list, rng):
-    """Analyze convergence of integrated scores as function of Dirichlet draws."""
+def convergence_from_draws(mat: np.ndarray, sizes, rng, n_rep=20):
+    """Spearman stability of prefix-median rankings vs the full-draw ranking."""
+    full_order = np.argsort(-np.median(mat, axis=1))
     results = {}
-    base_scores = compute_all_integrated_scores(scores, weights)
-    base_ranks = np.argsort(-base_scores)
-
-    for n_draws in n_draws_list:
-        rank_stabilities = []
-        score_stabilities = []
-
-        for _ in range(20):
-            draw_weights = rng.dirichlet(np.ones(len(weights)), size=n_draws)
-            mean_weights = draw_weights.mean(axis=0)
-            mean_weights = mean_weights / mean_weights.sum()
-
-            rep_scores = compute_all_integrated_scores(scores, mean_weights)
-            rep_ranks = np.argsort(-rep_scores)
-
-            corr_r = np.corrcoef(base_ranks, rep_ranks)[0, 1]
-            corr_s = np.corrcoef(base_scores, rep_scores)[0, 1]
-            rank_stabilities.append(0.0 if np.isnan(corr_r) else corr_r)
-            score_stabilities.append(0.0 if np.isnan(corr_s) else corr_s)
-
-        results[n_draws] = {
-            "rank_stability_mean": float(np.mean(rank_stabilities)),
-            "rank_stability_std": float(np.std(rank_stabilities)),
-            "score_stability_mean": float(np.mean(score_stabilities)),
-            "score_stability_std": float(np.std(score_stabilities)),
+    for size in sizes:
+        if size > mat.shape[1]:
+            continue
+        rhos = []
+        for _ in range(n_rep):
+            take = rng.choice(mat.shape[1], size=size, replace=False)
+            prefix_order = np.argsort(-np.median(mat[:, take], axis=1))
+            rho = stats.spearmanr(full_order, prefix_order).statistic
+            rhos.append(0.0 if np.isnan(rho) else float(rho))
+        results[size] = {
+            "n_draws": size,
+            "spearman_vs_full": float(np.mean(rhos)),
+            "spearman_std": float(np.std(rhos)),
+            "n_rep": n_rep,
         }
-
     return results
 
 
-def power_permutation_test(scores, weights, n_true, n_perms_list, rng):
-    """Estimate power of permutation test for different numbers of permutations."""
-    true_integrated = compute_all_integrated_scores(scores, weights)
-    target_score = true_integrated[0]
+def power_vs_nperm(rank: pd.DataFrame, score_col: str, perms_list, rng,
+                   n_rep=30):
+    """MC power of the permutation test at different n_perm.
 
-    power_results = {}
-    for n_perms in n_perms_list:
-        sig_count = 0
-        for _ in range(30):
-            null_maxes = []
-            for _ in range(n_perms):
-                perm_idx = rng.permutation(scores.shape[0])
-                perm_scores = compute_all_integrated_scores(scores[perm_idx], weights)
-                null_maxes.append(np.max(perm_scores))
-            null_dist = np.array(null_maxes)
-            p_empirical = (np.sum(null_dist >= target_score) + 1) / (n_perms + 1)
-            if p_empirical < 0.05:
-                sig_count += 1
-
-        power_results[n_perms] = {
-            "estimated_power": float(sig_count / 30),
-            "n_perms": int(n_perms),
-        }
-
-    return power_results
+    Null: score labels randomly permuted across genes (assignment null);
+    p = (count+1)/(n+1) exactly as in permutation_test_full.py. Power is
+    the fraction of repetitions in which the top-scoring gene reaches
+    p < 0.05 — i.e., the test's ability to flag a genuine top candidate.
+    """
+    scores = pd.to_numeric(rank[score_col], errors="coerce").dropna().to_numpy()
+    results = {}
+    for n_perm in perms_list:
+        hits = 0
+        for _ in range(n_rep):
+            nulls = rng.permutation(scores)[:n_perm]
+            # one-sided: how often a random assignment reaches the top score
+            p_emp = (np.sum(nulls >= scores.max()) + 1) / (n_perm + 1)
+            if p_emp < 0.05:
+                hits += 1
+        results[n_perm] = {"n_perm": n_perm, "power": hits / n_rep}
+    return results
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Power analysis and convergence diagnostics")
-    parser.add_argument("--n-draws", type=int, default=500, help="Max Dirichlet draws to test")
-    parser.add_argument("--n-perm-test", type=int, default=200, help="Max permutations for power test")
-    parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser = argparse.ArgumentParser(
+        description="Power analysis + convergence diagnostics on real draws"
+    )
+    parser.add_argument("--n-perm-test", type=int, default=200)
+    parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
-    print("=== Power Analysis & Convergence Diagnostics ===")
-
+    print("=== Power Analysis & Convergence Diagnostics (real data) ===")
     rng = np.random.default_rng(args.seed)
-    scores, n_true = simulate_scores(rng=rng)
-    weights = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2])
-    weights = weights / weights.sum()
 
-    print(f"Simulated data: {scores.shape[0]} candidates, {scores.shape[1]} streams")
-    print(f"True signals: {n_true}")
+    loaded = load_draw_matrix()
+    if loaded is None:
+        print(
+            f"ERROR: {DRAW_PATH} missing or too small.\n"
+            "Run projects/NeuralTF/scripts/dirichlet_centered.py first — "
+            "it persists the per-candidate draw-score matrix this analysis "
+            "consumes. (The previous version plotted simulated data.)"
+        )
+        return 1
+    genes, mat = loaded
+    print(f"Draw matrix: {mat.shape[0]} candidates x {mat.shape[1]} draws")
 
-    print("\n--- Convergence Analysis ---")
-    draws_list = [10, 25, 50, 100, 200, 500]
-    draws_list = [d for d in draws_list if d <= args.n_draws]
-    conv_results = convergence_analysis(scores, weights, draws_list, rng)
+    # --- Panel 1: convergence from the real draws -------------------------
+    sizes = [10, 25, 50, 100, 250, 500, mat.shape[1]]
+    conv = convergence_from_draws(mat, sizes, rng)
+    conv_df = pd.DataFrame([conv[s] for s in sorted(conv)])
+    conv_path = RESULTS_DIR / "convergence_draws.csv"
+    conv_df.to_csv(conv_path, index=False)
+    print(f"\nConvergence (Spearman of prefix ranking vs full {mat.shape[1]} draws):")
+    for _, r in conv_df.iterrows():
+        print(f"  draws={r['n_draws']:>4}: rho={r['spearman_vs_full']:.4f} "
+              f"± {r['spearman_std']:.4f}")
+    print(f"Saved: {conv_path}")
 
-    for n_draws, res in conv_results.items():
-        print(f"  Draws={n_draws:>4d}: rank_stability={res['rank_stability_mean']:.4f} "
-              f"± {res['rank_stability_std']:.4f}, "
-              f"score_stability={res['score_stability_mean']:.4f}")
-
-    print("\n--- Permutation Test Power ---")
+    # --- Panel 2: permutation power on the real score vector ---------------
+    rank_path = RUN_DIR / "rank.csv"
+    if not rank_path.exists():
+        print(f"\n[skip power panel] {rank_path} missing (run the pipeline first)")
+        return 0
+    rank = pd.read_csv(rank_path).drop_duplicates(subset="gene_id", keep="first")
+    score_col = "integrated_score" if "integrated_score" in rank.columns \
+        else rank.columns[-1]
     perms_list = [50, 100, 200]
     perms_list = [p for p in perms_list if p <= args.n_perm_test]
-    power_results = power_permutation_test(scores, weights, n_true, perms_list, rng)
-
-    for n_perms, res in power_results.items():
-        print(f"  Perms={n_perms:>4d}: estimated_power={res['estimated_power']:.2f}")
-
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-
-    ax = axes[0]
-    draws_vals = sorted(conv_results.keys())
-    rank_means = [conv_results[d]["rank_stability_mean"] for d in draws_vals]
-    rank_stds = [conv_results[d]["rank_stability_std"] for d in draws_vals]
-    ax.errorbar(draws_vals, rank_means, yerr=rank_stds, marker="o", linewidth=2, capsize=4)
-    ax.set_xlabel("Number of Dirichlet Draws")
-    ax.set_ylabel("Spearman Rank Stability")
-    ax.set_title("Convergence of Dirichlet Weight Averaging")
-    ax.grid(True, alpha=0.3)
-    ax.set_ylim([0.8, 1.02])
-
-    ax = axes[1]
-    perms_vals = sorted(power_results.keys())
-    power_vals = [power_results[p]["estimated_power"] for p in perms_vals]
-    ax.plot(perms_vals, power_vals, "ro-", linewidth=2, markersize=8)
-    ax.set_xlabel("Number of Permutations")
-    ax.set_ylabel("Estimated Power")
-    ax.set_title("Permutation Test Power vs. Permutations")
-    ax.grid(True, alpha=0.3)
-    ax.set_ylim([0, 1.1])
-    ax.axhline(y=0.8, color="gray", linestyle="--", alpha=0.5, label="80% power")
-    ax.legend()
-
-    plt.tight_layout()
-    fig_path = FIG_DIR / "convergence_analysis.png"
-    fig.savefig(fig_path, dpi=200)
-    plt.close(fig)
-    print(f"\nSaved: {fig_path}")
+    power = power_vs_nperm(rank, score_col, perms_list, rng)
+    power_df = pd.DataFrame([power[p] for p in sorted(power)])
+    power_path = RESULTS_DIR / "permutation_power.csv"
+    power_df.to_csv(power_path, index=False)
+    print(f"\nPermutation power (top candidate reaches p<0.05):")
+    for _, r in power_df.iterrows():
+        print(f"  n_perm={r['n_perm']:>4}: power={r['power']:.2f}")
+    print(f"Saved: {power_path}")
 
     return 0
 

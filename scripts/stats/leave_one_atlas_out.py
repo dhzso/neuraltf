@@ -12,9 +12,6 @@ import argparse
 import sys
 from pathlib import Path
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -48,16 +45,10 @@ def main():
 
     p = RUN_DIR / "rank.csv"
     if not p.exists():
-        for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
-            cand = RESULTS_DIR / fname
-            if cand.exists():
-                p = cand
-                break
-    if not p.exists():
-        print("Error: no candidate score file found")
+        print("Error: run the pipeline first (rank.csv missing)")
         return 1
 
-    df = pd.read_csv(p)
+    df = pd.read_csv(p).drop_duplicates(subset="gene_id", keep="first")
 
     gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
     name_col = "gene_name" if "gene_name" in df.columns else gene_col
@@ -139,38 +130,6 @@ def main():
     print(f"\nMean overlap: {avg_overlap:.1f}/10")
     print(f"Mean Jaccard: {avg_jaccard:.3f}")
     print(f"Mean Spearman rho: {avg_rho:.4f}")
-
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    excluded = [r["excluded_atlas"] for r in results]
-
-    ax = axes[0]
-    overlaps = [r["top10_overlap"] for r in results]
-    ax.barh(excluded, overlaps, color="#4C72B0", edgecolor="black", linewidth=0.5)
-    ax.set_xlabel("Top-10 Overlap with Baseline")
-    ax.set_title("Stability: Top-10 Overlap")
-    ax.set_xlim([0, 10])
-    ax.axvline(x=avg_overlap, color="red", linestyle="--", label=f"Mean={avg_overlap:.1f}")
-    ax.legend()
-
-    ax = axes[1]
-    jaccards = [r["top10_jaccard"] for r in results]
-    ax.barh(excluded, jaccards, color="#55A868", edgecolor="black", linewidth=0.5)
-    ax.set_xlabel("Jaccard Index")
-    ax.set_title("Stability: Jaccard Similarity")
-    ax.set_xlim([0, 1])
-
-    ax = axes[2]
-    rhos = [r["spearman_correlation"] for r in results]
-    ax.barh(excluded, rhos, color="#C44E52", edgecolor="black", linewidth=0.5)
-    ax.set_xlabel("Spearman rho")
-    ax.set_title("Stability: Rank Correlation")
-    ax.set_xlim([0.5, 1.0])
-
-    plt.tight_layout()
-    fig_path = FIG_DIR / "loo_atlas_stability.png"
-    fig.savefig(fig_path, dpi=200)
-    plt.close(fig)
-    print(f"Saved: {fig_path}")
 
     return 0
 

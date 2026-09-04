@@ -26,25 +26,29 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def rank_biserial_correlation(u_stat, n1, n2):
-    """Compute rank-biserial correlation from Mann-Whitney U statistic."""
-    return 1.0 - (2.0 * u_stat) / (n1 * n2)
+    """Rank-biserial correlation from Mann-Whitney U.
+
+    U counts pairs where a group-1 value EXCEEDS a group-2 value (plus
+    half the ties). The conventional effect size favoring group 1 is
+    r = 2U/(n1*n2) - 1, giving +1 for perfect separation (group 1 all
+    higher) and -1 for the reverse. The previous 1 - 2U/(n1*n2) form
+    stored -1.0 for a perfect top-10 separation, contradicting the
+    independently computed Cliff's delta in the same JSON.
+    """
+    return (2.0 * u_stat) / (n1 * n2) - 1.0
 
 
 def main():
     print("=== Mann-Whitney U Test: Top-10 vs Rest ===")
 
-    for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
-        p = RESULTS_DIR / fname
+    for fname in ["rank.csv"]:
+        p = RUN_DIR / fname
         if p.exists():
-            df = pd.read_csv(p)
+            df = pd.read_csv(p).drop_duplicates(subset="gene_id", keep="first")
             break
     else:
-        p = RUN_DIR / "rank.csv"
-        if p.exists():
-            df = pd.read_csv(p)
-        else:
-            print("Error: no candidate score file found")
-            return 1
+        print("Error: no candidate score file found")
+        return 1
 
     score_col = None
     for c in ["integrated_score", "composite_score", "dirichlet_median_score", "fixed_weight_score"]:

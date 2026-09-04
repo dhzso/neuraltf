@@ -1,8 +1,17 @@
 #!/usr/bin/env python
 """Negative control analysis for scoring specificity.
 
-Scores 100 random non-TF genes and 100 random non-neural TFs as negative
-controls. Compares their score distributions to neural TF candidates.
+Groups (WS3 relabel — old labels were misleading):
+  - "neural":    RNAi-validated (proof_status) — known neural TFs.
+  - "non_tf":    candidates with no Perez TF-class evidence
+                 (perez_lineage == 0/NaN) — lowest-confidence controls.
+  - "non_neural_tf": TF-classified candidates WITHOUT the RNAi-validated
+                 label — the strictest like-for-like control.
+
+Note on circularity: `neural_enriched` is a scoring stream, so the
+previous "neural" definition (validated OR neural_enriched>0) mixed the
+outcome into the grouping; the RNAi-validated label alone is the honest
+ground truth here.
 
 Usage:
     python scripts/stats/negative_controls.py --n-controls 100 --seed 42
@@ -13,9 +22,6 @@ import json
 import sys
 from pathlib import Path
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -23,38 +29,15 @@ from scipy import stats
 REPO = Path(__file__).resolve().parents[2]
 RUN_DIR = REPO / "projects" / "NeuralTF" / "runs" / "pipeline_run"
 RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
-FIG_DIR = REPO / "projects" / "NeuralTF" / "figures"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_all_genes():
     """Load all candidates to identify TFs and non-TFs."""
     p = RUN_DIR / "rank.csv"
     if p.exists():
-        return pd.read_csv(p)
-    for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
-        p = RESULTS_DIR / fname
-        if p.exists():
-            return pd.read_csv(p)
+        return pd.read_csv(p).drop_duplicates(subset="gene_id", keep="first")
     raise FileNotFoundError("No candidate score file found in runs/pipeline_run/rank.csv")
-
-
-def _boxplot_safe(ax, data, labels, colors=None):
-    """Draw boxplot compatible with matplotlib <3.9 and >=3.9."""
-    try:
-        bp = ax.boxplot(data, tick_labels=labels, patch_artist=True,
-                        boxprops=dict(facecolor="#4C72B0", alpha=0.7),
-                        medianprops=dict(color="red"))
-    except TypeError:
-        bp = ax.boxplot(data, labels=labels, patch_artist=True,
-                        boxprops=dict(facecolor="#4C72B0", alpha=0.7),
-                        medianprops=dict(color="red"))
-    if colors and len(data) > 1:
-        for idx, col in enumerate(colors):
-            if idx < len(bp["boxes"]):
-                bp["boxes"][idx].set_facecolor(col)
-    return bp
 
 
 def main():
@@ -77,8 +60,9 @@ def main():
 
     gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
 
-    # Neural candidates (known validated or strong neural enrichment)
-    neural_mask = (df["proof_status"] == "known_rnai_validated") | (df.get("neural_enriched", pd.Series(0, index=df.index)).fillna(0) > 0)
+    # Neural candidates: RNAi-validated ONLY (neural_enriched is a scoring
+    # stream — including it would make the control circular)
+    neural_mask = df["proof_status"] == "known_rnai_validated"
     # TF vs non-TF indicator
     if "perez_lineage" in df.columns:
         tf_mask = df["perez_lineage"].fillna(0) > 0
@@ -108,9 +92,9 @@ def main():
     ctrl_non_tf = non_tf_scores[random_non_tf_idx] if len(random_non_tf_idx) > 0 else np.array([])
     ctrl_non_neural_tf = tf_non_neural[random_non_neural_tf_idx] if len(random_non_neural_tf_idx) > 0 else np.array([])
 
-    print(f"Neural TFs (ground truth): {len(neural_scores)}")
-    print(f"Non-TF controls: {len(ctrl_non_tf)}")
-    print(f"Non-neural TF controls: {len(ctrl_non_neural_tf)}")
+    print(f"Neural TFs (RNAi-validated ground truth): {len(neural_scores)}")
+    print(f"Non-TF controls (no Perez TF class): {len(ctrl_non_tf)}")
+    print(f"Non-neural TF controls (TF-classified): {len(ctrl_non_neural_tf)}")
 
     results = {}
     p_val_report = 1.0
@@ -144,35 +128,21 @@ def main():
         }
         print(f"  Neural vs Non-Neural TF: U={u2:.1f}, p={p2:.4e}, d={d2:.3f}")
 
-    # JSON export with keys needed by figure 24
+    # JSON export with keys needed by figure 24 (labels now honest)
     results["neural_tfs"] = [float(x) for x in neural_scores[:100]] if len(neural_scores) else [0.0]
     results["non_tfs"] = [float(x) for x in ctrl_non_tf[:100]] if len(ctrl_non_tf) else [0.0]
+    # key kept as "random" for figure-24 compatibility, but these are
+    # non-neural TF candidates (not permutations)
     results["random"] = [float(x) for x in ctrl_non_neural_tf[:100]] if len(ctrl_non_neural_tf) else [0.0]
+    results["group_labels"] = {
+        "neural_tfs": "RNAi-validated neural TFs (ground truth)",
+        "non_tfs": "candidates without Perez TF class",
+        "random": "TF-classified, non-RNAi-validated candidates",
+    }
     results["p_neural_vs_non"] = float(p_val_report)
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-
-    ax = axes[0]
-    data_plot = [neural_scores, ctrl_non_tf] if len(ctrl_non_tf) > 0 else [neural_scores]
-    labels_plot = ["Neural TFs", "Random Non-TFs"] if len(ctrl_non_tf) > 0 else ["Neural TFs"]
-    _boxplot_safe(ax, data_plot, labels_plot, ["#4C72B0", "#55A868"])
-    ax.set_ylabel("Integrated Score")
-    ax.set_title("Neural TFs vs Random Non-TFs")
-    ax.grid(True, alpha=0.3)
-
-    ax = axes[1]
-    data_plot2 = [neural_scores, ctrl_non_neural_tf] if len(ctrl_non_neural_tf) > 0 else [neural_scores]
-    labels_plot2 = ["Neural TFs", "Non-Neural TFs"] if len(ctrl_non_neural_tf) > 0 else ["Neural TFs"]
-    _boxplot_safe(ax, data_plot2, labels_plot2, ["#4C72B0", "#C44E52"])
-    ax.set_ylabel("Integrated Score")
-    ax.set_title("Neural TFs vs Non-Neural TFs")
-    ax.grid(True, alpha=0.3)
-
-    plt.tight_layout()
-    fig_path = FIG_DIR / "negative_controls.png"
-    fig.savefig(fig_path, dpi=200)
-    plt.close(fig)
-    print(f"Saved: {fig_path}")
+    # NOTE: no standalone PNG — the numbered publication figure
+    # (figures/24_negative_controls.py) renders the showcase version.
 
     out_path = RESULTS_DIR / "negative_control_stats.json"
     with open(out_path, "w") as f:

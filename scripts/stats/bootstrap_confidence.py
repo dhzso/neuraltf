@@ -1,138 +1,170 @@
 #!/usr/bin/env python
 """Bootstrap confidence intervals for integrated evidence scores.
 
-Draws n=1000 bootstrap resamples from the evidence stream scores of all
-candidates, computing the 95% CI on the integrated score for each gene.
+Method (WS3): the correct unit of uncertainty is the WEIGHT VECTOR, not
+the candidate rows. Resampling candidate rows mixes genes and produces a
+mixture mean (~the cohort average) for every gene. Instead we consume
+the per-candidate draw-score matrices written by the Dirichlet scripts
+(1000 weight draws, seed 2024) and report per-gene 2.5/97.5 percentiles
+of the renormalized weighted score under weight uncertainty. A parametric
+stream-bootstrap fallback (resampling the observed streams with noise)
+covers runs without draw matrices.
+
+Outputs:
+  results/bootstrap_scores_ci.csv  — per-gene mean + 95% CI
+  figures/25_bootstrap_ci.png is produced by the numbered figure script.
 
 Usage:
-    python scripts/stats/bootstrap_confidence.py --n-boot 1000 --seed 42
+    python scripts/stats/bootstrap_confidence.py [--n-boot 1000] [--seed 42]
 """
 
 import argparse
 import sys
 from pathlib import Path
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 REPO = Path(__file__).resolve().parents[2]
 RUN_DIR = REPO / "projects" / "NeuralTF" / "runs" / "pipeline_run"
 RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
-FIG_DIR = REPO / "projects" / "NeuralTF" / "figures"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 STREAMS = [
     "expression", "specificity", "reproducibility", "rnai",
     "correlation", "neural_enriched", "neural_specificity",
-    "perez_lineage",
+    "perez_lineage", "perez_influence",
 ]
-W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2])
+# Must match bioforge.evidence.scoring.DEFAULT_WEIGHTS exactly.
+W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 
 
-def load_score_matrix():
-    """Load the full candidate table and extract evidence stream columns."""
-    candidates_path = RESULTS_DIR / "supplementary_table_S2_fixed_all249.csv"
+def load_score_matrix() -> pd.DataFrame:
+    candidates_path = RUN_DIR / "rank.csv"
     if not candidates_path.exists():
-        candidates_path = RUN_DIR / "rank.csv"
-    if not candidates_path.exists():
-        raise FileNotFoundError("No candidate score file found in RESULTS_DIR or RUN_DIR")
-    df = pd.read_csv(candidates_path)
-    return df
+        raise FileNotFoundError(
+            f"No candidate score file found at {candidates_path}; run the pipeline first"
+        )
+    return pd.read_csv(candidates_path).drop_duplicates(subset="gene_id", keep="first")
 
 
-def integrated_score(S, W):
-    """Compute integrated score with missing-data renormalization."""
-    mask = ~np.isnan(S)
-    if not mask.any():
-        return 0.0
-    S_filled = np.where(np.isnan(S), 0.0, S)
-    num = np.sum(S_filled * W)
-    den = np.sum(W[mask])
-    return num / den if den > 0 else 0.0
+def dirichlet_draw_cis(df: pd.DataFrame) -> pd.DataFrame | None:
+    """Per-gene 2.5/97.5 percentiles from the persisted Dirichlet draw
+    matrices (the same weight uncertainty model the robustness analysis
+    uses; no new randomness needed)."""
+    out_rows = []
+    for method, path in (
+        ("centered", RESULTS_DIR / "dirichlet_centered_draw_scores.csv"),
+        ("uniform", RESULTS_DIR / "dirichlet_uniform_draw_scores.csv"),
+    ):
+        if not path.exists():
+            continue
+        draws = pd.read_csv(path)
+        gene_col = "gene_id" if "gene_id" in draws.columns else draws.columns[0]
+        draw_cols = [c for c in draws.columns if c.startswith("draw_")]
+        if not draw_cols:
+            continue
+        mat = draws[draw_cols].to_numpy(dtype=float)
+        lo, hi = np.percentile(mat, [2.5, 97.5], axis=1)
+        mean = mat.mean(axis=1)
+        for i, gid in enumerate(draws[gene_col].astype(str)):
+            out_rows.append({
+                "gene_id": gid,
+                f"{method}_mean": mean[i],
+                f"{method}_ci_95_lo": lo[i],
+                f"{method}_ci_95_hi": hi[i],
+            })
+    if not out_rows:
+        return None
+    base = pd.DataFrame(out_rows)
+    # merge centered + uniform side by side on gene_id
+    out = df[["gene_id", "gene_name"]].merge(
+        base[base.columns[:4]], on="gene_id", how="left"
+    ) if "centered_mean" in base.columns else None
+    if out is None:
+        return None
+    uni = base[["gene_id", "uniform_mean", "uniform_ci_95_lo", "uniform_ci_95_hi"]] \
+        if "uniform_mean" in base.columns else None
+    if uni is not None:
+        out = out.merge(uni, on="gene_id", how="left")
+    return out
 
 
-def bootstrap_ci(scores_matrix, weights, n_boot=1000, seed=42):
-    """Return bootstrap means and 95% CIs for each candidate."""
+def weight_bootstrap_cis(df: pd.DataFrame, n_boot: int, seed: int) -> pd.DataFrame:
+    """Fallback: parametric bootstrap over the weight vector.
+
+    Draws Dirichlet(k=40 * W) weights (the centered model), recomputes the
+    renormalized weighted score per gene per draw, and takes percentiles.
+    This resamples the WEIGHTS (the modeling choice), never the genes.
+    """
+    stream_cols = [c for c in STREAMS if c in df.columns]
+    S = df[stream_cols].to_numpy(dtype=float)
+    W = W_DEFAULT[:len(stream_cols)]
+    W = W / W.sum()
+
     rng = np.random.default_rng(seed)
-    n_candidates = scores_matrix.shape[0]
-    boot_scores = np.zeros((n_boot, n_candidates))
+    draws = rng.dirichlet(40.0 * W, size=n_boot)  # (n_boot, n_streams)
+    valid = ~np.isnan(S)
+    S_filled = np.nan_to_num(S, nan=0.0)
+    num = S_filled @ draws.T                    # (n_genes, n_boot)
+    den = valid.astype(float) @ draws.T
+    den = np.where(den > 0, den, 1.0)
+    scores = num / den
 
-    for b in range(n_boot):
-        idx = rng.choice(n_candidates, size=n_candidates, replace=True)
-        resampled = scores_matrix[idx]
-        for j in range(n_candidates):
-            boot_scores[b, j] = integrated_score(resampled[j], weights)
-
-    means = np.mean(boot_scores, axis=0)
-    ci_lo = np.percentile(boot_scores, 2.5, axis=0)
-    ci_hi = np.percentile(boot_scores, 97.5, axis=0)
-    return means, ci_lo, ci_hi
+    lo, hi = np.percentile(scores, [2.5, 97.5], axis=1)
+    out = df[["gene_id"] + (["gene_name"] if "gene_name" in df.columns else [])].copy()
+    out["bootstrap_mean"] = scores.mean(axis=1)
+    out["mean_score"] = out["bootstrap_mean"]
+    out["ci_95_lo"] = lo
+    out["ci_low"] = lo
+    out["ci_95_hi"] = hi
+    out["ci_high"] = hi
+    out["ci_width"] = hi - lo
+    return out
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Bootstrap 95% CI for integrated scores")
-    parser.add_argument("--n-boot", type=int, default=1000, help="Number of bootstrap resamples")
-    parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser = argparse.ArgumentParser(
+        description="Bootstrap 95% CI for integrated scores (weight-vector uncertainty)"
+    )
+    parser.add_argument("--n-boot", type=int, default=1000,
+                        help="Number of weight draws (fallback mode)")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed (fallback mode)")
     args = parser.parse_args()
 
-    print(f"=== Bootstrap Confidence Intervals (n={args.n_boot}) ===")
+    print(f"=== Bootstrap Confidence Intervals (weight-vector model, n={args.n_boot}) ===")
 
     df = load_score_matrix()
-    stream_cols = [c for c in STREAMS if c in df.columns]
-    if len(stream_cols) < 4:
-        print(f"Warning: only {len(stream_cols)} stream columns found: {stream_cols}")
+    print(f"Candidates: {len(df)} (unique gene_id)")
 
-    scores_matrix = df[stream_cols].values.astype(float)
-    weights = W_DEFAULT[:len(stream_cols)]
-    weights = weights / weights.sum()
+    out = dirichlet_draw_cis(df)
+    if out is not None:
+        print("Using persisted Dirichlet draw matrices (centered k=40 / uniform a=1).")
+    else:
+        print("Draw matrices not found; running parametric weight bootstrap "
+              "(Dirichlet k=40 centered at default weights).")
+        out = weight_bootstrap_cis(df, args.n_boot, args.seed)
 
-    print(f"Candidates: {scores_matrix.shape[0]}, Streams: {scores_matrix.shape[1]}")
-    print(f"Running {args.n_boot} bootstrap resamples...")
-
-    means, ci_lo, ci_hi = bootstrap_ci(scores_matrix, weights, args.n_boot, args.seed)
-
-    out = df[["gene_id", "gene_name"]].copy() if "gene_name" in df.columns else df[["gene_id"]].copy()
-    out["bootstrap_mean"] = means
-    out["mean_score"] = means
-    out["ci_95_lo"] = ci_lo
-    out["ci_low"] = ci_lo
-    out["ci_95_hi"] = ci_hi
-    out["ci_high"] = ci_hi
-    out["ci_width"] = ci_hi - ci_lo
-    out = out.sort_values("bootstrap_mean", ascending=False)
+    # attach the observed integrated score for reference ordering
+    if "integrated_score" in df.columns:
+        out = out.merge(df[["gene_id", "integrated_score"]], on="gene_id", how="left")
+        out = out.sort_values("integrated_score", ascending=False)
+    out = out.reset_index(drop=True)
 
     out_path = RESULTS_DIR / "bootstrap_scores_ci.csv"
     out.to_csv(out_path, index=False)
     print(f"Saved: {out_path}")
 
-    top10 = out.head(10)
-    fig, ax = plt.subplots(figsize=(10, 6))
-    y_pos = np.arange(len(top10))
-    ax.barh(y_pos, top10["bootstrap_mean"], xerr=[
-        top10["bootstrap_mean"] - top10["ci_95_lo"],
-        top10["ci_95_hi"] - top10["bootstrap_mean"]
-    ], capsize=3, color="#4C72B0", edgecolor="black", linewidth=0.5)
-    ax.set_yticks(y_pos)
-    label_col = "gene_name" if "gene_name" in top10.columns else "gene_id"
-    ax.set_yticklabels(top10[label_col].values)
-    ax.set_xlabel("Bootstrap Mean Integrated Score")
-    ax.set_title(f"Top-10 Candidates: 95% Bootstrap CI (n={args.n_boot})")
-    ax.invert_yaxis()
-    plt.tight_layout()
-    fig_path = FIG_DIR / "bootstrap_ci_top10.png"
-    fig.savefig(fig_path, dpi=200)
-    plt.close(fig)
-    print(f"Saved: {fig_path}")
-
-    print(f"\nTop-10 by bootstrap mean:")
-    for _, row in top10.iterrows():
-        print(f"  {row.get('gene_name', row['gene_id']):>12}  "
-              f"mean={row['bootstrap_mean']:.4f}  "
-              f"95% CI=[{row['ci_95_lo']:.4f}, {row['ci_95_hi']:.4f}]")
+    score_col = "centered_mean" if "centered_mean" in out.columns else "bootstrap_mean"
+    ci_lo_col = ("centered_ci_95_lo" if "centered_ci_95_lo" in out.columns
+                 else "ci_95_lo")
+    ci_hi_col = ("centered_ci_95_hi" if "centered_ci_95_hi" in out.columns
+                 else "ci_95_hi")
+    print(f"\nTop-10 by integrated score (mean and 95% CI under weight uncertainty):")
+    for _, row in out.head(10).iterrows():
+        label = row.get("gene_name", row["gene_id"])
+        print(f"  {str(label):>14}  mean={row[score_col]:.4f}  "
+              f"95% CI=[{row[ci_lo_col]:.4f}, {row[ci_hi_col]:.4f}]")
 
     return 0
 

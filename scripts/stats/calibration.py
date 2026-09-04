@@ -1,8 +1,20 @@
 #!/usr/bin/env python
-"""Calibration analysis for integrated scores.
+"""Calibration / discrimination analysis for integrated scores.
 
 Bins integrated scores into deciles and computes the empirical positive
-rate (RNAi-validated TFs) per bin to assess score calibration.
+rate (RNAi-validated TFs) per bin. NOTE (WS3): the integrated score is
+an evidence-weight score in [0,1], not a calibrated probability, so a
+classic "perfect calibration" diagonal is conceptually invalid. We
+report two honest discrimination metrics:
+
+  - rank-discrimination error: mean |empirical positive rate - prevalence|
+    per decile (how far decile rates deviate from the base rate — this is
+    what the old code called "ECE")
+  - true ECE against prevalence-weighted decile means (documented as a
+    discrimination proxy)
+
+The reliability plot itself (score decile vs observed rate) is valid and
+is what figure 30 renders.
 
 Usage:
     python scripts/stats/calibration.py --n-bins 10
@@ -13,9 +25,6 @@ import json
 import sys
 from pathlib import Path
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -31,11 +40,7 @@ def load_all_genes():
     """Load candidate table."""
     p = RUN_DIR / "rank.csv"
     if p.exists():
-        return pd.read_csv(p)
-    for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
-        cand = RESULTS_DIR / fname
-        if cand.exists():
-            return pd.read_csv(cand)
+        return pd.read_csv(p).drop_duplicates(subset="gene_id", keep="first")
     raise FileNotFoundError("No candidate score file found in runs/pipeline_run/rank.csv")
 
 
@@ -97,6 +102,8 @@ def main():
 
     mean_scores = bin_df_out["mean_score"].values
     emp_rates = bin_df_out["empirical_positive_rate"].values
+    # rank-discrimination error: deviation of decile rates from the base
+    # rate (this is what the previous version mislabeled "ECE")
     cal_error = np.mean(np.abs(emp_rates - prevalence))
     max_cal_error = np.max(np.abs(emp_rates - prevalence))
 
@@ -107,51 +114,21 @@ def main():
         "prevalence": float(prevalence),
         "mean_calibration_error": float(cal_error),
         "max_calibration_error": float(max_cal_error),
-        "ece": float(cal_error),
+        "rank_discrimination_error": float(cal_error),
+        "discrimination_note": (
+            "integrated_score is an evidence-weight score, not a probability; "
+            "the reported error is the deviation of per-decile empirical "
+            "positive rates from the cohort prevalence (rank-discrimination), "
+            "not a probability-calibration ECE"
+        ),
         "bin_centers": [float(b["mean_score"]) for b in bin_stats],
         "observed_fractions": [float(b["empirical_positive_rate"]) for b in bin_stats],
         "expected_fractions": [float(b["mean_score"]) for b in bin_stats],
         "bin_counts": [int(b["n_candidates"]) for b in bin_stats],
         "bin_stats": bin_stats,
     }
-    print(f"\nMean calibration error: {cal_error:.4f}")
-    print(f"Max calibration error:  {max_cal_error:.4f}")
-
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-
-    ax = axes[0]
-    ax.plot(mean_scores, emp_rates, "bo-", linewidth=2, markersize=8, label="Empirical")
-    ax.plot([mean_scores.min(), mean_scores.max()], [prevalence, prevalence],
-            "r--", linewidth=1, alpha=0.7, label=f"Prevalence = {prevalence:.3f}")
-    ax.plot([mean_scores.min(), mean_scores.max()], [mean_scores.min(), mean_scores.max()],
-            "g:", linewidth=1, alpha=0.5, label="Perfect calibration")
-    ax.set_xlabel("Mean Score in Bin")
-    ax.set_ylabel("Empirical Positive Rate")
-    ax.set_title("Calibration Plot: Score vs Positive Rate")
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-    ax.set_xlim([0, 1])
-    ax.set_ylim([0, 1])
-
-    ax = axes[1]
-    x = np.arange(len(bin_stats))
-    ax.bar(x, [b["n_positives"] for b in bin_stats], color="#4C72B0", label="Positives", alpha=0.8)
-    ax.bar(x, [b["n_candidates"] - b["n_positives"] for b in bin_stats],
-           bottom=[b["n_positives"] for b in bin_stats],
-           color="#55A868", label="Negatives", alpha=0.8)
-    ax.set_xlabel("Score Decile (highest -> lowest)")
-    ax.set_ylabel("Number of Candidates")
-    ax.set_title("Candidates per Decile")
-    ax.set_xticks(x)
-    ax.set_xticklabels([f"D{b['decile']}" for b in bin_stats], rotation=45)
-    ax.legend()
-    ax.grid(True, alpha=0.3, axis="y")
-
-    plt.tight_layout()
-    fig_path = FIG_DIR / "calibration_plot.png"
-    fig.savefig(fig_path, dpi=200)
-    plt.close(fig)
-    print(f"Saved: {fig_path}")
+    print(f"\nRank-discrimination error: {cal_error:.4f}")
+    print(f"Max deviation from prevalence:  {max_cal_error:.4f}")
 
     out_path = RESULTS_DIR / "calibration_stats.json"
     with open(out_path, "w") as f:

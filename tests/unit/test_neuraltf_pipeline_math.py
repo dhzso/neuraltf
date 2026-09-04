@@ -107,3 +107,60 @@ class TestCorrelationAlignment:
         assert pair["g0"].iloc[0] == pytest.approx(0.7)
         gains = (pair["g0"] - pair["x1"]).to_numpy()
         assert gains[0] == pytest.approx(0.6)
+
+
+class TestBenjaminiHochberg:
+    """Regression for the cross_method_correction BH indexing bug that
+    reported p=0.70 genes as FDR-significant (0.046)."""
+
+    @classmethod
+    def _bh(cls):
+        import importlib.util
+        import sys as _sys
+        path = Path(__file__).resolve().parents[2] / "scripts" / "stats" / \
+            "cross_method_correction.py"
+        spec = importlib.util.spec_from_file_location("_cmc", path)
+        mod = importlib.util.module_from_spec(spec)
+        _sys.modules["_cmc"] = mod
+        spec.loader.exec_module(mod)
+        return mod.benjamini_hochberg
+
+    def test_matches_statsmodels(self):
+        bh = self._bh()
+        from statsmodels.stats.multitest import multipletests
+        rng = np.random.default_rng(7)
+        for _ in range(20):
+            p = np.sort(rng.uniform(0, 1, size=15))
+            ours = bh(p)
+            _, ref, _, _ = multipletests(p, method="fdr_bh")
+            assert np.allclose(ours, ref, atol=1e-12)
+
+    def test_no_false_significance_for_flat_p(self):
+        bh = self._bh()
+        p = np.full(8, 0.70)
+        adj = bh(p)
+        assert (adj > 0.05).all()  # old bug: 0.046
+
+    def test_monotone(self):
+        bh = self._bh()
+        p = np.array([0.001, 0.005, 0.02, 0.30, 0.31, 0.9])
+        adj = bh(p)
+        assert (np.diff(adj) >= -1e-12).all()
+
+
+class TestRankBiserialSign:
+    def test_perfect_separation_is_plus_one(self):
+        import importlib.util
+        import sys as _sys
+        path = Path(__file__).resolve().parents[2] / "scripts" / "stats" / \
+            "mann_whitney_top10.py"
+        spec = importlib.util.spec_from_file_location("_mwu", path)
+        mod = importlib.util.module_from_spec(spec)
+        _sys.modules["_mwu"] = mod
+        spec.loader.exec_module(mod)
+        # U = n1*n2 when every group-1 value exceeds every group-2 value
+        assert mod.rank_biserial_correlation(20.0, 4, 5) == pytest.approx(1.0)
+        # U = 0 -> perfect reverse separation -> -1
+        assert mod.rank_biserial_correlation(0.0, 4, 5) == pytest.approx(-1.0)
+        # U = half -> 0
+        assert mod.rank_biserial_correlation(10.0, 4, 5) == pytest.approx(0.0)

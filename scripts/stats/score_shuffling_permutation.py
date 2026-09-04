@@ -26,9 +26,11 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 STREAMS = [
     "expression", "specificity", "reproducibility", "rnai",
     "correlation", "neural_enriched", "neural_specificity",
-    "perez_lineage",
+    "perez_lineage", "perez_influence",
 ]
-W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2])
+# Must match bioforge.evidence.scoring.DEFAULT_WEIGHTS exactly
+# (the old perez_lineage=0.2 made "real" scores differ from rank.csv).
+W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 
 
 def compute_all_integrated_scores(scores: np.ndarray, weights: np.ndarray) -> np.ndarray:
@@ -63,16 +65,10 @@ def main():
 
     p = RUN_DIR / "rank.csv"
     if not p.exists():
-        for fname in ["supplementary_table_S2_fixed_all249.csv", "fstf_ranked_all.csv"]:
-            cand = RESULTS_DIR / fname
-            if cand.exists():
-                p = cand
-                break
-    if not p.exists():
-        print("Error: no candidate score file found")
+        print("Error: no candidate score file found (run the pipeline first)")
         return 1
 
-    df = pd.read_csv(p)
+    df = pd.read_csv(p).drop_duplicates(subset="gene_id", keep="first")
 
     gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
     score_col = "integrated_score" if "integrated_score" in df.columns else "composite_score"
@@ -103,9 +99,6 @@ def main():
         top10_null_max.append(np.max(perm_scores))
 
         if (perm + 1) % 50 == 0 or (perm + 1) == args.n_perm:
-            print(f"  Completed {perm+1}/{args.n_perm} permutations")
-
-        if (perm + 1) % 200 == 0:
             print(f"  Completed {perm+1}/{args.n_perm} permutations")
 
     print("\n=== Computing Empirical P-values ===")
