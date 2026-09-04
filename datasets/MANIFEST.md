@@ -21,16 +21,18 @@ evidence_cards.md, 6 checkpoint parquets).
 ```
 datasets/
    raw/
-    GSE103633_GEO_Plass_atlas/      # Plass et al., Science 2018 — GSE103633_RAW.tar, ~2 GB
-    GSE111764_GEO_Fincher_atlas/    # Fincher et al., Science 2018 — DGE .txt.gz
-    Supplementary_Data_King_2024/   # King et al., Cell Reports 2024 — mmc2–mmc7 xlsx
-    OMIX003867_OMIX_Cui_atlas/      # Cui et al., 2023 — single‑cell h5ad (~55 GB) (download: [OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867))
+    GSE103633_GEO_Plass_atlas/      # Plass et al., Science 2018 — GSE103633_RAW.tar, ~26 MB (11 DGE libraries)
+    GSE111764_GEO_Fincher_atlas/    # Fincher et al., Science 2018 — DGE .txt.gz, ~96 MB
+    Supplementary_Data_ King_2024/  # King et al., Cell Reports 2024 — mmc2–mmc7 xlsx (10–310 KB each)
+    OMIX003867_OMIX_Cui_atlas/      # Cui et al., 2023 — single-cell h5ad (~1.0 GB) (download: [OMIX](https://ngdc.cncb.ac.cn/omix/release/OMIX003867))
       OMIX003867-01/
         singlecell_h5ad/
           adata_scRNA_Annotated.h5ad   # Cui annotated h5ad used by the pipeline
+      OMIX003867-02/, -03/          # Visium spatial (unused by the pipeline)
     smed_20140614.mapping.rosettastone.2020.txt    # Rosetta Stone gene-ID bridge, 67 MB
-    go.obo                          # Gene Ontology, current release, ~40 MB
-    Supplementary_Data_Perez_2025/   # Perez et al., 2025 — MOESM5 (TF classification), MOESM19 (ANANSE influence), MOESM22 (ANANSE GRN) (download: [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94))
+    go.obo                          # Gene Ontology, current release, ~37 MB
+    Supplementary_Data_ Perez_2025/  # Perez et al., 2025 — MOESM5 (TF classification, 16 MB), MOESM19 (ANANSE influence), MOESM22 (ANANSE GRN) (download: [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94))
+                                     # NOTE: MOESM2 is absent from the journal download (not needed by the pipeline)
   processed/                        # GENERATED: fincher_subsample.h5ad, plass_v6.h5ad, cui_v6.h5ad,
                                      # planmine_annotations.parquet, planmine_transcripts.fasta
   references/
@@ -63,17 +65,20 @@ datasets/
 
 | File | SHA256 | Size | Source |
 |------|--------|------|--------|
-| `datasets/raw/GSE103633_GEO_Plass_atlas/GSE103633_RAW.tar` | `FAC5E2B45BBF2E4CDFD0E1CE6241BAD3936C3EC667835869EA3DB6A4BD0B0DE2` | ~2 GB | GEO GSE103633 |
-| `datasets/raw/GSE111764_GEO_Fincher_atlas/GSE111764_PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz` | `EF945898E17463D60BFED1C359A926383DD070A9098258599988640EBF0C29BC` | ~500 MB | GEO GSE111764 |
-| `datasets/raw/Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc4.xlsx` | `FD0F77946DCD6F35DCCC363761AB0857A4F60F94EBA4BA0282E289B6A5326A54` | ~5 MB | Cell Reports supplementary |
-| `datasets/raw/Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc5.xlsx` | `18A53AC54EFE6A244E875078D6863E67AC2B0E65D38DDA294615B05C3AB3E9D5` | ~1 MB | Cell Reports supplementary |
-| `datasets/raw/Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc6.xlsx` | `38646A0962CB577D719515CFA40A5B4E1569C5D3ADACA63DC51A37EDFFB2C6EF` | ~1 MB | Cell Reports supplementary |
-| `datasets/raw/Supplementary_Data_King_2024/1-s2.0-S2211124724001712-mmc7.xlsx` | `49005C8E57810AE50DF95A6482036650CD75BF5206D9BBE49126364B9DE06B6F` | ~10 MB | Cell Reports supplementary |
+| `datasets/raw/GSE103633_GEO_Plass_atlas/GSE103633_RAW.tar` | `FAC5E2B45BBF2E4CDFD0E1CE6241BAD3936C3EC667835869EA3DB6A4BD0B0DE2` | 26 MB | GEO GSE103633 |
+| `datasets/raw/GSE111764_GEO_Fincher_atlas/GSE111764_PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz` | `EF945898E17463D60BFED1C359A926383DD070A9098258599988640EBF0C29BC` | 96 MB | GEO GSE111764 |
+| `datasets/raw/OMIX003867_OMIX_Cui_atlas/OMIX003867-01/singlecell_h5ad/adata_scRNA_Annotated.h5ad` | `415B45A0A01C04DA616AA1909ADD605F05A13D514F1FAD72A2E622C5BD5DF414` | 1.0 GB | Cui 2023 (OMIX003867) |
+| `datasets/raw/Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc2.xlsx` | `7EC8400664DFA3D23247F5DA5D447E4190B14692B19FE822D08B6897F470B2C7` | 37 KB | Cell Reports supplementary |
+| `datasets/raw/Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc3.xlsx` | `6271DCEB98587DEEF9E1F3FF66DAD1CE81976BEC2A4B9B91E5861D6E2407CDD8` | 308 KB | Cell Reports supplementary |
+| `datasets/raw/Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc4.xlsx` | `FD0F77946DCD6F35DCCC363761AB0857A4F60F94EBA4BA0282E289B6A5326A54` | 81 KB | Cell Reports supplementary |
+| `datasets/raw/Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc5.xlsx` | `18A53AC54EFE6A244E875078D6863E67AC2B0E65D38DDA299615B05C3AB3E9D5` | 12 KB | Cell Reports supplementary |
+| `datasets/raw/Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc6.xlsx` | `38646A0962CB577D719515CFA40A5B4E1569C5D3ADACA63DC51A37EDFFB2C6EF` | 10 KB | Cell Reports supplementary |
+| `datasets/raw/Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc7.xlsx` | `49005C8E57810AE50DF95A6482036650CD75BF5206D9BBE49126364B9DE06B6F` | 96 KB | Cell Reports supplementary |
 | `datasets/raw/smed_20140614.mapping.rosettastone.2020.txt` | `D3E912B6798BD476B93C37E8B73F6801A1660C532D3EDD0E6BB8502ED14EC768` | 67 MB | PLANOSPHERE Rosetta Stone |
-| `datasets/raw/go.obo` | `D3593751D885CA160B2AB7BAF6C7ECCD88CA3C4599F79436C674BAD661095FF0` | ~40 MB | Gene Ontology |
-| `datasets/raw/Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM5_ESM.xlsx` | `BB103659353D842E95487F85DDB89415DF978224A2088F6D203461055B7344FD` | ~1.6 MB | Perez 2025 supplementary |
-| `datasets/raw/Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM22_ESM.xlsx` | `9EDED529AC7E0D8AD0F5D6CD73B2102C59F3E829CC69DDB9200A530EADE5E458` | ~0.86 MB | Perez 2025 supplementary |
-| `datasets/raw/OMIX003867_OMIX_Cui_atlas/OMIX003867-01/singlecell_h5ad/adata_scRNA_Annotated.h5ad` | `415B45A0A01C04DA616AA1909ADD605F05A13D514F1FAD72A2E622C5BD5DF414` | ~55 GB | Cui 2023 atlas annotated h5ad |
+| `datasets/raw/go.obo` | `D3593751D885CA160B2AB7BAF6C7ECCD88CA3C4599F79436C674BAD661095FF0` | 37 MB | Gene Ontology |
+| `datasets/raw/Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM5_ESM.xlsx` | `BB103659353D842E95487F85DDB89415DF978224A2088F6D203461055B7344FD` | 16 MB | Perez 2025 supplementary |
+| `datasets/raw/Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM19_ESM.xlsx` | `CFFA03EF022191E3C8984F84507E7DB137AE1DBF62A2A2EFEBDCAA127A2B9F34` | 57 KB | Perez 2025 supplementary |
+| `datasets/raw/Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM22_ESM.xlsx` | `9EDED529AC7E0D8AD0F5D6CD73B2102C59F3E829CC69DDB9200A530EADE5E458` | 859 KB | Perez 2025 supplementary |
 
 > **Note**: Verify checksums after download with `python scripts/verify_data.py` or `sha256sum <file>` (Linux/macOS) / `Get-FileHash -Algorithm SHA256 <file>` (Windows PowerShell).
 > 

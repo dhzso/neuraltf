@@ -96,7 +96,42 @@ $$\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$$
 
 The EvidenceScorer always renormalizes over **present** streams per candidate, so the effective weight depends on which streams have data for each candidate. This ensures that missing evidence does not penalize candidates as *absence of evidence is not evidence of absence*.
 
+### 1.9 Formula Revisions (2026-09-04 mathematical audit)
+
+The following refinements were applied after a full mathematical audit; the
+rationales above describe the current (post-audit) behavior:
+
+1. **True log2FC (Fincher/Plass/Cui)** — Scanpy's `rank_genes_groups`
+   `logfoldchanges` are a difference of log1p values (pseudo-fold-changes),
+   not real log2 fold changes. The pipeline now computes the true log2FC
+   from linear-space cluster means (`expm1` of the log1p data, pseudocount
+   $10^{-9}$), making the divisor-5.0 cap in §1.1 directly comparable with
+   King's mmc7 log2FC.
+2. **Best-cluster selection** — the argmax positive fold-change is now taken
+   among *significantly* enriched clusters (BH $q \le 0.10$); a gene whose
+   largest fold-change cluster is non-significant but which has a
+   significant cluster elsewhere is scored on the significant evidence.
+3. **King specificity units** — fractional breadth $1-(n-1)/(N-1)$ now uses
+   (compartment, subcluster) PAIRS in both numerator and denominator
+   (175 distinct subcluster names vs 180 compartment-subcluster pairs; five
+   names occur in both G0 and X1).
+4. **Perez lineage sentinel** — MOESM5 uses `-` for the ~58k non-TF genes;
+   these are now treated as absent (0.0, no atlas membership) instead of
+   receiving the 0.5 "other TF class" score.
+5. **RNAi/correlation ID matching** — the short-ID parser now extracts the
+   numeric gene field from structured IDs (`dd_Smed_v6_11150_0_1 → dd11150`;
+   the previous lazy regex returned `dd6`), restoring RNAi-stream matches
+   for 18 known neural TFs; correlation Δr uses joint NaN masking so the
+   x1/g0 values of a pair row can never be re-aligned independently.
+6. **HVG forcing** — only the King mmc4 catalog (418 TFs) is forced into
+   the highly-variable panel; the 14k master catalog seeds records but
+   does not bias clustering.
+7. **Perez influence mapping** — restricted to 1:1 reciprocal-best-hit
+   v6↔h1SMcG pairs (the collapsed `Similar` column claims 14.4k of 25k v6
+   IDs for more than one h1SMcG, making first-wins attribution arbitrary).
+
 ---
+
 
 ## 2. Statistical Testing & False Discovery Rate Control
 

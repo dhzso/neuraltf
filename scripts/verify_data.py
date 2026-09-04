@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 """Verify data integrity checksums for NeuralTF pipeline.
 
 Usage:
@@ -15,14 +15,23 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 RAW_DIR = REPO / "datasets" / "raw"
 
-# Expected files with their relative paths
+# Expected files with their relative paths â€” all pipeline-critical raw
+# inputs (King mmc2-8, Perez MOESM5/19/22, Cui scRNA h5ad, Rosetta,
+# go.obo included; MOESM2 is absent from the Perez download â€” see
+# datasets/MANIFEST.md).
 EXPECTED_FILES = [
     "GSE103633_GEO_Plass_atlas/GSE103633_RAW.tar",
     "GSE111764_GEO_Fincher_atlas/GSE111764_PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz",
+    "OMIX003867_OMIX_Cui_atlas/OMIX003867-01/singlecell_h5ad/adata_scRNA_Annotated.h5ad",
+    "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc2.xlsx",
+    "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc3.xlsx",
     "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc4.xlsx",
     "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc5.xlsx",
     "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc6.xlsx",
     "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc7.xlsx",
+    "Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM5_ESM.xlsx",
+    "Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM19_ESM.xlsx",
+    "Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM22_ESM.xlsx",
     "smed_20140614.mapping.rosettastone.2020.txt",
     "go.obo",
 ]
@@ -76,7 +85,7 @@ def main():
                 size_str = f"{size/1e6:.1f} MB" if size > 1e6 else f"{size/1e3:.1f} KB"
                 print(f"| `{rel_path}` | `{sha}` | {size_str} | GEO/Journal |")
             else:
-                print(f"| `{rel_path}` | `MISSING` | — | — |")
+                print(f"| `{rel_path}` | `MISSING` | â€” | â€” |")
         return 0
 
     # Default: verify against stored checksums
@@ -92,24 +101,24 @@ def main():
     for rel_path, exp in expected.items():
         full_path = RAW_DIR / rel_path
         if not full_path.exists():
-            print(f"  ❌ MISSING: {rel_path}")
+            print(f"  [FAIL] MISSING: {rel_path}")
             all_ok = False
             continue
 
         sha = compute_sha256(full_path)
         if sha == exp["sha256"]:
-            print(f"  ✅ OK: {rel_path}")
+            print(f"  [PASS] {rel_path}")
         else:
-            print(f"  ❌ MISMATCH: {rel_path}")
+            print(f"  [FAIL] MISMATCH: {rel_path}")
             print(f"    Expected: {exp['sha256']}")
             print(f"    Got:      {sha}")
             all_ok = False
 
     if all_ok:
-        print("\n✅ All checksums verified.")
+        print("\n[PASS] All checksums verified.")
         return 0
     else:
-        print("\n❌ Some checksums failed.")
+        print("\n[FAIL] Some checksums failed.")
         return 1
 
 

@@ -2,6 +2,15 @@
 
 A reproducible pipeline for **planarian neural-fate-specific transcription factor** discovery. Integrates **five single-cell and regulatory atlases** (Fincher 2018, Plass 2018, Cui 2023, King 2024, Perez 2025) with 9 evidence streams, Bayesian Dirichlet uncertainty quantification, and ANANSE gene regulatory network validation to prioritize high-confidence targets for RNAi and functional validation.
 
+> **2026-09 hardening audit**: the three prioritization methods (fixed /
+> centered / uniform) now share one philosophy — the same all-candidate
+> universe (rank.csv), the same annotation mask (one row per gene), the
+> same +0.07 bonus layer (neural GO +0.03, TF GO +0.02, human ortholog
+> +0.02), and the same Track-B DNA-binding-domain gate. The statistical
+> suite reports circular AND circularity-controlled evaluations, and every
+> figure is audited for non-emptiness
+> (`projects/NeuralTF/scripts/audit_figures.py`).
+
 ---
 
 ## Quick Start
@@ -43,17 +52,19 @@ bioforge ui                                  # http://localhost:8501
 
 | File | Content |
 |------|---------|
-| `master_tf_catalog.csv` | Unified King + Perez TF catalog (14,682 unique v6 TFs) |
-| `dirichlet_centered_full_rank.csv` | Full Dirichlet-centered (k=40) rank list (278 candidates) |
-| `dirichlet_uniform_full_rank.csv` | Full Dirichlet-uniform (α=1) rank list (278 candidates) |
+| `master_tf_catalog.csv` | Unified King + Perez TF catalog (14,682 unique v6 TFs) — in `projects/NeuralTF/data/` |
+| `dirichlet_centered_full_rank.csv` | Full Dirichlet-centered (k=40) composite rank (all candidates, 1 row/gene) |
+| `dirichlet_uniform_full_rank.csv` | Full Dirichlet-uniform (α=1) composite rank (all candidates, 1 row/gene) |
 | `dirichlet_centered_top10.csv` | Dual-track top-10 shortlist under centered Dirichlet (5 Track A + 5 Track B) |
 | `dirichlet_uniform_top10.csv` | Dual-track top-10 shortlist under uniform Dirichlet (5 Track A + 5 Track B) |
-| `ananse_network_full.csv` | ANANSE GRN scan across all 278 candidates & 9 cell fates |
-| `ananse_top_regulators.csv` | Top planarian neural regulators ranked by out-degree |
+| `dirichlet_*_draw_scores.csv` | Per-candidate draw-score matrices (bootstrap CIs, convergence) |
+| `ananse_network_full.csv` | ANANSE GRN scan across all candidates & 9 cell fates (RBH-mapped, neuron-share normalized) |
+| `ananse_top_regulators.csv` | Top planarian neural regulators (neuron-fate out-degree first) |
 | `tf_ranked_neural_top19.csv` | Top 19 TFs: neural-filtered candidates |
 | `tf_ranked_all_top43.csv` | Top 43 TFs: all expression-filtered candidates |
 | `tf_ranked_catalog_top74.csv` | Top 74 TFs: full King mmc4 catalog |
-| `supplementary_table_S1` – `S4` | Method comparison, fixed rank tables, and Dirichlet analyses across candidates |
+| `supplementary_table_S1` – `S7` | Method comparison, and fixed/centered/uniform rank tables across all candidates |
+| `de_pvalues.parquet` | Per-gene best DE p per atlas (pipeline checkpoint; drives meta-analysis) |
 
 ---
 
