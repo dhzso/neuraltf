@@ -68,7 +68,10 @@ def load_supported(args: argparse.Namespace) -> dict:
     king_dir = repo / "datasets" / "raw" / "Supplementary_Data_ King_2024"
     return {
         "repo": repo,
-        "rank": args.rank or (run / "rank_neural.csv"),
+        # WS2 unification: the fixed method scores the SAME candidate
+        # universe (all rank.csv candidates) as the Dirichlet methods;
+        # rank_neural.csv remains a documented neural-filtered view.
+        "rank": args.rank or (run / "rank.csv"),
         "bridge": args.bridge or (data / "bridge.csv"),
         "annotations": args.annotations or (
             repo / "datasets" / "processed" / "planmine_annotations.parquet"),
@@ -185,14 +188,14 @@ def select_shortlist(cand: pd.DataFrame, mmc5: pd.DataFrame | None) -> pd.DataFr
 
     Track B requires a tangible TF identity: a DNA-binding protein-domain hit
     in PlanMine or an mmc4 "TF" flag — no hypothetical factors without domain
-    evidence.
+    evidence. The gate lives in prioritize.gate_track_b so all three methods
+    (fixed / centered / uniform) apply it identically.
     """
+    from bioforge.projects.neuraltf.prioritize import gate_track_b
     a, b = assign_tracks(cand)
-    b = b[
-        (b["dna_binding_domains"].astype(str).str.strip() != "")
-        | (b["mmc4_tf_flag"].astype(str).str.upper() == "TF")
-    ]
-    print(f"  Track B after TF-domain filter: {len(b)}/{len(assign_tracks(cand)[1])}")
+    n_b_before = len(b)
+    b = gate_track_b(b)
+    print(f"  Track B after TF-domain filter: {len(b)}/{n_b_before}")
     ta = select_top(a, 5).assign(track="A")
     tb = select_top(b, 5).assign(track="B")
     top = pd.concat([ta, tb], ignore_index=True)
@@ -240,7 +243,8 @@ def build_report(top: pd.DataFrame, g0: dict, x1: dict,
     lines.append("# Candidate Summary Report — NeuralTF Prioritization\n")
     n_label = n_candidates if n_candidates is not None else len(top)
     lines.append(
-        f"Inputs: `rank_neural.csv` ({n_label} neural candidates), PlanMine "
+        f"Inputs: `rank.csv` ({n_label} candidates, all-candidate universe "
+        "shared with the Dirichlet methods), PlanMine "
         "annotations (`datasets/processed/planmine_annotations.parquet`), the "
         "v6→v4 identifier bridge, King 2024 supplementary tables (mmc4 TF "
         "catalog, mmc5 FSTF RNAi screen), G0 atlas (`king_atlas.tsv`).\n")
@@ -255,8 +259,10 @@ def build_report(top: pd.DataFrame, g0: dict, x1: dict,
         "(PlanMine protein-domain hits or mmc4 TF flag), then top 5 by "
         "composite score.\n\n"
         "`composite_score = integrated_score + bonuses` (formula in "
-        "`bioforge/projects/neuraltf/prioritize.py`): TF domain +0.05, neural "
-        "GO +0.03, TF GO +0.02, human ortholog +0.02, RNAi-validated +0.02.\n")
+        "`bioforge/projects/neuraltf/prioritize.py`): neural GO +0.03, "
+        "TF GO +0.02, human ortholog +0.02. The identical bonus mask and "
+        "Track-B gate are applied by the Dirichlet-centered and "
+        "Dirichlet-uniform methods.\n")
     lines.append("## Shortlist\n")
     lines.append("| v6 id | gene_name | track | rank | composite | human ortholog |")
     lines.append("|---|---|---|---|---|---|")

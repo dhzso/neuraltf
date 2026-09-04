@@ -12,19 +12,25 @@ output does not already exist (re-run with ``--force`` to regenerate
 existing outputs); a matching summary is printed at the end and missing-input
 steps are skipped, never aborted:
 
-  1. convert_fincher.py              -> datasets/processed/fincher_subsample.h5ad
-  2. consolidate_plass.py            -> datasets/processed/plass_v6.h5ad
-  3. build_bridge.py                 -> projects/NeuralTF/data/bridge.csv
-  4. build_king_atlas.py             -> projects/NeuralTF/data/king_atlas.tsv
-  5. pipeline (run.py)               -> projects/NeuralTF/runs/pipeline_run/*
-6. query_planmine.py                  -> datasets/processed/planmine_annotations.parquet (network)
-  7. prioritize_neural_tfs.py           -> projects/NeuralTF/results/top10_*.csv + report.md
-  8. make_supp_go_figures.py            -> projects/NeuralTF/figures/supplementary/*
-  9. dirichlet_prioritize.py            -> projects/NeuralTF/results/dirichlet_*.csv|md
-  10. dirichlet_uniform.py              -> projects/NeuralTF/results/dirichlet_uniform_*.csv|txt
-  11. dirichlet_uniform_all249.py       -> projects/NeuralTF/results/dirichlet_uniform_all249_*.csv|txt
-  12. export_fstf_ranked.py             -> projects/NeuralTF/results/tf_ranked_*.csv
-  13. generate_publication_figures.py   -> projects/NeuralTF/figures/01-17_*.png (17 figs)
+   1. convert_fincher.py              -> datasets/processed/fincher_subsample.h5ad
+   2. consolidate_plass.py            -> datasets/processed/plass_v6.h5ad
+   3. convert_cui.py                 -> datasets/processed/cui_v6.h5ad
+   4. preprocess_perez.py            -> projects/NeuralTF/data/perez_tf_summary.csv
+   5. build_master_catalog.py        -> projects/NeuralTF/data/master_tf_catalog.csv
+   6. build_bridge.py                -> projects/NeuralTF/data/bridge.csv
+   7. build_king_atlas.py            -> projects/NeuralTF/data/king_atlas.tsv
+   8. pipeline (run.py)              -> projects/NeuralTF/runs/pipeline_run/*
+   9. query_planmine.py              -> datasets/processed/planmine_annotations.parquet (network)
+  10. prioritize_neural_tfs.py        -> results/top10_*.csv + report.md (fixed method)
+  11. make_supp_go_figures.py         -> figures/supplementary/*
+  12. dirichlet_centered.py          -> results/dirichlet_centered_*.csv|txt
+  13. dirichlet_uniform.py           -> results/dirichlet_uniform_*.csv|txt
+  14. export_fstf_ranked.py          -> results/tf_ranked_*.csv
+  15. ananse_full_scan.py            -> results/ananse_*.csv|parquet
+  16. create_supplementary_tables.py -> results/supplementary_table_S1-S7.csv
+  17. run_weight_sensitivity.py      -> figures/weight_sensitivity_*.csv
+  18. run_statistical_tests.py       -> results/ (14 stats outputs)
+  19. generate_publication_figures.py -> figures/01-33_*.png (33 figs)
 """
 from __future__ import annotations
 
@@ -64,31 +70,31 @@ def _ready(root: Path, step: str) -> str | None:
             "Perez MOESM5 xlsx missing"),
         "Bridge CSV": (
             (raw / "smed_20140614.mapping.rosettastone.2020.txt").exists()
-            and any(king.glob("*mmc4*.xlsx")) if king.exists() else False,
+            and (any(king.glob("*mmc4*.xlsx")) if king.exists() else False),
             "Rosetta Stone txt or King mmc4 xlsx missing"),
         "King atlas TSV": (
-            any(king.glob("*mmc4*.xlsx")) and any(king.glob("*mmc7*.xlsx"))
+            (any(king.glob("*mmc4*.xlsx")) and any(king.glob("*mmc7*.xlsx")))
             if king.exists() else False,
             "King mmc4/mmc7 xlsx missing"),
         "Pipeline run": (
             (proc / "fincher_subsample.h5ad").exists()
             and (proc / "plass_v6.h5ad").exists()
-            and any(king.glob("*mmc4*.xlsx"))
-            and any(king.glob("*mmc5*.xlsx"))
-            and any(king.glob("*mmc6*.xlsx"))
-            and any((raw / "Supplementary_Data_ Perez_2025").glob("*MOESM19*.xlsx"))
-            if king.exists() and (raw / "Supplementary_Data_ Perez_2025").exists() else False,
+            and (any(king.glob("*mmc4*.xlsx")) if king.exists() else False)
+            and (any(king.glob("*mmc5*.xlsx")) if king.exists() else False)
+            and (any(king.glob("*mmc6*.xlsx")) if king.exists() else False)
+            and (any((raw / "Supplementary_Data_ Perez_2025").glob("*MOESM19*.xlsx"))
+                 if (raw / "Supplementary_Data_ Perez_2025").exists() else False),
             "h5ads or King mmc4-6 xlsx or Perez MOESM19 missing"),
         "PlanMine parquet": (
             (run / "rank_neural.csv").exists(),
             "rank_neural.csv missing (run the pipeline first); network step"),
-"Prioritization": (
-            (run / "rank_neural.csv").exists()
+        "Prioritization": (
+            (run / "rank.csv").exists()
             and (proc / "planmine_annotations.parquet").exists()
             and (data / "bridge.csv").exists()
-            and any(king.glob("*mmc4*.xlsx"))
-            and any(king.glob("*mmc5*.xlsx")) if king.exists() else False,
-            "rank_neural.csv / PlanMine parquet / bridge.csv / King mmc4-5 xlsx missing"),
+            and (any(king.glob("*mmc4*.xlsx")) if king.exists() else False)
+            and (any(king.glob("*mmc5*.xlsx")) if king.exists() else False),
+            "rank.csv / PlanMine parquet / bridge.csv / King mmc4-5 xlsx missing"),
         "GO supp figures": (
             (root / "projects" / "NeuralTF" / "results"
              / "top10_neural_tfs_prioritized.csv").exists()
@@ -123,15 +129,11 @@ def _ready(root: Path, step: str) -> str | None:
             (run / "rank_neural.csv").exists(),
             "rank_neural.csv missing (run the pipeline first)"),
         "Master TF Catalog": (
-            any(king.glob("*mmc4*.xlsx")) if king.exists() else False
-            and (proc.parent.parent / "projects" / "NeuralTF" / "data"
+            (any(king.glob("*mmc4*.xlsx")) if king.exists() else False)
+            and (root / "projects" / "NeuralTF" / "data"
                  / "perez_tf_summary.csv").exists(),
             "King mmc4 or perez_tf_summary.csv missing "
             "(run preprocess_perez.py first)"),
-        "Dirichlet-centered-all249": (
-            (run / "rank.csv").exists()
-            and (run / "rank_neural.csv").exists(),
-            "rank.csv / rank_neural.csv missing (run the pipeline first)"),
         "ANANSE full scan": (
             (run / "rank.csv").exists()
             and (root / "datasets" / "raw" / "Supplementary_Data_ Perez_2025"
@@ -180,12 +182,14 @@ STEPS = [
      [["projects", "NeuralTF", "results", "dirichlet_centered_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_centered_overall_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_centered_full_rank.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_centered_summary.txt"]]),
+      ["projects", "NeuralTF", "results", "dirichlet_centered_summary.txt"],
+      ["projects", "NeuralTF", "results", "dirichlet_centered_draw_scores.csv"]]),
     ("Dirichlet-uniform", ["projects/NeuralTF/scripts/dirichlet_uniform.py"], [],
      [["projects", "NeuralTF", "results", "dirichlet_uniform_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_overall_top10.csv"],
       ["projects", "NeuralTF", "results", "dirichlet_uniform_full_rank.csv"],
-      ["projects", "NeuralTF", "results", "dirichlet_uniform_summary.txt"]]),
+      ["projects", "NeuralTF", "results", "dirichlet_uniform_summary.txt"],
+      ["projects", "NeuralTF", "results", "dirichlet_uniform_draw_scores.csv"]]),
     ("Export ranked TFs",
      ["projects/NeuralTF/scripts/export_fstf_ranked.py"], [],
      [["projects", "NeuralTF", "results", "tf_ranked_neural_top19.csv"],
@@ -198,13 +202,12 @@ STEPS = [
     ("Generate supplementary tables",
      ["projects/NeuralTF/scripts/create_supplementary_tables.py"], [],
      [["projects", "NeuralTF", "results", "supplementary_table_S1_method_comparison.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S2_fixed_all249.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S3_centered_all99.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S4_uniform_all99.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S5_uniform_all249.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S6_tf_neural_top19.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S7_tf_all_top43.csv"],
-      ["projects", "NeuralTF", "results", "supplementary_table_S8_tf_catalog_top74.csv"]]),
+      ["projects", "NeuralTF", "results", "supplementary_table_S2_fixed_all_candidates.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S3_centered_all_candidates.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S4_uniform_all_candidates.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S5_tf_neural.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S6_tf_all.csv"],
+      ["projects", "NeuralTF", "results", "supplementary_table_S7_tf_catalog.csv"]]),
     ("Weight sensitivity analysis",
      ["scripts", "run_weight_sensitivity.py"], [],
      [["projects", "NeuralTF", "figures", "weight_sensitivity_draws.csv"],

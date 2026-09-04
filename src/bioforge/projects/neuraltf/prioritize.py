@@ -1,13 +1,32 @@
 """Dual-track prioritization of NeuralTF candidates.
 
-Combines the pipeline ranking (``rank_neural.csv``), PlanMine functional
-annotations, the v6<->v4 identifier bridge, and the King 2024 supplementary
-tables into a transparent, reproducible shortlist: top 5 RNAi-validated
-benchmark TFs (Track A) and top 5 uncharacterized novel TFs (Track B).
+Combines the pipeline ranking (``rank.csv`` / ``rank_neural.csv``),
+PlanMine functional annotations, the v6<->v4 identifier bridge, and the King
+2024 supplementary tables into a transparent, reproducible shortlist: top 5
+RNAi-validated benchmark TFs (Track A) and top 5 uncharacterized novel TFs
+(Track B).
+
+Unified method philosophy (WS2)
+-------------------------------
+All THREE prioritization methods — fixed weights, Dirichlet-centered,
+Dirichlet-uniform — share the identical post-processing:
+
+1. **Candidate universe**: all candidates in ``rank.csv`` (the neural
+   subset is a filtered view, never a different input).
+2. **Annotations**: the long PlanMine parquet is collapsed per gene via
+   ``summarize_annotations`` BEFORE merging (never raw-joined, which
+   explodes rows).
+3. **Bonuses**: ``apply_bonuses`` adds the same +0.07 bonus mask
+   (go_neural 0.03, go_tf 0.02, human_ortholog 0.02) on top of each
+   method's own base score, with per-component transparency columns.
+4. **Track B gate**: ``gate_track_b`` requires DNA-binding-domain or
+   mmc4-TF-flag evidence for every method.
+5. **Deterministic tie-breaks**: composite -> method base score ->
+   n_streams -> gene_id.
 
 Scoring
 -------
-``composite_score`` (0-1) is the pipeline ``integrated_score`` plus small,
+``composite_score`` (0-1) is the method's base weighted score plus small,
 fully documented bonuses:
 
 +----------------------+------+---------------------------------------------------+
@@ -24,7 +43,7 @@ Note: A DNA-binding domain bonus was removed because EvidenceSource.PEREZ_LINEAG
 (weight 0.10 in the pipeline) already rewards structural TF domain class with a
 score of 0.5–1.0, making an additional composite bonus double-counting.
 
-Bonuses are small and additive; the pipeline score stays dominant.
+Bonuses are small and additive; the method's base score stays dominant.
 
 All selector logic is pure and unit-testable (no I/O).
 """
@@ -263,10 +282,83 @@ def merge_annotations(score_df: pd.DataFrame, ann: pd.DataFrame) -> pd.DataFrame
 
 
 def compute_composite(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute composite_score from the merged feature columns (mutating copy)."""
+    """Compute composite_score from the merged feature columns (mutating copy).
+
+    Identical to ``apply_bonuses(df, "integrated_score")`` — kept as the
+    historical name used by the fixed method.
+    """
+    return apply_bonuses(df, "integrated_score")
+
+
+def apply_bonuses(df: pd.DataFrame, base_col: str) -> pd.DataFrame:
+    """Add the shared PlanMine/ortholog bonuses on top of ``base_col``.
+
+    Used by ALL THREE prioritization methods (fixed, Dirichlet-centered,
+    Dirichlet-uniform) so the bonus layer is applied identically everywhere:
+
+    +----------------------+------+-------------------------------------+
+    | bonus                | wt   | rationale                           |
+    +----------------------+------+-------------------------------------+
+    | go_neural            | 0.03 | GO term in a neural biological proc |
+    | go_tf                | 0.02 | GO term in transcription regulation |
+    | human_ortholog       | 0.02 | Confirmed ortholog (mmc4 / PlanMine)|
+    +----------------------+------+-------------------------------------+
+
+    ``base_col`` is the method's own weighted score (integrated_score,
+    dirichlet_median_score, or uniform_median_score). Adds transparent
+    ``bonus_*`` component columns alongside ``composite_score``.
+    """
     out = df.copy()
-    out["composite_score"] = out.apply(_composite_score, axis=1).round(4)
+    if base_col not in out.columns:
+        raise KeyError(f"base column {base_col!r} missing; have {list(out.columns)[:12]}")
+    if base_col != "integrated_score":
+        out["integrated_score"] = pd.to_numeric(out.get("integrated_score"), errors="coerce")
+
+    components = out.apply(_bonus_components, axis=1, result_type="expand")
+    out["bonus_go_neural"] = components[0]
+    out["bonus_go_tf"] = components[1]
+    out["bonus_human_ortholog"] = components[2]
+    out["bonus_total"] = components[3]
+
+    base = pd.to_numeric(out[base_col], errors="coerce").fillna(0.0)
+    out["composite_score"] = (base + out["bonus_total"]).clip(upper=MAX_COMPOSITE).round(4)
+    out["composite_base_column"] = base_col
     return out
+
+
+def _bonus_components(row: pd.Series) -> tuple[float, float, float, float]:
+    """Per-row bonus components (go_neural, go_tf, human_ortholog, total)."""
+    has_neural_go = has_go_tf = False
+    seen: set[str] = set()
+    for term in str(row.get("go_terms", "") or "").split(";"):
+        t = term.strip()
+        if not t or t.lower() in ("nan", "none") or t.lower() in seen:
+            continue
+        seen.add(t.lower())
+        is_neural, is_tf = go_term_flags(t)
+        has_neural_go = has_neural_go or is_neural
+        has_go_tf = has_go_tf or is_tf
+    b_neural = BONUS_GO_NEURAL if has_neural_go else 0.0
+    b_tf = BONUS_GO_TF if has_go_tf else 0.0
+    b_orth = BONUS_HUMAN_ORTHOLOG if _has_ortholog(row) else 0.0
+    return b_neural, b_tf, b_orth, b_neural + b_tf + b_orth
+
+
+def gate_track_b(df: pd.DataFrame) -> pd.DataFrame:
+    """Track B gate: keep only candidates with tangible TF identity.
+
+    A DNA-binding protein-domain hit in PlanMine or an mmc4 "TF" flag.
+    Applied identically by all three prioritization methods so the
+    shortlists are comparable (no hypothetical factors without domain
+    evidence).
+    """
+    dom_ok = df["dna_binding_domains"].astype(str).str.strip() != "" \
+        if "dna_binding_domains" in df.columns else False
+    tf_ok = df["mmc4_tf_flag"].astype(str).str.upper() == "TF" \
+        if "mmc4_tf_flag" in df.columns else False
+    if isinstance(dom_ok, bool):
+        return df
+    return df[dom_ok | tf_ok]
 
 
 def _has_ortholog(row: pd.Series) -> bool:
@@ -286,58 +378,34 @@ def _has_ortholog(row: pd.Series) -> bool:
     return False
 
 
-def _composite_score(row: pd.Series) -> float:
-    base = 0.0
-    try:
-        base = float(row.get("integrated_score") or 0.0)
-    except (TypeError, ValueError):
-        base = 0.0
-    bonus = 0.0
-    # NOTE: No TF-domain bonus here.  EvidenceSource.PEREZ_LINEAGE (w=0.10)
-    # already grants 0.5–1.0 for confirmed structural TF domain class in the
-    # pipeline scoring layer.  Adding a separate +0.05 bonus here would double-
-    # reward the same domain evidence, biasing the composite score.
-    has_neural_go = has_go_tf = False
-    seen: set[str] = set()
-    for term in str(row.get("go_terms", "") or "").split(";"):
-        t = term.strip()
-        if not t or t.lower() in ("nan", "none") or t.lower() in seen:
-            continue
-        seen.add(t.lower())
-        is_neural, is_tf = go_term_flags(t)
-        has_neural_go = has_neural_go or is_neural
-        has_go_tf = has_go_tf or is_tf
-    if has_neural_go:
-        bonus += BONUS_GO_NEURAL
-    if has_go_tf:
-        bonus += BONUS_GO_TF
-    if _has_ortholog(row):
-        bonus += BONUS_HUMAN_ORTHOLOG
-    return min(MAX_COMPOSITE, base + bonus)
-
-
 def select_top(track_df: pd.DataFrame, n: int = 5) -> pd.DataFrame:
-    """Take the top-n rows by composite_score (ties broken by the pipeline
-    integrated_score, then n_streams).  Returns the rows ranked 1..n."""
+    """Take the top-n rows by composite_score (ties broken by the method's
+    base median score, then n_streams).  Returns the rows ranked 1..n.
+
+    Ties are also broken by gene_id for full determinism.
+    """
     out = track_df.copy()
-    for col in ("composite_score", "integrated_score"):
-        if col not in out.columns:
-            out[col] = 0.0
+    base_col = "composite_score"
+    if "composite_score" not in out.columns:
+        # fall back to whichever method base column exists
+        for c in ("integrated_score", "dirichlet_median_score", "uniform_median_score"):
+            if c in out.columns:
+                out["composite_score"] = out[c]
+                break
+        else:
+            out["composite_score"] = 0.0
+    tie_cols = [c for c in ("integrated_score", "dirichlet_median_score",
+                            "uniform_median_score", "n_streams")
+                if c in out.columns]
     out["composite_score"] = pd.to_numeric(
         out["composite_score"], errors="coerce"
-    ).fillna(out["integrated_score"])
-    out["integrated_score"] = pd.to_numeric(
-        out["integrated_score"], errors="coerce"
     ).fillna(0.0)
-    if "n_streams" not in out.columns:
-        out["n_streams"] = 0
-    out["n_streams"] = pd.to_numeric(
-        out["n_streams"], errors="coerce"
-    ).fillna(0).astype(int)
-    out = out.sort_values(
-        by=["composite_score", "integrated_score", "n_streams"],
-        ascending=False,
-    ).head(n).copy()
+    for c in tie_cols:
+        out[c] = pd.to_numeric(out[c], errors="coerce").fillna(0.0)
+    if "n_streams" in out.columns:
+        out["n_streams"] = out["n_streams"].astype(int)
+    sort_cols = ["composite_score"] + tie_cols + ["gene_id"]
+    out = out.sort_values(by=sort_cols, ascending=False).head(n).copy()
     out["rank"] = range(1, len(out) + 1)
     return out.reset_index(drop=True)
 

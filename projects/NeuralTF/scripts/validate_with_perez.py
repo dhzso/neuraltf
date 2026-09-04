@@ -57,8 +57,8 @@ def validate_top10():
         v6_ids = df["gene_id_v6"].tolist() if "gene_id_v6" in df.columns else df.get("gene_id", pd.Series()).tolist()
         v6_ids = [str(v) for v in v6_ids if str(v) != "nan"]
 
-        # Map v6 -> h1SMcG
-        v6_to_h1_map = batch_v6_to_h1smcg(v6_ids)
+        # Map v6 -> h1SMcG (RBH-restricted for unambiguous attribution)
+        v6_to_h1_map = batch_v6_to_h1smcg(v6_ids, rbh_only=True)
 
         print(f"\n{'='*60}")
         print(f"  {name} TOP 10 vs ANANSE neuron network")

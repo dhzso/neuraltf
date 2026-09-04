@@ -131,12 +131,15 @@ def main() -> int:
     ))
     rank_pos = {gid: i + 1 for i, gid in enumerate(rank["gene_id"].astype(str))}
 
-    # ---------- Map v6 â†’ h1SMcG ------------------------------------------
-    print("  Mapping v6 IDs â†’ h1SMcG ...")
-    v6_to_h1 = batch_v6_to_h1smcg(v6_ids)
+    # ---------- Map v6 → h1SMcG -------------------------------------------
+    # RBH-restricted: the collapsed Similar column claims 14.4k of 25k v6
+    # IDs for >1 h1SMcG, so first-wins picks would attribute edges
+    # arbitrarily. The 1:1 RBH column is unambiguous.
+    print("  Mapping v6 IDs → h1SMcG (RBH-only) ...")
+    v6_to_h1 = batch_v6_to_h1smcg(v6_ids, rbh_only=True)
     h1_to_v6 = {h: v for v, h in v6_to_h1.items() if h}
     n_mapped = sum(1 for h in v6_to_h1.values() if h)
-    print(f"  Mapped {n_mapped}/{len(v6_ids)} v6 IDs to h1SMcG")
+    print(f"  Mapped {n_mapped}/{len(v6_ids)} v6 IDs to h1SMcG (1:1 RBH)")
 
     # ---------- Load ANANSE -----------------------------------------------
     print(f"  Loading ANANSE network from {MOESM22.name} ...")
@@ -156,9 +159,20 @@ def main() -> int:
         )
 
     print(f"  TF column: '{tf_col}', Target column: '{tgt_col}'")
+    score_col = _col(ananse, "interaction score", "score")
     if fate_col:
         fates = ananse[fate_col].dropna().unique()
         print(f"  Fates: {sorted(fates)}")
+    if score_col:
+        ananse[score_col] = pd.to_numeric(ananse[score_col], errors="coerce")
+
+    # Per-fate edge totals (for normalization: raw cross-fate edge counts
+    # favor fates with more sheets/edges, e.g. phagocytes 2253 vs neuron 1115)
+    fate_totals = (
+        ananse.dropna(subset=[tf_col])
+        .groupby(fate_col)[tf_col].size().to_dict()
+        if fate_col else {}
+    )
 
     # Build lookup sets
     ananse_tf_ids: set[str] = set(ananse[tf_col].dropna().astype(str))
@@ -177,21 +191,38 @@ def main() -> int:
         n_targets_total = 0
         n_targets_neuron = 0
         top5_targets = ""
+        neuron_share = 0.0  # share of a fate's full edge set this TF covers
         if is_tf:
             tf_rows = ananse[ananse[tf_col] == h1]
-            n_targets_total = len(tf_rows)
+            n_targets_total = tf_rows[tgt_col].nunique() if tgt_col else len(tf_rows)
             if fate_col:
                 fates_as_tf = sorted(tf_rows[fate_col].dropna().unique().tolist())
-                neuron_rows = tf_rows[tf_rows[fate_col].str.lower().str.contains("neuron", na=False)]
-                n_targets_neuron = len(neuron_rows)
+                neuron_rows = tf_rows[
+                    tf_rows[fate_col].str.lower().str.contains("neuron", na=False)
+                ]
+                n_targets_neuron = (
+                    neuron_rows[tgt_col].nunique() if tgt_col else len(neuron_rows)
+                )
+                # neuron-fate normalized share (per-fate edge-count scale)
+                tot = fate_totals.get("neuron", 0)
+                if tot > 0:
+                    neuron_share = round(len(neuron_rows) / tot, 4)
             else:
                 fates_as_tf = ["unknown"]
-            if tgt_sym_col and tgt_sym_col in tf_rows.columns:
-                top5 = tf_rows[tgt_sym_col].dropna().unique()[:5]
-                top5_targets = "; ".join(str(x) for x in top5)
-            elif tgt_col in tf_rows.columns:
-                top5 = tf_rows[tgt_col].dropna().unique()[:5]
-                top5_targets = "; ".join(str(x) for x in top5)
+            # Top targets ordered by interaction score (not file order)
+            ordered = tf_rows
+            if score_col and score_col in tf_rows.columns:
+                ordered = tf_rows.sort_values(score_col, ascending=False)
+            sym_src = tgt_sym_col if (tgt_sym_col and tgt_sym_col in ordered.columns) \
+                else tgt_col
+            if sym_src in ordered.columns:
+                seen: list[str] = []
+                for x in ordered[sym_src].dropna().astype(str):
+                    if x not in seen:
+                        seen.append(x)
+                    if len(seen) >= 5:
+                        break
+                top5_targets = "; ".join(seen)
 
         # Target metrics (which TFs regulate this gene)
         regulating_tfs = ""
@@ -212,6 +243,7 @@ def main() -> int:
             "fates_as_tf": "|".join(fates_as_tf),
             "n_targets_total": n_targets_total,
             "n_targets_neuron": n_targets_neuron,
+            "neuron_share": neuron_share,
             "top_5_targets": top5_targets,
             "regulating_tfs": regulating_tfs,
             "rank_position": rank_pos.get(v6_id, 0),
@@ -220,14 +252,19 @@ def main() -> int:
         })
 
     out_df = pd.DataFrame(records)
-    out_df = out_df.sort_values("n_targets_total", ascending=False).reset_index(drop=True)
+    # Rank regulators by neuron-fate activity first (this is a neural-TF
+    # project), then by unique-target out-degree.
+    out_df = out_df.sort_values(
+        ["n_targets_neuron", "n_targets_total"], ascending=False
+    ).reset_index(drop=True)
 
     # ---------- Assertions ---------------------------------------------------
     assert len(out_df) > 0, "ANANSE scan produced zero rows"
     req_cols = ["v6_id", "gene_name", "h1smcg_id", "is_ananse_tf",
                 "is_ananse_target", "fates_as_tf", "n_targets_total",
-                "n_targets_neuron", "top_5_targets", "regulating_tfs",
-                "rank_position", "integrated_score", "proof_status"]
+                "n_targets_neuron", "neuron_share", "top_5_targets",
+                "regulating_tfs", "rank_position", "integrated_score",
+                "proof_status"]
     for col in req_cols:
         assert col in out_df.columns, f"Missing required column: {col}"
 
@@ -247,11 +284,13 @@ def main() -> int:
 
     top_regulators = (
         out_df[out_df["is_ananse_tf"]]
-        .sort_values("n_targets_total", ascending=False)
+        .sort_values(
+            ["n_targets_neuron", "n_targets_total"], ascending=False
+        )
         .head(20)
         [["v6_id", "gene_name", "h1smcg_id", "fates_as_tf",
-          "n_targets_total", "n_targets_neuron", "top_5_targets",
-          "integrated_score", "proof_status"]]
+          "n_targets_total", "n_targets_neuron", "neuron_share",
+          "top_5_targets", "integrated_score", "proof_status"]]
         .reset_index(drop=True)
     )
     top_reg_path = RESULTS / "ananse_top_regulators.csv"
