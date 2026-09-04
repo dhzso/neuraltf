@@ -42,10 +42,11 @@ bioforge ui                                  # http://localhost:8501
 
 | File | Content |
 |------|---------|
-| `rank.csv` | All **278 candidates** with scores across all 9 evidence streams |
-| `rank_neural.csv` | **101 neural-enriched candidates** with proof status |
-| `evidence_cards.md` | Per-candidate markdown evidence summary (278 cards) |
+| `rank.csv` | All **11,672 candidates** with scores across all 9 evidence streams |
+| `rank_neural.csv` | Neural-enriched candidates with proof status |
+| `evidence_cards.md` | Per-candidate markdown evidence summary |
 | `pipeline_results.json` | Machine-readable candidate metadata |
+| `de_pvalues.parquet` | Per-gene best DE p per atlas (meta-analysis input) |
 | `checkpoint_0*.parquet` | 6 incremental audit checkpoints (atlas loads, post-QC, post-scoring, King, Perez, stream matrix) |
 
 ### Prioritization & Analysis Outputs (`projects/NeuralTF/results/`)
@@ -115,20 +116,24 @@ $$\text{Integrated Score} = \sum_{i \in \text{Present}} w_i \cdot s_i \Bigg/ \su
 
 ---
 
-## Top Prioritized Candidates (Current Run)
+## Top Prioritized Candidates (Production Run — Full Atlases, 11,672 Candidates)
 
-| Rank | Gene ID (v6) | Gene Name | Integrated Score | Dirichlet Median | Proof Status | Primary DNA-Binding Domain / Family |
-|:---:|:---|:---|:---:|:---:|:---|:---|
-| 1 | `dd_Smed_v6_2946_0_1` | **dd2946** | 0.852 | 0.857 | `known_rnai_validated` | C2H2 Zinc Finger |
-| 2 | `dd_Smed_v6_38342_0_1` | **dd38342** | 0.782 | 0.783 | `known_rnai_validated` | POU / Homeobox |
-| 3 | `dd_Smed_v6_14115_0_1` | **dd14115** | 0.764 | 0.762 | `known_rnai_validated` | Homeobox / LIM |
-| 4 | `dd_Smed_v6_14824_0_1` | **dd14824** | 0.756 | 0.762 | `known_rnai_validated` | C2H2 Zinc Finger |
-| 5 | `dd_Smed_v6_19890_0_1` | **dd19890** | 0.753 | 0.753 | `known_rnai_validated` | T-box |
-| 6 | `dd_Smed_v6_31217_0_1` | **dd31217** | 0.751 | 0.760 | `novel_candidate` | bHLH |
-| 7 | `dd_Smed_v6_7033_0_1` | **dd7033** | 0.734 | 0.734 | `novel_candidate` | Homeobox / C2H2 ZNF |
-| 8 | `dd_Smed_v6_4048_0_1` | **dd4048** | 0.750 | 0.749 | `novel_candidate` | bHLH |
-| 9 | `dd_Smed_v6_11930_0_1` | **dd11930** | 0.734 | 0.734 | `novel_candidate` | C2H2 Zinc Finger |
-| 10 | `dd_Smed_v6_9596_0_1` | **dd9596** | 0.691 | 0.691 | `novel_candidate` | Homeobox |
+Consensus across all three unified methods (fixed / centered Dirichlet k=40 / uniform Dirichlet α=1; shared universe, bonus mask, and Track gates):
+
+| Track | Consensus candidates | Evidence |
+|:---:|:---|:---|
+| **A #1** | `dd_Smed_v6_16955_0_1` (**dd16955**) | RNAi-validated; composite 1.000 in all 3 methods |
+| **A #2** | `dd_Smed_v6_14753_0_1` (**ascl-2**) | RNAi-validated proneural bHLH; recovered by the short-ID fix |
+| **A #3** | `dd_Smed_v6_11150_0_1` (**dd11150**) | RNAi-validated; fixed-method #2 |
+| **A #4** | `dd_Smed_v6_22163_0_1` (**dd22163 / UNCX**) | RNAi-validated; recovered by the short-ID fix |
+| **A #5** | `dd_Smed_v6_30562_0_1` (**dd30562**) | RNAi-validated in all 3 methods |
+| **B #1** | `dd_Smed_v6_13704_0_1` (**ptf-4**) | Novel POU-class candidate; top Track B in all 3 methods |
+| **B #2** | `dd_Smed_v6_18972_0_1` (**dd18972**) | Novel; consensus #2 Track B |
+| **B #3** | `dd_Smed_v6_18719_0_1` (**dd18719**) | Novel; top-3 Track B in all 3 methods |
+| **B #4** | `dd_Smed_v6_9596_0_1` (**dd9596**) | Novel homeobox; consistent across methods |
+| **B #5** | `dd_Smed_v6_10038_0_1` (**arh / dd10038**) | Novel; Dirichlet-consistent Track B |
+
+Per-method shortlists: `dirichlet_centered_top10.csv`, `dirichlet_uniform_top10.csv`, `top10_neural_tfs_prioritized.csv` (all 10-unique-gene dual-track lists). RNAi ground-truth recovery: honest ROC-AUC **0.933** (circularity-controlled, label-encoding streams excluded) vs 0.990 circular.
 
 ---
 

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 """ANANSE Full-Candidate GRN Regulatory Network Scan.
 
 Cross-references ALL prioritized TF candidates (from rank.csv) against the
@@ -131,11 +131,11 @@ def main() -> int:
     ))
     rank_pos = {gid: i + 1 for i, gid in enumerate(rank["gene_id"].astype(str))}
 
-    # ---------- Map v6 → h1SMcG -------------------------------------------
+    # ---------- Map v6 -> h1SMcG -------------------------------------------
     # RBH-restricted: the collapsed Similar column claims 14.4k of 25k v6
     # IDs for >1 h1SMcG, so first-wins picks would attribute edges
     # arbitrarily. The 1:1 RBH column is unambiguous.
-    print("  Mapping v6 IDs → h1SMcG (RBH-only) ...")
+    print("  Mapping v6 IDs -> h1SMcG (RBH-only) ...")
     v6_to_h1 = batch_v6_to_h1smcg(v6_ids, rbh_only=True)
     h1_to_v6 = {h: v for v, h in v6_to_h1.items() if h}
     n_mapped = sum(1 for h in v6_to_h1.values() if h)

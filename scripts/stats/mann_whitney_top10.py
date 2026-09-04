@@ -119,7 +119,7 @@ def main():
     print(f"\nTop-10 genes:")
     top10_df = df_sorted.head(10)
     for _, row in top10_df.iterrows():
-        print(f"  {row.get('gene_name', row[gene_col]):>12s}  score={row[score_col]:.4f}")
+        print(f"  {str(row.get('gene_name', row[gene_col])):>12}  score={row[score_col]:.4f}")
 
     out_path = RESULTS_DIR / "mann_whitney_top10.json"
     with open(out_path, "w") as f:

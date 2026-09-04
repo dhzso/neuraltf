@@ -129,8 +129,8 @@ def main():
 
     print("\nTop-10 by score with shuffled-null p-values:")
     for i, (_, row) in enumerate(df_out.head(10).iterrows()):
-        name = row.get("gene_name", row[gene_col])
-        print(f"  {i+1:>2d}. {name:>12s}  score={row['real_integrated_score']:.4f}  "
+        name = str(row.get("gene_name", row[gene_col]))
+        print(f"  {i+1:>2d}. {name:>12}  score={row['real_integrated_score']:.4f}  "
               f"p={row['empirical_p_shuffled']:.4f}")
 
     return 0

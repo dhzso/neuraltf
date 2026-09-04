@@ -1,12 +1,12 @@
 go_id,term,namespace,neural_go,tf_go,composite_bonus,n_of_97_neural_candidates,in_fig9_go_dotplot,in_fig_s1_map,in_fig_s2_top10_matrix,in_fig_s3_top15,in_fig_s4_neural_focus,is_obsolete
-GO:0007399,nervous system development,biological_process,yes,no,go_neural +0.03,12,no,yes,yes,no,yes,no
+GO:0007399,nervous system development,biological_process,yes,no,go_neural +0.03,12,yes,yes,yes,no,yes,no
 GO:0007411,axon guidance,biological_process,yes,no,go_neural +0.03,9,no,yes,yes,no,yes,no
 GO:0007417,central nervous system development,biological_process,yes,no,go_neural +0.03,8,no,yes,yes,no,yes,no
 GO:0007420,brain development,biological_process,yes,no,go_neural +0.03,8,no,yes,yes,no,yes,no
 GO:0007605,sensory perception of sound,biological_process,yes,no,go_neural +0.03,8,no,yes,yes,no,yes,no
 GO:0045665,negative regulation of neuron differentiation,biological_process,yes,no,go_neural +0.03,8,no,yes,yes,no,yes,no
 GO:0048663,neuron fate commitment,biological_process,yes,no,go_neural +0.03,7,no,yes,no,no,yes,no
-GO:0001764,neuron migration,biological_process,yes,no,go_neural +0.03,6,yes,yes,no,no,yes,no
+GO:0001764,neuron migration,biological_process,yes,no,go_neural +0.03,6,no,yes,no,no,yes,no
 GO:0008045,motor neuron axon guidance,biological_process,yes,no,go_neural +0.03,6,no,no,no,no,yes,no
 GO:0030182,neuron differentiation,biological_process,yes,no,go_neural +0.03,6,no,no,no,no,yes,no
 GO:0045664,regulation of neuron differentiation,biological_process,yes,no,go_neural +0.03,6,no,no,no,no,yes,no
@@ -107,21 +107,21 @@ GO:0003677,DNA binding,molecular_function,no,yes,go_tf +0.02,60,yes,yes,yes,yes,
 GO:0043565,sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,50,yes,yes,yes,yes,no,no
 GO:0006351,DNA-templated transcription,biological_process,no,no,,46,yes,yes,yes,yes,no,no
 GO:0045944,positive regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,32,no,yes,yes,yes,no,no
-GO:0005515,protein binding,molecular_function,no,no,,30,yes,yes,yes,yes,no,no
+GO:0005515,protein binding,molecular_function,no,no,,30,no,yes,yes,yes,no,no
 GO:0007275,multicellular organism development,biological_process,no,no,,29,yes,yes,yes,yes,no,no
 GO:0045893,positive regulation of DNA-templated transcription,biological_process,no,no,,23,no,yes,no,yes,no,no
-GO:0000122,negative regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,21,yes,yes,no,yes,no,no
-GO:0006357,regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,20,no,yes,no,yes,no,no
+GO:0000122,negative regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,21,no,yes,no,yes,no,no
+GO:0006357,regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,20,yes,yes,no,yes,no,no
 GO:0005622,intracellular anatomical structure,cellular_component,no,no,,17,no,no,no,yes,no,no
-GO:0005667,transcription regulator complex,cellular_component,no,no,,17,no,no,no,yes,no,no
-GO:0008270,zinc ion binding,molecular_function,no,no,,16,yes,no,no,yes,no,no
+GO:0005667,transcription regulator complex,cellular_component,no,no,,17,yes,no,no,yes,no,no
+GO:0008270,zinc ion binding,molecular_function,no,no,,16,no,no,no,yes,no,no
 GO:0005737,cytoplasm,cellular_component,no,no,,15,no,no,no,no,no,no
 GO:0044212,transcription cis-regulatory region binding,molecular_function,no,no,,13,no,no,no,no,no,no
 GO:0045892,negative regulation of DNA-templated transcription,biological_process,no,no,,13,no,no,no,no,no,no
 GO:0046872,metal ion binding,molecular_function,no,no,,13,no,no,no,no,no,no
 GO:0003682,chromatin binding,molecular_function,no,no,,11,no,no,no,no,no,no
 GO:0003705,"DNA-binding transcription factor activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,11,no,no,no,no,no,no
-GO:0005730,nucleolus,cellular_component,no,no,,11,no,no,no,no,no,no
+GO:0005730,nucleolus,cellular_component,no,no,,11,yes,no,no,no,no,no
 GO:0045165,cell fate commitment,biological_process,no,no,,11,no,no,no,no,no,no
 GO:0048839,inner ear development,biological_process,no,no,,10,no,no,no,no,no,no
 GO:0006366,transcription by RNA polymerase II,biological_process,no,no,,9,no,no,no,no,no,no
@@ -129,7 +129,7 @@ GO:0008134,transcription factor binding,molecular_function,no,no,,9,no,no,no,no,
 GO:0010468,regulation of gene expression,biological_process,no,no,,9,no,no,no,no,no,no
 GO:0030154,cell differentiation,biological_process,no,no,,9,no,no,no,no,no,no
 GO:0046983,protein dimerization activity,molecular_function,no,no,,9,no,no,no,no,no,no
-GO:0001077,"DNA-binding transcription activator activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,8,no,no,no,no,no,no
+GO:0001077,"DNA-binding transcription activator activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,8,yes,no,no,no,no,no
 GO:0042472,inner ear morphogenesis,biological_process,no,no,,8,no,no,no,no,no,no
 GO:0000981,"DNA-binding transcription factor activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,7,no,no,no,no,no,no
 GO:0001822,kidney development,biological_process,no,no,,7,no,no,no,no,no,no
@@ -139,7 +139,7 @@ GO:0008285,negative regulation of cell population proliferation,biological_proce
 GO:0031016,pancreas development,biological_process,no,no,,7,no,no,no,no,no,no
 GO:0005829,cytosol,cellular_component,no,no,,6,no,no,no,no,no,no
 GO:0007498,mesoderm development,biological_process,no,no,,6,no,no,no,no,no,no
-GO:0008283,cell population proliferation,biological_process,no,no,,6,yes,no,no,no,no,no
+GO:0008283,cell population proliferation,biological_process,no,no,,6,no,no,no,no,no,no
 GO:0009953,dorsal/ventral pattern formation,biological_process,no,no,,6,no,no,no,no,no,no
 GO:0060042,retina morphogenesis in camera-type eye,biological_process,no,no,,6,no,no,no,no,no,no
 GO:0000976,transcription cis-regulatory region binding,molecular_function,no,no,,5,no,no,no,no,no,no
