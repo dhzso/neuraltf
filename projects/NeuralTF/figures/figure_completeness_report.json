@@ -137,7 +137,7 @@
     },
     {
       "file": "fig_s1_go_gene_term_map.png",
-      "ink_coverage": 0.2375
+      "ink_coverage": 0.2389
     },
     {
       "file": "fig_s2_go_top10_dotmatrix.png",
@@ -145,7 +145,7 @@
     },
     {
       "file": "fig_s3_go_top_terms.png",
-      "ink_coverage": 0.3073
+      "ink_coverage": 0.3057
     },
     {
       "file": "fig_s4_go_neural_focus.png",
@@ -153,7 +153,7 @@
     },
     {
       "file": "fig_s5_go_heatmap_neural.png",
-      "ink_coverage": 0.6047
+      "ink_coverage": 0.6051
     },
     {
       "file": "fig_s6_top10_go_profiles.png",
@@ -161,7 +161,7 @@
     },
     {
       "file": "fig_s7_go_namespace_track.png",
-      "ink_coverage": 0.2818
+      "ink_coverage": 0.2813
     }
   ],
   "unreadable": [],

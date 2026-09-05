@@ -136,3 +136,6 @@ neuraltf-repo/
 # Exploratory notebook outputs were pruned (superseded by results/)
 projects/NeuralTF/notebooks/*
 !projects/NeuralTF/notebooks/.gitkeep
+
+# Local-only audit records (never commit/push)
+audit/

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Weight-sensitivity analysis: 1000 random weight draws over ALL candidates.
 
-2026-09-04 redesign (statistical audit):
+2026-09-04 redesign:
 
 - Universe: rank.csv (all candidates), matching the three published
   prioritization methods. The previous version used only the 128-gene

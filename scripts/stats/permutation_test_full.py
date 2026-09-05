@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Permutation test on the SAME multi-stream statistic the pipeline ranks.
 
-2026-09-04 FULL REDESIGN (statistical audit):
+2026-09-04 FULL REDESIGN:
 
 The previous null was degenerate: it permuted only Fincher/Plass labels,
 silently RETAINED the observed (King/Cui-inflated) expression for genes

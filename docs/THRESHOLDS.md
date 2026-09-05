@@ -96,10 +96,9 @@ $$\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$$
 
 The EvidenceScorer always renormalizes over **present** streams per candidate, so the effective weight depends on which streams have data for each candidate. This ensures that missing evidence does not penalize candidates as *absence of evidence is not evidence of absence*.
 
-### 1.9 Formula Revisions (2026-09-04 mathematical audit)
+### 1.9 Formula Revisions
 
-The following refinements were applied after a full mathematical audit; the
-rationales above describe the current (post-audit) behavior:
+The following refinements define the current behavior:
 
 1. **True log2FC (Fincher/Plass/Cui)** — Scanpy's `rank_genes_groups`
    `logfoldchanges` are a difference of log1p values (pseudo-fold-changes),
@@ -122,14 +121,14 @@ rationales above describe the current (post-audit) behavior:
    numeric gene field from structured IDs (`dd_Smed_v6_11150_0_1 → dd11150`;
    the previous lazy regex returned `dd6`), restoring RNAi-stream matches
    for 18 known neural TFs; correlation Δr uses joint NaN masking so the
-6. **King neural gate (2026-09-04 audit)** — the neural-enrichment gate on
+6. **King neural gate** — the neural-enrichment gate on
    King mmc7 G0 subclusters is `log2FC ≥ 1.5`, matching King 2024's own
    STAR Methods criterion ("at least a 1.5 log2FC enrichment"; every mmc7
    value already passed the authors' upstream p ≤ 0.001 MAST filter). The
    previous stricter gate of 2.0 dropped 7 TFs the paper itself reports as
    neural-enriched (dd17385/sp6-9 1.75, dd19255 1.78, dd36480 1.93,
    dd47123 1.77, dd5882 1.70, dd63520 1.51, dd7442 1.97).
-7. **Unused raw atlas arms (2026-09-04 scope decision)** — the following
+7. **Unused raw atlas arms (scope decision)** — the following
    downloaded data are deliberately OUT OF SCOPE for the current 5-atlas
    scRNA evidence model and are documented for future extensions:
    - Fincher GSE111764 `BrainClustering` DGE (10,637-cell neuronal
@@ -151,13 +150,13 @@ rationales above describe the current (post-audit) behavior:
 10. **Perez influence mapping** — restricted to 1:1 reciprocal-best-hit
     v6↔h1SMcG pairs (the collapsed `Similar` column claims 14.4k of 25k v6
     IDs for more than one h1SMcG, making first-wins attribution arbitrary).
-11. **Composite score unclipped (2026-09-04 audit)** — composite =
+11. **Composite score unclipped** — composite =
     base + bonuses (max +0.07) with NO 1.0 clip. The former clip
     saturated 6+ genes at exactly 1.0 across methods, destroying ranking
     resolution exactly at the top; deterministic tie-breaks (composite ->
     method base -> integrated -> n_streams -> gene_id) are the sole
     ordering authority.
-12. **Consensus null (2026-09-04 audit)** — cross-method consensus uses
+12. **Consensus null** — cross-method consensus uses
     the randomization null p0 = 10/N (N = candidate universe), matching
     overlap_significance.py; the previous binomial p=1/3 null was invalid
     by ~390× and structurally zero-power. Permutation p-values use the

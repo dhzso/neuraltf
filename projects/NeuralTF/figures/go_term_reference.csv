@@ -103,12 +103,12 @@ GO:0060040,retinal bipolar neuron differentiation,biological_process,yes,no,go_n
 GO:0060580,ventral spinal cord interneuron fate determination,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
 GO:2000171,negative regulation of dendrite development,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,no
 GO:2000734,obsolete negative regulation of glial cell-derived neurotrophic factor receptor signaling pathway involved in ureteric bud formation,biological_process,yes,no,go_neural +0.03,1,no,no,no,no,no,yes
-GO:0005634,nucleus,cellular_component,no,no,,84,yes,yes,yes,yes,no,no
-GO:0003677,DNA binding,molecular_function,no,yes,go_tf +0.02,75,yes,yes,yes,yes,no,no
-GO:0003700,DNA-binding transcription factor activity,molecular_function,no,yes,go_tf +0.02,74,yes,yes,yes,yes,no,no
-GO:0006355,regulation of DNA-templated transcription,biological_process,no,no,,73,yes,yes,yes,yes,no,no
-GO:0043565,sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,62,yes,yes,yes,yes,no,no
-GO:0006351,DNA-templated transcription,biological_process,no,no,,58,yes,yes,yes,yes,no,no
+GO:0005634,nucleus,cellular_component,no,no,,86,yes,yes,yes,yes,no,no
+GO:0003677,DNA binding,molecular_function,no,yes,go_tf +0.02,76,yes,yes,yes,yes,no,no
+GO:0003700,DNA-binding transcription factor activity,molecular_function,no,yes,go_tf +0.02,76,yes,yes,yes,yes,no,no
+GO:0006355,regulation of DNA-templated transcription,biological_process,no,no,,75,yes,yes,yes,yes,no,no
+GO:0043565,sequence-specific DNA binding,molecular_function,no,yes,go_tf +0.02,64,yes,yes,yes,yes,no,no
+GO:0006351,DNA-templated transcription,biological_process,no,no,,59,yes,yes,yes,yes,no,no
 GO:0007275,multicellular organism development,biological_process,no,no,,38,yes,yes,yes,yes,no,no
 GO:0045944,positive regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,38,yes,yes,yes,yes,no,no
 GO:0005515,protein binding,molecular_function,no,no,,34,no,yes,yes,yes,no,no
@@ -116,13 +116,13 @@ GO:0045893,positive regulation of DNA-templated transcription,biological_process
 GO:0000122,negative regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,29,no,yes,no,yes,no,no
 GO:0006357,regulation of transcription by RNA polymerase II,biological_process,no,yes,go_tf +0.02,25,no,yes,no,yes,no,no
 GO:0005667,transcription regulator complex,cellular_component,no,no,,21,yes,no,no,yes,no,no
+GO:0008270,zinc ion binding,molecular_function,no,no,,21,no,no,no,yes,no,no
+GO:0005622,intracellular anatomical structure,cellular_component,no,no,,20,no,no,no,no,no,no
 GO:0045892,negative regulation of DNA-templated transcription,biological_process,no,no,,20,no,no,no,yes,no,no
-GO:0005622,intracellular anatomical structure,cellular_component,no,no,,19,no,no,no,yes,no,no
-GO:0008270,zinc ion binding,molecular_function,no,no,,19,no,no,no,no,no,no
 GO:0005737,cytoplasm,cellular_component,no,no,,17,no,no,no,no,no,no
 GO:0003705,"DNA-binding transcription factor activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,16,yes,no,no,no,no,no
 GO:0044212,transcription cis-regulatory region binding,molecular_function,no,no,,16,no,no,no,no,no,no
-GO:0046872,metal ion binding,molecular_function,no,no,,15,no,no,no,no,no,no
+GO:0046872,metal ion binding,molecular_function,no,no,,16,no,no,no,no,no,no
 GO:0046983,protein dimerization activity,molecular_function,no,no,,15,no,no,no,no,no,no
 GO:0005730,nucleolus,cellular_component,no,no,,13,no,no,no,no,no,no
 GO:0001077,"DNA-binding transcription activator activity, RNA polymerase II-specific",molecular_function,no,yes,go_tf +0.02,12,yes,no,no,no,no,no
@@ -132,9 +132,9 @@ GO:0007507,heart development,biological_process,no,no,,11,no,no,no,no,no,no
 GO:0030154,cell differentiation,biological_process,no,no,,11,no,no,no,no,no,no
 GO:0045165,cell fate commitment,biological_process,no,no,,11,no,no,no,no,no,no
 GO:0001822,kidney development,biological_process,no,no,,10,no,no,no,no,no,no
+GO:0003676,nucleic acid binding,molecular_function,no,yes,go_tf +0.02,10,no,no,no,no,no,no
 GO:0006366,transcription by RNA polymerase II,biological_process,no,no,,10,no,no,no,no,no,no
 GO:0048839,inner ear development,biological_process,no,no,,10,no,no,no,no,no,no
-GO:0003676,nucleic acid binding,molecular_function,no,yes,go_tf +0.02,9,no,no,no,no,no,no
 GO:0009887,animal organ morphogenesis,biological_process,no,no,,9,no,no,no,no,no,no
 GO:0010468,regulation of gene expression,biological_process,no,no,,9,no,no,no,no,no,no
 GO:0042472,inner ear morphogenesis,biological_process,no,no,,9,no,no,no,no,no,no
@@ -191,6 +191,7 @@ GO:0008150,biological_process,biological_process,no,no,,4,no,no,no,no,no,no
 GO:0009952,anterior/posterior pattern specification,biological_process,no,no,,4,no,no,no,no,no,no
 GO:0010629,negative regulation of gene expression,biological_process,no,no,,4,no,no,no,no,no,no
 GO:0019827,stem cell population maintenance,biological_process,no,no,,4,no,no,no,no,no,no
+GO:0030326,embryonic limb morphogenesis,biological_process,no,no,,4,no,no,no,no,no,no
 GO:0030539,male genitalia development,biological_process,no,no,,4,no,no,no,no,no,no
 GO:0030910,olfactory placode formation,biological_process,no,no,,4,no,no,no,no,no,no
 GO:0035019,somatic stem cell population maintenance,biological_process,no,no,,4,no,no,no,no,no,no
@@ -226,6 +227,7 @@ GO:0007224,smoothened signaling pathway,biological_process,no,no,,3,no,no,no,no,
 GO:0007283,spermatogenesis,biological_process,no,no,,3,no,no,no,no,no,no
 GO:0007400,neuroblast fate determination,biological_process,no,no,,3,no,no,no,no,no,no
 GO:0007402,ganglion mother cell fate determination,biological_process,no,no,,3,no,no,no,no,no,no
+GO:0007480,imaginal disc-derived leg morphogenesis,biological_process,no,no,,3,no,no,no,no,no,no
 GO:0007501,mesodermal cell fate specification,biological_process,no,no,,3,no,no,no,no,no,no
 GO:0007517,muscle organ development,biological_process,no,no,,3,no,no,no,no,no,no
 GO:0007521,muscle cell fate determination,biological_process,no,no,,3,no,no,no,no,no,no
@@ -242,7 +244,6 @@ GO:0030178,negative regulation of Wnt signaling pathway,biological_process,no,no
 GO:0030183,B cell differentiation,biological_process,no,no,,3,no,no,no,no,no,no
 GO:0030199,collagen fibril organization,biological_process,no,no,,3,no,no,no,no,no,no
 GO:0030324,lung development,biological_process,no,no,,3,no,no,no,no,no,no
-GO:0030326,embryonic limb morphogenesis,biological_process,no,no,,3,no,no,no,no,no,no
 GO:0030335,positive regulation of cell migration,biological_process,no,no,,3,no,no,no,no,no,no
 GO:0030858,positive regulation of epithelial cell differentiation,biological_process,no,no,,3,no,no,no,no,no,no
 GO:0031018,endocrine pancreas development,biological_process,no,no,,3,no,no,no,no,no,no
@@ -304,7 +305,6 @@ GO:0007416,synapse assembly,biological_process,no,no,,2,no,no,no,no,no,no
 GO:0007450,"dorsal/ventral pattern formation, imaginal disc",biological_process,no,no,,2,no,no,no,no,no,no
 GO:0007465,R7 cell fate commitment,biological_process,no,no,,2,no,no,no,no,no,no
 GO:0007474,imaginal disc-derived wing vein specification,biological_process,no,no,,2,no,no,no,no,no,no
-GO:0007480,imaginal disc-derived leg morphogenesis,biological_process,no,no,,2,no,no,no,no,no,no
 GO:0007492,endoderm development,biological_process,no,no,,2,no,no,no,no,no,no
 GO:0007569,obsolete cell aging,biological_process,no,no,,2,no,no,no,no,no,yes
 GO:0007619,courtship behavior,biological_process,no,no,,2,no,no,no,no,no,no
@@ -549,6 +549,7 @@ GO:0007391,dorsal closure,biological_process,no,no,,1,no,no,no,no,no,no
 GO:0007398,ectoderm development,biological_process,no,no,,1,no,no,no,no,no,no
 GO:0007432,salivary gland boundary specification,biological_process,no,no,,1,no,no,no,no,no,no
 GO:0007435,salivary gland morphogenesis,biological_process,no,no,,1,no,no,no,no,no,no
+GO:0007444,imaginal disc development,biological_process,no,no,,1,no,no,no,no,no,no
 GO:0007469,antennal development,biological_process,no,no,,1,no,no,no,no,no,no
 GO:0007479,leg disc proximal/distal pattern formation,biological_process,no,no,,1,no,no,no,no,no,no
 GO:0007485,imaginal disc-derived male genitalia development,biological_process,no,no,,1,no,no,no,no,no,no
