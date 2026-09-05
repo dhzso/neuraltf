@@ -15,9 +15,9 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 RAW_DIR = REPO / "datasets" / "raw"
 
-# Expected files with their relative paths â€” all pipeline-critical raw
+# Expected files with their relative paths - all pipeline-critical raw
 # inputs (King mmc2-8, Perez MOESM5/19/22, Cui scRNA h5ad, Rosetta,
-# go.obo included; MOESM2 is absent from the Perez download â€” see
+# go.obo included; MOESM2 is absent from the Perez download - see
 # datasets/MANIFEST.md).
 EXPECTED_FILES = [
     "GSE103633_GEO_Plass_atlas/GSE103633_RAW.tar",
@@ -85,7 +85,7 @@ def main():
                 size_str = f"{size/1e6:.1f} MB" if size > 1e6 else f"{size/1e3:.1f} KB"
                 print(f"| `{rel_path}` | `{sha}` | {size_str} | GEO/Journal |")
             else:
-                print(f"| `{rel_path}` | `MISSING` | â€” | â€” |")
+                print(f"| `{rel_path}` | `MISSING` | - | - |")
         return 0
 
     # Default: verify against stored checksums

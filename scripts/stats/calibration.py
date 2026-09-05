@@ -123,7 +123,12 @@ def main():
         ),
         "bin_centers": [float(b["mean_score"]) for b in bin_stats],
         "observed_fractions": [float(b["empirical_positive_rate"]) for b in bin_stats],
-        "expected_fractions": [float(b["mean_score"]) for b in bin_stats],
+        "bin_mean_scores": [float(b["mean_score"]) for b in bin_stats],
+        "bin_mean_scores_note": (
+            "mean score per decile, for context only - the score is NOT a "
+            "probability, so these must not be plotted as an expected/"
+            "reliability diagonal against observed fractions"
+        ),
         "bin_counts": [int(b["n_candidates"]) for b in bin_stats],
         "bin_stats": bin_stats,
     }

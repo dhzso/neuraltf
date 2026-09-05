@@ -94,7 +94,7 @@ def build():
                  fontweight="bold", pad=10, fontsize=10)
     ax.legend(loc="lower right", fontsize=6, frameon=True, title="Score component",
              title_fontsize=7)
-    ax.set_xlim(0, 1.15)
+    ax.set_xlim(0, max(1.15, float(df["composite"].max()) * 1.05) if "composite" in df.columns else 1.15)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(); save(fig, "18_composite_bonus_waterfall")
 

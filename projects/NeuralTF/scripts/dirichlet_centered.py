@@ -150,6 +150,47 @@ def build_csv(top: pd.DataFrame) -> pd.DataFrame:
     return out[cols]
 
 
+def _load_mmc4() -> pd.DataFrame | None:
+    """Load King mmc4 (same table the fixed method uses) so the Dirichlet
+    methods receive IDENTICAL bonus inputs (human orthologs, TF flags) and
+    the same Track-B gate. Without it the fixed method had an extra +0.02
+    ortholog source and a domain-union-TF-flag gate the Dirichlet methods
+    lacked (dd10038/Zeb-1 lost its Track-B seat over exactly this gap)."""
+    import pandas as pd
+    king_dir = REPO / "datasets" / "raw" / "Supplementary_Data_ King_2024"
+    if not king_dir.exists():
+        return None
+    for ext_name in ("1-s2.0-S2211124724001712-mmc4.xlsx",):
+        p = king_dir / ext_name
+        if p.exists():
+            return pd.read_excel(p, sheet_name="TF")
+    # glob fallback (renamed downloads)
+    for p in sorted(king_dir.iterdir()):
+        if p.suffix.lower() == ".xlsx" and p.stem.lower().endswith("mmc4"):
+            return pd.read_excel(p, sheet_name="TF")
+    return None
+
+
+def _deterministic_overall_top10(full_rank: pd.DataFrame, n: int = 10) -> pd.DataFrame:
+    """Overall top-n with the SAME deterministic tie-break discipline as
+    select_top (composite -> method base -> integrated -> n_streams ->
+    gene_id). head(10) on an unstable sort silently resolved boundary ties
+    by quicksort artifact."""
+    out = full_rank.copy()
+    tie_cols = [c for c in ("dirichlet_median_score", "integrated_score", "n_streams")
+                if c in out.columns]
+    for c in ["composite_score"] + tie_cols:
+        if c in out.columns:
+            out[c] = pd.to_numeric(out[c], errors="coerce").fillna(0.0)
+    out["_gene_id_desc"] = [
+        "".join(chr(0x10FFFF - ord(ch)) for ch in str(g))
+        for g in out["gene_id"]
+    ]
+    sort_cols = ["composite_score"] + tie_cols + ["_gene_id_desc"]
+    out = out.sort_values(by=sort_cols, ascending=False).head(n).copy()
+    return out.drop(columns=["_gene_id_desc"])
+
+
 def main() -> int:
     print("=== Dirichlet Centered Robustness Analysis (All Candidates) ===")
 
@@ -171,7 +212,7 @@ def main() -> int:
     else:
         annot = pd.DataFrame()
 
-    cand = prepare_candidates(raw_rank)
+    cand = prepare_candidates(raw_rank, mmc4=_load_mmc4())
     cand = merge_annotations(cand, annot)
 
     # Uniqueness guard: exactly one row per gene after every merge.
@@ -180,9 +221,11 @@ def main() -> int:
         f"{cand['gene_id'].nunique()} unique genes"
     )
 
-    # Streams
+    # Streams — weights looked up BY STREAM NAME (never prefix-truncated:
+    # if a middle stream were absent from rank.csv, prefix truncation would
+    # silently assign the wrong weight to every subsequent stream).
     available_streams = [s for s in STREAMS if s in cand.columns]
-    w = W_DEFAULT[:len(available_streams)]
+    w = np.array([W_DEFAULT[STREAMS.index(s)] for s in available_streams])
     w = w / w.sum()
 
     S = cand[available_streams].to_numpy(dtype=float)
@@ -202,8 +245,10 @@ def main() -> int:
     cand = apply_bonuses(cand, "dirichlet_median_score")
     cand["rank"] = cand["composite_score"].rank(ascending=False, method="min").astype(int)
 
-    # Save full rank
-    full_rank = cand.sort_values("composite_score", ascending=False).reset_index(drop=True)
+    # Save full rank — deterministic tie-broken order (composite -> method
+    # base -> integrated -> n_streams -> inverted gene_id), NOT a bare
+    # unstable sort_values on composite alone.
+    full_rank = _deterministic_overall_top10(cand, n=len(cand)).reset_index(drop=True)
     full_rank_path = OUT / "dirichlet_centered_full_rank.csv"
     full_rank.to_csv(full_rank_path, index=False)
     print(f"Saved full ranking ({len(full_rank)} candidates, "
@@ -237,7 +282,7 @@ def main() -> int:
     assert top10["gene_id"].nunique() == len(top10), (
         "top-10 shortlist contains duplicate genes"
     )
-    overall_top10 = full_rank.head(10)
+    overall_top10 = _deterministic_overall_top10(cand, n=10)
 
     top10_csv = build_csv(top10)
     top10_path = OUT / "dirichlet_centered_top10.csv"

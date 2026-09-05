@@ -36,7 +36,10 @@ DATA_ROOT = Path(__file__).resolve().parents[4]
 # (digits="6") and silently corrupted short-ID extraction.
 _RE_DD_STRUCTURED = re.compile(r"dd_Smed_v[46]_(\d+)")
 _RE_DD_SHORT = re.compile(r"\bdd(\d+)\b")
-_NEURAL_FC_THRESHOLD = 2.0
+_NEURAL_FC_THRESHOLD = 1.5  # King 2024 STAR Methods: "at least a 1.5 log2FC
+# enrichment" (every mmc7 value already passed the authors' own p<=0.001
+# MAST filter upstream). The previous 2.0 gate was stricter than the paper
+# and silently dropped 7 neural-enriched TFs (e.g. dd19255, lfc=1.78).
 _FDR_THRESHOLD = 0.1  # Benjamini-Hochberg q-value threshold
 _L2FC_EPS = 1e-9  # pseudocount for true-log2FC means
 

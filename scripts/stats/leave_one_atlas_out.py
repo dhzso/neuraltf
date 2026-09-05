@@ -1,8 +1,17 @@
 #!/usr/bin/env python
-"""Leave-one-atlas-out sensitivity analysis.
+"""Leave-one-STREAM-out sensitivity analysis.
 
-Re-ranks candidates with each evidence atlas removed, tracking top-10
-stability across leave-one-out iterations.
+2026-09-04 audit relabel: despite its historical filename, this analysis
+leaves out one EVIDENCE STREAM (of the 9), not one atlas - the atlas
+contributions are already collapsed into single columns (expression is
+max over Fincher/Plass/Cui/King), so individual-atlas attribution cannot
+be isolated from rank.csv. The filename is kept for driver/figure
+compatibility; the docstring, output columns, and figure labels now say
+"stream".
+
+Re-ranks candidates with each evidence stream removed (weights
+renormalized over the remaining streams exactly as EvidenceScorer does),
+tracking top-10 stability across leave-one-out iterations.
 
 Usage:
     python scripts/stats/leave_one_atlas_out.py
@@ -41,7 +50,7 @@ def integrated_score(S, W):
 
 
 def main():
-    print("=== Leave-One-Atlas-Out Analysis ===")
+    print("=== Leave-One-STREAM-Out Analysis (stream ablation) ===")
 
     p = RUN_DIR / "rank.csv"
     if not p.exists():
@@ -59,7 +68,9 @@ def main():
         stream_cols = [c for c in df.columns if c in STREAMS]
 
     scores_matrix = df[stream_cols].values.astype(float)
-    weights = W_DEFAULT[:len(stream_cols)]
+    # weights looked up BY STREAM NAME (never prefix-truncated: a missing
+    # middle stream would silently misalign every subsequent weight)
+    weights = np.array([W_DEFAULT[STREAMS.index(s)] for s in stream_cols])
     weights = weights / weights.sum()
 
     baseline_scores = np.array([integrated_score(row, weights) for row in scores_matrix])
@@ -100,7 +111,7 @@ def main():
         rank_matrix_dict[stream] = [int(loo_ranks[idx]) for idx in top10_indices]
 
         results.append({
-            "excluded_atlas": stream,
+            "excluded_stream": stream,
             "n_remaining_streams": len(loo_streams),
             "top10_overlap": len(overlap),
             "top10_jaccard": float(jaccard),
@@ -113,6 +124,7 @@ def main():
               f"Jaccard={jaccard:.3f}, rho={rank_corr:.4f}")
 
     # Write rank matrix to loo_atlas_stability.csv for figure 27
+    # (filename kept for compatibility; content is stream-ablation)
     matrix_df = pd.DataFrame(rank_matrix_dict)
     out_path = RESULTS_DIR / "loo_atlas_stability.csv"
     matrix_df.to_csv(out_path, index=False)

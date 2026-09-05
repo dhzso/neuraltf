@@ -15,12 +15,12 @@ def build():
         fig, ax = plt.subplots(figsize=(6, 5))
 
         groups = ["neural_tfs", "non_tfs", "random"]
-        # Labels match the WS3 relabel in scripts/stats/negative_controls.py:
-        # "random" holds TF-classified non-RNAi-validated candidates
-        # (NOT permutations), and "non_tfs" are candidates without a
-        # Perez TF class.
-        labels = ["Neural TFs\n(RNAi-validated)", "No TF class\n(Perez)",
-                  "TF-classified,\nnot RNAi-validated"]
+        # Labels match the stats script: controls are AVAILABILITY-MATCHED
+        # on stream count (n_streams) before the random draw, so the
+        # separation is not an evidence-availability artifact.
+        labels = ["Neural TFs\n(RNAi-validated)",
+                  "No TF class\n(matched controls)",
+                  "TF-classified,\nmatched controls"]
         colors = [C_A, C_B, C_NEURAL]
         positions = [1, 2, 3]
 
@@ -44,7 +44,7 @@ def build():
         ax.set_xticks(positions)
         ax.set_xticklabels(labels)
         ax.set_ylabel("Integrated score")
-        ax.set_title("Neural TFs score significantly higher than negative controls",
+        ax.set_title("Neural TFs score higher than availability-matched controls",
                      fontweight="bold", pad=8)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)

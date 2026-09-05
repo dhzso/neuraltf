@@ -5,43 +5,43 @@
   "ok": [
     {
       "file": "01_stream_coverage_all.png",
-      "ink_coverage": 0.194
+      "ink_coverage": 0.1944
     },
     {
       "file": "02_integrated_vs_composite.png",
-      "ink_coverage": 0.2601
+      "ink_coverage": 0.2602
     },
     {
       "file": "03_score_distribution_all_vs_neural.png",
-      "ink_coverage": 0.3649
+      "ink_coverage": 0.3579
     },
     {
       "file": "04_evidence_heatmap_neural.png",
-      "ink_coverage": 0.6832
+      "ink_coverage": 0.6845
     },
     {
       "file": "05_top10_candidate_atlas.png",
-      "ink_coverage": 0.3688
+      "ink_coverage": 0.3596
     },
     {
       "file": "06_weight_sensitivity_ranks.png",
-      "ink_coverage": 0.1044
+      "ink_coverage": 0.0713
     },
     {
       "file": "07_weight_sensitivity_ptop10.png",
-      "ink_coverage": 0.1494
+      "ink_coverage": 0.1429
     },
     {
       "file": "08_stream_ablation_global.png",
-      "ink_coverage": 0.213
+      "ink_coverage": 0.2197
     },
     {
       "file": "09_stream_ablation_candidate.png",
-      "ink_coverage": 0.3973
+      "ink_coverage": 0.3986
     },
     {
       "file": "10_centered_top10_scores.png",
-      "ink_coverage": 0.3547
+      "ink_coverage": 0.4368
     },
     {
       "file": "11_centered_scatter_neural.png",
@@ -49,11 +49,11 @@
     },
     {
       "file": "12_uniform_top10_scores.png",
-      "ink_coverage": 0.4428
+      "ink_coverage": 0.4336
     },
     {
       "file": "13_uniform_scatter_all.png",
-      "ink_coverage": 0.1048
+      "ink_coverage": 0.1051
     },
     {
       "file": "14_uniform_neural_vs_all_rankrank.png",
@@ -61,11 +61,11 @@
     },
     {
       "file": "15_method_bumpchart.png",
-      "ink_coverage": 0.2092
+      "ink_coverage": 0.207
     },
     {
       "file": "16_method_score_density.png",
-      "ink_coverage": 0.1938
+      "ink_coverage": 0.2089
     },
     {
       "file": "17_method_rank_correlation.png",
@@ -73,11 +73,11 @@
     },
     {
       "file": "18_composite_bonus_waterfall.png",
-      "ink_coverage": 0.311
+      "ink_coverage": 0.3112
     },
     {
       "file": "19_method_consensus.png",
-      "ink_coverage": 0.2599
+      "ink_coverage": 0.2854
     },
     {
       "file": "20_stream_correlation.png",
@@ -85,7 +85,7 @@
     },
     {
       "file": "21_centered_vs_uniform_scatter.png",
-      "ink_coverage": 0.1105
+      "ink_coverage": 0.1108
     },
     {
       "file": "22_pipeline_schematic.png",
@@ -93,39 +93,39 @@
     },
     {
       "file": "23_roc_pr_curve.png",
-      "ink_coverage": 0.1037
+      "ink_coverage": 0.1045
     },
     {
       "file": "24_negative_controls.png",
-      "ink_coverage": 0.1681
+      "ink_coverage": 0.1798
     },
     {
       "file": "25_bootstrap_ci.png",
-      "ink_coverage": 0.4977
+      "ink_coverage": 0.4433
     },
     {
       "file": "26_permutation_null.png",
-      "ink_coverage": 0.3014
+      "ink_coverage": 0.3109
     },
     {
       "file": "27_loo_atlas_stability.png",
-      "ink_coverage": 0.5769
+      "ink_coverage": 0.5777
     },
     {
       "file": "28_effect_sizes.png",
-      "ink_coverage": 0.4242
+      "ink_coverage": 0.2668
     },
     {
       "file": "29_convergence_analysis.png",
-      "ink_coverage": 0.0848
+      "ink_coverage": 0.0959
     },
     {
       "file": "30_calibration.png",
-      "ink_coverage": 0.3167
+      "ink_coverage": 0.1454
     },
     {
       "file": "31_score_distribution_all9.png",
-      "ink_coverage": 0.5693
+      "ink_coverage": 0.5675
     },
     {
       "file": "32_perez_influence_comparison.png",
@@ -133,35 +133,35 @@
     },
     {
       "file": "33_method_agreement_summary.png",
-      "ink_coverage": 0.3268
+      "ink_coverage": 0.352
     },
     {
       "file": "fig_s1_go_gene_term_map.png",
-      "ink_coverage": 0.2139
+      "ink_coverage": 0.2375
     },
     {
       "file": "fig_s2_go_top10_dotmatrix.png",
-      "ink_coverage": 0.2938
+      "ink_coverage": 0.3317
     },
     {
       "file": "fig_s3_go_top_terms.png",
-      "ink_coverage": 0.3147
+      "ink_coverage": 0.3073
     },
     {
       "file": "fig_s4_go_neural_focus.png",
-      "ink_coverage": 0.1193
+      "ink_coverage": 0.1245
     },
     {
       "file": "fig_s5_go_heatmap_neural.png",
-      "ink_coverage": 0.6106
+      "ink_coverage": 0.6047
     },
     {
       "file": "fig_s6_top10_go_profiles.png",
-      "ink_coverage": 0.1936
+      "ink_coverage": 0.1981
     },
     {
       "file": "fig_s7_go_namespace_track.png",
-      "ink_coverage": 0.2785
+      "ink_coverage": 0.2818
     }
   ],
   "unreadable": [],

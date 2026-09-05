@@ -51,8 +51,14 @@ def load_score_matrix() -> pd.DataFrame:
 def dirichlet_draw_cis(df: pd.DataFrame) -> pd.DataFrame | None:
     """Per-gene 2.5/97.5 percentiles from the persisted Dirichlet draw
     matrices (the same weight uncertainty model the robustness analysis
-    uses; no new randomness needed)."""
-    out_rows = []
+    uses; no new randomness needed).
+
+    2026-09-04 fix: the previous version stacked centered+uniform rows
+    into one 23,344-row frame then merged it on gene_id TWICE, producing
+    a 4-rows-per-gene 46,688-row CSV. Centered and uniform are now
+    merged as separate one-row-per-gene frames.
+    """
+    per_method = {}
     for method, path in (
         ("centered", RESULTS_DIR / "dirichlet_centered_draw_scores.csv"),
         ("uniform", RESULTS_DIR / "dirichlet_uniform_draw_scores.csv"),
@@ -67,26 +73,23 @@ def dirichlet_draw_cis(df: pd.DataFrame) -> pd.DataFrame | None:
         mat = draws[draw_cols].to_numpy(dtype=float)
         lo, hi = np.percentile(mat, [2.5, 97.5], axis=1)
         mean = mat.mean(axis=1)
-        for i, gid in enumerate(draws[gene_col].astype(str)):
-            out_rows.append({
-                "gene_id": gid,
-                f"{method}_mean": mean[i],
-                f"{method}_ci_95_lo": lo[i],
-                f"{method}_ci_95_hi": hi[i],
-            })
-    if not out_rows:
+        per_method[method] = pd.DataFrame({
+            "gene_id": draws[gene_col].astype(str),
+            f"{method}_mean": mean,
+            f"{method}_ci_95_lo": lo,
+            f"{method}_ci_95_hi": hi,
+        })
+    if not per_method:
         return None
-    base = pd.DataFrame(out_rows)
-    # merge centered + uniform side by side on gene_id
-    out = df[["gene_id", "gene_name"]].merge(
-        base[base.columns[:4]], on="gene_id", how="left"
-    ) if "centered_mean" in base.columns else None
-    if out is None:
-        return None
-    uni = base[["gene_id", "uniform_mean", "uniform_ci_95_lo", "uniform_ci_95_hi"]] \
-        if "uniform_mean" in base.columns else None
-    if uni is not None:
-        out = out.merge(uni, on="gene_id", how="left")
+
+    out = df[["gene_id", "gene_name"]].copy()
+    for method, frame in per_method.items():
+        # one row per gene per method frame - left join keeps 1 row/gene
+        out = out.merge(frame, on="gene_id", how="left")
+    assert out["gene_id"].is_unique, (
+        f"bootstrap CI merge exploded: {len(out)} rows / "
+        f"{out['gene_id'].nunique()} genes"
+    )
     return out
 
 

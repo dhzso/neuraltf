@@ -35,11 +35,17 @@ steps are skipped, never aborted:
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
+
+# UTF-8 child environment: Windows cp1252 consoles cannot encode the
+# arrow/Greek characters several child scripts print (this crashed the
+# ANANSE scan in production).
+CHILD_ENV = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
 
 
 def _ready(root: Path, step: str) -> str | None:
@@ -142,9 +148,16 @@ def _ready(root: Path, step: str) -> str | None:
         "Statistical tests": (
             (run / "rank.csv").exists(),
             "rank.csv missing (run the pipeline first)"),
+        "Supplementary GO figures S5-S7": (
+            (root / "projects" / "NeuralTF" / "figures"
+             / "go_term_reference.csv").exists()
+            and (root / "projects" / "NeuralTF" / "figures"
+                 / "supplementary" / "go_gene_term_matrix_reduced.csv").exists(),
+            "go_term_reference.csv / go_gene_term_matrix_reduced.csv missing "
+            "(run make_supp_go_figures.py first)"),
     }
-    ok, why = rules[step]
-    return None if ok else why
+    ok, why = rules.get(step, (True, ""))
+    return why or None
 
 
 STEPS = [
@@ -260,17 +273,22 @@ STEPS = [
       ["projects", "NeuralTF", "figures", "29_convergence_analysis.png"],
       ["projects", "NeuralTF", "figures", "30_calibration.png"],
       ["projects", "NeuralTF", "figures", "31_score_distribution_all9.png"],
-      ["projects", "NeuralTF", "figures", "32_perez_influence_comparison.png"],
-      ["projects", "NeuralTF", "figures", "33_method_agreement_summary.png"]]),
+       ["projects", "NeuralTF", "figures", "32_perez_influence_comparison.png"],
+       ["projects", "NeuralTF", "figures", "33_method_agreement_summary.png"]]),
+    ("Supplementary GO figures S5-S7",
+     ["projects", "NeuralTF", "scripts", "figures", "supp_go_figures.py"], [],
+     [["projects", "NeuralTF", "figures", "supplementary", "fig_s5_go_heatmap_neural.png"],
+      ["projects", "NeuralTF", "figures", "supplementary", "fig_s6_top10_go_profiles.png"],
+      ["projects", "NeuralTF", "figures", "supplementary", "fig_s7_go_namespace_track.png"]]),
 ]
 
 
 def _has_output(root: Path, out_parts: list[list[str]]) -> bool:
     """True only when *every* expected output of a step exists and is non-empty
     (a crashed run that wrote one of several outputs must not be skipped).
-    Empty output list means no outputs to check — must run the step."""
+    Empty output list means no outputs to check - must run the step."""
     if not out_parts:
-        return False  # No outputs defined → must run
+        return False  # No outputs defined - must run
     for parts in out_parts:
         out = root.joinpath(*parts)
         if not (out.exists() and out.stat().st_size > 0):
@@ -307,6 +325,7 @@ def main() -> int:
             res = subprocess.run(
                 [sys.executable, str(script), *extra], cwd=root,
                 timeout=3600 * 4,
+                env=CHILD_ENV,
             )
         except subprocess.TimeoutExpired:
             results.append((name, "FAILED (timeout)"))

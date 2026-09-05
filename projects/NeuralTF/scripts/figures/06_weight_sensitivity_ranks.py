@@ -7,19 +7,20 @@ import matplotlib.pyplot as plt, numpy as np, pandas as pd
 def build():
     draws = load_sens_draws()
     sens = load_sens_top10()
-    neural = load_neural()
+    rank_all = load_all()
     top10 = load_top10()
     top10_ids = set(top10["gene_id"].tolist())
     track_map = dict(zip(top10["gene_id"], top10.get("track",[""]*len(top10))))
 
-    # Get baseline ranks for all candidates in draws
+    # Only candidates that ever reach a top-10 slot are drawn (sens already
+    # filters to entrants); draws CSV holds shortlist/top-30 rows only.
+    sens_ids = set(sens["gene_id"])
+    draws = draws[draws["gene_id"].isin(sens_ids)]
+
+    # Baseline ranks from the FULL universe (rank.csv), not the neural view
     candidates = draws["gene_id"].unique()
-    baseline = {}
-    for gid in candidates:
-        row = neural[neural["gene_id"]==gid]
-        if len(row)>0:
-            baseline[gid] = row.iloc[0].get("integrated_score", 0)
-    baseline_ranks = pd.Series(baseline).rank(ascending=False).to_dict()
+    base = rank_all.set_index("gene_id")["integrated_score"]
+    baseline_ranks = base.rank(ascending=False).to_dict()
 
     fig, ax = plt.subplots(figsize=(8, 5.5))
     y_labels = []
@@ -37,7 +38,7 @@ def build():
                         medianprops=dict(color="#333", lw=1.2),
                         whiskerprops=dict(color="#999", lw=0.5),
                         capprops=dict(color="#999", lw=0.5))
-        y_labels.append(label(neural, gid))
+        y_labels.append(label(rank_all, gid))
         y_pos.append(i)
         colors.append(color)
 
@@ -45,17 +46,18 @@ def build():
     for i, c in enumerate(colors):
         ax.get_yticklabels()[i].set_color(c)
     ax.axvline(x=10, color=C_HL, lw=0.8, ls="--", label="Top 10 cutoff")
-    ax.set_xlabel("Rank across 1000 weight draws"); ax.set_ylabel("TF candidate (sorted by baseline rank)")
+    ax.set_xlabel("Rank across 1000 weight draws (full candidate universe)")
+    ax.set_ylabel("TF candidate (sorted by baseline rank)")
     ax.invert_yaxis()
     ax.set_title("Most top-10 candidates maintain stable ranks under weight perturbation",
                  fontweight="bold", pad=8)
     from matplotlib.lines import Line2D
     track_handles = [Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=7, label="Track A"),
                      Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=7, label="Track B"),
-                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=7, label="Other neural")]
+                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=7, label="Other entrant")]
     handles, labels_leg = ax.get_legend_handles_labels()
     handles.extend(track_handles)
-    labels_leg.extend(["Track A","Track B","Other neural"])
+    labels_leg.extend(["Track A","Track B","Other entrant"])
     ax.legend(handles, labels_leg, frameon=False, fontsize=7)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(); save(fig, "06_weight_sensitivity_ranks")

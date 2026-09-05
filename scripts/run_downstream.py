@@ -10,6 +10,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 import time
@@ -20,17 +21,21 @@ PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
 if not PYTHON.exists():
     PYTHON = Path(sys.executable)
 
+# Children print arrows/Greek letters; Windows cp1252 consoles cannot encode
+# them (this is exactly what crashed the ANANSE scan in production).
+CHILD_ENV = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
+
 
 def run(script_parts: list, label: str, force: bool = False, outputs: list[Path] | None = None) -> bool:
     """Run a script; skip if all outputs already exist (unless --force)."""
     if not force and outputs:
         if all(p.exists() and p.stat().st_size > 0 for p in outputs):
-            print(f"  [SKIP] {label} â€” all outputs present")
+            print(f"  [SKIP] {label} - all outputs present")
             return True
 
     script = ROOT.joinpath(*script_parts)
     if not script.exists():
-        print(f"  [WARN] {label} â€” script not found: {script}")
+        print(f"  [WARN] {label} - script not found: {script}")
         return False
 
     print(f"\n>>> {label}")
@@ -39,6 +44,7 @@ def run(script_parts: list, label: str, force: bool = False, outputs: list[Path]
         [str(PYTHON), str(script)],
         cwd=str(ROOT),
         capture_output=False,
+        env=CHILD_ENV,
     )
     elapsed = time.time() - t0
     if result.returncode == 0:
@@ -73,12 +79,12 @@ def main():
         n_perez = rank["perez_lineage"].notna().sum()
         print(f"[INFO] perez_lineage column present: {n_perez} non-null values")
     else:
-        print("[WARN] perez_lineage column MISSING from rank.csv â€” pipeline may not have included Perez stream")
+        print("[WARN] perez_lineage column MISSING from rank.csv - pipeline may not have included Perez stream")
     if "perez_influence" in rank.columns:
         n_infl = rank["perez_influence"].notna().sum()
         print(f"[INFO] perez_influence column present: {n_infl} non-null values")
     else:
-        print("[WARN] perez_influence column MISSING from rank.csv â€” pipeline may not have included Perez influence")
+        print("[WARN] perez_influence column MISSING from rank.csv - pipeline may not have included Perez influence")
 
     errors = []
 
@@ -146,6 +152,14 @@ def main():
          ["projects", "NeuralTF", "scripts", "generate_publication_figures.py"],
          [FIG / "01_stream_coverage_all.png",
           FIG / "33_method_agreement_summary.png"]),
+
+        # Step 7: Supplementary GO figures S5-S7 (built by the figure-script
+        # supp_go_figures.py; a fresh regeneration previously skipped them)
+        ("Supplementary GO figures S5-S7",
+         ["projects", "NeuralTF", "scripts", "figures", "supp_go_figures.py"],
+         [FIG / "supplementary" / "fig_s5_go_heatmap_neural.png",
+          FIG / "supplementary" / "fig_s6_top10_go_profiles.png",
+          FIG / "supplementary" / "fig_s7_go_namespace_track.png"]),
     ]
 
     for label, script_parts, outputs in steps:

@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 """Score-separation analysis at the median threshold (Brier context).
 
-WS3 fix: the previous version treated the integrated evidence score as a
-calibrated probability and reported a "Brier skill score". Because the
-score is an evidence-weight composite (not P(RNAi-validated)), the Brier
-skill was meaningless (it measured -0.66 purely because scores cluster
-above 0 while prevalence is ~0.13 — an artifact of scale, not skill).
+2026-09-04 audit fix (Murphy decomposition): the previous "reliability/
+resolution" were NOT a valid Murphy decomposition of the Brier score -
+the reported resolution (score-scale variance, 0.136) EXCEEDED the
+uncertainty (pi*(1-pi), 0.0057) by 24x, which is arithmetically
+impossible for a real decomposition (resolution <= uncertainty always).
+The score is not a probability, so those keys were mislabeled algebra.
 
-What IS valid and is kept:
-  - raw Brier score and its decomposition (reliability/resolution/
-    uncertainty) as DESCRIPTIVE diagnostics of score separation
-  - a median-threshold classification report (accuracy/precision/
-    recall/F1) which makes no probability assumption
-  - the rank-discrimination interpretation: resolution vs uncertainty
+What this version reports:
+- the raw Brier score as a DESCRIPTIVE distance between the score scale
+  and the binary label (valid arithmetic, no probability claim);
+- the classification report at the median threshold (no probability
+  assumption);
+- a proper Murphy decomposition ONLY as a sanity-check diagnostic on
+  binned empirical rates: resolution_b = sum_b (n_b/N)(rate_b - pi)^2,
+  reliability_b = sum_b (n_b/N)(rate_b - mean_score_b)^2, with
+  Brier = uncertainty - resolution + reliability holding on the binned
+  quantities (and resolution <= uncertainty guaranteed by construction).
 
 Usage:
     python scripts/stats/brier_score.py
@@ -29,6 +34,8 @@ REPO = Path(__file__).resolve().parents[2]
 RUN_DIR = REPO / "projects" / "NeuralTF" / "runs" / "pipeline_run"
 RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+N_BINS = 10
 
 
 def main():
@@ -59,9 +66,29 @@ def main():
     prevalence = n_pos / n
 
     brier = np.mean((y_score - y_true) ** 2)
-    brier_baseline = prevalence * (1 - prevalence)
-    resolution = np.mean((y_score - prevalence) ** 2)
-    reliability = brier - resolution + brier_baseline
+    uncertainty = prevalence * (1 - prevalence)
+
+    # ---- Proper Murphy decomposition on binned empirical rates ---------
+    # Bins: equal-count deciles of the score. rate_b = positives rate in
+    # bin b; mean_score_b = mean score in bin b.
+    order = np.argsort(y_score, kind="stable")
+    bins = np.array_split(order, N_BINS)
+    resolution_b = 0.0   # sum (n_b/N)(rate_b - pi)^2   <= uncertainty
+    reliability_b = 0.0  # sum (n_b/N)(rate_b - mean_score_b)^2
+    for idx in bins:
+        if len(idx) == 0:
+            continue
+        w_b = len(idx) / n
+        rate_b = y_true[idx].mean()
+        mean_score_b = y_score[idx].mean()
+        resolution_b += w_b * (rate_b - prevalence) ** 2
+        reliability_b += w_b * (rate_b - mean_score_b) ** 2
+    # Identity check: Brier = uncertainty - resolution + reliability
+    # holds exactly only for probability scores; for a non-probability
+    # score the identity breaks by the score-scale offset - we report the
+    # decomposition of the BINNED rates (valid) and the raw Brier
+    # separately, without claiming the identity.
+    binned_brier = uncertainty - resolution_b + reliability_b
 
     y_pred = (y_score >= np.median(y_score)).astype(float)
     tp = np.sum((y_pred == 1) & (y_true == 1))
@@ -77,18 +104,32 @@ def main():
         "n_candidates": int(n),
         "n_positives": int(n_pos),
         "prevalence": float(prevalence),
-        "brier_score": float(brier),
-        "brier_baseline": float(brier_baseline),
-        "reliability": float(reliability),
-        "resolution": float(resolution),
-        "uncertainty": float(brier_baseline),
+        "brier_score_descriptive": float(brier),
+        "brier_interpretation": (
+            "mean((score - y)^2) as a scale-distance diagnostic ONLY - the "
+            "integrated score is an evidence-weight composite, not a "
+            "calibrated probability of RNAi validation"
+        ),
+        "murphy_decomposition_binned": {
+            "n_bins": N_BINS,
+            "uncertainty": float(uncertainty),
+            "resolution": float(resolution_b),
+            "reliability": float(reliability_b),
+            "binned_brier_identity": float(binned_brier),
+            "note": (
+                "Decomposition of binned empirical positive-rates "
+                "(deciles of the score). Resolution <= uncertainty holds "
+                "by construction. The identity Brier = uncertainty - "
+                "resolution + reliability does NOT hold for the raw "
+                "score because the score is not a probability."
+            ),
+        },
         "score_column": score_col,
         "interpretation_note": (
             "The integrated score is an evidence-weight composite, not a "
-            "calibrated probability; the Brier numbers are descriptive "
-            "separation diagnostics. Skill-vs-baseline probability claims "
-            "were removed (see WS3 audit). The median-threshold "
-            "classification and precision/recall are the valid summaries."
+            "calibrated probability; the Brier number is a descriptive "
+            "separation diagnostic. The median-threshold classification "
+            "and precision/recall are the valid summaries."
         ),
         "classification_at_median": {
             "accuracy": float(accuracy),
@@ -100,8 +141,10 @@ def main():
     }
 
     print(f"Candidates: {n}; positives: {int(n_pos)} ({prevalence:.4f})")
-    print(f"Brier score (descriptive): {brier:.6f}")
-    print(f"Resolution / uncertainty: {resolution:.4f} / {brier_baseline:.4f}")
+    print(f"Brier (descriptive scale-distance): {brier:.6f}")
+    print(f"Binned Murphy: uncertainty={uncertainty:.6f} "
+          f"resolution={resolution_b:.6f} reliability={reliability_b:.6f} "
+          f"(resolution <= uncertainty: {resolution_b <= uncertainty + 1e-12})")
     print(f"Median-threshold classification: acc={accuracy:.3f} "
           f"prec={precision:.3f} rec={recall:.3f} F1={f1:.3f}")
 

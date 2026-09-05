@@ -132,3 +132,7 @@ neuraltf-repo/
 # =============================================================================
 # Allow .streamlit/config.toml to be committed (suppresses email prompt).
 .streamlit/secrets.toml
+
+# Exploratory notebook outputs were pruned (superseded by results/)
+projects/NeuralTF/notebooks/*
+!projects/NeuralTF/notebooks/.gitkeep

@@ -20,14 +20,16 @@ Dirichlet-uniform — share the identical post-processing:
    (go_neural 0.03, go_tf 0.02, human_ortholog 0.02) on top of each
    method's own base score, with per-component transparency columns.
 4. **Track B gate**: ``gate_track_b`` requires DNA-binding-domain or
-   mmc4-TF-flag evidence for every method.
+   mmc4-TF-flag evidence for every method (all three methods now pass the
+   same mmc4 table into ``prepare_candidates``).
 5. **Deterministic tie-breaks**: composite -> method base score ->
    n_streams -> gene_id.
 
 Scoring
 -------
-``composite_score`` (0-1) is the method's base weighted score plus small,
-fully documented bonuses:
+``composite_score`` is the method's base weighted score (in [0, 1]) plus
+small, fully documented bonuses (max +0.07, so composite <= 1.07 and is
+NOT clipped):
 
 +----------------------+------+---------------------------------------------------+
 | bonus                | wt   | rationale                                         |
@@ -65,7 +67,13 @@ BONUS_GO_NEURAL = 0.03
 BONUS_GO_TF = 0.02
 BONUS_HUMAN_ORTHOLOG = 0.02
 
-MAX_COMPOSITE = 1.0
+# Composite scores are NOT clipped at 1.0. The former MAX_COMPOSITE=1.0
+# clip saturated the top of all three rankings (6+ genes at exactly 1.0,
+# destroying resolution exactly where ranking matters most) and masked the
+# ortholog-bonus differences between methods. Base scores live in [0, 1]
+# and bonuses sum to at most 0.07, so composite_score <= 1.07 - the tie-
+# break discipline (composite -> base -> n_streams -> gene_id) is the sole
+# ordering authority.
 
 
 # ---------------------------------------------------------------------------
@@ -321,7 +329,9 @@ def apply_bonuses(df: pd.DataFrame, base_col: str) -> pd.DataFrame:
     out["bonus_total"] = components[3]
 
     base = pd.to_numeric(out[base_col], errors="coerce").fillna(0.0)
-    out["composite_score"] = (base + out["bonus_total"]).clip(upper=MAX_COMPOSITE).round(4)
+    # No clipping at 1.0 (see module docstring): the unclipped composite
+    # preserves top-of-ranking resolution; it is bounded by 1.07 anyway.
+    out["composite_score"] = (base + out["bonus_total"]).round(6)
     out["composite_base_column"] = base_col
     return out
 
@@ -356,9 +366,16 @@ def gate_track_b(df: pd.DataFrame) -> pd.DataFrame:
         if "dna_binding_domains" in df.columns else False
     tf_ok = df["mmc4_tf_flag"].astype(str).str.upper() == "TF" \
         if "mmc4_tf_flag" in df.columns else False
-    if isinstance(dom_ok, bool):
-        return df
-    return df[dom_ok | tf_ok]
+    if isinstance(dom_ok, bool) and isinstance(tf_ok, bool):
+        # No gate inputs at all: fail loudly rather than returning every
+        # candidate ungated (a silent fallthrough would let hypothetical
+        # factors without any domain evidence into Track B).
+        raise ValueError(
+            "gate_track_b: neither 'dna_binding_domains' nor 'mmc4_tf_flag' "
+            "present - Track B cannot be gated without TF-identity evidence"
+        )
+    gate = dom_ok.fillna(False) | tf_ok.fillna(False)
+    return df[gate]
 
 
 def _has_ortholog(row: pd.Series) -> bool:
@@ -379,13 +396,14 @@ def _has_ortholog(row: pd.Series) -> bool:
 
 
 def select_top(track_df: pd.DataFrame, n: int = 5) -> pd.DataFrame:
-    """Take the top-n rows by composite_score (ties broken by the method's
-    base median score, then n_streams).  Returns the rows ranked 1..n.
+    """Take the top-n rows by composite_score.
 
-    Ties are also broken by gene_id for full determinism.
+    Tie-break order (fully deterministic, matching the WS2 docstring):
+    composite_score -> the method's own base median score -> n_streams ->
+    gene_id (ascending for gene_id, descending for scores).
+    Returns the rows ranked 1..n.
     """
     out = track_df.copy()
-    base_col = "composite_score"
     if "composite_score" not in out.columns:
         # fall back to whichever method base column exists
         for c in ("integrated_score", "dirichlet_median_score", "uniform_median_score"):
@@ -394,9 +412,17 @@ def select_top(track_df: pd.DataFrame, n: int = 5) -> pd.DataFrame:
                 break
         else:
             out["composite_score"] = 0.0
-    tie_cols = [c for c in ("integrated_score", "dirichlet_median_score",
-                            "uniform_median_score", "n_streams")
-                if c in out.columns]
+    # Tie-break columns: the method's OWN base score first, then the fixed
+    # integrated_score, then n_streams, then gene_id. (The method base is
+    # what the composite was built from, so it is the primary tie-break;
+    # integrated_score - a different method's base - only breaks remaining
+    # ties, per the documented WS2 order.)
+    base_col = out["composite_base_column"].iloc[0] \
+        if "composite_base_column" in out.columns else None
+    tie_cols = []
+    for c in (base_col, "integrated_score", "n_streams"):
+        if c and c in out.columns and c not in tie_cols:
+            tie_cols.append(c)
     out["composite_score"] = pd.to_numeric(
         out["composite_score"], errors="coerce"
     ).fillna(0.0)
@@ -404,8 +430,16 @@ def select_top(track_df: pd.DataFrame, n: int = 5) -> pd.DataFrame:
         out[c] = pd.to_numeric(out[c], errors="coerce").fillna(0.0)
     if "n_streams" in out.columns:
         out["n_streams"] = out["n_streams"].astype(int)
-    sort_cols = ["composite_score"] + tie_cols + ["gene_id"]
+    # gene_id ascending: use a temporary inverted key for the mixed
+    # descending/ascending sort (pandas sort_values can't mix per-column
+    # ascending for mixed dtypes across multiple keys).
+    out["_gene_id_desc"] = [
+        "".join(chr(0x10FFFF - ord(ch)) for ch in str(g))
+        for g in out["gene_id"]
+    ]
+    sort_cols = ["composite_score"] + tie_cols + ["_gene_id_desc"]
     out = out.sort_values(by=sort_cols, ascending=False).head(n).copy()
+    out = out.drop(columns=["_gene_id_desc"])
     out["rank"] = range(1, len(out) + 1)
     return out.reset_index(drop=True)
 
