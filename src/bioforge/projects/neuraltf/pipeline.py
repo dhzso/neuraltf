@@ -279,6 +279,12 @@ class NeuralTFPipeline:
             print(f"    MOESM5: {m5['total_h1smcg']} h1SMcG -> {m5['total_v6_all']} v6 "
                   f"(h1SMcG->v6 rate: {m5['rate_h1smcg_to_v6']:.2%}, "
                   f"v6->h1SMcG rate: {m5['rate_v6_to_h1smcg']:.2%})")
+            print(f"      note: the h1SMcG->v6 rate is over the FULL h1 "
+                  f"genome ({m5['total_h1smcg']} genes); {m5['total_h1smcg'] - m5['mapped_h1smcg']} "
+                  f"h1SMcG have no v6 counterpart in Perez's own table "
+                  f"(the v6 transcriptome predates the h1 genome). The "
+                  f"v6->h1SMcG rate is over mapped v6 IDs only — the two "
+                  f"percentages use different denominators by design.")
         except Exception as e:
             print(f"  (Mapping QC skipped: {e})")
 

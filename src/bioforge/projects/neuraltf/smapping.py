@@ -100,10 +100,15 @@ def _get_v6_maps() -> tuple[dict[str, str], dict[str, str]]:
 def _get_v6_maps_rbh() -> dict[str, str]:
     """RBH-restricted v6 -> h1SMcG map.
 
-    ~14.4k of 25k v6 IDs are claimed by more than one h1SMcG via the
-    collapsed (`Similar`) column; first-wins picks are arbitrary there.
-    The 1:1 reciprocal-best-hit column is unambiguous, so influence and
-    lineage attribution should use only these rows.
+    Verified 2026-09-06 against the raw MOESM5: the multi-mapping
+    direction is ONE h1SMcG -> MANY v6 (the collapsed `Similar` column
+    lumps paralogs: 4,365 h1 rows carry lists of up to 275 v6 IDs, and
+    10,648 of the 25,066 mapped v6 IDs are Similar-only). No v6 ID is
+    claimed by two different h1SMcG rows — so a Similar-only v6's
+    attribution is not "contested" but PARALOG-VAGUE: the influence
+    score belongs to a family, not to that specific gene. The 1:1
+    reciprocal-best-hit column (14,418 rows) is gene-specific, so
+    influence and lineage attribution use only these rows.
     """
     df = _load_moism5()
     v6_to_h1: dict[str, str] = {}
