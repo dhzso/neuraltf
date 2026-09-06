@@ -1,0 +1,11 @@
+services:
+  bioforge:
+    build:
+      context: .
+      dockerfile: docker/base/Dockerfile
+    container_name: bioforge-dev
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/workspace
+    restart: unless-stopped

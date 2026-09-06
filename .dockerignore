@@ -1,0 +1,12 @@
+.git
+.gitignore
+datasets/
+backups/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+*.pyc
+*.pyo
+*.log
+.vscode
+.idea

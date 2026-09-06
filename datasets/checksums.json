@@ -1,0 +1,58 @@
+{
+  "GSE103633_GEO_Plass_atlas/GSE103633_RAW.tar": {
+    "sha256": "fac5e2b45bbf2e4cdfd0e1ce6241bad3936c3ec667835869ea3db6a4bd0b0de2",
+    "size_bytes": 26030080
+  },
+  "GSE111764_GEO_Fincher_atlas/GSE111764_PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz": {
+    "sha256": "ef945898e17463d60bfed1c359a926383dd070a9098258599988640ebf0c29bc",
+    "size_bytes": 96288208
+  },
+  "OMIX003867_OMIX_Cui_atlas/OMIX003867-01/singlecell_h5ad/adata_scRNA_Annotated.h5ad": {
+    "sha256": "415b45a0a01c04da616aa1909add605f05a13d514f1fad72a2e622c5bd5df414",
+    "size_bytes": 1056300514
+  },
+  "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc2.xlsx": {
+    "sha256": "7ec8400664dfa3d23247f5da5d447e4190b14692b19fe822d08b6897f470b2c7",
+    "size_bytes": 37098
+  },
+  "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc3.xlsx": {
+    "sha256": "6271dceb98587deef9e1f3ff66dad1ce81976bec2a4b9b91e5861d6e2407cdd8",
+    "size_bytes": 308382
+  },
+  "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc4.xlsx": {
+    "sha256": "fd0f77946dcd6f35dccc363761ab0857a4f60f94eba4ba0282e289b6a5326a54",
+    "size_bytes": 80676
+  },
+  "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc5.xlsx": {
+    "sha256": "18a53ac54efe6a244e875078d6863e67ac2b0e65d38dda294615b05c3ab3e9d5",
+    "size_bytes": 12296
+  },
+  "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc6.xlsx": {
+    "sha256": "38646a0962cb577d719515cfa40a5b4e1569c5d3adaca63dc51a37edffb2c6ef",
+    "size_bytes": 9996
+  },
+  "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc7.xlsx": {
+    "sha256": "49005c8e57810ae50df95a6482036650cd75bf5206d9bbe49126364b9de06b6f",
+    "size_bytes": 95880
+  },
+  "Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM5_ESM.xlsx": {
+    "sha256": "bb103659353d842e95487f85ddb89415df978224a2088f6d203461055b7344fd",
+    "size_bytes": 16166227
+  },
+  "Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM19_ESM.xlsx": {
+    "sha256": "cffa03ef022191e3c8984f84507e7db137ae1dbf62a2a2efebdcaa127a2b9f34",
+    "size_bytes": 57120
+  },
+  "Supplementary_Data_ Perez_2025/41467_2025_65712_MOESM22_ESM.xlsx": {
+    "sha256": "9eded529ac7e0d8ad0f5d6cd73b2102c59f3e829cc69ddb9200a530eade5e458",
+    "size_bytes": 859432
+  },
+  "smed_20140614.mapping.rosettastone.2020.txt": {
+    "sha256": "d3e912b6798bd476b93c37e8b73f6801a1660c532d3edd0e6bb8502ed14ec768",
+    "size_bytes": 70598684
+  },
+  "go.obo": {
+    "sha256": "d3593751d885ca160b2ab7baf6c7eccd88ca3c4599f79436c674bad661095ff0",
+    "size_bytes": 36726956
+  }
+}

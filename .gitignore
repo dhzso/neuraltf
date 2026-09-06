@@ -1,0 +1,141 @@
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.pyc
+
+# =============================================================================
+# Virtual environments
+# =============================================================================
+.venv/
+venv/
+
+# =============================================================================
+# Jupyter
+# =============================================================================
+.ipynb_checkpoints/
+
+# =============================================================================
+# IDE
+# =============================================================================
+.vscode/
+.idea/
+
+# =============================================================================
+# Operating system
+# =============================================================================
+.DS_Store
+Thumbs.db
+
+# =============================================================================
+# Project
+# =============================================================================
+# ALL data files are generated locally: download the raw sources to the
+# documented locations (datasets/MANIFEST.md + README.md "Datasets") and run
+# `python scripts/generate_all.py` (or the individual build scripts) to
+# recreate every processed artifact. No data files are committed.
+datasets/raw/*
+!datasets/raw/.gitkeep
+datasets/raw.zip
+datasets/reference/*
+!datasets/reference/.gitkeep
+datasets/cache/*
+!datasets/cache/.gitkeep
+
+# Generated processed files (prebuilt only locally via the build scripts:
+# convert_fincher.py, consolidate_plass.py, query_planmine.py).
+datasets/processed/*
+!datasets/processed/.gitkeep
+
+# Generated per-run, report and figure artifacts (reproducible from the
+# pipeline + scripts; committed files would mask stale runs).
+projects/NeuralTF/data/*.csv
+projects/NeuralTF/data/*.tsv
+projects/NeuralTF/results/*
+!projects/NeuralTF/results/.gitkeep
+projects/NeuralTF/figures/*.png
+projects/NeuralTF/figures/*.pdf
+projects/NeuralTF/figures/weight_sensitivity_draws.csv
+projects/NeuralTF/figures/weight_sensitivity_top10_challengers.csv
+projects/NeuralTF/figures/supplementary/*
+!projects/NeuralTF/figures/supplementary/.gitkeep
+
+# Dirichlet/weight-sensitivity notebook outputs (CSVs, PNGs, reports) are
+# generated locally by the notebook scripts; only the .py scripts are tracked.
+projects/NeuralTF/notebooks/*.csv
+projects/NeuralTF/notebooks/*.png
+projects/NeuralTF/notebooks/*.txt
+projects/NeuralTF/notebooks/*.md
+
+# Local logs dir is for ad-hoc run logs (legitimate run outputs live
+# under projects/<name>/runs/), but keep the subdir itself tracked.
+logs/*
+!logs/.gitkeep
+
+# NeuronalTF docs workspace: internal notes/presentations, never pushed.
+projects/NeuralTF/docs/*
+!projects/NeuralTF/docs/.gitkeep
+backups/
+
+# Workflow run artifacts are reproducible from YAML; not tracked.
+runs/
+projects/*/runs/*
+!projects/*/runs/.gitkeep
+
+# Built artifacts
+src/bioforge.egg-info/
+
+# Stray pipeline outputs from `python -m bioforge.projects.neuraltf.pipeline`
+# (legitimate outputs live under projects/NeuralTF/runs/)
+/evidence_cards.md
+/rank.csv
+/rank_neural.csv
+/pipeline_results.json
+
+# Presentation/one-time scripts (not needed for replication)
+projects/NeuralTF/scripts/generate_neuraltf_sota.py
+projects/NeuralTF/scripts/count_slides.py
+
+# Stray output CSVs
+analysis_results.csv
+corrected_comparison.csv
+scores_comparison.csv
+
+# Stray analysis scripts (not needed for replication)
+analyze_full.py
+analyze_missing.py
+final_validation.py
+verify_final.py
+
+# Generated zip archives
+projects/NeuralTF/figures.zip
+projects/NeuralTF/results.zip
+
+# Internal audit/guide docs (not for replication)
+projects/NeuralTF/FIGURE_AUDIT.md
+projects/NeuralTF/FIGURE_GUIDE.md
+
+# Legacy duplicate
+neuraltf-repo/
+
+# =============================================================================
+# Docker
+# =============================================================================
+*.pid
+*.log
+
+# Legacy duplicate (not used)
+neuraltf-repo/
+
+# =============================================================================
+# Streamlit
+# =============================================================================
+# Allow .streamlit/config.toml to be committed (suppresses email prompt).
+.streamlit/secrets.toml
+
+# Exploratory notebook outputs were pruned (superseded by results/)
+projects/NeuralTF/notebooks/*
+!projects/NeuralTF/notebooks/.gitkeep
+
+# Local-only audit records (never commit/push)
+audit/
