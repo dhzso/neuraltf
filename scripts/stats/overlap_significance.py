@@ -194,6 +194,17 @@ def main():
     else:
         results["binomial"] = {"error": "no pairs"}
 
+    # 2026-09-07 audit fix (CRITICAL-3): the three methods share rank.csv,
+    # apply_bonuses(), and gate_track_b() — they are NOT independent.
+    # The hypergeometric/binomial null understates expected overlap,
+    # inflating significance. Flag this in the output for consumers.
+    results["CAVEAT_independence_assumption"] = (
+        "These p-values assume method independence, which is violated: "
+        "all 3 methods share rank.csv, apply_bonuses(), and gate_track_b(). "
+        "The null model understates expected overlap. Interpret as an UPPER "
+        "BOUND on significance (true p-values are larger)."
+    )
+
     out_path = RESULTS_DIR / "overlap_significance.json"
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, default=str)

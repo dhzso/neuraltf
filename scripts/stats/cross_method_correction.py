@@ -235,11 +235,15 @@ def main():
             for name, k, p in zip(pair_names, pair_overlaps, pair_pvals)
         },
         "caveat": (
-            "The three methods share the candidate matrix and bonus layer "
-            "by design, so shortlist memberships are positively correlated; "
-            "per-gene binomial p-values are descriptive of agreement "
-            "strength. The pairwise hypergeometric set-level overlaps are "
-            "the primary consensus statistics."
+            "The three methods share rank.csv, apply_bonuses(), and "
+            "gate_track_b() by design, so shortlist memberships are "
+            "positively correlated — the independence assumption of the "
+            "binomial and hypergeometric null models is violated. "
+            "Per-gene binomial p-values are descriptive of agreement "
+            "strength only. All reported p-values are UPPER BOUNDS on "
+            "significance (true p-values are larger). The pairwise "
+            "hypergeometric set-level overlaps are the primary consensus "
+            "statistics. [2026-09-07 audit fix CRITICAL-3]"
         ),
         "genes": df.to_dict(orient="records"),
     }

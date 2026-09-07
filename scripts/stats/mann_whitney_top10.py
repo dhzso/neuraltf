@@ -157,14 +157,15 @@ def main():
         "test": "Mann-Whitney U (one-sided, greater)",
         "caveat": (
             "The 'circular' comparison selects the top-10 by the tested "
-            "score itself - tautological (U=n1*n2, delta=1 by "
-            "construction). The 'honest' comparison recomputes the score "
-            "excluding rnai/neural_enriched/neural_specificity/"
+            "score itself — DIAGNOSTIC ONLY, tautological (U=n1*n2, "
+            "delta=1 by construction, carries zero evidential value for "
+            "the selection itself). The 'honest' comparison recomputes "
+            "the score excluding rnai/neural_enriched/neural_specificity/"
             "perez_lineage (label-derived streams; perez_lineage alone "
             "carries AUC 0.99 on the label). The 'strict' variant "
             "additionally excludes reproducibility (King-neural-G0 "
             "membership leakage) and is the lower bound on true "
-            "discrimination."
+            "discrimination. [2026-09-07 audit WARNING-5]"
         ),
         "circular": circular,
         "honest": honest,

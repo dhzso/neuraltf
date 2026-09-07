@@ -45,6 +45,14 @@ def build():
             "family": fam, "family_color": fam_c,
         })
     df = pd.DataFrame(records)
+    if df.empty:
+        print("WARNING: empty top-10 DataFrame, generating placeholder figure")
+        fig, ax = plt.subplots(figsize=(9, 6))
+        ax.text(0.5, 0.5, "No top-10 candidates available", ha="center",
+                va="center", transform=ax.transAxes, fontsize=12, color="#999")
+        ax.set_title("Top 10 candidates (no data)", fontweight="bold", fontsize=10)
+        fig.tight_layout(); save(fig, "05_top10_candidate_atlas")
+        return
     df = df.sort_values("composite", ascending=True)
     y = np.arange(len(df))
 

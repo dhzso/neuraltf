@@ -138,7 +138,10 @@ def main():
     u_top10, p_top10 = stats.mannwhitneyu(top10_scores, rest_scores, alternative="greater")
 
     results["top10_vs_rest"] = {
-        "caveat": "tautological: groups defined by the tested score",
+        "caveat": ("DIAGNOSTIC ONLY — tautological: top-10 defined by the "
+                   "same score being tested (Cliff's delta = 1.0, p ≈ 0 "
+                   "by construction). Carries zero evidential value for "
+                   "the selection itself. [2026-09-07 audit WARNING-4]"),
         "cliffs_delta": float(cd_top10),
         "cohens_d": float(d_top10),
         "hedges_g": float(g_top10),

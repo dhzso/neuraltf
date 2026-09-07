@@ -313,6 +313,8 @@ def fig_s1_map(go, neural, ids, labels, names, top, out: Path) -> None:
 
 def fig_s2_top10_dotmatrix(go, neural, ids, labels, names, top, out: Path) -> None:
     if top is None:
+        print("WARNING: fig_s2_top10_dotmatrix skipped — top candidates CSV "
+              "missing (top10_neural_tfs_prioritized.csv not found)")
         return
     terms = pick_terms(go, n_neural=6, n_top=9, max_terms=15)
     gene_order = [g for g in order_genes(ids, neural, top) if g in set(top["gene_id_v6"])]

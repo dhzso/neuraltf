@@ -82,9 +82,26 @@ BONUS_HUMAN_ORTHOLOG = 0.02
 def map_v6_to_v4(bridge: pd.DataFrame) -> pd.DataFrame:
     """One row per unique v6 id with its v4 id(s).
 
-    When a v6 id maps to more than one distinct v4 id the mapping is flagged
-    ``ambiguous`` and the v4 value is left blank - we never guess numeric
-    prefix matches (the documented behaviour).
+    Flags BOTH directions of mapping ambiguity:
+
+    - ``ambiguous``: a single v6 maps to more than one distinct v4 id
+      (the v4 value is left blank — we never guess).
+    - ``many_to_one_v4``: the v6→v4 mapping is unique, but the SAME v4
+      id is shared by multiple v6 isoforms. In v4-indexed atlases like
+      Fincher, only one of those v6 aliases will receive the v4 gene's
+      expression evidence (``bridge.v4_to_v6`` returns a single v6);
+      the others are silently starved. The flag allows downstream code
+      to detect and handle this (e.g. attribute Fincher evidence to all
+      aliased v6 IDs, or emit a warning).
+    - ``unique``: one-to-one mapping in both directions.
+    - ``unmapped``: v6 id has no v4 mapping.
+
+    2026-09-07 audit fix (CRITICAL-2): the previous version only checked
+    the v6→v4 direction. Multiple v6 isoforms sharing a v4 reference
+    gene (e.g. dd_Smed_v6_9460_0_1 and dd_Smed_v6_9460_0_2 both mapping
+    to dd_Smed_v4_9460_0_1) each received ``mapping_flag='unique'``,
+    hiding the many-to-one relationship that causes Fincher expression
+    misattribution.
     """
     col_map: dict[str, str] = {}
     for c in bridge.columns:
@@ -101,11 +118,24 @@ def map_v6_to_v4(bridge: pd.DataFrame) -> pd.DataFrame:
     g[v4_col] = g[v4_col].astype(str).str.strip()
     g = g[g[v4_col].notna() & (g[v4_col] != "nan") & (g[v4_col] != "")]
 
+    # Build reverse map: v4 → {v6_ids} to detect many-to-one relationships
+    v4_to_v6s: dict[str, set[str]] = {}
+    for v6, sub in g.groupby(v6_col, sort=False):
+        for v4 in sub[v4_col].unique():
+            if v4:
+                v4_to_v6s.setdefault(v4, set()).add(str(v6))
+    many_to_one_v4s = frozenset(
+        v4 for v4, v6s in v4_to_v6s.items() if len(v6s) > 1
+    )
+
     rows = []
     for v6, sub in g.groupby(v6_col, sort=False):
         v4_vals = sorted({v for v in sub[v4_col] if v})
         if len(v4_vals) == 1:
-            rows.append({"v6_id": v6, "v4_id": v4_vals[0], "mapping_flag": "unique"})
+            flag = "unique"
+            if v4_vals[0] in many_to_one_v4s:
+                flag = "many_to_one_v4"
+            rows.append({"v6_id": v6, "v4_id": v4_vals[0], "mapping_flag": flag})
         elif v4_vals:
             rows.append({"v6_id": v6, "v4_id": "", "mapping_flag": "ambiguous"})
         else:
