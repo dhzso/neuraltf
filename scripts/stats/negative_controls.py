@@ -101,7 +101,7 @@ def matched_sample(pool: pd.DataFrame, target_n_streams: int,
                    n_draw: int, rng) -> pd.DataFrame:
     """Draw controls matched on stream-availability count.
 
-    Genes are ranked by |n_streams - target| (ties broken by a random
+    Genes are ranked by |n_streams_avail - target| (ties broken by a random
     key so the draw stays random within the matched band) and the top
     n_draw are taken. This removes the availability confound: validated
     TFs have ~9 non-null streams; controls with ~5 would trivially
@@ -110,7 +110,8 @@ def matched_sample(pool: pd.DataFrame, target_n_streams: int,
     if pool.empty:
         return pool
     pool = pool.copy()
-    pool["_dist"] = (pool["n_streams"] - target_n_streams).abs()
+    match_col = "n_streams_avail" if "n_streams_avail" in pool.columns else "n_streams"
+    pool["_dist"] = (pool[match_col] - target_n_streams).abs()
     pool["_rand"] = rng.random(len(pool))
     pool = pool.sort_values(["_dist", "_rand"])
     take = pool.head(min(n_draw, len(pool)))

@@ -313,9 +313,6 @@ def main() -> int:
                 f"cross-track attribution leaked through: {gid} ({gt}) "
                 f"attributed to {disp} ({dt})")
 
-        if (d + 1) % 100 == 0:
-            print(f"  {d + 1}/{N_DRAWS}", flush=True)
-
     draws_df = pd.DataFrame(draw_rows, columns=["draw", "gene_id", "gene_name", "rank", "in_top_10"])
 
     # Completeness guard: every persisted gene must have exactly N_DRAWS
