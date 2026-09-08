@@ -6,52 +6,46 @@ import matplotlib.pyplot as plt, numpy as np, pandas as pd
 from scipy.stats import spearmanr
 
 def build():
-    fixed = load_top10()
-    centered = load_centered()
-    uniform = load_uniform()
-    neural = load_neural()
-    track_map = dict(zip(fixed["gene_id"], fixed.get("track",[""]*len(fixed))))
-
-    all_ids = set()
-    for df in [fixed, centered, uniform]:
-        if "gene_id" in df.columns: all_ids.update(df["gene_id"].tolist())
-
-    records = []
-    for gid in all_ids:
-        rec = {"gene_id":gid}
-        for name, df in [("fixed",fixed),("centered",centered),("uniform",uniform)]:
-            row = df[df["gene_id"]==gid]
-            if len(row)>0:
-                rec[f"{name}_score"] = row.iloc[0].get("composite_score", np.nan)
-        records.append(rec)
-    score_df = pd.DataFrame(records).dropna()
-
-    methods = ["fixed","centered","uniform"]
-    labels = ["Fixed","Centered","Uniform"]
+    s1 = pd.read_csv(RES / "supplementary_table_S1_method_comparison.csv")
+    
+    methods = ["fixed_composite", "centered_composite", "uniform_composite"]
+    labels = ["Fixed-weight", "Centered\nDirichlet", "Uniform\nDirichlet"]
     n = len(methods)
-    corr = np.zeros((n,n))
+    corr = np.zeros((n, n))
+    
     for i in range(n):
         for j in range(n):
-            if i==j: corr[i,j]=1.0
-            elif i<j:
-                rho, _ = spearmanr(score_df[f"{methods[i]}_score"], score_df[f"{methods[j]}_score"])
-                corr[i,j] = rho; corr[j,i] = rho
+            if i == j:
+                corr[i, j] = 1.0
+            elif i < j:
+                rho, _ = spearmanr(s1[methods[i]], s1[methods[j]])
+                corr[i, j] = rho
+                corr[j, i] = rho
 
-    fig, ax = plt.subplots(figsize=(5, 4.5))
-    im = ax.imshow(corr, cmap="RdYlBu_r", vmin=0.8, vmax=1.0, aspect="equal")
-    ax.set_xticks(range(n)); ax.set_xticklabels(labels, fontsize=9)
-    ax.set_yticks(range(n)); ax.set_yticklabels(labels, fontsize=9)
-    ax.set_xlabel("Weighting method (column)")
-    ax.set_ylabel("Weighting method (row)")
+    fig, ax = plt.subplots(figsize=(W_1COL, 3.0))
+    cmap = plt.cm.YlGnBu
+    im = ax.imshow(corr, cmap=cmap, vmin=0.90, vmax=1.0, aspect="equal")
+    ax.set_xticks(range(n))
+    ax.set_xticklabels(labels, fontsize=7)
+    ax.set_yticks(range(n))
+    ax.set_yticklabels(labels, fontsize=7)
+
     for i in range(n):
         for j in range(n):
-            ax.text(j, i, f"{corr[i,j]:.3f}", ha="center", va="center", fontsize=10,
-                    color="white" if corr[i,j]<0.9 else "#333", fontweight="bold")
-    ax.set_title("All three weighting methods produce highly concordant rankings (Spearman rho > 0.9)\n"
-                 "Constructed-by-design agreement: methods share matrix/bonuses/gate/tie-breaks",
-                 fontweight="bold", pad=8)
-    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-    cbar.set_label("Spearman rho", fontsize=8)
-    fig.tight_layout(); save(fig, "17_method_rank_correlation")
+            val = corr[i, j]
+            tc = "white" if val > 0.97 else "#222222"
+            ax.text(j, i, f"{val:.3f}", ha="center", va="center", fontsize=7.5,
+                    color=tc, fontweight="bold")
+                    
+    ax.set_title("Method rank correlation\n(full candidate universe, n = 11,675)",
+                 fontweight="bold", fontsize=8, pad=8)
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.06)
+    cbar.set_label("Spearman $r_s$", fontsize=7.5)
+    cbar.ax.tick_params(labelsize=6.5)
+    
+    ax.spines[:].set_visible(False)
+    fig.tight_layout()
+    save(fig, "17_method_rank_correlation")
 
 if __name__=="__main__": build()
+

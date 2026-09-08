@@ -29,20 +29,27 @@ def build():
                       "mean_abs":np.mean(np.abs(delta)), "n_displaced":n_displaced})
 
     stats = pd.DataFrame(stats).sort_values("median_abs", ascending=True)
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(W_15COL, 3.2))
     y = np.arange(len(stats))
-    ax.barh(y, stats["median_abs"], color=[STREAM_C[s] for s in stats["stream"]], height=0.55, edgecolor="white", lw=0.3)
-    for i, (_,r) in enumerate(stats.iterrows()):
-        ax.text(r["median_abs"]+0.05, i, f'ΔTop10={r["n_displaced"]}', fontsize=7, va="center",
-                color=C_HL if r["n_displaced"]>0 else "#999")
-    ax.set_yticks(y); ax.set_yticklabels([STREAM_L[s] for s in stats["stream"]], fontsize=8)
-    ax.set_xlabel(f"Median |rank change| ({len(neural)} candidates)"); ax.set_ylabel("Evidence stream removed")
-    ax.set_title("Removing expression or reproducibility causes largest rank shifts",
-                 fontweight="bold", pad=8)
-    ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
-    from matplotlib.patches import Patch
-    ax.legend(handles=[Patch(facecolor=STREAM_C[s], label=STREAM_L[s]) for s in stats["stream"]],
-              loc="lower right", fontsize=6, frameon=True, title="Removed stream", title_fontsize=7)
-    fig.tight_layout(); save(fig, "08_stream_ablation_global")
+    ax.barh(y, stats["median_abs"], color=[STREAM_C[s] for s in stats["stream"]],
+            height=0.62, edgecolor="none")
+    for i, (_, r) in enumerate(stats.iterrows()):
+        nd = int(r["n_displaced"])
+        txt = f"|Δrank| = {r['median_abs']:.1f}  (Top-10 displaced: {nd})" if nd > 0 else f"|Δrank| = {r['median_abs']:.1f} (stable)"
+        ax.text(r["median_abs"] + 0.08, i, txt, fontsize=6.8, va="center",
+                color=C_HL if nd > 0 else "#555555", fontweight="bold" if nd > 0 else "normal")
+        
+    ax.set_yticks(y)
+    ax.set_yticklabels([STREAM_L[s] for s in stats["stream"]], fontsize=7.5)
+    ax.set_xlabel(f"Median absolute rank change (|Δrank|, n = {len(neural)})", fontsize=8)
+    ax.set_ylabel("Ablated evidence stream", fontsize=8)
+    ax.set_xlim(0, max(stats["median_abs"]) * 1.55)
+    ax.set_title("Global stream ablation: rank displacement upon evidence omission",
+                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    fig.tight_layout()
+    save(fig, "08_stream_ablation_global")
 
 if __name__=="__main__": build()
+

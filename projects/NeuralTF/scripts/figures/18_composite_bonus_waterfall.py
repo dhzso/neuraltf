@@ -51,17 +51,19 @@ def build():
         rows.append({"name": nm, "track": track, "base": base, **bonuses,
                      "total_bonus": total_bonus})
 
-    df = pd.DataFrame(rows).sort_values("base", ascending=True)
+    df = pd.DataFrame(rows)
+    df["composite"] = df["base"] + df["total_bonus"]
+    df = df.sort_values("composite", ascending=True)
     y = np.arange(len(df))
 
     bonus_cols = ["GO neural", "GO TF", "Human ortholog"]
     bonus_colors = {"GO neural": "#E69F00", "GO TF": "#009E73",
-                    "Human ortholog": "#CC79A7"}
+                    "Human ortholog": "#56B4E9"}
 
-    fig, ax = plt.subplots(figsize=(9, 6))
+    fig, ax = plt.subplots(figsize=(W_15COL, 4.2))
 
     # Base score bars
-    ax.barh(y, df["base"], height=0.6, color="#CCCCCC", edgecolor="white", lw=0.3,
+    ax.barh(y, df["base"], height=0.58, color="#90A4AE", edgecolor="none",
             label="Base integrated score")
 
     # Stacked bonus bars
@@ -70,33 +72,34 @@ def build():
         vals = df[bc].values
         mask = vals > 0
         if mask.any():
-            ax.barh(y[mask], vals[mask], height=0.6, left=left[mask],
-                    color=bonus_colors[bc], alpha=0.85, edgecolor="white", lw=0.3,
-                    label=bc)
+            ax.barh(y[mask], vals[mask], height=0.58, left=left[mask],
+                    color=bonus_colors[bc], alpha=0.9, edgecolor="none",
+                    label=f"{bc} (+{vals[mask][0]:.2f})")
             left = left + vals
 
     # Composite score label at end
     for i, (_, r) in enumerate(df.iterrows()):
-        comp = r["base"] + r["total_bonus"]
-        ax.text(min(comp + 0.005, 1.14), y[i], f'{comp:.3f}', fontsize=7,
-                va="center", fontweight="bold")
+        comp = r["composite"]
+        ax.text(comp + 0.015, y[i], f"{comp:.3f}", fontsize=7,
+                va="center", fontweight="bold", color="#222222")
 
     # Gene names
     ax.set_yticks(y)
-    ax.set_yticklabels(df["name"], fontsize=8, fontweight="bold")
+    ax.set_yticklabels(df["name"], fontsize=7.5, fontweight="bold")
     for i, track in enumerate(df["track"]):
         ax.get_yticklabels()[i].set_color(C_A if track == "A" else C_B)
 
-    ax.set_xlabel("Composite score (base integrated + annotation bonuses)", fontsize=9)
-    ax.set_ylabel("Top-10 TF candidate (sorted by base score)", fontsize=9)
-    ax.set_title("Annotation bonuses add up to +0.07 on top of base integrated scores for top-10\n"
-                 "Gene names colored by track (blue = Track A RNAi-validated, orange = Track B novel)",
-                 fontweight="bold", pad=10, fontsize=10)
-    ax.legend(loc="lower right", fontsize=6, frameon=True, title="Score component",
-             title_fontsize=7)
-    ax.set_xlim(0, max(1.15, float(df["composite"].max()) * 1.05) if "composite" in df.columns else 1.15)
-    ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
-    fig.tight_layout(); save(fig, "18_composite_bonus_waterfall")
+    ax.set_xlabel("Composite score (base multi-atlas evidence + annotation bonuses)", fontsize=8)
+    ax.set_ylabel("Top-10 candidate", fontsize=8)
+    ax.set_title("Scoring anatomy: baseline multi-atlas evidence + transparent annotation bonuses",
+                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.legend(loc="lower right", frameon=False, fontsize=7)
+    ax.set_xlim(0, 1.20)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    fig.tight_layout()
+    save(fig, "18_composite_bonus_waterfall")
+
 
 if __name__ == "__main__":
     build()

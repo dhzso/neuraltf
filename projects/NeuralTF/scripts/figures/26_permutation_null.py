@@ -56,48 +56,46 @@ def build():
 
         null_scores = np.array(null_scores)
 
-        fig, ax = plt.subplots(figsize=(7, 4.5))
-        ax.hist(null_scores, bins=50, density=True, color=C_NEURAL, alpha=0.6, edgecolor="white",
-                label="Null: joint row permutation (evidence vectors)")
+        fig, ax = plt.subplots(figsize=(W_15COL, 3.4))
+        ax.hist(null_scores, bins=45, density=True, color="#78909C", alpha=0.55, edgecolor="none",
+                label="Empirical null (joint evidence row permutation)")
 
         if len(real_scores) > 0:
-            # Top-10 BY SCORE among genes TESTABLE by the cluster-label
-            # permutation (King-table-saturated genes are excluded: their
-            # score cannot change under any cluster permutation).
             testable = df
             if "untestable_by_permutation" in df.columns:
                 testable = df[~df["untestable_by_permutation"].astype(bool)]
             top_real = np.sort(testable["real_integrated_score"].dropna().values)[-10:] \
                 if "real_integrated_score" in testable.columns else np.sort(real_scores)[-10:]
-            for rs in top_real:
-                ax.axvline(x=rs, color=C_HL, lw=1.2, linestyle="--", alpha=0.8)
-            ax.axvline(x=top_real[-1], color=C_HL, lw=1.5, linestyle="--",
-                       label="Top-10 testable candidates")
+            for rs in top_real[:-1]:
+                ax.axvline(x=rs, color=C_HL, lw=1.0, linestyle="--", alpha=0.75)
+            ax.axvline(x=top_real[-1], color=C_HL, lw=1.4, linestyle="--",
+                       label="Top-10 permutation-testable candidates")
 
         p_empirical = df["empirical_p"].min() if "empirical_p" in df.columns else (df["empirical_p_shuffled"].min() if "empirical_p_shuffled" in df.columns else 0.001)
         n_untestable = int(df["untestable_by_permutation"].sum()) if "untestable_by_permutation" in df.columns else 0
         n_testable = len(df) - n_untestable
         n_perm = int(df["n_perm"].iloc[0]) if "n_perm" in df.columns else 30
         p_floor = 1.0 / (n_perm + 1)
-        ax.text(0.95, 0.95,
-                f"min empirical p = {p_empirical:.4f} "
-                f"(= floor 1/{n_perm+1} if {p_empirical:.4g} == {p_floor:.4g})\n"
-                f"resolution floor at n={n_perm}: {p_floor:.4f}\n"
-                f"testable: {n_testable} | table-saturated: {n_untestable}",
-                transform=ax.transAxes, ha="right", va="top", fontsize=8,
-                fontweight="bold", color=C_HL,
-                bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor=C_HL, alpha=0.8))
+        
+        ax.text(0.95, 0.92,
+                f"Min empirical $p = {p_empirical:.4f}$ (floor $1/(n+1)$)\n"
+                f"Resolution floor (n={n_perm}): ${p_floor:.4f}$\n"
+                f"Testable: {n_testable:,} | Saturated: {n_untestable:,}",
+                transform=ax.transAxes, ha="right", va="top", fontsize=7,
+                color="#222222",
+                bbox=dict(boxstyle="round,pad=0.35", facecolor="#FAFAFA", edgecolor="#CCCCCC", lw=0.6))
 
-        ax.set_xlabel("Integrated evidence score")
-        ax.set_ylabel("Density")
-        ax.set_title("Joint row-permutation null vs top cluster-permutation-testable candidates",
-                     fontweight="bold", pad=8)
-        ax.legend(fontsize=8)
+        ax.set_xlabel("Integrated evidence score", fontsize=8)
+        ax.set_ylabel("Probability density", fontsize=8)
+        ax.set_title("Permutation null distribution vs observed scores of prioritized candidates",
+                     fontweight="bold", fontsize=8.5, pad=8)
+        ax.legend(fontsize=7, frameon=False, loc="upper left")
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
         fig.tight_layout()
         save(fig, "26_permutation_null")
+
     except Exception as e:
         print(f"  [ERROR] {__file__}: {e}")
         return

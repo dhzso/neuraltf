@@ -40,31 +40,46 @@ def build():
     vmax = max(abs(pivot.values.min()), abs(pivot.values.max()), 1)
     norm = mcolors.TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
-    fig, ax = plt.subplots(figsize=(7, 4))
+    fig, ax = plt.subplots(figsize=(W_15COL, 3.8))
     im = ax.imshow(pivot.values, aspect="auto", cmap=plt.cm.RdBu_r, norm=norm, interpolation="nearest")
     ax.set_xticks(range(len(pivot.columns)))
-    ax.set_xticklabels([STREAM_L[s] for s in pivot.columns], rotation=45, ha="right", fontsize=8)
-    ax.set_xlabel("Evidence stream removed")
+    ax.set_xticklabels([STREAM_L[s] for s in pivot.columns], rotation=38, ha="left", fontsize=7)
+    ax.xaxis.tick_top()
     ax.xaxis.set_label_position("top")
+    
+    ylabels = [label(neural, g) for g in pivot.index]
     ax.set_yticks(range(len(pivot)))
-    ax.set_yticklabels([label(neural, g) for g in pivot.index], fontsize=7)
-    ax.set_ylabel("Top-10 TF candidate (sorted by track)")
+    ax.set_yticklabels(ylabels, fontsize=7)
+    
     for i, gid in enumerate(pivot.index):
-        c = C_A if track_map.get(gid,"")=="A" else C_B
+        c = C_A if track_map.get(gid, "") == "A" else C_B
         ax.get_yticklabels()[i].set_color(c)
+        ax.get_yticklabels()[i].set_fontweight("bold")
+        
     for i in range(pivot.shape[0]):
         for j in range(pivot.shape[1]):
-            v = pivot.values[i,j]
+            v = pivot.values[i, j]
             if not np.isnan(v):
-                tc = "white" if abs(v)>vmax*0.6 else "#333"
-                ax.text(j, i, f"{v:.0f}", ha="center", va="center", fontsize=6, color=tc)
-    ax.set_title("Top-10 candidates vary in sensitivity to individual stream removal", fontweight="bold", pad=12)
-    cbar = fig.colorbar(im, ax=ax, fraction=0.02, pad=0.02)
-    cbar.set_label("Rank change (− = improves)", fontsize=8)
-    from matplotlib.lines import Line2D
-    track_handles = [Line2D([0],[0], marker="o", color="w", markerfacecolor=C_A, markersize=6, label="Track A (RNAi)"),
-                     Line2D([0],[0], marker="o", color="w", markerfacecolor=C_B, markersize=6, label="Track B (novel)")]
-    ax.legend(handles=track_handles, loc="upper right", fontsize=6, frameon=True, title="Gene label color", title_fontsize=7)
-    fig.tight_layout(); save(fig, "09_stream_ablation_candidate")
+                tc = "white" if abs(v) > vmax * 0.55 else "#222222"
+                sign_str = f"+{int(v)}" if v > 0 else (f"{int(v)}" if v < 0 else "0")
+                ax.text(j, i, sign_str, ha="center", va="center", fontsize=6.5, color=tc, fontweight="bold")
+
+    # Add divider line between Track A (rows 0-4) and Track B (rows 5-9)
+    ax.axhline(4.5, color="#333333", lw=1.2, ls="--")
+    ax.text(-0.85, 2.0, "Track A\n(RNAi)", ha="center", va="center", fontsize=6.5, color=C_A, fontweight="bold", rotation=90)
+    ax.text(-0.85, 7.0, "Track B\n(Novel)", ha="center", va="center", fontsize=6.5, color=C_B, fontweight="bold", rotation=90)
+
+    ax.set_ylabel("Top-10 candidate", fontsize=8)
+    ax.spines[:].set_visible(False)
+    
+    cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.03)
+    cbar.set_label("Rank shift (+ drops, − improves)", fontsize=7.5)
+    cbar.ax.tick_params(labelsize=6.5)
+
+    ax.set_title("Candidate sensitivity to individual stream removal (Δrank upon omission)",
+                 fontweight="bold", fontsize=8.5, pad=18)
+    fig.tight_layout()
+    save(fig, "09_stream_ablation_candidate")
 
 if __name__=="__main__": build()
+

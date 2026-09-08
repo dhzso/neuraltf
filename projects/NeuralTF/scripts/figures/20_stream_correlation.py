@@ -26,31 +26,32 @@ def build():
                 pvals[i,j] = p
                 pvals[j,i] = p
 
-    fig, ax = plt.subplots(figsize=(7, 6))
-    im = ax.imshow(corr, cmap="RdYlBu_r", vmin=-0.3, vmax=1.0, aspect="equal")
+    fig, ax = plt.subplots(figsize=(W_15COL, 4.2))
+    im = ax.imshow(corr, cmap="RdBu_r", vmin=-0.4, vmax=1.0, aspect="equal")
     ax.set_xticks(range(n))
-    ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=7)
+    ax.set_xticklabels(labels, rotation=40, ha="right", fontsize=7)
     ax.set_yticks(range(n))
     ax.set_yticklabels(labels, fontsize=7)
 
     # Annotate cells
     for i in range(n):
         for j in range(n):
-            v = corr[i,j]
+            v = corr[i, j]
             if i == j:
-                ax.text(j, i, "1.00", ha="center", va="center", fontsize=6, color="#333")
+                ax.text(j, i, "1.00", ha="center", va="center", fontsize=6, color="#222222")
             else:
-                sig = "***" if pvals[i,j] < 0.001 else "**" if pvals[i,j] < 0.01 else "*" if pvals[i,j] < 0.05 else ""
-                tc = "white" if abs(v) > 0.5 else "#333"
-                ax.text(j, i, f"{v:.2f}{sig}", ha="center", va="center", fontsize=6, color=tc)
+                sig = "***" if pvals[i, j] < 0.001 else ("**" if pvals[i, j] < 0.01 else ("*" if pvals[i, j] < 0.05 else ""))
+                tc = "white" if abs(v) > 0.55 else "#222222"
+                ax.text(j, i, f"{v:.2f}{sig}", ha="center", va="center", fontsize=5.8, color=tc)
 
-    ax.set_title("Expression and reproducibility are most strongly correlated;\n"
-                 "neural-specificity is relatively independent",
-                 fontweight="bold", pad=10, fontsize=10)
-    ax.set_xlabel("Evidence stream (variable 1)")
-    ax.set_ylabel("Evidence stream (variable 2)")
+    ax.set_title("Evidence stream orthogonality: pairwise Spearman rank correlations (n = 11,675)",
+                 fontweight="bold", fontsize=8.5, pad=10)
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-    cbar.set_label("Spearman rho", fontsize=8)
-    fig.tight_layout(); save(fig, "20_stream_correlation")
+    cbar.set_label("Spearman $r_s$", fontsize=7.5)
+    cbar.ax.tick_params(labelsize=6.5)
+    ax.spines[:].set_visible(False)
+    fig.tight_layout()
+    save(fig, "20_stream_correlation")
 
 if __name__=="__main__": build()
+

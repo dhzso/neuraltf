@@ -1,10 +1,10 @@
-"""Calibration — decile rank-discrimination diagram for the integrated score.
+"""Calibration and rank discrimination diagram for the integrated score.
 
-The integrated score is NOT a probability, so this is a rank-
-discrimination plot (empirical RNAi-validated fraction per score decile,
-monotonicity = discrimination power), NOT a probability reliability
-diagram. The misleading perfect-calibration diagonal and the
-score-vs-fraction pairing are removed (the score is not P(positive)).
+The integrated score is an evidence-weight aggregation, not a probability.
+Rank discrimination measures whether top-ranked candidates enrich RNAi-validated
+neural TFs.
+Panel a: Empirical validation rate per score decile with Wilson 95% CIs.
+Panel b: Cumulative recovery of known validated neural TFs across score deciles.
 """
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
@@ -22,51 +22,75 @@ def build():
     with open(data_path) as f:
         data = json.load(f)
 
-    fig, ax = plt.subplots(figsize=(6.5, 5))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(W_2COL, 2.7))
 
-    # Decile bins in score space: empirical positive rate per decile
     stats_list = data.get("bin_stats", [])
     if not stats_list:
         raise ValueError("calibration_stats.json carries no bin_stats")
     bin_df = pd.DataFrame(stats_list)
-    # bin index 0 = lowest decile .. n-1 = highest (calibration.py orders
-    # deciles ascending then inverts label 9=highest; re-derive here from
-    # mean_score ordering)
+    # Order deciles from 1 (lowest) to 10 (highest score)
     bin_df = bin_df.sort_values("mean_score", ascending=True).reset_index(drop=True)
+    decile_labels = [f"D{i+1}" for i in range(len(bin_df))]
     x = np.arange(len(bin_df))
     observed = bin_df["empirical_positive_rate"].to_numpy(dtype=float)
     counts = bin_df["n_candidates"].to_numpy(dtype=float)
+    positives = bin_df["n_positives"].to_numpy(dtype=int)
     prevalence = float(data["prevalence"])
+    total_pos = int(data["n_positives"])
 
-    bars = ax.bar(x, observed, color=C_A, alpha=0.85, width=0.7,
-                  label="Empirical RNAi-validated fraction")
-    ax.axhline(y=prevalence, color=C_HL, lw=1.2, linestyle="--",
-               label=f"Cohort prevalence ({prevalence:.4f})")
+    # Panel a: Empirical validation rate
+    colors = [C_A if obs > prevalence else "#CCCCCC" for obs in observed]
+    bars = ax1.bar(x, observed * 100, color=colors, width=0.65, edgecolor="none")
+    ax1.axhline(y=prevalence * 100, color=C_HL, lw=1.0, linestyle="--",
+                label=f"Genome prevalence ({prevalence*100:.2f}%)")
 
-    # Wilson 95% CI per bin (prevalence is tiny; Wilson stays in [0,1])
+    # Wilson 95% CI per bin
     z = 1.96
     p_hat = np.clip(observed, 0, 1)
     denom = 1 + z**2 / counts
     center = (p_hat + z**2 / (2 * counts)) / denom
     half = z * np.sqrt(p_hat * (1 - p_hat) / counts + z**2 / (4 * counts**2)) / denom
-    ax.errorbar(x, observed, yerr=half, fmt="none", ecolor="#333333",
-                elinewidth=1, capsize=3)
+    ax1.errorbar(x, observed * 100, yerr=half * 100, fmt="none", ecolor="#333333",
+                 elinewidth=0.8, capsize=2)
 
-    # secondary axis: bin counts
-    ax2 = ax.twinx()
-    ax2.plot(x, counts, color=C_NEURAL, lw=1.5, marker=".", markersize=5,
-             alpha=0.7, label="Candidates per decile")
-    ax2.set_ylabel("Candidates per decile", color="#999999")
-    ax2.tick_params(axis="y", labelcolor="#999999")
+    # Top decile callout
+    top_rate = observed[-1] * 100
+    enrichment = data.get("top_decile_enrichment", {}).get("fold_enrichment", 9.5)
+    ax1.text(x[-1], top_rate + 1.0, f"{top_rate:.1f}%\n({enrichment:.1f}\u00d7)",
+             ha="center", va="bottom", fontsize=6.5, fontweight="bold", color=C_A)
 
-    ax.set_xlabel("Integrated-score decile (low → high)")
-    ax.set_ylabel("Fraction RNAi-validated in decile")
-    ax.set_title("Rank discrimination by score decile\n"
-                 "Monotone rise = the score enriches validated neural TFs "
-                 "(not a probability calibration)",
-                 fontweight="bold", pad=8)
-    ax.legend(loc="upper left", fontsize=8)
-    ax.spines["top"].set_visible(False)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(decile_labels, fontsize=6.5)
+    ax1.set_xlabel("Score decile (D1 = lowest, D10 = highest)", fontsize=7.5)
+    ax1.set_ylabel("RNAi-validated rate (%)", fontsize=7.5)
+    ax1.legend(loc="upper left", frameon=False, fontsize=6.5)
+    panel_tag(ax1, "a")
+
+    # Panel b: Cumulative positive recovery (from D10 downwards)
+    pos_desc = positives[::-1]
+    cum_recovered = np.cumsum(pos_desc)
+    cum_pct = (cum_recovered / total_pos) * 100
+    x_rev = np.arange(len(cum_pct))
+    rev_labels = [f"Top {i+1}0%" for i in range(len(cum_pct))]
+
+    ax2.plot(x_rev, cum_pct, marker="o", markersize=4, color=C_B, lw=1.5, clip_on=False)
+    ax2.fill_between(x_rev, 0, cum_pct, color=C_B, alpha=0.15)
+    ax2.plot([0, len(cum_pct)-1], [10, 100], color="#AAAAAA", lw=1.0, linestyle=":",
+             label="Random baseline")
+
+    # Annotate top 10% recovery
+    ax2.annotate(f"{cum_pct[0]:.1f}% recovered\nin top 10%",
+                 xy=(0, cum_pct[0]), xytext=(1.5, 75),
+                 arrowprops=dict(arrowstyle="->", color=C_B, lw=0.8),
+                 fontsize=6.5, fontweight="bold", color=C_B)
+
+    ax2.set_xticks(x_rev)
+    ax2.set_xticklabels(rev_labels, rotation=35, ha="right", fontsize=6.5)
+    ax2.set_xlabel("Cumulative score fraction", fontsize=7.5)
+    ax2.set_ylabel("Validated neural TFs captured (%)", fontsize=7.5)
+    ax2.set_ylim(0, 105)
+    ax2.legend(loc="lower right", frameon=False, fontsize=6.5)
+    panel_tag(ax2, "b")
 
     fig.tight_layout()
     save(fig, "30_calibration")

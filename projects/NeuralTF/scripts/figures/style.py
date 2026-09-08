@@ -19,14 +19,29 @@ plt.rcParams.update({
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
     "font.size": 8,
-    "axes.titlesize": 10,
-    "axes.labelsize": 9,
+    "axes.titlesize": 8.5,
+    "axes.labelsize": 8,
+    "axes.linewidth": 0.6,
+    "axes.labelweight": "bold",
     "xtick.labelsize": 7,
     "ytick.labelsize": 7,
+    "xtick.major.width": 0.6,
+    "ytick.major.width": 0.6,
+    "xtick.major.size": 3.0,
+    "ytick.major.size": 3.0,
+    "xtick.direction": "out",
+    "ytick.direction": "out",
     "legend.fontsize": 7,
     "figure.dpi": 300,
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
 })
 plt.rcParams["svg.fonttype"] = "none"
+
+# Standard Nature Communications column dimensions (inches)
+W_1COL = 3.50   # 89 mm
+W_15COL = 5.00  # 127 mm
+W_2COL = 7.08   # 180 mm
 
 C_A, C_B = "#0072B2", "#E69F00"
 C_FIXED, C_CENTERED, C_UNIFORM = "#333333", "#56B4E9", "#CC79A7"
@@ -62,7 +77,7 @@ def _nid(df):
     return df
 
 
-def _csv(path):
+def _csv(path, allow_duplicates=False):
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(
@@ -74,14 +89,13 @@ def _csv(path):
     df = pd.read_csv(p)
     # Guard: candidate tables must be one row per gene (an upstream
     # annotation-join explosion would silently duplicate every point).
-    if "gene_id" in df.columns and not df["gene_id"].is_unique:
+    # Repeated measurement matrices (e.g. draws) are exempted.
+    if not allow_duplicates and "gene_id" in df.columns and not df["gene_id"].is_unique:
         n = df["gene_id"].nunique()
         print(f"[style.py] WARNING: {p.name} has {len(df)} rows but only {n} "
               f"unique gene_id — dropping duplicates (upstream join bug)")
         df = df.drop_duplicates(subset="gene_id", keep="first")
     # Only pad stream columns that the CURRENT pipeline actually defines.
-    # (Padding phantom columns renders blank axes and NaN "nan" cells in
-    # figures 04/20/31 when a run predates a stream.)
     present_any = any(s in df.columns for s in ["expression", "specificity", "rnai"])
     if present_any:
         base_streams = [s for s in STREAM_COLS if s in df.columns]
@@ -124,7 +138,8 @@ def load_uniform_full():
 
 
 def load_sens_draws():
-    return _csv(FIG / "weight_sensitivity_draws.csv")
+    """Load all 1000 weight sensitivity draws without dropping repeated draws per gene."""
+    return _csv(FIG / "weight_sensitivity_draws.csv", allow_duplicates=True)
 
 
 def load_sens_top10():
@@ -132,13 +147,24 @@ def load_sens_top10():
 
 
 def save(fig, name, dpi=300):
+    """Save figure in publication-quality PNG and vector PDF."""
     fig.savefig(FIG / f"{name}.png", dpi=dpi, bbox_inches="tight", facecolor="white")
+    try:
+        fig.savefig(FIG / f"{name}.pdf", bbox_inches="tight", facecolor="white")
+    except Exception:
+        pass
     plt.close(fig)
 
 
 def save_sup(fig, name, dpi=300):
+    """Save supplementary figure in publication-quality PNG and vector PDF."""
     fig.savefig(SUP / f"{name}.png", dpi=dpi, bbox_inches="tight", facecolor="white")
+    try:
+        fig.savefig(SUP / f"{name}.pdf", bbox_inches="tight", facecolor="white")
+    except Exception:
+        pass
     plt.close(fig)
+
 
 
 def label(df, gid):
@@ -149,3 +175,10 @@ def label(df, gid):
             if pd.notna(n) and str(n).strip():
                 return str(n)
     return gid
+
+
+def panel_tag(ax, letter: str, x: float = -0.12, y: float = 1.05, fontsize: float = 8.5):
+    """Add a Nature Communications standard bold lowercase panel tag (a, b, c, ...)."""
+    ax.text(x, y, letter.lower(), transform=ax.transAxes,
+            fontsize=fontsize, fontweight="bold", va="bottom", ha="right")
+

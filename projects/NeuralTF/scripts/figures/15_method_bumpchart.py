@@ -1,92 +1,92 @@
-"""3-method comparison — grouped bar chart of ranks for top-10 candidates."""
+"""Rank conservation across fixed-weight, centered, and uniform Dirichlet methods.
+
+Panel a: Track A benchmarks (RNAi-validated neural TFs) showing near-perfect rank conservation.
+Panel b: Track B novel candidates showing dynamic rank trajectories across Dirichlet priors.
+"""
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from style import *
-import matplotlib.pyplot as plt, numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 def build():
-    fixed_top10 = load_top10()
-    centered_top10 = load_centered()
-    uniform_top10 = load_uniform()
+    f10 = load_top10()
+    cf = load_centered_full()
+    uf = load_uniform_full()
     neural = load_neural()
 
-    # Build rank lookup from each top-10 file (within-track ranks 1-5).
-    # Centered/uniform shortlists carry `rank_within_track` (not `rank`),
-    # so fall back to it — otherwise their bars silently render as NaN.
-    def rank_lookup(df):
-        d = {}
-        for _, row in df.iterrows():
-            gid = row["gene_id"]
-            v = row.get("rank", np.nan)
-            if pd.isna(v):
-                v = row.get("rank_within_track", np.nan)
-            d[gid] = v
-        return d
-
-    fixed_r = rank_lookup(fixed_top10)
-    centered_r = rank_lookup(centered_top10)
-    uniform_r = rank_lookup(uniform_top10)
-
-    # Use fixed top-10 as the candidate list
+    # Calculate within-track ranks across methods
     records = []
-    for _, row in fixed_top10.iterrows():
-        gid = row["gene_id"]
-        nm = label(neural, gid)
-        track = row.get("track","")
+    for _, r in f10.iterrows():
+        gid = r["gene_id"]
+        tr = r["track"]
+        cf_tr = cf[cf["proof_status"] == r["proof_status"]] if tr == "A" else cf[cf["proof_status"] != "known_rnai_validated"]
+        uf_tr = uf[uf["proof_status"] == r["proof_status"]] if tr == "A" else uf[uf["proof_status"] != "known_rnai_validated"]
+        c_sub = cf_tr.reset_index(drop=True)
+        u_sub = uf_tr.reset_index(drop=True)
+        c_rank = c_sub[c_sub["gene_id"] == gid].index[0] + 1 if gid in c_sub["gene_id"].values else np.nan
+        u_rank = u_sub[u_sub["gene_id"] == gid].index[0] + 1 if gid in u_sub["gene_id"].values else np.nan
         records.append({
-            "name": nm, "track": track,
-            "fixed": fixed_r.get(gid, np.nan),
-            "centered": centered_r.get(gid, np.nan),
-            "uniform": uniform_r.get(gid, np.nan),
+            "gene_id": gid,
+            "name": label(neural, gid),
+            "track": tr,
+            "fixed": r["rank"],
+            "centered": c_rank,
+            "uniform": u_rank,
         })
+
     df = pd.DataFrame(records)
-    df = df.sort_values("fixed", ascending=True)
-    y = np.arange(len(df))
-    bw = 0.25
 
-    fig, ax = plt.subplots(figsize=(9, 6))
-    colors = {"fixed": C_FIXED, "centered": C_CENTERED, "uniform": C_UNIFORM}
-    offsets = {"fixed": -bw, "centered": 0, "uniform": bw}
-    methods = ["fixed", "centered", "uniform"]
-    labels = ["Fixed-weight", "Centered Dirichlet", "Uniform Dirichlet"]
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(W_2COL, 3.2), gridspec_kw={"width_ratios": [1, 1.2]})
 
-    for method, lbl in zip(methods, labels):
-        vals = df[method].values
-        n_missing = int(pd.isna(vals).sum())
-        if n_missing == len(vals):
-            print(f"[fig15] WARNING: no ranks resolved for method "
-                  f"'{method}' — bars would be empty")
-        bars = ax.barh(y + offsets[method], vals, height=bw*0.9, color=colors[method],
-                       alpha=0.85, edgecolor="white", lw=0.3, label=lbl)
-        for i, v in enumerate(vals):
-            if pd.notna(v):
-                ax.text(v + 0.1, y[i] + offsets[method], f'{int(v)}',
-                        fontsize=6, va="center", color=colors[method], fontweight="bold")
+    methods = ["Fixed", "Centered\n(k=40)", "Uniform\n(\u03b1=1)"]
+    x_pos = [0, 1, 2]
 
-    # Gene names with track color
-    ax.set_yticks(y)
-    ax.set_yticklabels(df["name"], fontsize=8, fontweight="bold")
-    for i, track in enumerate(df["track"]):
-        ax.get_yticklabels()[i].set_color(C_A if track=="A" else C_B)
+    # --- Panel a: Track A ---
+    df_a = df[df["track"] == "A"].sort_values("fixed")
+    for _, r in df_a.iterrows():
+        ranks = [r["fixed"], r["centered"], r["uniform"]]
+        ax1.plot(x_pos, ranks, "o-", color=C_A, lw=1.3, markersize=4, alpha=0.85, zorder=3)
+        ax1.text(-0.08, ranks[0], f"{r['name']} (#{int(ranks[0])})",
+                 ha="right", va="center", fontsize=6.5, color=C_A, fontweight="bold")
+        ax1.text(2.08, ranks[2], f"#{int(ranks[2])}",
+                 ha="left", va="center", fontsize=6.5, color=C_A, fontweight="bold")
 
-    from matplotlib.lines import Line2D
-    track_handles = [Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=8, label="Track A (RNAi)"),
-                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=8, label="Track B (novel)")]
-    handles, labels_leg = ax.get_legend_handles_labels()
-    handles.extend(track_handles)
-    labels_leg.extend(["Track A (RNAi)", "Track B (novel)"])
-    ax.legend(handles, labels_leg, loc="lower right", fontsize=7, frameon=True)
+    ax1.set_xticks(x_pos)
+    ax1.set_xticklabels(methods, fontsize=7)
+    ax1.set_ylabel("Track A within-track rank", fontsize=7.5)
+    ax1.set_ylim(0.5, 7.5)
+    ax1.set_yticks(range(1, 8))
+    ax1.invert_yaxis()
+    ax1.set_xlim(-1.1, 2.7)
+    panel_tag(ax1, "a")
 
-    ax.set_xlabel("Rank within track (1 = highest)", fontsize=9)
-    ax.set_ylabel("TF candidate (sorted by fixed-weight rank)", fontsize=9)
-    ax.set_title("Fixed-weight, centered, and uniform methods produce largely concordant rankings\n"
-                 "Constructed-by-design agreement: all three share the candidate matrix, bonus mask,\n"
-                 "Track-B gate and tie-breaks — only the weights differ",
-                 fontweight="bold", pad=10, fontsize=10)
-    ax.set_xlim(0, 7)
-    ax.set_xticks([1, 2, 3, 4, 5, 6])
-    ax.invert_yaxis()
-    ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+    # --- Panel b: Track B ---
+    df_b = df[df["track"] == "B"].sort_values("fixed")
+    for _, r in df_b.iterrows():
+        ranks = [r["fixed"], r["centered"], r["uniform"]]
+        ax2.plot(x_pos, ranks, "o-", color=C_B, lw=1.3, markersize=4, alpha=0.85, zorder=3)
+        # Clean long name
+        disp_name = r["name"] if len(r["name"]) <= 16 else r["name"].split()[0]
+        ax2.text(-0.08, ranks[0], f"{disp_name} (#{int(ranks[0])})",
+                 ha="right", va="center", fontsize=6.5, color=C_B, fontweight="bold")
+        ax2.text(2.08, ranks[2], f"#{int(ranks[2])}",
+                 ha="left", va="center", fontsize=6.5, color=C_B, fontweight="bold")
+
+    ax2.set_xticks(x_pos)
+    ax2.set_xticklabels(methods, fontsize=7)
+    ax2.set_ylabel("Track B within-track rank", fontsize=7.5)
+    ax2.set_ylim(0.5, 24.5)
+    ax2.set_yticks([1, 5, 10, 15, 20])
+    ax2.invert_yaxis()
+    ax2.set_xlim(-1.1, 2.7)
+    panel_tag(ax2, "b")
+
+    fig.tight_layout()
     save(fig, "15_method_bumpchart")
 
-if __name__=="__main__": build()
+if __name__ == "__main__":
+    build()
+
+

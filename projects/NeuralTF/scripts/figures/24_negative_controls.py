@@ -7,70 +7,71 @@ import numpy as np
 import json
 
 def build():
-    try:
-        data_path = RES / "negative_control_stats.json"
-        with open(data_path) as f:
-            data = json.load(f)
+    data_path = RES / "negative_control_stats.json"
+    if not data_path.exists():
+        raise FileNotFoundError(f"{data_path} missing")
+    with open(data_path) as f:
+        data = json.load(f)
 
-        fig, ax = plt.subplots(figsize=(6, 5))
+    fig, ax = plt.subplots(figsize=(W_15COL, 3.6))
 
-        groups = ["neural_tfs", "non_tfs", "random"]
-        # Labels match the 2026-09-06 stats script: LABEL-FREE score
-        # (rnai/neural_*/perez_lineage excluded — the rnai stream is a
-        # perfect copy of the group label), availability-matched, and the
-        # TF controls are additionally neural_enriched-free.
-        labels = ["Neural TFs\n(RNAi-validated)",
-                  "No TF class\n(matched controls)",
-                  "TF-classified,\nmatched, non-neural"]
-        colors = [C_A, C_B, C_NEURAL]
-        positions = [1, 2, 3]
+    groups = ["neural_tfs", "non_tfs", "random"]
+    labels = ["Neural TFs\n(RNAi validated)",
+              "Non-TF genes\n(matched controls)",
+              "Non-neural TFs\n(matched controls)"]
+    colors = [C_A, "#78909C", C_B]
+    positions = [1, 2, 3]
 
-        for pos, group, label, color in zip(positions, groups, labels, colors):
-            scores = np.array(data[group]) if data.get(group) else np.array([])
-            if len(scores) == 0:
-                # empty group (e.g. no eligible controls) — never plot the
-                # old [0.0] sentinel as a phantom gene
-                continue
-            parts = ax.violinplot(scores, positions=[pos], showmeans=True, showmedians=True)
-            for pc in parts["bodies"]:
-                pc.set_facecolor(color)
-                pc.set_alpha(0.4)
-            parts["cmeans"].set_color(color)
-            parts["cmedians"].set_color(C_HL)
-            parts["cbars"].set_color(color)
-            parts["cmins"].set_color(color)
-            parts["cmaxes"].set_color(color)
+    for pos, group, label_str, color in zip(positions, groups, labels, colors):
+        scores = np.array(data[group]) if data.get(group) else np.array([])
+        if len(scores) == 0:
+            continue
+        parts = ax.violinplot(scores, positions=[pos], showmeans=False, showmedians=False, widths=0.65)
+        for pc in parts["bodies"]:
+            pc.set_facecolor(color)
+            pc.set_edgecolor("none")
+            pc.set_alpha(0.35)
 
-            median = np.median(scores)
-            q1, q3 = np.percentile(scores, [25, 75])
-            ax.text(pos + 0.25, median, f"median={median:.3f}\nIQR=[{q1:.3f}, {q3:.3f}]",
-                    fontsize=6, va="center")
+        # Boxplot overlay
+        bp = ax.boxplot(scores, positions=[pos], widths=0.22, patch_artist=True,
+                        showfliers=False,
+                        boxprops=dict(facecolor=color, alpha=0.85, edgecolor="none"),
+                        medianprops=dict(color="white", lw=1.5),
+                        whiskerprops=dict(color="#555555", lw=0.8),
+                        capprops=dict(color="#555555", lw=0.8))
 
-        ax.set_xticks(positions)
-        ax.set_xticklabels(labels)
-        ax.set_ylabel("Label-free score (rnai/neural/lineage streams excluded)")
-        ax.set_title("Neural TFs score higher than availability-matched controls\n(label-free score; controls also neural-enrichment-free)",
-                     fontweight="bold", pad=8)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
+        median = np.median(scores)
+        q1, q3 = np.percentile(scores, [25, 75])
+        ax.text(pos + 0.32, median, f"med = {median:.3f}",
+                fontsize=6.5, va="center", color="#333333")
 
-        # 2026-09-06: show BOTH contrasts' p-values — the old figure showed
-        # only the weaker non-TF comparison and hid the stricter TF one.
-        pvals = []
-        if "neural_vs_random_non_tf" in data:
-            pvals.append(f"vs non-TF: p={data['neural_vs_random_non_tf']['p_value']:.2e}")
-        if "neural_vs_non_neural_tf" in data:
-            pvals.append(f"vs non-neural TF: p={data['neural_vs_non_neural_tf']['p_value']:.2e}")
-        if pvals:
-            ax.annotate("\n".join(pvals),
-                        xy=(2.0, max(data["neural_tfs"]) * 1.05) if data.get("neural_tfs") else (2.0, 1.0),
-                        ha="center", fontsize=8, fontweight="bold", color=C_HL)
+    ax.set_xticks(positions)
+    ax.set_xticklabels(labels, fontsize=7.5)
+    ax.set_ylabel("Label-free evidence score", fontsize=8)
+    ax.set_title("Neural TF score specificity vs availability-matched controls",
+                 fontweight="bold", fontsize=8.5, pad=14)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.set_xlim(0.4, 3.8)
 
-        fig.tight_layout()
-        save(fig, "24_negative_controls")
-    except FileNotFoundError as e:
-        print(f"  [SKIP] {__file__}: {e}")
-        return
+    # Clean p-value brackets
+    p1 = data.get("neural_vs_random_non_tf", {}).get("p_value", None)
+    p2 = data.get("neural_vs_non_neural_tf", {}).get("p_value", None)
+    y_max = max([max(data[g]) for g in groups if data.get(g)]) * 1.05
+
+    if p1 is not None:
+        ax.plot([1, 1, 2, 2], [y_max, y_max + 0.04, y_max + 0.04, y_max], color="#333333", lw=0.7)
+        p1_str = "p < 10^{-10}" if p1 < 1e-10 else f"p = {p1:.1e}"
+        ax.text(1.5, y_max + 0.05, f"${p1_str}$", ha="center", va="bottom", fontsize=6.5, color="#222222")
+
+    if p2 is not None:
+        ax.plot([1, 1, 3, 3], [y_max + 0.12, y_max + 0.16, y_max + 0.16, y_max + 0.12], color="#333333", lw=0.7)
+        p2_str = "p < 10^{-10}" if p2 < 1e-10 else f"p = {p2:.1e}"
+        ax.text(2.0, y_max + 0.17, f"${p2_str}$", ha="center", va="bottom", fontsize=6.5, color="#222222")
+
+    ax.set_ylim(-0.02, y_max + 0.26)
+    fig.tight_layout()
+    save(fig, "24_negative_controls")
 
 if __name__ == "__main__":
     build()

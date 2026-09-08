@@ -29,25 +29,48 @@ def build():
     hi_col = "centered_ci_95_hi" if "centered_ci_95_hi" in df.columns else "ci_95_hi"
 
     df = df.sort_values(order_col, ascending=True).tail(20)
+    neural = load_neural()
+    proof_map = dict(zip(neural["gene_id"], neural.get("proof_status", [""] * len(neural))))
 
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(W_15COL, 4.4))
     y = np.arange(len(df))
-    names = df["gene_name"].values if "gene_name" in df.columns else df["gene_id"].values
+    names = [label(neural, gid) for gid in df["gene_id"]]
     means = df[order_col].values
     lo = df[lo_col].values
     hi = df[hi_col].values
 
-    ax.barh(y, means, height=0.6, color=C_A, alpha=0.7, edgecolor="white", lw=0.3)
-    ax.errorbar(means, y, xerr=[np.maximum(means - lo, 0), np.maximum(hi - means, 0)],
-                fmt="none", ecolor="#333333", elinewidth=1, capsize=3, capthick=1)
+    # Determine track color for each candidate
+    colors = []
+    for gid in df["gene_id"]:
+        ps = str(proof_map.get(gid, "")).lower()
+        colors.append(C_A if "validated" in ps or "fstf" in ps else C_B)
+
+    # Point-range plot
+    for i in range(len(df)):
+        c = colors[i]
+        # 95% uncertainty interval
+        ax.plot([lo[i], hi[i]], [y[i], y[i]], color=c, lw=1.6, alpha=0.75, zorder=3)
+        # Point estimate
+        ax.scatter([means[i]], [y[i]], color=c, s=36, edgecolors="white", lw=0.6, zorder=4)
 
     ax.set_yticks(y)
-    ax.set_yticklabels(names, fontsize=8, fontweight="bold")
-    ax.set_xlabel("Integrated score (observed; whiskers = weight-perturbation band)")
-    ax.set_title("Top-20 candidates: weight-perturbation band (NOT a sampling CI)\n"
-                 "Centered Dirichlet (k=40), 1000 draws — same-draw bands shift jointly;\n"
-                 "overlapping bands imply nothing about rank order",
-                 fontweight="bold", pad=8)
+    ax.set_yticklabels(names, fontsize=7.5)
+    for i, c in enumerate(colors):
+        ax.get_yticklabels()[i].set_color(c)
+        if c == C_A:
+            ax.get_yticklabels()[i].set_fontweight("bold")
+
+    ax.set_xlabel("Integrated evidence score (points = observed, intervals = 95% Dirichlet band)", fontsize=8)
+    ax.set_ylabel("Top candidates (ranked by score)", fontsize=8)
+    ax.set_title("Top candidate score stability under Bayesian weight perturbation (Dirichlet k = 40, 1,000 draws)",
+                 fontweight="bold", fontsize=8.5, pad=8)
+    
+    from matplotlib.lines import Line2D
+    legend_handles = [
+        Line2D([0], [0], color=C_A, marker="o", lw=1.5, markersize=5, label="Track A (RNAi validated)"),
+        Line2D([0], [0], color=C_B, marker="o", lw=1.5, markersize=5, label="Track B (novel candidate)")
+    ]
+    ax.legend(handles=legend_handles, loc="lower right", frameon=False, fontsize=7)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
@@ -56,3 +79,4 @@ def build():
 
 if __name__ == "__main__":
     build()
+

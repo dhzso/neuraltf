@@ -24,44 +24,40 @@ def build():
         if not comparisons:
             raise ValueError("effect_sizes.json carries no known comparisons")
 
-        fig, ax = plt.subplots(figsize=(8, 5))
+        fig, ax = plt.subplots(figsize=(W_15COL, 3.4))
 
         y = np.arange(len(comparisons))
         deltas = [data[k]["cliffs_delta"] for k in comparisons]
         gs = [data[k].get("hedges_g", data[k].get("cohens_d", 0.0)) for k in comparisons]
         pvals = [data[k].get("p_value", None) for k in comparisons]
 
-        width = 0.38
+        width = 0.32
         bars_d = ax.barh(y + width/2, deltas, height=width, color=C_A,
-                         edgecolor="white", lw=0.5, label="Cliff's delta")
+                         edgecolor="none", label="Cliff's delta (non-parametric)")
         bars_g = ax.barh(y - width/2, gs, height=width, color=C_B,
-                         edgecolor="white", lw=0.5, label="Hedges' g")
+                         edgecolor="none", label="Hedges' g (parametric, debiased)")
 
         for i, (d, g, p) in enumerate(zip(deltas, gs, pvals)):
-            sig = ""
-            if p is not None:
-                sig = " ***" if p < 0.001 else " **" if p < 0.01 else " *" if p < 0.05 else " ns"
-            ax.text(max(d, g) + 0.04, i,
-                    f"delta={d:.3f}{sig}", va="center", ha="left",
-                    fontsize=7, fontweight="bold")
+            ax.text(d + 0.03, y[i] + width/2, f"δ = {d:.2f}", va="center", ha="left",
+                    fontsize=6.5, color=C_A, fontweight="bold")
+            ax.text(g + 0.03, y[i] - width/2, f"g = {g:.2f}", va="center", ha="left",
+                    fontsize=6.5, color=C_B, fontweight="bold")
 
         ax.set_yticks(y)
-        ax.set_yticklabels([LABELS[k][0] for k in comparisons], fontsize=8.5)
-        ax.axvline(x=0, color="#999999", lw=0.8, linestyle="-")
-        ax.axvline(x=0.5, color="#999999", lw=0.8, linestyle="--", alpha=0.6)
-        ax.text(0.51, len(comparisons) - 0.42, "large effect", fontsize=6.5,
-                color="#777777", rotation=90, va="top")
-        ax.set_xlabel("Effect size")
-        ax.set_title("Effect sizes: top-10 and neural-TF contrasts\n"
-                     "honest excludes rnai/neural_*/perez_lineage; strict additionally drops\n"
-                     "reproducibility (King-membership leak) — the lower bound",
-                     fontweight="bold", pad=8)
-        ax.legend(fontsize=8, loc="lower right")
+        ax.set_yticklabels([LABELS[k][0] for k in comparisons], fontsize=7.5)
+        ax.axvline(x=0, color="#555555", lw=0.6)
+        ax.axvline(x=0.5, color="#999999", lw=0.6, linestyle=":", label="Large effect (δ ≥ 0.47 / g ≥ 0.8)")
+        ax.set_xlabel("Effect size magnitude", fontsize=8)
+        ax.set_title("Statistical effect sizes across candidate cohorts & circularity controls",
+                     fontweight="bold", fontsize=8.5, pad=8)
+        ax.legend(fontsize=7, loc="lower right", frameon=False)
+        ax.set_xlim(-0.05, max(max(deltas), max(gs)) * 1.25)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
         fig.tight_layout()
         save(fig, "28_effect_sizes")
+
     except FileNotFoundError as e:
         print(f"  [SKIP] {__file__}: {e}")
         return

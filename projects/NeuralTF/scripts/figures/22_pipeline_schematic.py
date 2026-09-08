@@ -7,72 +7,105 @@ import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
 def build():
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(W_2COL, 3.8))
+
     ax.set_xlim(0, 10)
-    ax.set_ylim(0, 5)
+    ax.set_ylim(0, 4.8)
     ax.axis("off")
-    ax.set_title("NeuralTF prioritization pipeline schematic",
-                 fontweight="bold", fontsize=12, pad=10)
 
-    # Stage 1: Atlases — the REAL five integrated datasets
-    atlas_box = FancyBboxPatch((0.2, 1.5), 2.0, 2.0, boxstyle="round,pad=0.1",
-                                facecolor="#B3D9FF", edgecolor="#0072B2", linewidth=1.5)
-    ax.add_patch(atlas_box)
-    ax.text(1.2, 3.3, "Input Atlases", ha="center", fontsize=9, fontweight="bold", color="#0072B2")
-    atlases = ["Fincher 2018\n(50.6K cells, v4)", "Plass 2018\n(37.5K cells, v6)",
-               "Cui 2023\n(55.0K cells, 8 timepts)", "King 2024\n(TF catalog + RNAi)",
-               "Perez 2025\n(lineage + ANANSE)"]
-    for i, name in enumerate(atlases):
-        ax.text(1.2, 3.0 - i * 0.35, name, ha="center", fontsize=6)
+    # Header title
+    ax.text(5.0, 4.55, "NeuralTF: Five-Atlas Evidence Synthesis & Target Prioritization Architecture",
+            ha="center", va="center", fontsize=9, fontweight="bold", color="#111111")
 
-    # Arrow 1
-    ax.annotate("", xy=(2.7, 2.5), xytext=(2.2, 2.5),
-                arrowprops=dict(arrowstyle="->", color="#333333", lw=1.5))
+    # Box 1: Input Atlases
+    b1 = FancyBboxPatch((0.2, 0.4), 2.2, 3.8, boxstyle="round,pad=0.08,rounding_size=0.15",
+                         facecolor="#F0F7FD", edgecolor="#0072B2", linewidth=0.8)
+    ax.add_patch(b1)
+    ax.text(1.3, 3.95, "1. Multi-Atlas Inputs", ha="center", fontsize=8, fontweight="bold", color="#0072B2")
+    atlases = [
+        ("Fincher 2018", "50,562 cells, scRNA-seq"),
+        ("Plass 2018", "37,507 cells, scRNA-seq"),
+        ("Cui 2023", "55,014 cells, regeneration"),
+        ("King 2024", "TF catalog & RNAi screen"),
+        ("Perez 2025", "Lineages & ANANSE GRNs")
+    ]
+    for i, (name, desc) in enumerate(atlases):
+        y_a = 3.45 - i * 0.65
+        ax.text(0.4, y_a + 0.12, name, fontsize=7, fontweight="bold", color="#222222")
+        ax.text(0.4, y_a - 0.10, desc, fontsize=6, color="#555555")
 
-    # Stage 2: Evidence streams
-    stream_box = FancyBboxPatch((2.9, 1.0), 2.2, 3.0, boxstyle="round,pad=0.1",
-                                 facecolor="#E6F7E6", edgecolor="#009E73", linewidth=1.5)
-    ax.add_patch(stream_box)
-    ax.text(4.0, 3.8, "9 Evidence Streams", ha="center", fontsize=9, fontweight="bold", color="#009E73")
-    for i, (s, c) in enumerate(STREAM_C.items()):
-        y = 3.4 - i * 0.28
-        ax.plot(3.1, y, "o", color=c, markersize=5)
-        ax.text(3.25, y, STREAM_L[s], fontsize=6, va="center")
+    # Arrow 1 -> 2
+    ax.annotate("", xy=(2.75, 2.3), xytext=(2.45, 2.3),
+                arrowprops=dict(arrowstyle="->,head_width=0.3,head_length=0.4", color="#555555", lw=1.2))
 
-    # Arrow 2
-    ax.annotate("", xy=(5.6, 2.5), xytext=(5.1, 2.5),
-                arrowprops=dict(arrowstyle="->", color="#333333", lw=1.5))
+    # Box 2: Evidence Streams
+    b2 = FancyBboxPatch((2.8, 0.4), 2.35, 3.8, boxstyle="round,pad=0.08,rounding_size=0.15",
+                         facecolor="#F2FAF6", edgecolor="#009E73", linewidth=0.8)
+    ax.add_patch(b2)
+    ax.text(3.97, 3.95, "2. Nine Evidence Streams", ha="center", fontsize=8, fontweight="bold", color="#009E73")
+    stream_items = [
+        ("Expression", "0.20", STREAM_C["expression"]),
+        ("Specificity", "0.10", STREAM_C["specificity"]),
+        ("Reproducibility", "0.10", STREAM_C["reproducibility"]),
+        ("RNAi Phenotype", "0.10", STREAM_C["rnai"]),
+        ("Co-expression Gain", "0.10", STREAM_C["correlation"]),
+        ("Neural Enriched", "0.10", STREAM_C["neural_enriched"]),
+        ("Neural Specificity", "0.10", STREAM_C["neural_specificity"]),
+        ("Perez Lineage Class", "0.10", STREAM_C["perez_lineage"]),
+        ("ANANSE Influence", "0.10", STREAM_C["perez_influence"])
+    ]
+    for i, (name, wt, c) in enumerate(stream_items):
+        y_s = 3.55 - i * 0.35
+        ax.plot(3.05, y_s, "o", color=c, markersize=4.5)
+        ax.text(3.22, y_s, name, fontsize=6.5, va="center", color="#222222")
+        ax.text(4.95, y_s, f"w={wt}", fontsize=6, va="center", ha="right", color="#666666")
 
-    # Stage 3: Scoring
-    score_box = FancyBboxPatch((5.8, 1.8), 1.6, 1.4, boxstyle="round,pad=0.1",
-                                facecolor="#FFF2CC", edgecolor="#E69F00", linewidth=1.5)
-    ax.add_patch(score_box)
-    ax.text(6.6, 2.9, "Evidence Scoring", ha="center", fontsize=9, fontweight="bold", color="#E69F00")
-    ax.text(6.6, 2.5, "Weighted sum\n(0.2 + 8×0.1)", ha="center", fontsize=7)
-    ax.text(6.6, 2.1, "→ Integrated score", ha="center", fontsize=7)
+    # Arrow 2 -> 3
+    ax.annotate("", xy=(5.50, 2.3), xytext=(5.20, 2.3),
+                arrowprops=dict(arrowstyle="->,head_width=0.3,head_length=0.4", color="#555555", lw=1.2))
 
-    # Arrow 3
-    ax.annotate("", xy=(7.9, 2.5), xytext=(7.4, 2.5),
-                arrowprops=dict(arrowstyle="->", color="#333333", lw=1.5))
+    # Box 3: Bayesian Scoring & UQ
+    b3 = FancyBboxPatch((5.55, 0.4), 2.15, 3.8, boxstyle="round,pad=0.08,rounding_size=0.15",
+                         facecolor="#FFF9F0", edgecolor="#E69F00", linewidth=0.8)
+    ax.add_patch(b3)
+    ax.text(6.62, 3.95, "3. Scoring & UQ", ha="center", fontsize=8, fontweight="bold", color="#E69F00")
+    ax.text(6.62, 3.45, r"$S = \frac{\sum w_i s_i}{\sum w_i}$", fontsize=8, ha="center", color="#222222")
+    ax.text(6.62, 3.00, "Three Weight Regimes:", fontsize=6.8, ha="center", fontweight="bold", color="#333333")
+    ax.text(6.62, 2.65, "• Fixed weights", fontsize=6.5, ha="center", color=C_FIXED)
+    ax.text(6.62, 2.35, "• Centered Dirichlet (k=40)", fontsize=6.5, ha="center", color=C_A)
+    ax.text(6.62, 2.05, "• Uniform Dirichlet (α=1)", fontsize=6.5, ha="center", color=C_UNIFORM)
+    ax.text(6.62, 1.55, "+ Annotation Bonuses:\nGO Neural (+0.03)\nGO TF (+0.02) | Orth (+0.02)",
+            fontsize=6, ha="center", color="#555555")
 
-    # Stage 4: Prioritization
-    prior_box = FancyBboxPatch((8.1, 1.5), 1.6, 2.0, boxstyle="round,pad=0.1",
-                                facecolor="#FFE6E6", edgecolor="#D55E00", linewidth=1.5)
-    ax.add_patch(prior_box)
-    ax.text(8.9, 3.3, "3 Methods", ha="center", fontsize=9, fontweight="bold", color="#D55E00")
-    ax.text(8.9, 2.95, "Fixed weights", ha="center", fontsize=7, color=C_FIXED)
-    ax.text(8.9, 2.7, "Dirichlet k=40", ha="center", fontsize=7, color=C_CENTERED)
-    ax.text(8.9, 2.45, "Dirichlet a=1", ha="center", fontsize=7, color=C_UNIFORM)
-    ax.text(8.9, 2.15, "+ same bonuses", ha="center", fontsize=6, color="#555555")
-    ax.text(8.9, 1.85, "Track A (RNAi) / B (novel)", ha="center", fontsize=6,
-            color="#555555")
+    # Arrow 3 -> 4
+    ax.annotate("", xy=(8.05, 2.3), xytext=(7.75, 2.3),
+                arrowprops=dict(arrowstyle="->,head_width=0.3,head_length=0.4", color="#555555", lw=1.2))
 
-    # Bottom annotation
-    ax.text(5.0, 0.4, "Pipeline: 5 atlases × 9 evidence streams → weighted scoring → "
-            "fixed/centered/uniform methods (shared universe, bonuses, gates)",
-            ha="center", fontsize=8, fontstyle="italic", color="#555555")
+    # Box 4: Dual-Track Prioritization
+    b4 = FancyBboxPatch((8.1, 0.4), 1.7, 3.8, boxstyle="round,pad=0.08,rounding_size=0.15",
+                         facecolor="#FBF4FA", edgecolor="#CC79A7", linewidth=0.8)
+    ax.add_patch(b4)
+    ax.text(8.95, 3.95, "4. Discovery", ha="center", fontsize=8, fontweight="bold", color="#CC79A7")
 
+    # Track A pill
+    tA = FancyBboxPatch((8.25, 2.5), 1.4, 1.05, boxstyle="round,pad=0.04,rounding_size=0.1",
+                         facecolor=C_A, edgecolor="none", alpha=0.9)
+    ax.add_patch(tA)
+    ax.text(8.95, 3.25, "TRACK A", ha="center", fontsize=7, fontweight="bold", color="white")
+    ax.text(8.95, 2.90, "RNAi-Validated\nBenchmarks", ha="center", fontsize=6, color="white")
+    ax.text(8.95, 2.62, "FoxQ2, six6, unc-4...", ha="center", fontsize=5.5, color="#F0F7FD")
+
+    # Track B pill
+    tB = FancyBboxPatch((8.25, 1.05), 1.4, 1.05, boxstyle="round,pad=0.04,rounding_size=0.1",
+                         facecolor=C_B, edgecolor="none", alpha=0.9)
+    ax.add_patch(tB)
+    ax.text(8.95, 1.80, "TRACK B", ha="center", fontsize=7, fontweight="bold", color="white")
+    ax.text(8.95, 1.45, "Novel Knockout\nCandidates", ha="center", fontsize=6, color="white")
+    ax.text(8.95, 1.17, "ptf-4, dd15328...", ha="center", fontsize=5.5, color="#FFF9F0")
+
+    fig.tight_layout()
     save(fig, "22_pipeline_schematic")
 
 if __name__ == "__main__":
     build()
+
