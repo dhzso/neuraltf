@@ -16,10 +16,10 @@ def build():
     fig, ax = plt.subplots(figsize=(W_15COL, 3.6))
 
     groups = ["neural_tfs", "non_tfs", "random"]
-    labels = ["Neural TFs\n(RNAi validated)",
-              "Non-TF genes\n(matched controls)",
-              "Non-neural TFs\n(matched controls)"]
-    colors = [C_A, "#78909C", C_B]
+    labels = ["Neural TFs",
+              "Non-TF controls",
+              "Non-neural TFs"]
+    colors = [C_A, "#788896", C_B]
     positions = [1, 2, 3]
 
     for pos, group, label_str, color in zip(positions, groups, labels, colors):
@@ -43,13 +43,13 @@ def build():
         median = np.median(scores)
         q1, q3 = np.percentile(scores, [25, 75])
         ax.text(pos + 0.32, median, f"med = {median:.3f}",
-                fontsize=6.5, va="center", color="#333333")
+                fontsize=6.5, va="center", color="#222222")
 
     ax.set_xticks(positions)
     ax.set_xticklabels(labels, fontsize=7.5)
-    ax.set_ylabel("Label-free evidence score", fontsize=8)
-    ax.set_title("Neural TF score specificity vs availability-matched controls",
-                 fontweight="bold", fontsize=8.5, pad=14)
+    ax.set_ylabel("Label-free score", fontsize=8)
+    ax.set_title("Score comparison vs controls",
+                 fontweight="bold", fontsize=8.5, pad=12)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.set_xlim(0.4, 3.8)

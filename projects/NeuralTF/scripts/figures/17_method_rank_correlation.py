@@ -23,7 +23,7 @@ def build():
                 corr[j, i] = rho
 
     fig, ax = plt.subplots(figsize=(W_1COL, 3.0))
-    cmap = plt.cm.YlGnBu
+    cmap = plt.cm.Blues
     im = ax.imshow(corr, cmap=cmap, vmin=0.90, vmax=1.0, aspect="equal")
     ax.set_xticks(range(n))
     ax.set_xticklabels(labels, fontsize=7)
@@ -33,12 +33,12 @@ def build():
     for i in range(n):
         for j in range(n):
             val = corr[i, j]
-            tc = "white" if val > 0.97 else "#222222"
+            tc = "white" if val > 0.96 else "#222222"
             ax.text(j, i, f"{val:.3f}", ha="center", va="center", fontsize=7.5,
                     color=tc, fontweight="bold")
                     
-    ax.set_title("Method rank correlation\n(full candidate universe, n = 11,675)",
-                 fontweight="bold", fontsize=8, pad=8)
+    ax.set_title("Rank correlation (Spearman $r_s$)",
+                 fontweight="bold", fontsize=8.5, pad=6)
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.06)
     cbar.set_label("Spearman $r_s$", fontsize=7.5)
     cbar.ax.tick_params(labelsize=6.5)

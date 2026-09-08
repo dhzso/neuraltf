@@ -50,11 +50,6 @@ def build():
     ylabels = [label(neural, g) for g in pivot.index]
     ax.set_yticks(range(len(pivot)))
     ax.set_yticklabels(ylabels, fontsize=7)
-    
-    for i, gid in enumerate(pivot.index):
-        c = C_A if track_map.get(gid, "") == "A" else C_B
-        ax.get_yticklabels()[i].set_color(c)
-        ax.get_yticklabels()[i].set_fontweight("bold")
         
     for i in range(pivot.shape[0]):
         for j in range(pivot.shape[1]):
@@ -65,18 +60,18 @@ def build():
                 ax.text(j, i, sign_str, ha="center", va="center", fontsize=6.5, color=tc, fontweight="bold")
 
     # Add divider line between Track A (rows 0-4) and Track B (rows 5-9)
-    ax.axhline(4.5, color="#333333", lw=1.2, ls="--")
-    ax.text(-0.85, 2.0, "Track A\n(RNAi)", ha="center", va="center", fontsize=6.5, color=C_A, fontweight="bold", rotation=90)
-    ax.text(-0.85, 7.0, "Track B\n(Novel)", ha="center", va="center", fontsize=6.5, color=C_B, fontweight="bold", rotation=90)
+    ax.axhline(4.5, color="#555555", lw=0.8, ls="--")
+    ax.text(-0.85, 2.0, "Track A\n(benchmark)", ha="center", va="center", fontsize=6.5, color="#222222", rotation=90)
+    ax.text(-0.85, 7.0, "Track B\n(candidate)", ha="center", va="center", fontsize=6.5, color="#222222", rotation=90)
 
-    ax.set_ylabel("Top-10 candidate", fontsize=8)
+    ax.set_ylabel("Candidate", fontsize=8)
     ax.spines[:].set_visible(False)
     
     cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.03)
-    cbar.set_label("Rank shift (+ drops, − improves)", fontsize=7.5)
+    cbar.set_label("Rank shift (Δrank)", fontsize=7.5)
     cbar.ax.tick_params(labelsize=6.5)
 
-    ax.set_title("Candidate sensitivity to individual stream removal (Δrank upon omission)",
+    ax.set_title("Candidate stream sensitivity (Δrank)",
                  fontweight="bold", fontsize=8.5, pad=18)
     fig.tight_layout()
     save(fig, "09_stream_ablation_candidate")

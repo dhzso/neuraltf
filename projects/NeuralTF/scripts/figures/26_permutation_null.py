@@ -69,7 +69,7 @@ def build():
             for rs in top_real[:-1]:
                 ax.axvline(x=rs, color=C_HL, lw=1.0, linestyle="--", alpha=0.75)
             ax.axvline(x=top_real[-1], color=C_HL, lw=1.4, linestyle="--",
-                       label="Top-10 permutation-testable candidates")
+                       label="Top 10 candidates")
 
         p_empirical = df["empirical_p"].min() if "empirical_p" in df.columns else (df["empirical_p_shuffled"].min() if "empirical_p_shuffled" in df.columns else 0.001)
         n_untestable = int(df["untestable_by_permutation"].sum()) if "untestable_by_permutation" in df.columns else 0
@@ -78,17 +78,16 @@ def build():
         p_floor = 1.0 / (n_perm + 1)
         
         ax.text(0.95, 0.92,
-                f"Min empirical $p = {p_empirical:.4f}$ (floor $1/(n+1)$)\n"
-                f"Resolution floor (n={n_perm}): ${p_floor:.4f}$\n"
-                f"Testable: {n_testable:,} | Saturated: {n_untestable:,}",
+                f"Min empirical $P = {p_empirical:.4f}$\n"
+                f"Permutations: {n_perm}\n"
+                f"Testable: {n_testable:,}",
                 transform=ax.transAxes, ha="right", va="top", fontsize=7,
-                color="#222222",
-                bbox=dict(boxstyle="round,pad=0.35", facecolor="#FAFAFA", edgecolor="#CCCCCC", lw=0.6))
+                color="#222222")
 
-        ax.set_xlabel("Integrated evidence score", fontsize=8)
-        ax.set_ylabel("Probability density", fontsize=8)
-        ax.set_title("Permutation null distribution vs observed scores of prioritized candidates",
-                     fontweight="bold", fontsize=8.5, pad=8)
+        ax.set_xlabel("Integrated score", fontsize=8)
+        ax.set_ylabel("Density", fontsize=8)
+        ax.set_title("Permutation null vs observed scores",
+                     fontweight="bold", fontsize=8.5, pad=6)
         ax.legend(fontsize=7, frameon=False, loc="upper left")
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)

@@ -49,11 +49,12 @@ def build():
     ax1.axvline(0, color="#888888", lw=0.6, ls=":")
     ax1.plot([-4, 6], [-4, 6], color="#555555", lw=0.8, ls="--")
 
-    ax1.text(0.05, 0.92, f"Spearman $r_s$ = {r_val:.2f}\n$p$ < $10^{{-30}}$",
-             transform=ax1.transAxes, fontsize=6.5, fontweight="bold",
+    ax1.text(0.05, 0.92, f"Spearman $r_s$ = {r_val:.2f}\n$P < 10^{{-30}}$",
+             transform=ax1.transAxes, fontsize=6.5,
              va="top", ha="left")
     ax1.set_xlabel("Fincher et al. log$_2$FC", fontsize=7.5)
     ax1.set_ylabel("Plass et al. log$_2$FC", fontsize=7.5)
+    ax1.set_title("Fold-change concordance", fontsize=8, pad=4)
     ax1.set_xlim(-4, 6)
     ax1.set_ylim(-4, 6)
     ax1.legend(loc="lower right", frameon=False, fontsize=6)
@@ -67,12 +68,14 @@ def build():
     bars = ax2.bar(x2, counts.values, color=colors2[:len(counts)], width=0.6, edgecolor="none")
     for i, v in enumerate(counts.values):
         pct = (v / len(meta_df)) * 100
-        ax2.text(i, v + max(counts.values)*0.02, f"{v:,}\n({pct:.1f}%)",
+        ax2.text(i, v + max(counts.values)*0.02, f"{v:,} ({pct:.1f}%)",
                  ha="center", va="bottom", fontsize=6, color="#222222")
 
     ax2.set_xticks(x2)
     ax2.set_xticklabels(labels2, fontsize=7)
-    ax2.set_ylabel("Candidate genes", fontsize=7.5)
+    ax2.set_xlabel("Atlas concordance", fontsize=7.5)
+    ax2.set_ylabel("Candidates", fontsize=7.5)
+    ax2.set_title("Concordance count", fontsize=8, pad=4)
     ax2.set_ylim(0, max(counts.values) * 1.25)
     panel_tag(ax2, "b")
 
@@ -98,7 +101,9 @@ def build():
         patch.set_edgecolor("#333333")
 
     ax3.set_xticklabels(labels3, fontsize=6.5)
-    ax3.set_ylabel(r"Fisher combined $-\log_{10}(p)$", fontsize=7.5)
+    ax3.set_xlabel("Significant atlases", fontsize=7.5)
+    ax3.set_ylabel(r"Fisher combined $-\log_{10}(P)$", fontsize=7.5)
+    ax3.set_title("Statistical significance", fontsize=8, pad=4)
     ax3.set_ylim(0, 52)
     panel_tag(ax3, "c")
 

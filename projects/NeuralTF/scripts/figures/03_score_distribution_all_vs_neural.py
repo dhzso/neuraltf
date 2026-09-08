@@ -16,29 +16,27 @@ def build():
     bins = np.linspace(0, max(a.max(), n.max()) * 1.02, 35)
     
     # Histograms
-    ax.hist(a, bins=bins, density=True, alpha=0.35, color="#78909C", edgecolor="none")
-    ax.hist(n, bins=bins, density=True, alpha=0.45, color=C_A, edgecolor="none")
+    ax.hist(a, bins=bins, density=True, alpha=0.35, color=C_ALL, edgecolor="none")
+    ax.hist(n, bins=bins, density=True, alpha=0.55, color=C_A, edgecolor="none")
 
     # KDE overlay
     from scipy.stats import gaussian_kde
     x_grid = np.linspace(bins[0], bins[-1], 300)
     kde_a = gaussian_kde(a)
     kde_n = gaussian_kde(n)
-    ax.plot(x_grid, kde_a(x_grid), color="#455A64", lw=1.5, label=f"All candidates (n = {len(a):,})")
-    ax.plot(x_grid, kde_n(x_grid), color=C_A, lw=1.8, label=f"Neural-enriched (n = {len(n):,})")
+    ax.plot(x_grid, kde_a(x_grid), color="#55606B", lw=1.3, label=f"All candidates (n = {len(a):,})")
+    ax.plot(x_grid, kde_n(x_grid), color=C_A, lw=1.6, label=f"Neural TFs (n = {len(n):,})")
 
     ks, p = ks_2samp(a, n)
-    p_str = "p < 10^{-30}" if p < 1e-30 else f"p = {p:.1e}"
-    ax.text(0.96, 0.93, f"Kolmogorov–Smirnov\n$D = {ks:.3f}$\n${p_str}$",
-            transform=ax.transAxes, fontsize=7.5, ha="right", va="top",
-            bbox=dict(boxstyle="round,pad=0.35", fc="#FAFAFA", ec="#CCCCCC", lw=0.6))
+    p_str = "P < 10^{-30}" if p < 1e-30 else f"P = {p:.1e}"
+    ax.text(0.96, 0.90, f"KS test: $D = {ks:.3f}$, ${p_str}$",
+            transform=ax.transAxes, fontsize=7, ha="right", va="top", color="#222222")
 
-    ax.set_xlabel("Integrated evidence score", fontsize=8)
-    ax.set_ylabel("Probability density", fontsize=8)
-    ax.set_title("Neural filtering enriches for higher-scoring candidates",
-                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.set_xlabel("Integrated score", fontsize=8)
+    ax.set_ylabel("Density", fontsize=8)
+    ax.set_title("Score distribution", fontweight="bold", fontsize=8.5, pad=6)
 
-    ax.legend(frameon=False, fontsize=7.5, loc="upper center")
+    ax.legend(frameon=False, fontsize=7, loc="upper center")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()

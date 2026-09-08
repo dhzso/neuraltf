@@ -35,17 +35,17 @@ def build():
             height=0.62, edgecolor="none")
     for i, (_, r) in enumerate(stats.iterrows()):
         nd = int(r["n_displaced"])
-        txt = f"|Δrank| = {r['median_abs']:.1f}  (Top-10 displaced: {nd})" if nd > 0 else f"|Δrank| = {r['median_abs']:.1f} (stable)"
+        txt = f"{r['median_abs']:.1f} ({nd} displaced)" if nd > 0 else f"{r['median_abs']:.1f}"
         ax.text(r["median_abs"] + 0.08, i, txt, fontsize=6.8, va="center",
-                color=C_HL if nd > 0 else "#555555", fontweight="bold" if nd > 0 else "normal")
+                color="#222222", fontweight="bold" if nd > 0 else "normal")
         
     ax.set_yticks(y)
     ax.set_yticklabels([STREAM_L[s] for s in stats["stream"]], fontsize=7.5)
-    ax.set_xlabel(f"Median absolute rank change (|Δrank|, n = {len(neural)})", fontsize=8)
-    ax.set_ylabel("Ablated evidence stream", fontsize=8)
-    ax.set_xlim(0, max(stats["median_abs"]) * 1.55)
-    ax.set_title("Global stream ablation: rank displacement upon evidence omission",
-                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.set_xlabel("Median |Δrank|", fontsize=8)
+    ax.set_ylabel("Omitted stream", fontsize=8)
+    ax.set_xlim(0, max(stats["median_abs"]) * 1.35)
+    ax.set_title("Stream ablation impact",
+                 fontweight="bold", fontsize=8.5, pad=6)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()

@@ -25,7 +25,6 @@ FIGURES = {
     17: ("17_method_rank_correlation.py",         "3-method rank correlation"),
     18: ("18_composite_bonus_waterfall.py",       "Composite bonus waterfall"),
     20: ("20_stream_correlation.py",              "Stream correlation matrix"),
-    22: ("22_pipeline_schematic.py",              "Pipeline schematic"),
     23: ("23_roc_pr_curve.py",                    "ROC and PR curves"),
     24: ("24_negative_controls.py",               "Negative controls"),
     25: ("25_bootstrap_ci.py",                    "Bootstrap confidence intervals"),

@@ -56,10 +56,10 @@ def build():
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(W_15COL, 4.8), sharex=True,
                                    gridspec_kw={"height_ratios": [1, 1], "hspace": 0.35})
 
-    tracks_data = [("Track A: RNAi-validated benchmark TFs (n = 5)", "A", ax1, C_A),
-                   ("Track B: Novel high-confidence targets for validation (n = 5)", "B", ax2, C_B)]
+    tracks_data = [("Track A (benchmark)", "A", ax1, C_A, "a"),
+                   ("Track B (candidate)", "B", ax2, C_B, "b")]
 
-    for title, track_code, ax, color in tracks_data:
+    for title, track_code, ax, color, tag in tracks_data:
         sub = df[df["track"] == track_code].sort_values("composite", ascending=True)
         y = np.arange(len(sub))
 
@@ -68,27 +68,28 @@ def build():
                        edgecolor="none", label="Composite score")
         
         # Overlay point for base score
-        ax.scatter(sub["base"], y, color="#212121", s=30, zorder=4,
-                   label="Base score (multi-atlas evidence)", edgecolors="white", lw=0.6)
+        ax.scatter(sub["base"], y, color="#222222", s=28, zorder=4,
+                   label="Base score", edgecolors="white", lw=0.6)
 
-        # Annotations on the right
+        # Value annotations
         for i, (_, r) in enumerate(sub.iterrows()):
             ax.text(r["composite"] + 0.015, y[i], 
-                    f"{r['composite']:.3f}  [{r['family']}, {r['ortholog']}]",
-                    fontsize=6.5, va="center", color="#333333")
+                    f"{r['composite']:.2f} ({r['family']})",
+                    fontsize=6.5, va="center", color="#222222")
 
         ax.set_yticks(y)
-        ax.set_yticklabels(sub["name"], fontsize=8, fontweight="bold")
-        ax.set_title(title, fontweight="bold", fontsize=8, loc="left", pad=5, color=color)
+        ax.set_yticklabels(sub["name"], fontsize=7.5)
+        ax.set_title(title, fontweight="bold", fontsize=8, loc="left", pad=4, color="#222222")
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-        ax.set_xlim(0, 1.25)
+        ax.set_xlim(0, 1.15)
+        panel_tag(ax, tag)
 
-    ax2.set_xlabel("Prioritization score (base evidence + annotation bonuses)", fontsize=8)
+    ax2.set_xlabel("Prioritization score", fontsize=8)
     ax1.legend(loc="lower right", frameon=False, fontsize=7)
 
-    fig.suptitle("NeuralTF Top-10 Prioritized Transcription Factors",
-                 fontweight="bold", fontsize=9, y=0.98)
+    fig.suptitle("Prioritized transcription factors (top 10)",
+                 fontweight="bold", fontsize=8.5, y=0.98)
     save(fig, "05_top10_candidate_atlas")
 
 if __name__=="__main__": build()

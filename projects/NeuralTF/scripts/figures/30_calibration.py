@@ -55,14 +55,14 @@ def build():
 
     # Top decile callout
     top_rate = observed[-1] * 100
-    enrichment = data.get("top_decile_enrichment", {}).get("fold_enrichment", 9.5)
-    ax1.text(x[-1], top_rate + 1.0, f"{top_rate:.1f}%\n({enrichment:.1f}\u00d7)",
-             ha="center", va="bottom", fontsize=6.5, fontweight="bold", color=C_A)
+    ax1.text(x[-1], top_rate + 1.0, f"{top_rate:.1f}%",
+             ha="center", va="bottom", fontsize=6.5, color="#222222")
 
     ax1.set_xticks(x)
     ax1.set_xticklabels(decile_labels, fontsize=6.5)
-    ax1.set_xlabel("Score decile (D1 = lowest, D10 = highest)", fontsize=7.5)
-    ax1.set_ylabel("RNAi-validated rate (%)", fontsize=7.5)
+    ax1.set_xlabel("Score decile", fontsize=7.5)
+    ax1.set_ylabel("Validation rate (%)", fontsize=7.5)
+    ax1.set_title("Decile validation rate", fontsize=8, pad=4)
     ax1.legend(loc="upper left", frameon=False, fontsize=6.5)
     panel_tag(ax1, "a")
 
@@ -78,16 +78,11 @@ def build():
     ax2.plot([0, len(cum_pct)-1], [10, 100], color="#AAAAAA", lw=1.0, linestyle=":",
              label="Random baseline")
 
-    # Annotate top 10% recovery
-    ax2.annotate(f"{cum_pct[0]:.1f}% recovered\nin top 10%",
-                 xy=(0, cum_pct[0]), xytext=(1.5, 75),
-                 arrowprops=dict(arrowstyle="->", color=C_B, lw=0.8),
-                 fontsize=6.5, fontweight="bold", color=C_B)
-
     ax2.set_xticks(x_rev)
     ax2.set_xticklabels(rev_labels, rotation=35, ha="right", fontsize=6.5)
-    ax2.set_xlabel("Cumulative score fraction", fontsize=7.5)
-    ax2.set_ylabel("Validated neural TFs captured (%)", fontsize=7.5)
+    ax2.set_xlabel("Top candidates (%)", fontsize=7.5)
+    ax2.set_ylabel("Cumulative recovery (%)", fontsize=7.5)
+    ax2.set_title("Cumulative recovery", fontsize=8, pad=4)
     ax2.set_ylim(0, 105)
     ax2.legend(loc="lower right", frameon=False, fontsize=6.5)
     panel_tag(ax2, "b")

@@ -52,8 +52,8 @@ def build():
     ax_track.spines[:].set_visible(False)
 
     # 2. Main heatmap
-    cmap = plt.cm.YlGnBu
-    cmap.set_bad("#F9F9F9")
+    cmap = plt.cm.Blues
+    cmap.set_bad("#F5F5F5")
     im = ax_main.imshow(mat_sub, aspect="auto", cmap=cmap, vmin=0, vmax=1, interpolation="nearest")
     ax_main.set_xticks(range(len(streams)))
     ax_main.set_xticklabels([STREAM_L[s] for s in streams], rotation=40, ha="left", fontsize=7)
@@ -64,29 +64,25 @@ def build():
                for i, gid in enumerate(df_sub["gene_id"])]
     ax_main.set_yticks(range(n_show))
     ax_main.set_yticklabels(ylabels, fontsize=6)
-    for i, c in enumerate(track_colors):
-        ax_main.get_yticklabels()[i].set_color(c)
-        if c == C_A:
-            ax_main.get_yticklabels()[i].set_fontweight("bold")
             
-    ax_main.set_ylabel("Top neural candidates (sorted by evidence)", fontsize=8)
+    ax_main.set_ylabel("Candidate", fontsize=8)
     ax_main.spines[:].set_visible(False)
 
     # 3. Colorbar
     cbar = fig.colorbar(im, cax=ax_cbar)
-    cbar.set_label("Evidence score (0–1)", fontsize=7.5)
+    cbar.set_label("Score", fontsize=7.5)
     cbar.ax.tick_params(labelsize=6.5)
 
     # Legend for track
     from matplotlib.patches import Patch
     leg_handles = [
-        Patch(facecolor=C_A, label="Track A (RNAi-validated)"),
-        Patch(facecolor=C_B, label="Track B (novel candidate)")
+        Patch(facecolor=C_A, label="Track A (benchmark)"),
+        Patch(facecolor=C_B, label="Track B (candidate)")
     ]
     ax_main.legend(handles=leg_handles, loc="upper right", bbox_to_anchor=(1.0, -0.02),
                   ncol=2, frameon=False, fontsize=7)
 
-    fig.suptitle("Evidence stream profiles across prioritized neural TF candidates",
+    fig.suptitle("Evidence stream profiles (top neural TFs)",
                  fontweight="bold", fontsize=8.5, y=0.99)
     save(fig, "04_evidence_heatmap_neural")
 

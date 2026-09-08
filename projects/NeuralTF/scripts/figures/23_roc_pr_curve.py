@@ -24,9 +24,9 @@ def build():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(W_2COL, 3.4))
 
-    specs = [("circular", "#455A64", "All 9 streams (circular benchmark)"),
-             ("honest", C_A, "Label-free (honest lower bound)"),
-             ("honest_strict", C_B, "Strict (excl. reproducibility)")]
+    specs = [("circular", "#687787", "All 9 streams"),
+             ("honest", C_A, "Label-free streams"),
+             ("honest_strict", C_B, "Strict label-free")]
     for key, color, label in specs:
         if key not in data:
             continue
@@ -44,10 +44,10 @@ def build():
                  label=f"{label} (AP = {pr_auc:.3f})")
 
     ax1.plot([0, 1], [0, 1], color="#999999", lw=0.8, linestyle="--",
-             label="Chance diagonal (AUC = 0.500)")
+             label="Random")
     ax1.set_xlabel("False positive rate", fontsize=8)
-    ax1.set_ylabel("True positive rate (sensitivity)", fontsize=8)
-    ax1.set_title("ROC: recovery of RNAi-validated neural TFs",
+    ax1.set_ylabel("True positive rate", fontsize=8)
+    ax1.set_title("Receiver operating characteristic",
                   fontweight="bold", fontsize=8.5, pad=6)
     ax1.legend(loc="lower right", fontsize=6.8, frameon=False)
     ax1.set_xlim([-0.02, 1.02])
@@ -59,10 +59,10 @@ def build():
     baseline = data.get("honest", data.get("circular", {})).get(
         "pr", {}).get("baseline", 0.15)
     ax2.axhline(y=baseline, color="#999999", lw=0.8, linestyle="--",
-                label=f"Cohort prevalence ({baseline:.2f})")
-    ax2.set_xlabel("Recall (sensitivity)", fontsize=8)
-    ax2.set_ylabel("Precision (positive predictive value)", fontsize=8)
-    ax2.set_title("Precision–Recall: recovery of RNAi-validated TFs",
+                label=f"Baseline ({baseline:.2f})")
+    ax2.set_xlabel("Recall", fontsize=8)
+    ax2.set_ylabel("Precision", fontsize=8)
+    ax2.set_title("Precision–recall curve",
                   fontweight="bold", fontsize=8.5, pad=6)
     ax2.legend(loc="upper right", fontsize=6.8, frameon=False)
     ax2.set_xlim([-0.02, 1.02])

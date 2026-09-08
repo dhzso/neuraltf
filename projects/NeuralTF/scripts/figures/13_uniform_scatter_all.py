@@ -45,12 +45,11 @@ def build():
         ax.plot([lo, hi], [lo, hi], "--", color="#555555", lw=0.8, label="y = x (identity)")
         
         rho, p = spearmanr(x_m, y_m)
-        p_str = "p < 10^{-30}" if p < 1e-30 else f"p = {p:.1e}"
-        ax.text(0.06, 0.92, f"$r_s = {rho:.3f}$\n${p_str}$\n(n = {len(x_m):,})",
-                transform=ax.transAxes, fontsize=7.5, va="top",
-                bbox=dict(boxstyle="round,pad=0.3", fc="#FAFAFA", ec="#CCCCCC", lw=0.5))
+        p_str = "P < 10^{-30}" if p < 1e-30 else f"P = {p:.1e}"
+        ax.text(0.06, 0.92, f"$r_s = {rho:.3f}$, ${p_str}$",
+                transform=ax.transAxes, fontsize=7.5, va="top", color="#222222")
 
-        ax.set_xlabel("Fixed-weight integrated score", fontsize=8)
+        ax.set_xlabel("Fixed weight score", fontsize=8)
         ax.set_title(title, fontweight="bold", fontsize=8.5, pad=6)
         ax.set_xlim(lo, hi)
         ax.set_ylim(lo, hi)
@@ -62,15 +61,15 @@ def build():
 
     from matplotlib.lines import Line2D
     legend_handles = [
-        Line2D([0], [0], marker="o", color="w", markerfacecolor=C_A, markersize=6, label="Track A (RNAi-validated)"),
-        Line2D([0], [0], marker="o", color="w", markerfacecolor=C_B, markersize=6, label="Track B (novel candidate)"),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor=C_A, markersize=6, label="Track A (benchmark)"),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor=C_B, markersize=6, label="Track B (candidate)"),
         Line2D([0], [0], marker="o", color="w", markerfacecolor="#B0BEC5", markersize=5, label="Other candidate"),
-        Line2D([0], [0], color="#555555", ls="--", lw=0.8, label="Identity line")
+        Line2D([0], [0], color="#555555", ls="--", lw=0.8, label="Identity")
     ]
     ax2.legend(handles=legend_handles, frameon=False, fontsize=6.8, loc="lower right")
 
-    fig.suptitle("Prioritization concordance: fixed-weight vs Bayesian Dirichlet scoring",
-                 fontweight="bold", fontsize=9, y=1.01)
+    fig.suptitle("Score concordance across weighting schemes",
+                 fontweight="bold", fontsize=8.5, y=0.99)
     fig.tight_layout()
     save(fig, "13_uniform_scatter_all")
 

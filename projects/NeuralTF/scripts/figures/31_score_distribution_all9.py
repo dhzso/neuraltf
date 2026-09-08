@@ -44,13 +44,13 @@ def build():
     # Panel a: Non-zero coverage percentage
     bars = ax1.barh(y, coverage_pct, color=colors, alpha=0.85, height=0.6, edgecolor="none")
     for i, cov in enumerate(coverage_pct):
-        count = int(np.round(cov * n_total / 100))
-        ax1.text(cov + 1.0, i, f"{cov:.1f}%\n(n={count:,})",
-                 va="center", ha="left", fontsize=6, color="#222222")
+        ax1.text(cov + 1.0, i, f"{cov:.1f}%",
+                 va="center", ha="left", fontsize=6.5, color="#222222")
     ax1.set_yticks(y)
     ax1.set_yticklabels(labels, fontsize=7)
-    ax1.set_xlabel("Candidates with evidence > 0 (%)", fontsize=7.5)
-    ax1.set_xlim(0, max(coverage_pct) * 1.25)
+    ax1.set_xlabel("Coverage (%)", fontsize=7.5)
+    ax1.set_xlim(0, max(coverage_pct) * 1.18)
+    ax1.set_title("Stream coverage", fontsize=8, pad=4)
     ax1.invert_yaxis()
     panel_tag(ax1, "a")
 
@@ -70,8 +70,9 @@ def build():
 
     ax2.set_yticks(y)
     ax2.set_yticklabels([])  # shared labels on ax1
-    ax2.set_xlabel("Evidence score (non-zero candidates)", fontsize=7.5)
+    ax2.set_xlabel("Score", fontsize=7.5)
     ax2.set_xlim(0, 1.05)
+    ax2.set_title("Score distribution", fontsize=8, pad=4)
     ax2.invert_yaxis()
     panel_tag(ax2, "b")
 

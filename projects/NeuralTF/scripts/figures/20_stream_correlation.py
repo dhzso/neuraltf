@@ -44,8 +44,8 @@ def build():
                 tc = "white" if abs(v) > 0.55 else "#222222"
                 ax.text(j, i, f"{v:.2f}{sig}", ha="center", va="center", fontsize=5.8, color=tc)
 
-    ax.set_title("Evidence stream orthogonality: pairwise Spearman rank correlations (n = 11,675)",
-                 fontweight="bold", fontsize=8.5, pad=10)
+    ax.set_title("Pairwise stream correlation (Spearman $r_s$)",
+                 fontweight="bold", fontsize=8.5, pad=8)
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Spearman $r_s$", fontsize=7.5)
     cbar.ax.tick_params(labelsize=6.5)

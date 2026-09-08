@@ -35,15 +35,14 @@ def build():
     lim = max(merged["r_fixed"].max(), merged["r_unif"].max()) * 1.05
     ax.plot([0, lim], [0, lim], "--", color="#555555", lw=0.8, label="y = x (identity)")
     rho, p = spearmanr(merged["r_fixed"], merged["r_unif"])
-    p_str = "p < 10^{-30}" if p < 1e-30 else f"p = {p:.1e}"
-    ax.text(0.95, 0.08, f"$r_s = {rho:.3f}$\n${p_str}$\n(n = {len(merged):,})",
-            transform=ax.transAxes, fontsize=7.5, ha="right", va="bottom",
-            bbox=dict(boxstyle="round,pad=0.3", fc="#FAFAFA", ec="#CCCCCC", lw=0.6))
+    p_str = "P < 10^{-30}" if p < 1e-30 else f"P = {p:.1e}"
+    ax.text(0.95, 0.08, f"$r_s = {rho:.3f}$, ${p_str}$",
+            transform=ax.transAxes, fontsize=7.5, ha="right", va="bottom", color="#222222")
             
-    ax.set_xlabel(f"Fixed-weight integrated rank (n = {len(merged):,})", fontsize=8)
-    ax.set_ylabel("Uniform Dirichlet median rank (α = 1)", fontsize=8)
-    ax.set_title("Rank conservation across candidate universe under non-informative Dirichlet weights",
-                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.set_xlabel("Fixed weight rank", fontsize=8)
+    ax.set_ylabel("Uniform Dirichlet rank (α = 1)", fontsize=8)
+    ax.set_title("Rank conservation across candidate universe",
+                 fontweight="bold", fontsize=8.5, pad=6)
     ax.legend(frameon=False, fontsize=7, loc="upper left")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

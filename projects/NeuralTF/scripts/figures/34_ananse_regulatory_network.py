@@ -42,7 +42,8 @@ def build():
 
     ax1.plot([0, 800], [0, 800], color="#999999", ls=":", lw=0.8, label="100% neural")
     ax1.set_xlabel("Total target genes", fontsize=7.5)
-    ax1.set_ylabel("Neuron-specific targets", fontsize=7.5)
+    ax1.set_ylabel("Neuron target genes", fontsize=7.5)
+    ax1.set_title("Target specificity", fontsize=8, pad=4)
     ax1.set_xlim(-20, 950)
     ax1.set_ylim(-20, 500)
     ax1.legend(loc="upper left", frameon=False, fontsize=6)
@@ -60,14 +61,14 @@ def build():
     bars = ax2.barh(y2, neural_sorted["n_targets_neuron"], color=bar_cols,
                     height=0.55, edgecolor="none")
     for i, (_, r) in enumerate(neural_sorted.iterrows()):
-        status_tag = "RNAi" if r["proof_status"] == "known_rnai_validated" else ("Novel" if r["proof_status"] == "novel_candidate" else "Prior")
-        ax2.text(r["n_targets_neuron"] + 8, i, f"{int(r['n_targets_neuron'])} ({status_tag})",
-                 va="center", ha="left", fontsize=6, fontweight="bold", color="#222222")
+        ax2.text(r["n_targets_neuron"] + 8, i, f"{int(r['n_targets_neuron'])}",
+                 va="center", ha="left", fontsize=6.5, color="#222222")
 
     ax2.set_yticks(y2)
     ax2.set_yticklabels(labels2, fontsize=7)
-    ax2.set_xlabel("Neuron target out-degree", fontsize=7.5)
-    ax2.set_xlim(0, 550)
+    ax2.set_xlabel("Neuron target genes", fontsize=7.5)
+    ax2.set_title("Neuron out-degree", fontsize=8, pad=4)
+    ax2.set_xlim(0, 500)
     panel_tag(ax2, "b")
 
     # --- Panel c: Shared downstream neural targets ---
@@ -84,13 +85,14 @@ def build():
         t_names, t_freqs = zip(*reversed(common_targets))
         t_display = [tn if len(tn) <= 20 else tn[:18] + ".." for tn in t_names]
         y3 = np.arange(len(t_names))
-        ax3.barh(y3, t_freqs, color="#4C72B0", height=0.55, edgecolor="none")
+        ax3.barh(y3, t_freqs, color=C_A, height=0.55, edgecolor="none")
         for i, cnt in enumerate(t_freqs):
             ax3.text(cnt + 0.1, i, f"{cnt}/{len(neural_tfs)}",
-                     va="center", ha="left", fontsize=6, fontweight="bold", color="#333333")
+                     va="center", ha="left", fontsize=6, color="#222222")
         ax3.set_yticks(y3)
         ax3.set_yticklabels(t_display, fontsize=6.5)
-        ax3.set_xlabel("Regulating neural TFs", fontsize=7.5)
+        ax3.set_xlabel("Regulating TFs", fontsize=7.5)
+        ax3.set_title("Core regulated targets", fontsize=8, pad=4)
         ax3.set_xlim(0, len(neural_tfs) + 1.2)
     panel_tag(ax3, "c")
 

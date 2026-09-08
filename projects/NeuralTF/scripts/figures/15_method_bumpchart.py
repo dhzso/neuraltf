@@ -55,11 +55,12 @@ def build():
 
     ax1.set_xticks(x_pos)
     ax1.set_xticklabels(methods, fontsize=7)
-    ax1.set_ylabel("Track A within-track rank", fontsize=7.5)
+    ax1.set_ylabel("Within-track rank", fontsize=7.5)
     ax1.set_ylim(0.5, 7.5)
     ax1.set_yticks(range(1, 8))
     ax1.invert_yaxis()
     ax1.set_xlim(-1.1, 2.7)
+    ax1.set_title("Track A (benchmark)", fontsize=8, pad=4)
     panel_tag(ax1, "a")
 
     # --- Panel b: Track B ---
@@ -76,11 +77,12 @@ def build():
 
     ax2.set_xticks(x_pos)
     ax2.set_xticklabels(methods, fontsize=7)
-    ax2.set_ylabel("Track B within-track rank", fontsize=7.5)
+    ax2.set_ylabel("Within-track rank", fontsize=7.5)
     ax2.set_ylim(0.5, 24.5)
     ax2.set_yticks([1, 5, 10, 15, 20])
     ax2.invert_yaxis()
     ax2.set_xlim(-1.1, 2.7)
+    ax2.set_title("Track B (candidate)", fontsize=8, pad=4)
     panel_tag(ax2, "b")
 
     fig.tight_layout()

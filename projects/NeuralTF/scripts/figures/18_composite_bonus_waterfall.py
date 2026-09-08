@@ -57,14 +57,14 @@ def build():
     y = np.arange(len(df))
 
     bonus_cols = ["GO neural", "GO TF", "Human ortholog"]
-    bonus_colors = {"GO neural": "#E69F00", "GO TF": "#009E73",
-                    "Human ortholog": "#56B4E9"}
+    bonus_colors = {"GO neural": "#B04A3E", "GO TF": "#4A7C59",
+                    "Human ortholog": "#5C82A6"}
 
     fig, ax = plt.subplots(figsize=(W_15COL, 4.2))
 
     # Base score bars
-    ax.barh(y, df["base"], height=0.58, color="#90A4AE", edgecolor="none",
-            label="Base integrated score")
+    ax.barh(y, df["base"], height=0.58, color="#788896", edgecolor="none",
+            label="Base score")
 
     # Stacked bonus bars
     left = df["base"].values.copy()
@@ -80,21 +80,19 @@ def build():
     # Composite score label at end
     for i, (_, r) in enumerate(df.iterrows()):
         comp = r["composite"]
-        ax.text(comp + 0.015, y[i], f"{comp:.3f}", fontsize=7,
-                va="center", fontweight="bold", color="#222222")
+        ax.text(comp + 0.015, y[i], f"{comp:.2f}", fontsize=7,
+                va="center", color="#222222")
 
     # Gene names
     ax.set_yticks(y)
-    ax.set_yticklabels(df["name"], fontsize=7.5, fontweight="bold")
-    for i, track in enumerate(df["track"]):
-        ax.get_yticklabels()[i].set_color(C_A if track == "A" else C_B)
+    ax.set_yticklabels(df["name"], fontsize=7.5)
 
-    ax.set_xlabel("Composite score (base multi-atlas evidence + annotation bonuses)", fontsize=8)
-    ax.set_ylabel("Top-10 candidate", fontsize=8)
-    ax.set_title("Scoring anatomy: baseline multi-atlas evidence + transparent annotation bonuses",
-                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.set_xlabel("Composite score", fontsize=8)
+    ax.set_ylabel("Candidate", fontsize=8)
+    ax.set_title("Score composition (top 10 TFs)",
+                 fontweight="bold", fontsize=8.5, pad=6)
     ax.legend(loc="lower right", frameon=False, fontsize=7)
-    ax.set_xlim(0, 1.20)
+    ax.set_xlim(0, 1.15)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()

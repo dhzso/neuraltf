@@ -44,92 +44,92 @@ def compute_bonuses(row):
 
 
 def fig1_overview():
-    """Figure 1: NeuralTF Framework & Comprehensive Evidence Landscape."""
-    fig = plt.figure(figsize=(W_2COL, 6.0))
-    gs = fig.add_gridspec(2, 2, height_ratios=[1.1, 1.0], hspace=0.35, wspace=0.28)
+    """Figure 1: NeuralTF Evidence Landscape & Score Distributions."""
+    fig, ((ax_rank, ax_wt), (ax_cov, ax_dist)) = plt.subplots(2, 2, figsize=(W_2COL, 5.2))
 
-    ax_schematic = fig.add_subplot(gs[0, :])
-    ax_cov = fig.add_subplot(gs[1, 0])
-    ax_dist = fig.add_subplot(gs[1, 1])
-
-    # --- Panel a: Schematic ---
-    ax_schematic.set_xlim(0, 100)
-    ax_schematic.set_ylim(0, 32)
-    ax_schematic.axis("off")
-
-    cards = [
-        {"title": "1. Multi-Atlas Single-Cell", "box": (1, 3, 22, 26), "col": "#E8F1F5", "border": "#4C72B0",
-         "items": ["Fincher et al. (2018)", "Plass et al. (2018)", "Cui et al. (2023)", "11,675 candidates"]},
-        {"title": "2. 9 Evidence Streams", "box": (26, 3, 23, 26), "col": "#FFF3E6", "border": "#D55E00",
-         "items": ["3x scRNA-seq DE", "SCENIC + Regulon", "Perez Lineage + Inf.", "Meta-DE + Concordance"]},
-        {"title": "3. Scoring & Robustness", "box": (52, 3, 22, 26), "col": "#F3EBF7", "border": "#8856A7",
-         "items": ["Dirichlet posterior (1k)", "Evidence ablation", "Functional bonuses", "Negative controls"]},
-        {"title": "4. Neural Prioritization", "box": (77, 3, 22, 26), "col": "#EAF5EA", "border": "#2CA02C",
-         "items": ["Track A: Validated", "Track B: Novel TFs", "Decile enrichment", "ANANSE GRN targets"]},
-    ]
-    for c in cards:
-        x, y, w, h = c["box"]
-        rect = FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.5,rounding_size=1.5",
-                              facecolor=c["col"], edgecolor=c["border"], lw=1.0)
-        ax_schematic.add_patch(rect)
-        ax_schematic.text(x + w/2, y + h - 3.5, c["title"], ha="center", va="center",
-                          fontsize=7.5, fontweight="bold", color="#222222")
-        for idx, item in enumerate(c["items"]):
-            ax_schematic.text(x + 2.0, y + h - 8.5 - idx * 4.2, f"\u2022 {item}",
-                              ha="left", va="center", fontsize=6.2, color="#333333")
-
-    for x_arr in [24.0, 50.0, 75.0]:
-        ax_schematic.annotate("", xy=(x_arr + 1.8, 16), xytext=(x_arr - 0.8, 16),
-                              arrowprops=dict(arrowstyle="-|>", lw=1.2, color="#555555", mutation_scale=10))
-    panel_tag(ax_schematic, "a", x=0.01, y=0.98)
-
-    # --- Panel b: Stream Coverage ---
     df = load_all()
-    n_tot = len(df)
-    streams = STREAM_COLS
-    covs = [(len(df[s].dropna()[df[s].dropna() > 0]) / n_tot) * 100 for s in streams]
-    y_cov = np.arange(len(streams))
-    labels_cov = [STREAM_L.get(s, s) for s in streams]
-    cols_cov = [STREAM_C.get(s, C_A) for s in streams]
-
-    ax_cov.barh(y_cov, covs, color=cols_cov, height=0.6, edgecolor="none", alpha=0.85)
-    for i, cv in enumerate(covs):
-        ax_cov.text(cv + 1.0, i, f"{cv:.1f}%", va="center", ha="left", fontsize=6, color="#222222")
-    ax_cov.set_yticks(y_cov)
-    ax_cov.set_yticklabels(labels_cov, fontsize=6.5)
-    ax_cov.set_xlabel("Coverage (% candidates with score > 0)", fontsize=7.5)
-    ax_cov.set_xlim(0, max(covs) * 1.25)
-    ax_cov.invert_yaxis()
-    panel_tag(ax_cov, "b")
-
-    # --- Panel c: All vs Neural Distribution ---
     neural = load_neural()
+
+    # --- Panel a: Global Score Rank Waterfall ---
+    df_sorted = df.sort_values("integrated_score", ascending=False).reset_index(drop=True)
+    x_rank = np.arange(len(df_sorted)) + 1
+    scores = df_sorted["integrated_score"].values
+
+    ax_rank.plot(x_rank, scores, color="#788896", lw=1.2, label=f"All candidates (n = {len(df):,})")
+    
+    # Highlight top 10
+    top10_idx = np.arange(10) + 1
+    ax_rank.scatter(top10_idx, scores[:10], color=C_A, s=18, zorder=5, label="Top 10")
+    ax_rank.set_xlabel("Rank", fontsize=7.5)
+    ax_rank.set_ylabel("Integrated score", fontsize=7.5)
+    ax_rank.set_title("Score rank profile", fontsize=8, pad=4)
+    ax_rank.set_xlim(0, len(df) * 1.02)
+    ax_rank.legend(loc="upper right", frameon=False, fontsize=6)
+    panel_tag(ax_rank, "a")
+
+    # --- Panel b: Stream Weight Distribution ---
+    y_wt = np.arange(len(STREAM_COLS))
+    wt_labels = [STREAM_L.get(s, s) for s in STREAM_COLS]
+    wt_cols = [STREAM_C.get(s, C_A) for s in STREAM_COLS]
+
+    ax_wt.barh(y_wt, W, color=wt_cols, height=0.58, edgecolor="none")
+    for i, w in enumerate(W):
+        ax_wt.text(w + 0.005, i, f"{w:.2f}", va="center", ha="left", fontsize=6.5, color="#222222")
+    ax_wt.set_yticks(y_wt)
+    ax_wt.set_yticklabels(wt_labels, fontsize=6.5)
+    ax_wt.set_xlabel("Evidence weight ($w_i$)", fontsize=7.5)
+    ax_wt.set_xlim(0, max(W) * 1.30)
+    ax_wt.set_title("Evidence stream weighting", fontsize=8, pad=4)
+    ax_wt.invert_yaxis()
+    panel_tag(ax_wt, "b")
+
+    # --- Panel c: Stream Coverage ---
+    n_tot = len(df)
+    covs = [(len(df[s].dropna()[df[s].dropna() > 0]) / n_tot) * 100 for s in STREAM_COLS]
+    ax_cov.barh(y_wt, covs, color=wt_cols, height=0.58, edgecolor="none")
+    for i, cv in enumerate(covs):
+        ax_cov.text(cv + 1.0, i, f"{cv:.1f}%", va="center", ha="left", fontsize=6.5, color="#222222")
+    ax_cov.set_yticks(y_wt)
+    ax_cov.set_yticklabels(wt_labels, fontsize=6.5)
+    ax_cov.set_xlabel("Coverage (%)", fontsize=7.5)
+    ax_cov.set_xlim(0, max(covs) * 1.20)
+    ax_cov.set_title("Evidence stream coverage", fontsize=8, pad=4)
+    ax_cov.invert_yaxis()
+    panel_tag(ax_cov, "c")
+
+    # --- Panel d: All vs Neural Distribution ---
     all_scores = df["integrated_score"].dropna().values
     neural_scores = neural["integrated_score"].dropna().values
     ks_stat, ks_pval = ks_2samp(neural_scores, all_scores, alternative="less")
+    p_str = "P < 10^{-30}" if ks_pval < 1e-30 else f"P = {ks_pval:.1e}"
 
-    ax_dist.hist(all_scores, bins=35, density=True, alpha=0.4, color=C_ALL, label=f"Genome (n={len(all_scores):,})")
-    ax_dist.hist(neural_scores, bins=25, density=True, alpha=0.65, color=C_NEURAL, label=f"Neural TFs (n={len(neural_scores):,})")
-    ax_dist.axvline(np.median(neural_scores), color=C_NEURAL, lw=1.0, ls="--",
+    ax_dist.hist(all_scores, bins=35, density=True, alpha=0.35, color=C_ALL, label=f"Genome (n = {len(all_scores):,})")
+    ax_dist.hist(neural_scores, bins=25, density=True, alpha=0.55, color=C_A, label=f"Neural TFs (n = {len(neural_scores):,})")
+    ax_dist.axvline(np.median(neural_scores), color=C_A, lw=1.0, ls="--",
                     label=f"Neural median ({np.median(neural_scores):.2f})")
-    ax_dist.axvline(np.median(all_scores), color=C_ALL, lw=1.0, ls=":",
+    ax_dist.axvline(np.median(all_scores), color="#788896", lw=1.0, ls=":",
                     label=f"Genome median ({np.median(all_scores):.2f})")
 
-    ax_dist.text(0.05, 0.72, f"KS test: $D={ks_stat:.3f}$\n$p < 10^{{-30}}$",
-                 transform=ax_dist.transAxes, fontsize=6.5, fontweight="bold",
-                 bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#CCCCCC", lw=0.5))
-    ax_dist.set_xlabel("Integrated evidence score", fontsize=7.5)
+    ax_dist.text(0.05, 0.72, f"KS test: $D = {ks_stat:.3f}$\n${p_str}$",
+                 transform=ax_dist.transAxes, fontsize=6.5, color="#222222")
+    ax_dist.set_xlabel("Integrated score", fontsize=7.5)
     ax_dist.set_ylabel("Density", fontsize=7.5)
+    ax_dist.set_title("Score distribution", fontsize=8, pad=4)
     ax_dist.legend(loc="upper right", frameon=False, fontsize=6)
-    panel_tag(ax_dist, "c")
+    panel_tag(ax_dist, "d")
 
+    for ax in [ax_rank, ax_wt, ax_cov, ax_dist]:
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+    fig.tight_layout()
     save(fig, "fig1_overview_pipeline")
     print("  wrote fig1_overview_pipeline")
 
 
 def fig2_prioritization():
     """Figure 2: Prioritized Planarian Neural Transcription Factors."""
-    fig = plt.figure(figsize=(W_2COL, 6.2))
+    fig = plt.figure(figsize=(W_2COL, 6.0))
     gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 1.1], hspace=0.38, wspace=0.28)
 
     ax_top = fig.add_subplot(gs[0, :])
@@ -141,23 +141,27 @@ def fig2_prioritization():
     neural = load_neural()
     y = np.arange(len(top10))
     bar_cols = [C_A if r["track"] == "A" else C_B for _, r in top10.iterrows()]
-    labels = []
-    for _, r in top10.iterrows():
-        nm = label(neural, r["gene_id"])
-        labels.append(f"[{r['track']}] {nm}")
+    labels = [label(neural, r["gene_id"]) for _, r in top10.iterrows()]
 
     score_col = "composite_score" if "composite_score" in top10.columns else "integrated_score"
     scores = top10[score_col].values
-    ax_top.barh(y, scores, height=0.55, color=bar_cols, alpha=0.85, edgecolor="none", label="Composite score")
+    ax_top.barh(y, scores, height=0.55, color=bar_cols, alpha=0.85, edgecolor="none")
 
     for i, sc in enumerate(scores):
-        ax_top.text(sc + 0.015, i, f"{sc:.3f}", va="center", ha="left", fontsize=6.5, fontweight="bold")
+        ax_top.text(sc + 0.012, i, f"{sc:.2f}", va="center", ha="left", fontsize=6.5, color="#222222")
     ax_top.axhline(4.5, color="#555555", lw=0.8, ls="--")
     ax_top.set_yticks(y)
     ax_top.set_yticklabels(labels, fontsize=7)
-    ax_top.set_xlabel("Evidence score", fontsize=7.5)
+    ax_top.set_xlabel("Prioritization score", fontsize=7.5)
     ax_top.set_xlim(0, 1.15)
-    ax_top.legend(loc="lower right", frameon=False, fontsize=6.5)
+    ax_top.set_title("Prioritized transcription factors (top 10)", fontsize=8, pad=4)
+    
+    from matplotlib.lines import Line2D
+    top_handles = [
+        Line2D([0], [0], color="w", marker="s", markerfacecolor=C_A, markersize=6, label="Track A (benchmark)"),
+        Line2D([0], [0], color="w", marker="s", markerfacecolor=C_B, markersize=6, label="Track B (candidate)")
+    ]
+    ax_top.legend(handles=top_handles, loc="lower right", frameon=False, fontsize=6.5)
     ax_top.invert_yaxis()
     panel_tag(ax_top, "a")
 
@@ -166,11 +170,13 @@ def fig2_prioritization():
     streams = STREAM_COLS
     mat = top20[streams].fillna(0).values
     names20 = [label(neural, gid) for gid in top20["gene_id"]]
-    im = ax_heat.imshow(mat, cmap="YlGnBu", aspect="auto", vmin=0, vmax=1)
+    im = ax_heat.imshow(mat, cmap=plt.cm.Blues, aspect="auto", vmin=0, vmax=1)
     ax_heat.set_xticks(range(len(streams)))
-    ax_heat.set_xticklabels([STREAM_L[s] for s in streams], rotation=45, ha="right", fontsize=6)
+    ax_heat.set_xticklabels([STREAM_L[s] for s in streams], rotation=40, ha="right", fontsize=6)
     ax_heat.set_yticks(range(len(names20)))
     ax_heat.set_yticklabels(names20, fontsize=6)
+    ax_heat.set_ylabel("Candidate", fontsize=7.5)
+    ax_heat.set_title("Evidence stream profiles (top 20)", fontsize=8, pad=4)
     panel_tag(ax_heat, "b")
 
     # --- Panel c: Functional Bonus Waterfall ---
@@ -187,22 +193,29 @@ def fig2_prioritization():
     df_wf = pd.DataFrame(wf_rows).sort_values("composite", ascending=True)
     y_wf = np.arange(len(df_wf))
 
-    ax_wf.barh(y_wf, df_wf["base"], height=0.55, color="#4C72B0", alpha=0.85, label="Base evidence")
+    ax_wf.barh(y_wf, df_wf["base"], height=0.55, color="#788896", alpha=0.85, label="Base score")
     curr = df_wf["base"].values.copy()
-    for col, colr, lab in [("GO neural", "#D55E00", "GO neural (+0.03)"),
-                           ("GO TF", "#009E73", "GO TF (+0.02)"),
-                           ("Human ortholog", "#CC79A7", "Ortholog (+0.02)")]:
+    for col, colr, lab in [("GO neural", "#B04A3E", "GO neural (+0.03)"),
+                           ("GO TF", "#4A7C59", "GO TF (+0.02)"),
+                           ("Human ortholog", "#5C82A6", "Ortholog (+0.02)")]:
         vals = df_wf[col].values
         ax_wf.barh(y_wf, vals, left=curr, height=0.55, color=colr, alpha=0.85, label=lab)
         curr += vals
 
     ax_wf.set_yticks(y_wf)
-    ax_wf.set_yticklabels([f"[{r['track']}] {r['name']}" for _, r in df_wf.iterrows()], fontsize=6.5)
-    ax_wf.set_xlabel("Score composition", fontsize=7.5)
+    ax_wf.set_yticklabels([r["name"] for _, r in df_wf.iterrows()], fontsize=6.5)
+    ax_wf.set_xlabel("Composite score", fontsize=7.5)
+    ax_wf.set_ylabel("Candidate", fontsize=7.5)
     ax_wf.set_xlim(0, 1.15)
+    ax_wf.set_title("Score composition (top 10)", fontsize=8, pad=4)
     ax_wf.legend(loc="lower right", frameon=False, fontsize=5.8)
     panel_tag(ax_wf, "c")
 
+    for ax in [ax_top, ax_wf]:
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+    fig.tight_layout()
     save(fig, "fig2_prioritization_landscape")
     print("  wrote fig2_prioritization_landscape")
 
@@ -231,7 +244,9 @@ def fig3_sensitivity():
         patch.set_alpha(0.65)
     ax1.set_yticks(range(1, len(labels) + 1))
     ax1.set_yticklabels(labels, fontsize=6.5)
-    ax1.set_xlabel("Rank across 1,000 Dirichlet draws", fontsize=7.5)
+    ax1.set_xlabel("Rank (1,000 Dirichlet draws)", fontsize=7.5)
+    ax1.set_ylabel("Candidate", fontsize=7.5)
+    ax1.set_title("Rank distribution across weight draws", fontsize=8, pad=4)
     ax1.set_xlim(0.5, 45)
     panel_tag(ax1, "a")
 
@@ -244,10 +259,11 @@ def fig3_sensitivity():
     y_b = np.arange(len(p10_data))
     ax2.barh(y_b, p10_data, height=0.55, color=C_B, alpha=0.85)
     for i, p in enumerate(p10_data):
-        ax2.text(p + 1.5, i, f"{p:.1f}%", va="center", ha="left", fontsize=6)
+        ax2.text(p + 1.5, i, f"{p:.1f}%", va="center", ha="left", fontsize=6, color="#222222")
     ax2.set_yticks(y_b)
     ax2.set_yticklabels(labels, fontsize=6.5)
-    ax2.set_xlabel("P(Rank \u2264 10) (%)", fontsize=7.5)
+    ax2.set_xlabel("Top 10 retention frequency (%)", fontsize=7.5)
+    ax2.set_title("Top 10 retention frequency", fontsize=8, pad=4)
     ax2.set_xlim(0, 115)
     panel_tag(ax2, "b")
 
@@ -257,21 +273,28 @@ def fig3_sensitivity():
         abl = pd.read_csv(abl_p)
         s_names = [STREAM_L.get(s, s) for s in abl["stream_dropped"]]
         y_c = np.arange(len(abl))
-        ax3.barh(y_c, abl["mean_abs_rank_delta"], height=0.55, color="#D55E00", alpha=0.85)
+        ax3.barh(y_c, abl["mean_abs_rank_delta"], height=0.55, color="#788896", alpha=0.85)
         ax3.set_yticks(y_c)
         ax3.set_yticklabels(s_names, fontsize=6.5)
-        ax3.set_xlabel("Mean |\u0394 rank| upon ablation", fontsize=7.5)
+        ax3.set_xlabel("Median |Δrank|", fontsize=7.5)
+        ax3.set_ylabel("Omitted stream", fontsize=7.5)
+        ax3.set_title("Rank displacement upon ablation", fontsize=8, pad=4)
         ax3.invert_yaxis()
     panel_tag(ax3, "c")
 
     # --- Panel d: Top 10 Displacement ---
     if abl_p.exists():
-        ax4.barh(y_c, abl["top10_displaced_count"], height=0.55, color="#0072B2", alpha=0.85)
+        ax4.barh(y_c, abl["top10_displaced_count"], height=0.55, color=C_A, alpha=0.85)
         ax4.set_yticks(y_c)
         ax4.set_yticklabels(s_names, fontsize=6.5)
         ax4.set_xlabel("Top 10 candidates displaced", fontsize=7.5)
+        ax4.set_title("Top 10 candidate displacement", fontsize=8, pad=4)
         ax4.invert_yaxis()
     panel_tag(ax4, "d")
+
+    for ax in [ax1, ax2, ax3, ax4]:
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
 
     fig.tight_layout()
     save(fig, "fig3_sensitivity_and_uncertainty")
@@ -292,9 +315,10 @@ def fig4_agreement():
         ax1.plot([1, 11675], [1, 11675], color="#555555", lw=0.8, ls="--")
         r_val, _ = spearmanr(s1["fixed_rank"], s1["uniform_rank"])
         ax1.text(0.05, 0.90, f"Spearman $r_s = {r_val:.3f}$", transform=ax1.transAxes,
-                 fontsize=6.5, fontweight="bold")
-        ax1.set_xlabel("Fixed rank (1–11,675)", fontsize=7.5)
-        ax1.set_ylabel("Uniform rank (1–11,675)", fontsize=7.5)
+                 fontsize=6.5, color="#222222")
+        ax1.set_xlabel("Fixed weight rank", fontsize=7.5)
+        ax1.set_ylabel("Uniform Dirichlet rank", fontsize=7.5)
+        ax1.set_title("Rank correlation across schemes", fontsize=8, pad=4)
         ax1.legend(loc="lower right", frameon=False, fontsize=6)
     panel_tag(ax1, "a")
 
@@ -311,7 +335,7 @@ def fig4_agreement():
                     mat[i, j] = 1.0
                 else:
                     mat[i, j] = data.get("pairwise", {}).get(f"{m1}_vs_{m2}", {}).get("jaccard", 0)
-        im = ax2.imshow(mat, cmap="YlGnBu", vmin=0, vmax=1)
+        im = ax2.imshow(mat, cmap=plt.cm.Blues, vmin=0, vmax=1)
         ax2.set_xticks(range(3))
         ax2.set_xticklabels(["Fixed", "Centered", "Uniform"], fontsize=7)
         ax2.set_yticks(range(3))
@@ -319,9 +343,10 @@ def fig4_agreement():
         for i in range(3):
             for j in range(3):
                 ax2.text(j, i, f"{mat[i, j]:.2f}", ha="center", va="center",
-                         fontsize=7.5, fontweight="bold", color="white" if mat[i, j] > 0.6 else "black")
+                         fontsize=7.5, color="white" if mat[i, j] > 0.6 else "#222222")
+        ax2.set_title("Pairwise Jaccard similarity", fontsize=8, pad=4)
         cbar = fig.colorbar(im, ax=ax2, shrink=0.8)
-        cbar.set_label("Jaccard similarity", fontsize=7)
+        cbar.set_label("Jaccard index", fontsize=7)
     panel_tag(ax2, "b")
 
     # --- Panel c: Multi-Method Slope / Bump Chart ---
@@ -334,11 +359,12 @@ def fig4_agreement():
             nm = label(neural, r["gene_id"])
             col = C_A if r["fixed_rank"] <= 5 else C_B
             ax3.plot(x_m, ranks, marker="o", markersize=3.5, lw=1.2, color=col, alpha=0.85)
-            ax3.text(2.08, ranks[2], nm, va="center", fontsize=5.8, color=col, fontweight="bold")
+            ax3.text(2.08, ranks[2], nm, va="center", fontsize=5.8, color="#222222")
         ax3.set_xticks(x_m)
         ax3.set_xticklabels(["Fixed", "Centered", "Uniform"], fontsize=7)
         ax3.set_ylabel("Rank", fontsize=7.5)
         ax3.set_xlim(-0.2, 2.8)
+        ax3.set_title("Top candidate rank trajectories", fontsize=8, pad=4)
         ax3.invert_yaxis()
     panel_tag(ax3, "c")
 
@@ -349,11 +375,12 @@ def fig4_agreement():
         y_d = np.arange(len(c_names))
         ax4.barh(y_d, c_vals, height=0.55, color=[C_A, C_B, C_B, C_NEURAL], alpha=0.85)
         for i, v in enumerate(c_vals):
-            ax4.text(v + 0.2, i, f"{v}/10", va="center", ha="left", fontsize=6.5, fontweight="bold")
+            ax4.text(v + 0.2, i, f"{v}/10", va="center", ha="left", fontsize=6.5, color="#222222")
         ax4.set_yticks(y_d)
         ax4.set_yticklabels(c_names, fontsize=6.5)
-        ax4.set_xlabel("Candidates in overlap", fontsize=7.5)
-        ax4.set_xlim(0, 12)
+        ax4.set_xlabel("Shared candidates (top 10)", fontsize=7.5)
+        ax4.set_xlim(0, 11)
+        ax4.set_title("Top 10 overlap count", fontsize=8, pad=4)
         ax4.invert_yaxis()
     panel_tag(ax4, "d")
 
@@ -365,7 +392,7 @@ def fig4_agreement():
 def fig5_benchmarks():
     """Figure 5: Empirical Benchmarking, Cross-Atlas Concordance, and Network Topology."""
     fig = plt.figure(figsize=(W_2COL, 5.8))
-    gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 1.0], hspace=0.35, wspace=0.28)
+    gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 1.0], hspace=0.38, wspace=0.32)
 
     ax_neg = fig.add_subplot(gs[0, 0])
     ax_eff = fig.add_subplot(gs[0, 1])
@@ -388,15 +415,16 @@ def fig5_benchmarks():
                             medianprops=dict(color="#111111", lw=1.2),
                             boxprops=dict(lw=0.7), whiskerprops=dict(lw=0.7),
                             flierprops=dict(marker=".", markersize=1.5, alpha=0.2))
-        cols = [C_A, "#CCCCCC", "#E5E5E5"]
+        cols = [C_A, "#788896", C_ALL]
         for patch, col in zip(bp["boxes"], cols):
             patch.set_facecolor(col)
             patch.set_alpha(0.7)
             patch.set_edgecolor("#333333")
         ax_neg.set_xticklabels([f"Neural TFs\n(n={len(pos_vals)})", f"Matched Ctrl\n(n={len(m_vals)})", f"Genome\n(n={len(u_vals):,})"], fontsize=6.5)
         ax_neg.set_ylabel("Integrated score", fontsize=7.5)
-        ax_neg.text(0.5, 0.90, "Separation $p < 10^{-10}$", transform=ax_neg.transAxes,
-                    ha="center", fontsize=6.5, fontweight="bold", color=C_A)
+        ax_neg.set_title("Score comparison vs controls", fontsize=8, pad=4)
+        ax_neg.text(0.5, 0.90, "Separation $P < 10^{-10}$", transform=ax_neg.transAxes,
+                    ha="center", fontsize=6.5, color="#222222")
     panel_tag(ax_neg, "a")
 
     # --- Panel b: Effect Sizes ---
@@ -411,14 +439,18 @@ def fig5_benchmarks():
 
         x_e = np.arange(2)
         w = 0.35
-        ax_eff.bar(x_e - w/2, [c_delta, m_delta], w, color=C_A, alpha=0.85, label="Cliff's \u03b4")
-        ax_eff.bar(x_e + w/2, [h_g/3.0, m_g/3.0], w, color=C_B, alpha=0.85, label="Hedges' g / 3")
+        ax_eff.bar(x_e - w/2, [c_delta, m_delta], w, color=C_A, alpha=0.85, label="Cliff's δ")
+        ax_eff.bar(x_e + w/2, [h_g, m_g], w, color=C_B, alpha=0.85, label="Hedges' g")
         ax_eff.set_xticks(x_e)
         ax_eff.set_xticklabels(["vs Genome", "vs Matched Ctrl"], fontsize=7)
-        ax_eff.set_ylabel("Standardized effect size", fontsize=7.5)
+        ax_eff.set_ylabel("Effect size", fontsize=7.5)
+        ax_eff.set_ylim(0, 3.0)
+        ax_eff.set_title("Standardized effect sizes", fontsize=8, pad=4)
         ax_eff.legend(loc="upper right", frameon=False, fontsize=6.5)
-        ax_eff.text(0 - w/2, c_delta + 0.03, f"{c_delta:.2f}", ha="center", fontsize=6, fontweight="bold")
-        ax_eff.text(0 + w/2, h_g/3.0 + 0.03, f"g={h_g:.2f}", ha="center", fontsize=6, fontweight="bold")
+        ax_eff.text(0 - w/2, c_delta + 0.06, f"{c_delta:.2f}", ha="center", fontsize=6, color="#222222")
+        ax_eff.text(0 + w/2, h_g + 0.06, f"{h_g:.2f}", ha="center", fontsize=6, color="#222222")
+        ax_eff.text(1 - w/2, m_delta + 0.06, f"{m_delta:.2f}", ha="center", fontsize=6, color="#222222")
+        ax_eff.text(1 + w/2, m_g + 0.06, f"{m_g:.2f}", ha="center", fontsize=6, color="#222222")
     panel_tag(ax_eff, "b")
 
     # --- Panel c: Cross-Atlas LFC Concordance ---
@@ -431,9 +463,10 @@ def fig5_benchmarks():
         r_val, _ = spearmanr(clean["fincher_lfc"], clean["plass_lfc"])
         ax_lfc.plot([-3, 5], [-3, 5], color="#555555", lw=0.8, ls="--")
         ax_lfc.text(0.05, 0.90, f"Spearman $r_s = {r_val:.2f}$", transform=ax_lfc.transAxes,
-                    fontsize=6.5, fontweight="bold")
+                    fontsize=6.5, color="#222222")
         ax_lfc.set_xlabel("Fincher et al. log$_2$FC", fontsize=7.5)
         ax_lfc.set_ylabel("Plass et al. log$_2$FC", fontsize=7.5)
+        ax_lfc.set_title("Fold-change concordance", fontsize=8, pad=4)
     panel_tag(ax_lfc, "c")
 
     # --- Panel d: ANANSE Regulatory Targets ---
@@ -448,12 +481,18 @@ def fig5_benchmarks():
         ax_grn.barh(y_g, neural_grn["n_targets_neuron"], height=0.55, color=cols_g, alpha=0.85)
         for i, (_, r) in enumerate(neural_grn.iterrows()):
             ax_grn.text(r["n_targets_neuron"] + 8, i, f"{int(r['n_targets_neuron'])}",
-                        va="center", ha="left", fontsize=6, fontweight="bold")
+                        va="center", ha="left", fontsize=6, color="#222222")
         ax_grn.set_yticks(y_g)
         ax_grn.set_yticklabels(names_g, fontsize=6.5)
         ax_grn.set_xlabel("Neuron target genes", fontsize=7.5)
+        ax_grn.set_ylabel("Transcription factor", fontsize=7.5)
+        ax_grn.set_title("Neuron-specific targets", fontsize=8, pad=4)
         ax_grn.set_xlim(0, 500)
     panel_tag(ax_grn, "d")
+
+    for ax in [ax_neg, ax_eff, ax_lfc, ax_grn]:
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
 
     fig.tight_layout()
     save(fig, "fig5_empirical_benchmarks_and_network")

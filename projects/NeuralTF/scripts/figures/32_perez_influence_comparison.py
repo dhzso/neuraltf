@@ -53,6 +53,7 @@ def build():
                 patch.set_edgecolor("#333333")
             ax1.set_xticklabels(labels, fontsize=7)
         ax1.set_ylabel("Integrated score", fontsize=7.5)
+        ax1.set_title("Score by lineage classification", fontsize=8, pad=4)
     else:
         ax1.text(0.5, 0.5, "perez_lineage stream empty in this run",
                  ha="center", va="center", transform=ax1.transAxes,
@@ -67,9 +68,10 @@ def build():
                  alpha=0.75, edgecolor="none")
         med = np.median(infl_nz) if len(infl_nz) > 0 else 0
         ax2.axvline(x=med, color=C_HL, lw=1.2, linestyle="--",
-                    label=f"Median = {med:.3f}")
-        ax2.set_xlabel("Perez ANANSE neuron influence score", fontsize=7.5)
-        ax2.set_ylabel("Candidate count", fontsize=7.5)
+                    label=f"Median ({med:.2f})")
+        ax2.set_xlabel("ANANSE neuron influence score", fontsize=7.5)
+        ax2.set_ylabel("Number of candidates", fontsize=7.5)
+        ax2.set_title("Influence score distribution", fontsize=8, pad=4)
         ax2.legend(loc="upper right", frameon=False, fontsize=7)
     else:
         ax2.text(0.5, 0.5, "perez_influence stream empty in this run",

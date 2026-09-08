@@ -44,14 +44,14 @@ def build():
     bars = ax1.barh(y, counts, color=colors, edgecolor="none", height=0.55)
 
     for i, (c, p) in enumerate(zip(counts, pvals)):
-        sig = f" (p={p:.1e})" if (p is not None and p < 0.05) else ""
-        ax1.text(c + 0.2, i, f"{c}/10{sig}", va="center", ha="left",
-                 fontsize=6.5, fontweight="bold", color="#222222")
+        ax1.text(c + 0.2, i, f"{c}/10", va="center", ha="left",
+                 fontsize=6.5, color="#222222")
 
     ax1.set_yticks(y)
     ax1.set_yticklabels(labels, fontsize=7)
-    ax1.set_xlabel("Candidates in top 10 overlap", fontsize=7.5)
-    ax1.set_xlim(0, 14)
+    ax1.set_xlabel("Shared candidates (top 10)", fontsize=7.5)
+    ax1.set_xlim(0, 11)
+    ax1.set_title("Top 10 candidate overlap", fontsize=8, pad=4)
     ax1.invert_yaxis()
     panel_tag(ax1, "a")
 
@@ -68,7 +68,7 @@ def build():
                 key = f"{m1}_vs_{m2}"
                 matrix[i, j] = pairwise.get(key, {}).get("jaccard", 0.0)
 
-    im = ax2.imshow(matrix, cmap="YlGnBu", vmin=0, vmax=1, aspect="auto")
+    im = ax2.imshow(matrix, cmap=plt.cm.Blues, vmin=0, vmax=1, aspect="auto")
     ax2.set_xticks(range(3))
     ax2.set_xticklabels(display_methods, fontsize=7)
     ax2.set_yticks(range(3))
@@ -78,11 +78,12 @@ def build():
         for j in range(3):
             val = matrix[i, j]
             ax2.text(j, i, f"{val:.2f}", ha="center", va="center",
-                     fontsize=8, fontweight="bold",
+                     fontsize=8,
                      color="white" if val > 0.6 else "#222222")
 
+    ax2.set_title("Jaccard similarity", fontsize=8, pad=4)
     cbar = fig.colorbar(im, ax=ax2, shrink=0.85, pad=0.04)
-    cbar.set_label("Jaccard similarity", fontsize=7)
+    cbar.set_label("Jaccard index", fontsize=7)
     cbar.ax.tick_params(labelsize=6.5)
     panel_tag(ax2, "b")
 

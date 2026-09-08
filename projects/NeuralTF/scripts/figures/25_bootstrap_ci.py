@@ -55,20 +55,16 @@ def build():
 
     ax.set_yticks(y)
     ax.set_yticklabels(names, fontsize=7.5)
-    for i, c in enumerate(colors):
-        ax.get_yticklabels()[i].set_color(c)
-        if c == C_A:
-            ax.get_yticklabels()[i].set_fontweight("bold")
 
-    ax.set_xlabel("Integrated evidence score (points = observed, intervals = 95% Dirichlet band)", fontsize=8)
-    ax.set_ylabel("Top candidates (ranked by score)", fontsize=8)
-    ax.set_title("Top candidate score stability under Bayesian weight perturbation (Dirichlet k = 40, 1,000 draws)",
-                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.set_xlabel("Integrated score (point = median, bar = 95% CI)", fontsize=8)
+    ax.set_ylabel("Candidate", fontsize=8)
+    ax.set_title("Score credible intervals (1,000 Dirichlet draws)",
+                 fontweight="bold", fontsize=8.5, pad=6)
     
     from matplotlib.lines import Line2D
     legend_handles = [
-        Line2D([0], [0], color=C_A, marker="o", lw=1.5, markersize=5, label="Track A (RNAi validated)"),
-        Line2D([0], [0], color=C_B, marker="o", lw=1.5, markersize=5, label="Track B (novel candidate)")
+        Line2D([0], [0], color=C_A, marker="o", lw=1.5, markersize=5, label="Track A (benchmark)"),
+        Line2D([0], [0], color=C_B, marker="o", lw=1.5, markersize=5, label="Track B (candidate)")
     ]
     ax.legend(handles=legend_handles, loc="lower right", frameon=False, fontsize=7)
     ax.spines["top"].set_visible(False)

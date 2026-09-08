@@ -19,14 +19,13 @@ def build():
     bars = ax.barh(y, vals, color=colors, edgecolor="none", height=0.62)
     for bar, v, c in zip(bars, vals, counts.values()):
         ax.text(bar.get_width() + 1.2, bar.get_y() + bar.get_height() / 2,
-                f"{c:,} ({v:.1f}%)", va="center", fontsize=7, color="#333333")
+                f"{v:.1f}%", va="center", fontsize=7, color="#222222")
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=7.5)
-    ax.set_xlabel(f"Candidates with evidence (%, n = {total:,})", fontsize=8)
+    ax.set_xlabel("Coverage (%)", fontsize=8)
     ax.set_ylabel("Evidence stream", fontsize=8)
-    ax.set_xlim(0, 115)
-    ax.set_title("Evidence stream coverage across planarian TF candidates",
-                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.set_xlim(0, 110)
+    ax.set_title("Evidence stream coverage", fontweight="bold", fontsize=8.5, pad=6)
 
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

@@ -31,27 +31,22 @@ def build():
             ax.text(val + 0.015, y[i], f"{val:.1%}", fontsize=6, va="center", color="#333333")
 
     ax.set_yticks(y)
-    ax.set_yticklabels([label(rank_all, g) for g in df["gene_id"]], fontsize=6)
-    for i, (_, r) in enumerate(df.iterrows()):
-        c = _color(r["gene_id"])
-        ax.get_yticklabels()[i].set_color(c)
-        if c in (C_A, C_B):
-            ax.get_yticklabels()[i].set_fontweight("bold")
+    ax.set_yticklabels([label(rank_all, g) for g in df["gene_id"]], fontsize=6.5)
 
-    ax.axvline(x=0.8, color=C_HL, lw=0.8, ls="--", label="80% retention reference")
-    ax.set_xlabel("Retention frequency in Top-10 shortlist (1,000 Dirichlet draws)", fontsize=8)
-    ax.set_ylabel("TF candidate (ordered by retention)", fontsize=8)
+    ax.axvline(x=0.8, color="#888888", lw=0.8, ls="--", label="Threshold = 80%")
+    ax.set_xlabel("Top 10 retention frequency", fontsize=8)
+    ax.set_ylabel("Candidate", fontsize=8)
     ax.set_xlim(0, 1.15)
-    ax.set_title("Candidate retention robustness under Bayesian Dirichlet perturbation",
-                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.set_title("Top 10 retention frequency (1,000 Dirichlet draws)",
+                 fontweight="bold", fontsize=8.5, pad=6)
     
     from matplotlib.lines import Line2D
-    track_handles = [Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=6, label="Track A (RNAi)"),
-                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=6, label="Track B (novel)"),
-                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=6, label="Challenger entrant")]
+    track_handles = [Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=6, label="Track A (benchmark)"),
+                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=6, label="Track B (candidate)"),
+                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=6, label="Other candidate")]
     handles, labels_leg = ax.get_legend_handles_labels()
     handles.extend(track_handles)
-    labels_leg.extend(["Track A (RNAi)","Track B (novel)","Challenger entrant"])
+    labels_leg.extend(["Track A (benchmark)","Track B (candidate)","Other candidate"])
     ax.legend(handles, labels_leg, frameon=False, fontsize=6.5, loc="lower right")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

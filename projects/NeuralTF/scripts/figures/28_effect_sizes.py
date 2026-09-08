@@ -8,10 +8,10 @@ import json
 
 # human-readable labels incl. circularity status
 LABELS = {
-    "top10_vs_rest": ("Top-10 vs rest (circular)", True),
-    "neural_vs_non_neural": ("Neural vs rest (circular)", True),
-    "neural_vs_non_neural_honest": ("Honest: excl. rnai/neural/perez_lineage", False),
-    "neural_vs_non_neural_honest_strict": ("Strict LB: also excl. reproducibility", False),
+    "top10_vs_rest": ("Top 10 vs rest", True),
+    "neural_vs_non_neural": ("Neural vs rest (all streams)", True),
+    "neural_vs_non_neural_honest": ("Neural vs rest (label-free)", False),
+    "neural_vs_non_neural_honest_strict": ("Neural vs rest (strict label-free)", False),
 }
 
 def build():
@@ -33,9 +33,9 @@ def build():
 
         width = 0.32
         bars_d = ax.barh(y + width/2, deltas, height=width, color=C_A,
-                         edgecolor="none", label="Cliff's delta (non-parametric)")
+                         edgecolor="none", label="Cliff's δ")
         bars_g = ax.barh(y - width/2, gs, height=width, color=C_B,
-                         edgecolor="none", label="Hedges' g (parametric, debiased)")
+                         edgecolor="none", label="Hedges' g")
 
         for i, (d, g, p) in enumerate(zip(deltas, gs, pvals)):
             ax.text(d + 0.03, y[i] + width/2, f"δ = {d:.2f}", va="center", ha="left",
@@ -46,10 +46,10 @@ def build():
         ax.set_yticks(y)
         ax.set_yticklabels([LABELS[k][0] for k in comparisons], fontsize=7.5)
         ax.axvline(x=0, color="#555555", lw=0.6)
-        ax.axvline(x=0.5, color="#999999", lw=0.6, linestyle=":", label="Large effect (δ ≥ 0.47 / g ≥ 0.8)")
-        ax.set_xlabel("Effect size magnitude", fontsize=8)
-        ax.set_title("Statistical effect sizes across candidate cohorts & circularity controls",
-                     fontweight="bold", fontsize=8.5, pad=8)
+        ax.axvline(x=0.5, color="#999999", lw=0.6, linestyle=":", label="Reference (0.5)")
+        ax.set_xlabel("Effect size", fontsize=8)
+        ax.set_title("Effect sizes across candidate cohorts",
+                     fontweight="bold", fontsize=8.5, pad=6)
         ax.legend(fontsize=7, loc="lower right", frameon=False)
         ax.set_xlim(-0.05, max(max(deltas), max(gs)) * 1.25)
         ax.spines["top"].set_visible(False)
