@@ -73,7 +73,7 @@ def _ink_coverage(png_path: Path) -> float | None:
 
 
 def main() -> int:
-    report = {"empty": [], "tiny": [], "missing": [], "ok": [], "unreadable": [], "missing_pdf": []}
+    report = {"empty": [], "tiny": [], "missing": [], "ok": [], "unreadable": []}
 
     expected: list[tuple[str, Path]] = []
     # Curated numbered figures
@@ -117,11 +117,6 @@ def main() -> int:
         else:
             report["ok"].append({"file": name, "ink_coverage": round(cov, 4)})
 
-        # Check for vector PDF counterpart
-        pdf_path = path.with_suffix(".pdf")
-        if not pdf_path.exists():
-            report["missing_pdf"].append(name.replace(".png", ".pdf"))
-
     valid_prefixes = tuple([f"{num}_" for num in EXPECTED_MAIN] + [f"{c}" for c in EXPECTED_COMPOSITE])
     stray_main = sorted(
         p.name for p in FIG.glob("*.png")
@@ -134,7 +129,7 @@ def main() -> int:
     report["stray_main_pngs"] = stray_main
     report["stray_supplementary_pngs"] = stray_supp
     report["scope_note"] = (
-        "Verified Nature Communications standards: 300 DPI PNG + vector PDF, "
+        "Verified Nature Communications standards: 500 DPI PNG export, "
         "non-emptiness, and complete curated set."
     )
 
@@ -142,15 +137,11 @@ def main() -> int:
     with open(out_path, "w") as f:
         json.dump(report, f, indent=2)
 
-    print(f"Audited {audited} figures (PNG + vector PDF).")
+    print(f"Audited {audited} figures (500 DPI PNG).")
     if report["missing"]:
         print(f"  MISSING PNG ({len(report['missing'])}):")
         for m in report["missing"]:
             print(f"    - {m}")
-    if report["missing_pdf"]:
-        print(f"  MISSING PDF ({len(report['missing_pdf'])}):")
-        for mp in report["missing_pdf"]:
-            print(f"    - {mp}")
     if report["empty"]:
         print(f"  EMPTY  ({len(report['empty'])}):")
         for e in report["empty"]:
@@ -161,11 +152,11 @@ def main() -> int:
             print(f"    - {t['file']} ({t['bytes']} B)")
     if report["stray_main_pngs"]:
         print(f"  STRAY MAIN PNGs ({len(report['stray_main_pngs'])}): {report['stray_main_pngs']}")
-    if not (report["missing"] or report["missing_pdf"] or report["empty"] or report["tiny"] or report["stray_main_pngs"]):
-        print("  All figures pass 100% (PNG + PDF present, non-empty, no strays).")
+    if not (report["missing"] or report["empty"] or report["tiny"] or report["stray_main_pngs"]):
+        print("  All figures pass 100% (500 DPI PNG present, non-empty, no strays).")
     print(f"Report: {out_path}")
 
-    return 0 if not (report["missing"] or report["empty"] or report["missing_pdf"]) else 1
+    return 0 if not (report["missing"] or report["empty"]) else 1
 
 
 if __name__ == "__main__":

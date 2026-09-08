@@ -1,4 +1,4 @@
-"""Master script — regenerate all publication figures (PNG only, 300dpi).
+"""Master script — regenerate all publication figures (PNG only, 500dpi).
 
 Usage:
     python projects/NeuralTF/scripts/generate_publication_figures.py

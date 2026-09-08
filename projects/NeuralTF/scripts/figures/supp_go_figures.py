@@ -90,7 +90,7 @@ def fig_s1_go_landscape():
 
     fig.tight_layout()
     save_sup(fig, "fig_s1_go_landscape")
-    print("  wrote fig_s1_go_landscape (PNG + PDF)")
+    print("  wrote fig_s1_go_landscape (PNG)")
 
 
 def fig_s2_go_namespace_and_track():
@@ -155,7 +155,7 @@ def fig_s2_go_namespace_and_track():
 
     fig.tight_layout()
     save_sup(fig, "fig_s2_go_namespace_and_track")
-    print("  wrote fig_s2_go_namespace_and_track (PNG + PDF)")
+    print("  wrote fig_s2_go_namespace_and_track (PNG)")
 
 
 if __name__ == "__main__":

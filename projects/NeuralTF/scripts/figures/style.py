@@ -32,7 +32,7 @@ plt.rcParams.update({
     "xtick.direction": "out",
     "ytick.direction": "out",
     "legend.fontsize": 7,
-    "figure.dpi": 300,
+    "figure.dpi": 500,
     "pdf.fonttype": 42,
     "ps.fonttype": 42,
 })
@@ -146,23 +146,15 @@ def load_sens_top10():
     return _csv(FIG / "weight_sensitivity_top10_challengers.csv")
 
 
-def save(fig, name, dpi=300):
-    """Save figure in publication-quality PNG and vector PDF."""
+def save(fig, name, dpi=500):
+    """Save figure in publication-quality 500 DPI PNG."""
     fig.savefig(FIG / f"{name}.png", dpi=dpi, bbox_inches="tight", facecolor="white")
-    try:
-        fig.savefig(FIG / f"{name}.pdf", bbox_inches="tight", facecolor="white")
-    except Exception:
-        pass
     plt.close(fig)
 
 
-def save_sup(fig, name, dpi=300):
-    """Save supplementary figure in publication-quality PNG and vector PDF."""
+def save_sup(fig, name, dpi=500):
+    """Save supplementary figure in publication-quality 500 DPI PNG."""
     fig.savefig(SUP / f"{name}.png", dpi=dpi, bbox_inches="tight", facecolor="white")
-    try:
-        fig.savefig(SUP / f"{name}.pdf", bbox_inches="tight", facecolor="white")
-    except Exception:
-        pass
     plt.close(fig)
 
 
