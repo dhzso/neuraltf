@@ -54,6 +54,7 @@ def build():
     ax1.set_ylim([-0.02, 1.02])
     ax1.spines["top"].set_visible(False)
     ax1.spines["right"].set_visible(False)
+    panel_tag(ax1, "a")
 
     baseline = data.get("honest", data.get("circular", {})).get(
         "pr", {}).get("baseline", 0.15)
@@ -68,6 +69,7 @@ def build():
     ax2.set_ylim([-0.02, 1.02])
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
+    panel_tag(ax2, "b")
 
     fig.tight_layout()
     save(fig, "23_roc_pr_curve")

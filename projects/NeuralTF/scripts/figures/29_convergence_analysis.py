@@ -78,6 +78,9 @@ def build():
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
+    panel_tag(ax1, "a")
+    panel_tag(ax2, "b")
+
     fig.tight_layout()
     save(fig, "29_convergence_analysis")
 

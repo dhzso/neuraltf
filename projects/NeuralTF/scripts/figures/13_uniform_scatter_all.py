@@ -25,10 +25,10 @@ def build():
 
     panels = [
         (ax1, df["dirichlet_median_score"].values, "Centered Dirichlet (k=40)", "a"),
-        (ax2, df["uniform_median_score"].values, "Uniform Dirichlet (α=1)", "b")
+        (ax2, df["uniform_median_score"].values, "Uniform Dirichlet (\u03b1=1)", "b")
     ]
 
-    for ax, y, title, panel_tag in panels:
+    for ax, y, title, tag in panels:
         mask = ~(np.isnan(x) | np.isnan(y))
         x_m, y_m = x[mask], y[mask]
         
@@ -56,6 +56,7 @@ def build():
         ax.set_ylim(lo, hi)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
+        panel_tag(ax, tag)
 
     ax1.set_ylabel("Dirichlet median score", fontsize=8)
 
