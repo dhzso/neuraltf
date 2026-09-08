@@ -66,7 +66,7 @@ def build():
         Line2D([0], [0], color=C_A, marker="o", lw=1.5, markersize=5, label="Track A (benchmark)"),
         Line2D([0], [0], color=C_B, marker="o", lw=1.5, markersize=5, label="Track B (candidate)")
     ]
-    ax.legend(handles=legend_handles, loc="lower right", frameon=False, fontsize=7)
+    ax.legend(handles=legend_handles, loc="upper left", frameon=False, fontsize=7)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 

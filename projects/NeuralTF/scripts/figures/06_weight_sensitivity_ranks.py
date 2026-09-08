@@ -75,7 +75,7 @@ def build():
     handles, labels_leg = ax.get_legend_handles_labels()
     handles.extend(track_handles)
     labels_leg.extend(["Track A (benchmark)","Track B (candidate)","Other candidate"])
-    ax.legend(handles, labels_leg, frameon=False, fontsize=6.5, loc="lower right")
+    ax.legend(handles, labels_leg, frameon=False, fontsize=6.5, loc="upper right")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()

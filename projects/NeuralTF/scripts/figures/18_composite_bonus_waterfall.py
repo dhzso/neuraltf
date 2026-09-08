@@ -90,9 +90,9 @@ def build():
     ax.set_xlabel("Composite score", fontsize=8)
     ax.set_ylabel("Candidate", fontsize=8)
     ax.set_title("Score composition (top 10 TFs)",
-                 fontweight="bold", fontsize=8.5, pad=6)
-    ax.legend(loc="lower right", frameon=False, fontsize=7)
-    ax.set_xlim(0, 1.15)
+                 fontweight="bold", fontsize=8.5, pad=18)
+    ax.legend(loc="lower left", bbox_to_anchor=(0.0, 1.02), ncol=4, frameon=False, fontsize=6.8)
+    ax.set_xlim(0, 1.25)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()

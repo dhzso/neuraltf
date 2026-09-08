@@ -68,8 +68,7 @@ def build():
     for _, r in df_b.iterrows():
         ranks = [r["fixed"], r["centered"], r["uniform"]]
         ax2.plot(x_pos, ranks, "o-", color=C_B, lw=1.3, markersize=4, alpha=0.85, zorder=3)
-        # Clean long name
-        disp_name = r["name"] if len(r["name"]) <= 16 else r["name"].split()[0]
+        disp_name = clean_gene_symbol(r["name"], r["gene_id"])
         ax2.text(-0.08, ranks[0], f"{disp_name} (#{int(ranks[0])})",
                  ha="right", va="center", fontsize=6.5, color=C_B, fontweight="bold")
         ax2.text(2.08, ranks[2], f"#{int(ranks[2])}",

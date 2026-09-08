@@ -17,17 +17,17 @@ def build():
     sorted_indices = sorted(neural.index, key=lambda idx: track_sort_key(neural.loc[idx]))
     df = neural.loc[sorted_indices].copy().reset_index(drop=True)
     
-    streams = [s for s in STREAM_COLS if s in df.columns]
+    streams = [s for s in STREAM_HEATMAP_ORDER if s in df.columns]
     mat = df[streams].fillna(0).values
 
-    # Focus on the top 45 neural candidates for maximum readability, or full cohort
+    # Focus on the top 40 neural candidates for maximum readability
     n_show = min(40, len(df))
     df_sub = df.iloc[:n_show]
     mat_sub = mat[:n_show]
 
-    fig = plt.figure(figsize=(W_15COL, 6.2))
-    # Layout: [track bar (0.04), heatmap (0.82), colorbar (0.04)]
-    gs = fig.add_gridspec(1, 3, width_ratios=[0.05, 0.90, 0.05], wspace=0.08)
+    fig = plt.figure(figsize=(W_15COL, 6.4))
+    # Layout: [track bar (0.04), heatmap (0.88), colorbar (0.04)]
+    gs = fig.add_gridspec(1, 3, width_ratios=[0.04, 0.91, 0.04], wspace=0.06)
     ax_track = fig.add_subplot(gs[0, 0])
     ax_main = fig.add_subplot(gs[0, 1])
     ax_cbar = fig.add_subplot(gs[0, 2])
@@ -56,14 +56,14 @@ def build():
     cmap.set_bad("#F5F5F5")
     im = ax_main.imshow(mat_sub, aspect="auto", cmap=cmap, vmin=0, vmax=1, interpolation="nearest")
     ax_main.set_xticks(range(len(streams)))
-    ax_main.set_xticklabels([STREAM_L[s] for s in streams], rotation=40, ha="left", fontsize=7)
+    ax_main.set_xticklabels([STREAM_L[s] for s in streams], rotation=38, ha="left", fontsize=7)
     ax_main.xaxis.tick_top()
     ax_main.xaxis.set_label_position("top")
     
     ylabels = [f"{label(neural, gid)} ({df_sub.iloc[i]['integrated_score']:.2f})" 
                for i, gid in enumerate(df_sub["gene_id"])]
     ax_main.set_yticks(range(n_show))
-    ax_main.set_yticklabels(ylabels, fontsize=6)
+    ax_main.set_yticklabels(ylabels, fontsize=6.5)
             
     ax_main.set_ylabel("Candidate", fontsize=8)
     ax_main.spines[:].set_visible(False)
@@ -79,11 +79,12 @@ def build():
         Patch(facecolor=C_A, label="Track A (benchmark)"),
         Patch(facecolor=C_B, label="Track B (candidate)")
     ]
-    ax_main.legend(handles=leg_handles, loc="upper right", bbox_to_anchor=(1.0, -0.02),
-                  ncol=2, frameon=False, fontsize=7)
+    ax_main.legend(handles=leg_handles, loc="upper right", bbox_to_anchor=(1.0, -0.03),
+                   ncol=2, frameon=False, fontsize=7)
 
     fig.suptitle("Evidence stream profiles (top neural TFs)",
                  fontweight="bold", fontsize=8.5, y=0.99)
+    fig.subplots_adjust(left=0.22, right=0.93, top=0.88, bottom=0.06)
     save(fig, "04_evidence_heatmap_neural")
 
 if __name__=="__main__": build()

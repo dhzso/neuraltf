@@ -36,7 +36,7 @@ def build():
     ax.axvline(x=0.8, color="#888888", lw=0.8, ls="--", label="Threshold = 80%")
     ax.set_xlabel("Top 10 retention frequency", fontsize=8)
     ax.set_ylabel("Candidate", fontsize=8)
-    ax.set_xlim(0, 1.15)
+    ax.set_xlim(0, 1.25)
     ax.set_title("Top 10 retention frequency (1,000 Dirichlet draws)",
                  fontweight="bold", fontsize=8.5, pad=6)
     
@@ -47,7 +47,7 @@ def build():
     handles, labels_leg = ax.get_legend_handles_labels()
     handles.extend(track_handles)
     labels_leg.extend(["Track A (benchmark)","Track B (candidate)","Other candidate"])
-    ax.legend(handles, labels_leg, frameon=False, fontsize=6.5, loc="lower right")
+    ax.legend(handles, labels_leg, frameon=False, fontsize=6.5, loc="lower right", bbox_to_anchor=(0.98, 0.04))
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()

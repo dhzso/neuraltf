@@ -20,9 +20,7 @@ FIGURES = {
     8:  ("08_stream_ablation_global.py",          "Stream ablation global impact"),
     9:  ("09_stream_ablation_candidate.py",       "Stream ablation candidate sensitivity"),
     13: ("13_uniform_scatter_all.py",             "Fixed vs uniform Dirichlet (all)"),
-    14: ("14_uniform_neural_vs_all_rankrank.py",  "Neural vs all rank-rank comparison"),
     15: ("15_method_bumpchart.py",                "3-method rank comparison"),
-    17: ("17_method_rank_correlation.py",         "3-method rank correlation"),
     18: ("18_composite_bonus_waterfall.py",       "Composite bonus waterfall"),
     20: ("20_stream_correlation.py",              "Stream correlation matrix"),
     23: ("23_roc_pr_curve.py",                    "ROC and PR curves"),
@@ -37,6 +35,7 @@ FIGURES = {
     33: ("33_method_agreement_summary.py",        "Method agreement summary"),
     34: ("34_ananse_regulatory_network.py",       "ANANSE regulatory network & targets"),
     35: ("35_meta_analysis_concordance.py",       "Cross-atlas meta-analysis concordance"),
+    36: ("36_regeneration_temporal_dynamics.py",  "Regeneration temporal dynamics"),
 }
 
 COMPOSITE_SCRIPTS = [

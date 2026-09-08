@@ -5,6 +5,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[4]
@@ -77,6 +78,17 @@ STREAM_L = {"expression":          "Expression",
             "neural_specificity":  "Neural specificity",
             "perez_lineage":       "Perez lineage",
             "perez_influence":     "Perez influence"}
+STREAM_HEATMAP_ORDER = [
+    "expression",
+    "specificity",
+    "neural_enriched",
+    "neural_specificity",
+    "reproducibility",
+    "rnai",
+    "perez_lineage",
+    "correlation",
+    "perez_influence",
+]
 # expression=0.2, all 8 others=0.1 (matches EvidenceScorer DEFAULT_WEIGHTS)
 W = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
 
@@ -168,14 +180,80 @@ def save_sup(fig, name, dpi=500):
 
 
 
+def clean_gene_symbol(name: str | None, gid: str | None = None) -> str:
+    """Normalize raw GenBank descriptions and contig strings to clean publication gene symbols.
+
+    e.g. 'Schmidtea mediterranea Zeb-1 mRNA, complete cds' -> 'Zeb-1'
+         'Schmidtea mediterranea aristaless-like homeobox transcription factor (arx) mRNA, complete cds' -> 'arx'
+         'Schmidtea mediterranea snail-1 mRNA, complete cds' -> 'snail-1'
+         'soxB1-2 (not deposited)' -> 'soxB1-2'
+         'dd_Smed_v6_19255_0_1' -> 'dd19255'
+         'dd_Smed_v6_1854_0_1' -> 'dd1854'
+    """
+    s = str(name).strip() if (name is not None and pd.notna(name)) else ""
+    # Strip '(not deposited)'
+    s = re.sub(r"\s*\(\s*not\s+deposited\s*\)", "", s, flags=re.IGNORECASE).strip()
+
+    # GenBank description parsing
+    if "schmidtea" in s.lower() or "mrna" in s.lower() or "cds" in s.lower():
+        # 1. Symbol in parentheses e.g. '... transcription factor (arx) mRNA ...' or '(ascl-2)'
+        m_paren = re.search(
+            r"\(([^()]+)\)\s*(?:mRNA|cds|protein|partial|complete)", s, flags=re.IGNORECASE
+        )
+        if m_paren:
+            cand = m_paren.group(1).strip()
+            if 1 < len(cand) <= 15:
+                return cand
+        # 2. 'Schmidtea mediterranea <Symbol> mRNA'
+        m_gene = re.search(
+            r"Schmidtea\s+mediterranea\s+([A-Za-z0-9/_-]+(?:\s+[0-9/_-]+)?)\s+(?:protein\s+)?(?:mRNA|cds)",
+            s,
+            flags=re.IGNORECASE,
+        )
+        if m_gene:
+            cand = m_gene.group(1).strip()
+            return cand
+        # 3. '<Symbol> mRNA'
+        m_mrna = re.search(
+            r"([A-Za-z0-9/_-]+)\s+(?:protein\s+)?mRNA", s, flags=re.IGNORECASE
+        )
+        if m_mrna:
+            cand = m_mrna.group(1).strip()
+            if cand.lower() not in ("schmidtea", "mediterranea", "protein", "hypothetical"):
+                return cand
+
+    # If s is a valid short biological gene symbol
+    if (
+        s
+        and len(s) < 25
+        and not s.lower().startswith("schmidtea")
+        and "mrna" not in s.lower()
+        and "hypothetical" not in s.lower()
+        and s != "-"
+    ):
+        m_dd = re.search(r"dd_Smed(?:_v[0-9]+)?_([0-9]+)", s)
+        if m_dd:
+            return f"dd{m_dd.group(1)}"
+        return s
+
+    # Fallback to compact contig ID (e.g. dd_Smed_v6_19255_0_1 -> dd19255)
+    target_id = str(gid) if gid else s
+    m_dd = re.search(r"dd_Smed(?:_v[0-9]+)?_([0-9]+)", target_id)
+    if m_dd:
+        return f"dd{m_dd.group(1)}"
+
+    return target_id if target_id else "TF"
+
+
 def label(df, gid):
+    raw_name = ""
     if "gene_name" in df.columns:
         r = df[df["gene_id"] == gid]
         if len(r) > 0:
             n = r.iloc[0].get("gene_name", "")
-            if pd.notna(n) and str(n).strip():
-                return str(n)
-    return gid
+            if pd.notna(n) and str(n).strip() and str(n).strip() != "-":
+                raw_name = str(n).strip()
+    return clean_gene_symbol(raw_name, gid)
 
 
 def panel_tag(ax, letter: str, x: float = -0.12, y: float = 1.05, fontsize: float = 8.5):

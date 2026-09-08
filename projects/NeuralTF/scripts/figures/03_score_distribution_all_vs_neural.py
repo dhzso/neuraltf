@@ -36,7 +36,7 @@ def build():
     ax.set_ylabel("Density", fontsize=8)
     ax.set_title("Score distribution", fontweight="bold", fontsize=8.5, pad=6)
 
-    ax.legend(frameon=False, fontsize=7, loc="upper center")
+    ax.legend(frameon=False, fontsize=7, loc="upper left")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()

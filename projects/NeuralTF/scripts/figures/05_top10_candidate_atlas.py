@@ -82,11 +82,11 @@ def build():
         ax.set_title(title, fontweight="bold", fontsize=8, loc="left", pad=4, color="#222222")
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-        ax.set_xlim(0, 1.15)
+        ax.set_xlim(0, 1.38)
         panel_tag(ax, tag)
 
     ax2.set_xlabel("Prioritization score", fontsize=8)
-    ax1.legend(loc="lower right", frameon=False, fontsize=7)
+    ax1.legend(loc="lower left", bbox_to_anchor=(0.48, 1.02), ncol=2, frameon=False, fontsize=7)
 
     fig.suptitle("Prioritized transcription factors (top 10)",
                  fontweight="bold", fontsize=8.5, y=0.98)

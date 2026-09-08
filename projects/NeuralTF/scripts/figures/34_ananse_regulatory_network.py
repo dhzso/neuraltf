@@ -33,11 +33,13 @@ def build():
                 color=C_A, s=35, edgecolor="#111111", lw=0.6,
                 label="Neural regulators", zorder=4)
 
-    # Annotate top neural TFs
-    for _, r in neural_tfs.iterrows():
-        nm = r["gene_name"] if pd.notna(r["gene_name"]) and r["gene_name"] != "" else r["v6_id"].split("_")[3]
+    # Annotate top neural TFs with staggered text offsets to avoid collisions
+    offsets = [(5, 3), (5, -8), (-35, 4), (5, 4), (5, -6)]
+    for i, (_, r) in enumerate(neural_tfs.iterrows()):
+        nm = clean_gene_symbol(r.get("gene_name"), r.get("v6_id"))
+        ox, oy = offsets[i % len(offsets)]
         ax1.annotate(nm, (r["n_targets_total"], r["n_targets_neuron"]),
-                     xytext=(4, 2), textcoords="offset points",
+                     xytext=(ox, oy), textcoords="offset points",
                      fontsize=6, fontweight="bold", color=C_A)
 
     ax1.plot([0, 800], [0, 800], color="#999999", ls=":", lw=0.8, label="100% neural")
@@ -52,7 +54,7 @@ def build():
     # --- Panel b: Top neural regulators out-degree ---
     neural_sorted = neural_tfs.sort_values("n_targets_neuron", ascending=True)
     y2 = np.arange(len(neural_sorted))
-    labels2 = [r["gene_name"] if pd.notna(r["gene_name"]) and r["gene_name"] != "" else r["v6_id"].split("_")[3]
+    labels2 = [clean_gene_symbol(r.get("gene_name"), r.get("v6_id"))
                for _, r in neural_sorted.iterrows()]
     bar_cols = [C_A if r["proof_status"] == "known_rnai_validated"
                 else (C_B if r["proof_status"] == "novel_candidate" else C_NEURAL)
@@ -76,14 +78,14 @@ def build():
     for _, r in neural_tfs.iterrows():
         raw_tgts = str(r["top_5_targets"]).split(";")
         for t in raw_tgts:
-            clean_t = t.strip()
-            if clean_t and clean_t != "nan":
+            clean_t = clean_gene_symbol(t.strip())
+            if clean_t and clean_t.lower() not in ("nan", "hypothetical", "protein", "-"):
                 target_counts[clean_t] += 1
 
     common_targets = target_counts.most_common(7)
     if common_targets:
         t_names, t_freqs = zip(*reversed(common_targets))
-        t_display = [tn if len(tn) <= 20 else tn[:18] + ".." for tn in t_names]
+        t_display = [tn if len(tn) <= 18 else tn[:16] + ".." for tn in t_names]
         y3 = np.arange(len(t_names))
         ax3.barh(y3, t_freqs, color=C_A, height=0.55, edgecolor="none")
         for i, cnt in enumerate(t_freqs):

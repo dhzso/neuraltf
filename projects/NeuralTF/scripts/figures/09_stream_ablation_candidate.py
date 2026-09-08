@@ -33,14 +33,32 @@ def build():
     df = pd.DataFrame(rows)
     top10_sub = df[df["gene_id"].isin(top10_ids)]
     pivot = top10_sub.pivot_table(index="gene_id", columns="stream", values="rank_change", aggfunc="first")
-    pivot = pivot.reindex(columns=[s for s in STREAM_COLS if s in pivot.columns])
+    pivot = pivot.reindex(columns=[s for s in STREAM_HEATMAP_ORDER if s in pivot.columns])
     pivot["_track"] = pivot.index.map(lambda g: track_map.get(g,""))
     pivot = pivot.sort_values(["_track","gene_id"], ascending=[True,True]).drop(columns=["_track"])
 
     vmax = max(abs(pivot.values.min()), abs(pivot.values.max()), 1)
     norm = mcolors.TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
-    fig, ax = plt.subplots(figsize=(W_15COL, 3.8))
+    fig = plt.figure(figsize=(W_15COL, 4.2))
+    gs = fig.add_gridspec(1, 3, width_ratios=[0.04, 0.91, 0.04], wspace=0.06)
+    ax_track = fig.add_subplot(gs[0, 0])
+    ax = fig.add_subplot(gs[0, 1])
+    ax_cbar = fig.add_subplot(gs[0, 2])
+
+    # 1. Track sidebar
+    track_colors = [C_A if i < 5 else C_B for i in range(len(pivot))]
+    ax_track.imshow([[1] for _ in range(len(pivot))], aspect="auto", cmap="binary", vmin=0, vmax=1)
+    for i, color in enumerate(track_colors):
+        ax_track.add_patch(plt.Rectangle((-0.5, i - 0.5), 1, 1, color=color, ec="none"))
+    ax_track.set_xticks([])
+    ax_track.set_yticks([])
+    ax_track.set_xlim(-0.5, 0.5)
+    ax_track.set_ylim(len(pivot) - 0.5, -0.5)
+    ax_track.set_ylabel("Track", fontsize=7.5, fontweight="bold")
+    ax_track.spines[:].set_visible(False)
+
+    # 2. Main heatmap
     im = ax.imshow(pivot.values, aspect="auto", cmap=plt.cm.RdBu_r, norm=norm, interpolation="nearest")
     ax.set_xticks(range(len(pivot.columns)))
     ax.set_xticklabels([STREAM_L[s] for s in pivot.columns], rotation=38, ha="left", fontsize=7)
@@ -59,21 +77,28 @@ def build():
                 sign_str = f"+{int(v)}" if v > 0 else (f"{int(v)}" if v < 0 else "0")
                 ax.text(j, i, sign_str, ha="center", va="center", fontsize=6.5, color=tc, fontweight="bold")
 
-    # Add divider line between Track A (rows 0-4) and Track B (rows 5-9)
+    # Divider line between Track A and Track B
     ax.axhline(4.5, color="#555555", lw=0.8, ls="--")
-    ax.text(-0.85, 2.0, "Track A\n(benchmark)", ha="center", va="center", fontsize=6.5, color="#222222", rotation=90)
-    ax.text(-0.85, 7.0, "Track B\n(candidate)", ha="center", va="center", fontsize=6.5, color="#222222", rotation=90)
-
     ax.set_ylabel("Candidate", fontsize=8)
     ax.spines[:].set_visible(False)
     
-    cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.03)
+    # 3. Colorbar
+    cbar = fig.colorbar(im, cax=ax_cbar)
     cbar.set_label("Rank shift (Δrank)", fontsize=7.5)
     cbar.ax.tick_params(labelsize=6.5)
 
-    ax.set_title("Candidate stream sensitivity (Δrank)",
-                 fontweight="bold", fontsize=8.5, pad=18)
-    fig.tight_layout()
+    # Legend for track
+    from matplotlib.patches import Patch
+    leg_handles = [
+        Patch(facecolor=C_A, label="Track A (benchmark)"),
+        Patch(facecolor=C_B, label="Track B (candidate)")
+    ]
+    ax.legend(handles=leg_handles, loc="upper right", bbox_to_anchor=(1.0, -0.06),
+              ncol=2, frameon=False, fontsize=7)
+
+    fig.suptitle("Candidate stream sensitivity (Δrank)",
+                 fontweight="bold", fontsize=8.5, y=0.99)
+    fig.subplots_adjust(left=0.22, right=0.93, top=0.84, bottom=0.10)
     save(fig, "09_stream_ablation_candidate")
 
 if __name__=="__main__": build()

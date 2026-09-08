@@ -153,26 +153,26 @@ def fig2_prioritization():
     ax_top.set_yticks(y)
     ax_top.set_yticklabels(labels, fontsize=7)
     ax_top.set_xlabel("Prioritization score", fontsize=7.5)
-    ax_top.set_xlim(0, 1.15)
-    ax_top.set_title("Prioritized transcription factors (top 10)", fontsize=8, pad=4)
+    ax_top.set_xlim(0, 1.25)
+    ax_top.set_title("Prioritized transcription factors (top 10)", fontsize=8, pad=14)
     
     from matplotlib.lines import Line2D
     top_handles = [
         Line2D([0], [0], color="w", marker="s", markerfacecolor=C_A, markersize=6, label="Track A (benchmark)"),
         Line2D([0], [0], color="w", marker="s", markerfacecolor=C_B, markersize=6, label="Track B (candidate)")
     ]
-    ax_top.legend(handles=top_handles, loc="lower right", frameon=False, fontsize=6.5)
+    ax_top.legend(handles=top_handles, loc="lower left", bbox_to_anchor=(0.52, 1.02), ncol=2, frameon=False, fontsize=6.5)
     ax_top.invert_yaxis()
     panel_tag(ax_top, "a")
 
     # --- Panel b: Evidence Heatmap (top 20) ---
     top20 = neural.sort_values("integrated_score", ascending=False).head(20)
-    streams = STREAM_COLS
+    streams = [s for s in STREAM_HEATMAP_ORDER if s in top20.columns]
     mat = top20[streams].fillna(0).values
     names20 = [label(neural, gid) for gid in top20["gene_id"]]
     im = ax_heat.imshow(mat, cmap=plt.cm.Blues, aspect="auto", vmin=0, vmax=1)
     ax_heat.set_xticks(range(len(streams)))
-    ax_heat.set_xticklabels([STREAM_L[s] for s in streams], rotation=40, ha="right", fontsize=6)
+    ax_heat.set_xticklabels([STREAM_L[s] for s in streams], rotation=38, ha="right", fontsize=6)
     ax_heat.set_yticks(range(len(names20)))
     ax_heat.set_yticklabels(names20, fontsize=6)
     ax_heat.set_ylabel("Candidate", fontsize=7.5)
@@ -206,9 +206,9 @@ def fig2_prioritization():
     ax_wf.set_yticklabels([r["name"] for _, r in df_wf.iterrows()], fontsize=6.5)
     ax_wf.set_xlabel("Composite score", fontsize=7.5)
     ax_wf.set_ylabel("Candidate", fontsize=7.5)
-    ax_wf.set_xlim(0, 1.15)
-    ax_wf.set_title("Score composition (top 10)", fontsize=8, pad=4)
-    ax_wf.legend(loc="lower right", frameon=False, fontsize=5.8)
+    ax_wf.set_xlim(0, 1.25)
+    ax_wf.set_title("Score composition (top 10)", fontsize=8, pad=14)
+    ax_wf.legend(loc="lower left", bbox_to_anchor=(0.0, 1.02), ncol=4, frameon=False, fontsize=5.8)
     panel_tag(ax_wf, "c")
 
     for ax in [ax_top, ax_wf]:
@@ -475,7 +475,7 @@ def fig5_benchmarks():
         grn_df = pd.read_csv(grn_p)
         neural_grn = grn_df[grn_df["n_targets_neuron"] > 0].sort_values("n_targets_neuron", ascending=True)
         y_g = np.arange(len(neural_grn))
-        names_g = [r["gene_name"] if pd.notna(r["gene_name"]) and r["gene_name"] != "" else r["v6_id"].split("_")[3]
+        names_g = [clean_gene_symbol(r.get("gene_name"), r.get("v6_id"))
                    for _, r in neural_grn.iterrows()]
         cols_g = [C_A if r["proof_status"] == "known_rnai_validated" else C_B for _, r in neural_grn.iterrows()]
         ax_grn.barh(y_g, neural_grn["n_targets_neuron"], height=0.55, color=cols_g, alpha=0.85)
