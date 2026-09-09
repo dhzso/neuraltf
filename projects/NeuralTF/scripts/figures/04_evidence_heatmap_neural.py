@@ -49,26 +49,19 @@ def build():
     # Clean unique gene labels
     gene_labels = [get_unique_gene_label(r, neural) for _, r in df.iterrows()]
 
-    # 2. Select 7 active evidence streams:
-    # Continuous high-density streams first, then specialized network/correlation streams
+    # 2. Complete canonical 9 evidence streams in standard pipeline order
     streams = [
         "expression",
         "specificity",
+        "neural_enriched",
         "neural_specificity",
         "reproducibility",
+        "rnai",
         "perez_lineage",
-        "perez_influence",
         "correlation",
+        "perez_influence",
     ]
-    stream_labels = [
-        "Bulk Expression",
-        "Bulk Specificity",
-        "Neural Spec. (scRNA)",
-        "Reproducibility",
-        "Lineage Association",
-        "Network Centrality",
-        "Marker Co-expression",
-    ]
+    stream_labels = [STREAM_L[s] for s in streams]
 
     # Extract raw data and mask NaNs (unmeasured/not applicable)
     raw_mat = df[streams].values.astype(float)
@@ -82,11 +75,11 @@ def build():
     # Neutral light gray for missing/unmeasured values
     base_cmap.set_bad(color="#ECEFF1")
 
-    # Dimensions: 8.0 x 12.0 inches at 500 DPI (crisp, balanced publication format)
-    fig = plt.figure(figsize=(8.0, 12.0), dpi=500)
+    # Dimensions: 8.2 x 12.0 inches at 500 DPI (crisp, balanced publication format)
+    fig = plt.figure(figsize=(8.2, 12.0), dpi=500)
     gs = fig.add_gridspec(
         1, 4,
-        width_ratios=[0.022, 0.50, 0.20, 0.26],
+        width_ratios=[0.022, 0.54, 0.18, 0.26],
         wspace=0.10,
         left=0.06,
         right=0.96,
@@ -115,15 +108,13 @@ def build():
     # 2. Main heatmap
     im = ax_main.imshow(masked_mat, aspect="auto", cmap=base_cmap, vmin=0, vmax=1, interpolation="nearest")
     ax_main.set_xticks(range(n_cols))
-    ax_main.set_xticklabels(stream_labels, rotation=35, ha="left", fontsize=6.8, fontweight="bold")
+    ax_main.set_xticklabels(stream_labels, rotation=35, ha="left", fontsize=6.5, fontweight="bold")
     ax_main.xaxis.tick_top()
     ax_main.xaxis.set_label_position("top")
     ax_main.tick_params(axis="x", pad=3)
     ax_main.set_ylim(n_rows - 0.5, -0.5)
     ax_main.axhline(div1, color="white", lw=2.0)
     ax_main.axhline(div2, color="white", lw=2.0)
-    # Subtle separator between dense streams (0..4) and specialized streams (5..6)
-    ax_main.axvline(4.5, color="#B0BEC5", lw=0.8, ls=":")
     ax_main.tick_params(left=False, labelleft=False, bottom=False, labelbottom=False)
     for s in ax_main.spines.values():
         s.set_visible(False)

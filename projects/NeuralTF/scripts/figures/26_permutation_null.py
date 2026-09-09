@@ -66,10 +66,14 @@ def build():
                 testable = df[~df["untestable_by_permutation"].astype(bool)]
             top_real = np.sort(testable["real_integrated_score"].dropna().values)[-10:] \
                 if "real_integrated_score" in testable.columns else np.sort(real_scores)[-10:]
-            for rs in top_real[:-1]:
-                ax.axvline(x=rs, color=C_HL, lw=1.0, linestyle="--", alpha=0.75)
-            ax.axvline(x=top_real[-1], color=C_HL, lw=1.4, linestyle="--",
-                       label="Top 10 candidates")
+            min_c = float(top_real.min())
+            max_c = float(top_real.max())
+            med_c = float(np.median(top_real))
+
+            ax.axvspan(min_c, max_c, color=C_HL, alpha=0.25,
+                       label=f"Top 10 candidates ({min_c:.2f}–{max_c:.2f})")
+            ax.axvline(x=med_c, color=C_HL, lw=1.4, linestyle="-",
+                       label=f"Candidate median ({med_c:.2f})")
 
         p_empirical = df["empirical_p"].min() if "empirical_p" in df.columns else (df["empirical_p_shuffled"].min() if "empirical_p_shuffled" in df.columns else 0.001)
         n_untestable = int(df["untestable_by_permutation"].sum()) if "untestable_by_permutation" in df.columns else 0
@@ -77,17 +81,24 @@ def build():
         n_perm = int(df["n_perm"].iloc[0]) if "n_perm" in df.columns else 30
         p_floor = 1.0 / (n_perm + 1)
         
-        ax.text(0.78, 0.92,
-                f"Min empirical $P = {p_empirical:.4f}$\n"
-                f"Permutations: {n_perm}\n"
-                f"Testable: {n_testable:,}",
+        stats_card = (
+            r"$\bf{Joint\ Permutation\ Null}$" + "\n"
+            f"Min empirical $P \\leq {p_empirical:.4f}$\n"
+            f"Null iterations: $N = {n_perm}$\n"
+            f"Testable candidates: $n = {n_testable:,}$"
+        )
+        ax.text(0.85, 0.88, stats_card,
                 transform=ax.transAxes, ha="right", va="top", fontsize=6.2,
-                color="#222222")
+                color="#222222",
+                bbox=dict(boxstyle="round,pad=0.5", facecolor="#F8F9FA", edgecolor="#D0D7DE", lw=0.6))
 
         ax.set_xlabel("Integrated score", fontsize=7.0)
         ax.set_ylabel("Density", fontsize=7.0)
         ax.set_title("Permutation Null vs Observed Candidate Scores",
                      fontsize=8.0, pad=6)
+        # Ensure sufficient vertical headroom
+        y_max = ax.get_ylim()[1]
+        ax.set_ylim(0, y_max * 1.25)
         ax.legend(fontsize=6.2, frameon=False, loc="upper left")
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)

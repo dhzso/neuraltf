@@ -127,12 +127,12 @@ def build():
     n_total = len(df_sorted)
     streams = ["s_expr", "s_spec", "s_nspec", "s_repro", "s_lineage", "s_inf"]
     stream_names = [
-        "Bulk\nExpr.",
-        "Bulk\nSpec.",
-        "Neural\nSpec.",
-        "Repro-\nducibility",
-        "Lineage\nAssoc.",
-        "Network\nCentrality",
+        "Expression",
+        "Specificity",
+        "Neural\nspecificity",
+        "Reproduc-\nibility",
+        "Perez\nlineage",
+        "Perez\ninfluence",
     ]
     mat = df_sorted[streams].values.astype(float)
     masked_mat = np.ma.masked_invalid(mat)
@@ -198,10 +198,14 @@ def build():
     panel_tag(ax_score, "b", x=-0.06, y=1.12)
     y_pos = np.arange(n_total)
 
-    # Horizontal composite score bars
-    ax_score.barh(y_pos, df_sorted["composite"], height=0.56, color=colors, alpha=0.88, edgecolor="none")
-    # Base score points
-    ax_score.scatter(df_sorted["base"], y_pos, color="#1A1A1A", s=28, zorder=5, edgecolors="white", lw=0.8)
+    # Two-tone stacked horizontal bar chart: Base score + Composite bonus
+    base_scores = df_sorted["base"].values
+    comp_scores = df_sorted["composite"].values
+    bonus_scores = comp_scores - base_scores
+    C_BONUS = "#D9822B"  # Distinct warm amber gold for composite bonus
+
+    ax_score.barh(y_pos, base_scores, height=0.56, color=colors, alpha=0.90, edgecolor="none")
+    ax_score.barh(y_pos, bonus_scores, left=base_scores, height=0.56, color=C_BONUS, alpha=0.90, edgecolor="none")
 
     # Column headers above Panel B
     x_score_col = 1.15
@@ -221,7 +225,7 @@ def build():
                       color=r['family_color'], fontweight="bold")
         # 3. Human ortholog (left-aligned)
         ax_score.text(x_orth_col, y, f"Hs: {r['ortholog']}", va="center", ha="left", fontsize=6.2,
-                      fontstyle="italic", color="#333333")
+                       fontstyle="italic", color="#333333")
 
     ax_score.axhline(div_y, color="#CCCCCC", lw=1.0, ls="--")
     ax_score.set_xlim(0, 2.05)
@@ -249,10 +253,9 @@ def build():
 
     # Unified Legend below Panel B
     leg_handles = [
-        Patch(facecolor=C_A, label="Track A (Benchmark)"),
-        Patch(facecolor=C_B, label="Track B (Candidate)"),
-        Line2D([0], [0], marker="o", color="w", markerfacecolor="#1A1A1A",
-               markeredgecolor="white", markersize=5.0, label="Base score"),
+        Patch(facecolor=C_A, label="Track A: Base score"),
+        Patch(facecolor=C_B, label="Track B: Base score"),
+        Patch(facecolor=C_BONUS, label="Composite bonus"),
     ]
     ax_score.legend(
         handles=leg_handles,

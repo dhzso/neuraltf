@@ -1,7 +1,7 @@
 """Candidate rank stability trajectories across Dirichlet prior weighting schemes.
 
-Single-panel bump chart tracking rank conservation from fixed weights to centered Dirichlet (k=40)
-and uniform Dirichlet (alpha=1) for top prioritized candidates.
+Dual-track bump chart tracking within-track rank conservation from Fixed weights to
+Centered Dirichlet (k=40) and Uniform Dirichlet (alpha=1) for Track A and Track B candidates.
 """
 from __future__ import annotations
 import sys
@@ -11,88 +11,127 @@ from style import *
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.lines import Line2D
+
+
+def get_track_ranks(df, score_col="composite_score"):
+    df_sorted = df.sort_values(score_col, ascending=False).reset_index(drop=True)
+    df_a = df_sorted[df_sorted["proof_status"] == "known_rnai_validated"].reset_index(drop=True)
+    df_a["rank_a"] = df_a.index + 1
+    df_b = df_sorted[df_sorted["proof_status"] == "novel_candidate"].reset_index(drop=True)
+    df_b["rank_b"] = df_b.index + 1
+    return df_a.set_index("gene_id")["rank_a"], df_b.set_index("gene_id")["rank_b"]
 
 
 def build():
-    f10 = load_top10()
+    top10 = load_top10()
     cf = load_centered_full()
     uf = load_uniform_full()
     neural = load_neural()
 
-    fig, ax = plt.subplots(figsize=(W_15COL, 4.6), dpi=500)
+    # True composite score for fixed baseline: integrated_score + bonus_total
+    neural_bonus = cf.set_index("gene_id")["bonus_total"].reindex(neural["gene_id"]).fillna(0.0).values
+    neural["composite_score"] = neural["integrated_score"] + neural_bonus
 
-    methods = ["Fixed Weight", "Dirichlet Centered\n(k=40)", "Dirichlet Uniform\n(\u03b1=1)"]
+    # Rank lookups across the 3 methods using within-track composite scores
+    a_fix, b_fix = get_track_ranks(neural, score_col="composite_score")
+    a_cen, b_cen = get_track_ranks(cf, score_col="composite_score")
+    a_uni, b_uni = get_track_ranks(uf, score_col="composite_score")
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7.8, 4.0), dpi=500)
+    methods = ["Fixed\nWeight", "Centered\nDirichlet (k=40)", "Uniform\nDirichlet (\u03b1=1)"]
     x_pos = [0, 1, 2]
 
-    left_labels = []
-    right_labels = []
+    palette_a = ["#1B365D", "#2B4C6F", "#4A7C59", "#7D5A7D", "#C08A3E", "#65799B"]
+    palette_b = ["#B04A3E", "#D9822B", "#5C82A6", "#8C564B", "#2CA02C", "#9467BD", "#E377C2"]
 
-    for _, r in f10.iterrows():
-        gid = r["gene_id"]
-        nm = clean_gene_symbol(r.get("gene_name", ""), gid)
-        tr = r["track"]
-        color = C_A if tr == "A" else C_B
-        ls = "-" if tr == "A" else "--"
+    # ------------------ PANEL A: Track A (RNAi-Validated) ------------------
+    panel_tag(ax1, "a", x=-0.14, y=1.05)
+    ax1.set_title("Track A: RNAi-Validated Benchmark Regulators", fontsize=7.5, pad=8, fontweight="bold")
 
-        r_fix = neural[neural["gene_id"] == gid].index[0] + 1
-        c_sub = cf[cf["gene_id"].isin(neural["gene_id"])].reset_index(drop=True)
-        r_cen = c_sub[c_sub["gene_id"] == gid].index[0] + 1
-        u_sub = uf[uf["gene_id"].isin(neural["gene_id"])].reset_index(drop=True)
-        r_uni = u_sub[u_sub["gene_id"] == gid].index[0] + 1
-
-        ranks = [r_fix, r_cen, r_uni]
-        ax.plot(x_pos, ranks, marker="o", color=color, linestyle=ls, lw=1.5,
-                markersize=5, alpha=0.9, zorder=4)
-        left_labels.append((r_fix, f"{nm} (#{r_fix})", color))
-        right_labels.append((r_uni, f"#{r_uni} {nm}", color))
-
-    # Declutter left labels
-    left_labels.sort(key=lambda x: x[0])
-    adj_left = []
-    last_y = -999
-    for y, txt, c in left_labels:
-        cur_y = max(y, last_y + 2.2)
-        adj_left.append((cur_y, txt, c))
-        last_y = cur_y
-
-    for y, txt, c in adj_left:
-        ax.text(-0.06, y, txt, ha="right", va="center", fontsize=6.2, color=c)
-
-    # Declutter right labels
-    right_labels.sort(key=lambda x: x[0])
-    adj_right = []
-    last_y = -999
-    for y, txt, c in right_labels:
-        cur_y = max(y, last_y + 2.2)
-        adj_right.append((cur_y, txt, c))
-        last_y = cur_y
-
-    for y, txt, c in adj_right:
-        ax.text(2.06, y, txt, ha="left", va="center", fontsize=6.2, color=c)
-
-    ax.set_xticks(x_pos)
-    ax.set_xticklabels(methods, fontsize=6.8)
-    ax.set_ylabel("Neural Candidate Rank (1–134)", fontsize=7.0)
-    ax.set_ylim(-3, 72)
-    ax.invert_yaxis()
-    ax.set_xlim(-0.85, 2.55)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    # Legend placed cleanly in the middle corridor
-    legend_handles = [
-        Line2D([0], [0], color=C_A, ls="-", lw=1.5, marker="o", markersize=4.5,
-               label="Track A (RNAi-validated benchmark)"),
-        Line2D([0], [0], color=C_B, ls="--", lw=1.5, marker="o", markersize=4.5,
-               label="Track B (Novel candidate)"),
+    # Baseline 5 candidates + uniform entrant dd12722
+    genes_a = [
+        "dd_Smed_v6_19255_0_1",
+        "dd_Smed_v6_16955_0_1",
+        "dd_Smed_v6_11975_0_1",
+        "dd_Smed_v6_22163_0_1",
+        "dd_Smed_v6_14753_0_1",
+        "dd_Smed_v6_12722_0_1",
     ]
-    ax.legend(handles=legend_handles, loc="upper left", bbox_to_anchor=(0.28, 0.68),
-              frameon=False, fontsize=6.2)
 
-    fig.suptitle("Candidate Rank Trajectories Across Dirichlet Prior Weighting",
-                 fontsize=8.0, y=0.98)
-    fig.subplots_adjust(left=0.22, right=0.88, top=0.90, bottom=0.10)
+    for idx, gid in enumerate(genes_a):
+        row = cf[cf["gene_id"] == gid].iloc[0] if len(cf[cf["gene_id"] == gid]) else neural[neural["gene_id"] == gid].iloc[0]
+        nm = clean_gene_symbol(row.get("gene_name", ""), gid)
+        r0 = a_fix.get(gid, 8)
+        r1 = a_cen.get(gid, 8)
+        r2 = a_uni.get(gid, 8)
+        c = palette_a[idx % len(palette_a)]
+
+        if gid == "dd_Smed_v6_12722_0_1":
+            # Entrant line enters at Uniform
+            ax1.plot([1.2, 2.0], [6.3, r2], marker="o", color=c, ls="--", lw=1.5, markersize=5.0, zorder=3)
+            ax1.text(2.08, r2, f"#{r2} {nm} (entrant)", ha="left", va="center", fontsize=6.2, fontweight="bold", color=c)
+        else:
+            ls = "-" if r0 <= 5 else "--"
+            ax1.plot(x_pos, [r0, r1, r2], marker="o", color=c, ls=ls, lw=1.6, markersize=5.5, zorder=4)
+            ax1.text(-0.08, r0, f"#{r0} {nm}", ha="right", va="center", fontsize=6.2, fontweight="bold", color=c)
+            ax1.text(2.08, r2, f"#{r2} {nm}", ha="left", va="center", fontsize=6.2, fontweight="bold", color=c)
+
+    ax1.set_xticks(x_pos)
+    ax1.set_xticklabels(methods, fontsize=6.8)
+    ax1.set_ylabel("Prioritization Rank (Track A)", fontsize=7.0, fontweight="bold")
+    ax1.set_ylim(0.5, 6.5)
+    ax1.invert_yaxis()
+    ax1.set_xlim(-0.75, 2.75)
+    ax1.tick_params(left=False, labelleft=False)
+    ax1.spines["top"].set_visible(False)
+    ax1.spines["right"].set_visible(False)
+    ax1.spines["left"].set_visible(False)
+    ax1.grid(axis="y", color="#EEEEEE", lw=0.6, ls=":")
+
+    # ------------------ PANEL B: Track B (Novel Candidates) ------------------
+    panel_tag(ax2, "b", x=-0.14, y=1.05)
+    ax2.set_title("Track B: Novel Neural TF Candidates", fontsize=7.5, pad=8, fontweight="bold")
+
+    genes_b = [
+        "dd_Smed_v6_13704_0_1",  # ptf-4 (1 -> 1 -> 1)
+        "dd_Smed_v6_18972_0_1",  # dd18972 (2 -> 2 -> 2)
+        "dd_Smed_v6_18719_0_1",  # dd18719 (3 -> 4 -> 6)
+        "dd_Smed_v6_9596_0_1",   # dd9596 (4 -> 3 -> 3)
+        "dd_Smed_v6_10038_0_1",  # Zeb-1 (5 -> 6 -> 9)
+        "dd_Smed_v6_7033_0_1",   # dd7033 (6 -> 5 -> 4)
+        "dd_Smed_v6_17534_0_1",  # arh (7 -> 7 -> 5)
+    ]
+
+    for idx, gid in enumerate(genes_b):
+        row = cf[cf["gene_id"] == gid].iloc[0] if len(cf[cf["gene_id"] == gid]) else neural[neural["gene_id"] == gid].iloc[0]
+        nm = clean_gene_symbol(row.get("gene_name", ""), gid)
+        r0 = b_fix.get(gid, 8)
+        r1 = b_cen.get(gid, 8)
+        r2 = b_uni.get(gid, 8)
+        c = palette_b[idx % len(palette_b)]
+        ls = "-" if r0 <= 5 else "--"
+
+        ax2.plot(x_pos, [r0, r1, r2], marker="s", color=c, ls=ls, lw=1.6, markersize=5.0, zorder=4)
+        # Suffix for entrants on right side
+        suffix = " (entrant)" if r0 > 5 and r2 <= 5 else ""
+        ax2.text(-0.08, r0, f"#{r0} {nm}", ha="right", va="center", fontsize=6.2, fontweight="bold", color=c)
+        ax2.text(2.08, r2, f"#{r2} {nm}{suffix}", ha="left", va="center", fontsize=6.2, fontweight="bold", color=c)
+
+    ax2.set_xticks(x_pos)
+    ax2.set_xticklabels(methods, fontsize=6.8)
+    ax2.set_ylabel("Prioritization Rank (Track B)", fontsize=7.0, fontweight="bold")
+    ax2.set_ylim(0.5, 9.8)
+    ax2.invert_yaxis()
+    ax2.set_xlim(-0.75, 2.90)
+    ax2.tick_params(left=False, labelleft=False)
+    ax2.spines["top"].set_visible(False)
+    ax2.spines["right"].set_visible(False)
+    ax2.spines["left"].set_visible(False)
+    ax2.grid(axis="y", color="#EEEEEE", lw=0.6, ls=":")
+
+    fig.suptitle("Prioritization Rank Trajectories Across Dirichlet Prior Weighting Schemes",
+                 fontsize=8.5, fontweight="bold", y=0.98)
+    fig.subplots_adjust(left=0.10, right=0.88, top=0.84, bottom=0.14, wspace=0.42)
     save(fig, "15_method_bumpchart")
 
 

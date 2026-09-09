@@ -59,22 +59,24 @@ def build():
         colors.append(color)
 
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(y_labels, fontsize=6.0)
+    ax.set_yticklabels(y_labels, fontsize=5.8)
             
-    ax.axvline(x=30, color="#888888", lw=0.8, ls="--", label="Rank = 30")
-    ax.set_xlabel("Candidate rank across 1,000 Dirichlet weight draws", fontsize=7.0)
-    ax.set_ylabel("Candidate", fontsize=7.0)
+    ax.axvline(x=30, color="#666666", lw=0.8, ls="--", label="Top-30 candidate threshold")
+    ax.set_xlabel("Candidate rank across 1,000 centered Dirichlet weight draws", fontsize=7.0)
+    ax.set_ylabel("Prioritized neural candidate / challenger", fontsize=7.0)
     ax.invert_yaxis()
-    ax.set_title("Rank distribution across weight draws", fontsize=8.0, pad=6)
+    ax.set_title("Rank Stability Under Centered Dirichlet Weight Uncertainty (k = 40, 1,000 Draws)",
+                 fontsize=8.0, pad=8)
     
     from matplotlib.lines import Line2D
-    track_handles = [Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=5, label="Track A (benchmark)"),
-                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=5, label="Track B (candidate)"),
-                     Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=5, label="Other candidate")]
-    handles, labels_leg = ax.get_legend_handles_labels()
-    handles.extend(track_handles)
-    labels_leg.extend(["Track A (benchmark)","Track B (candidate)","Other candidate"])
-    ax.legend(handles, labels_leg, frameon=False, fontsize=6.0, loc="upper right")
+    leg_handles = [
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=5.5, label="Track A: Benchmark (RNAi+)"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=5.5, label="Track B: Novel candidate"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=5.5, label="Top-10 challenger (n=48)"),
+        Line2D([0],[0], color="#666666", lw=0.8, ls="--", label="Top-30 threshold (Rank = 30)"),
+    ]
+    ax.legend(handles=leg_handles, frameon=False, fontsize=6.2, loc="lower right",
+              bbox_to_anchor=(0.98, 0.02))
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()
