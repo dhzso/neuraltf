@@ -1,8 +1,12 @@
-"""Top 10 candidates — domain-colored bar chart with track-colored gene names."""
+"""Top 10 prioritized candidates — unified single-panel horizontal atlas."""
 from __future__ import annotations
-import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from style import *
-import matplotlib.pyplot as plt, numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 
@@ -16,6 +20,7 @@ TF_FAMILIES = {
     "p53": "#56B4E9",
 }
 
+
 def tf_family_color(domains_str):
     d = str(domains_str)
     for fam, c in TF_FAMILIES.items():
@@ -23,17 +28,18 @@ def tf_family_color(domains_str):
             return fam, c
     return "Other", "#AAAAAA"
 
+
 def build():
     neural = load_neural()
     top10 = load_top10()
 
     if top10.empty:
-        fig, ax = plt.subplots(figsize=(W_15COL, 4))
+        fig, ax = plt.subplots(figsize=(W_15COL, 4.0))
         ax.text(0.5, 0.5, "No candidates", ha="center", va="center")
         save(fig, "05_top10_candidate_atlas")
         return
 
-    # Extract clean details
+    # Extract candidate metadata
     records = []
     for _, row in top10.iterrows():
         gid = row["gene_id"]
@@ -47,50 +53,89 @@ def build():
         domains = str(row.get("interpro_domains", row.get("domains_all", "")))
         fam, _ = tf_family_color(domains)
         records.append({
-            "gene_id": gid, "name": nm, "track": track,
-            "base": base, "composite": comp,
-            "ortholog": orth_clean, "family": fam,
+            "gene_id": gid,
+            "name": nm,
+            "track": track,
+            "base": base,
+            "composite": comp,
+            "ortholog": orth_clean,
+            "family": fam,
         })
     df = pd.DataFrame(records)
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(W_15COL, 4.8), sharex=True,
-                                   gridspec_kw={"height_ratios": [1, 1], "hspace": 0.35})
+    # Sort Track A and Track B individually by composite score ascending
+    sub_a = df[df["track"] == "A"].sort_values("composite", ascending=True)
+    sub_b = df[df["track"] == "B"].sort_values("composite", ascending=True)
 
-    tracks_data = [("Track A (benchmark)", "A", ax1, C_A, "a"),
-                   ("Track B (candidate)", "B", ax2, C_B, "b")]
+    # Combined layout: Track B on bottom (indices 0..4), Track A on top (indices 6..10), gap at 5
+    n_b = len(sub_b)
+    n_a = len(sub_a)
+    y_b = np.arange(n_b)
+    gap = 1.2
+    y_a = n_b + gap + np.arange(n_a)
 
-    for title, track_code, ax, color, tag in tracks_data:
-        sub = df[df["track"] == track_code].sort_values("composite", ascending=True)
-        y = np.arange(len(sub))
+    fig, ax = plt.subplots(figsize=(W_15COL, 4.6), dpi=500)
 
-        # Horizontal bars for composite score
-        bars = ax.barh(y, sub["composite"], height=0.55, color=color, alpha=0.88,
-                       edgecolor="none", label="Composite score")
-        
-        # Overlay point for base score
-        ax.scatter(sub["base"], y, color="#222222", s=28, zorder=4,
-                   label="Base score", edgecolors="white", lw=0.6)
+    # Bars for Track B
+    ax.barh(y_b, sub_b["composite"], height=0.62, color=C_B, alpha=0.88,
+            edgecolor="none", label="Track B (Candidate)")
+    ax.scatter(sub_b["base"], y_b, color="#222222", s=28, zorder=4,
+               edgecolors="white", lw=0.6, label="Base score")
 
-        # Value annotations
-        for i, (_, r) in enumerate(sub.iterrows()):
-            ax.text(r["composite"] + 0.015, y[i], 
-                    f"{r['composite']:.2f} ({r['family']})",
-                    fontsize=6.5, va="center", color="#222222")
+    for i, (_, r) in enumerate(sub_b.iterrows()):
+        ax.text(r["composite"] + 0.015, y_b[i],
+                f"{r['composite']:.2f} ({r['family']})",
+                fontsize=6.8, va="center", color="#222222")
 
-        ax.set_yticks(y)
-        ax.set_yticklabels(sub["name"], fontsize=7.5)
-        ax.set_title(title, fontweight="bold", fontsize=8, loc="left", pad=4, color="#222222")
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.set_xlim(0, 1.38)
-        panel_tag(ax, tag)
+    # Bars for Track A
+    ax.barh(y_a, sub_a["composite"], height=0.62, color=C_A, alpha=0.88,
+            edgecolor="none", label="Track A (Benchmark)")
+    ax.scatter(sub_a["base"], y_a, color="#222222", s=28, zorder=4,
+               edgecolors="white", lw=0.6)
 
-    ax2.set_xlabel("Prioritization score", fontsize=8)
-    ax1.legend(loc="lower left", bbox_to_anchor=(0.48, 1.02), ncol=2, frameon=False, fontsize=7)
+    for i, (_, r) in enumerate(sub_a.iterrows()):
+        ax.text(r["composite"] + 0.015, y_a[i],
+                f"{r['composite']:.2f} ({r['family']})",
+                fontsize=6.8, va="center", color="#222222")
 
-    fig.suptitle("Prioritized transcription factors (top 10)",
+    # Divider line and section labels
+    div_y = n_b + gap / 2.0 - 0.5
+    ax.axhline(div_y, color="#CCCCCC", lw=0.8, ls="--")
+
+    # Y-ticks
+    all_y = np.concatenate([y_b, y_a])
+    all_names = list(sub_b["name"]) + list(sub_a["name"])
+    ax.set_yticks(all_y)
+    ax.set_yticklabels(all_names, fontsize=7.5)
+
+    # Section annotations on the right or near divider
+    ax.text(0.01, div_y + 0.25, "TRACK A: RNAi-Validated Regulators",
+            fontsize=7.0, fontweight="bold", color=C_A, va="bottom")
+    ax.text(0.01, div_y - 0.25, "TRACK B: Novel Candidate Regulators",
+            fontsize=7.0, fontweight="bold", color=C_B, va="top")
+
+    ax.set_xlabel("Prioritization Score", fontsize=8, fontweight="bold")
+    ax.set_xlim(0, 1.48)
+    ax.set_ylim(-0.8, y_a[-1] + 0.8)
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    # Clean unified legend placed cleanly above axes
+    leg_handles = [
+        Patch(facecolor=C_A, label="Track A (RNAi-validated)"),
+        Patch(facecolor=C_B, label="Track B (Novel candidate)"),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor="#222222",
+               markeredgecolor="white", markersize=5, label="Base score"),
+    ]
+    ax.legend(handles=leg_handles, loc="lower center", bbox_to_anchor=(0.5, 1.02),
+              ncol=3, frameon=False, fontsize=7)
+
+    fig.suptitle("Prioritized Neural Transcription Factors (Top 10 Candidates)",
                  fontweight="bold", fontsize=8.5, y=0.98)
+    fig.subplots_adjust(left=0.18, right=0.96, top=0.88, bottom=0.12)
     save(fig, "05_top10_candidate_atlas")
 
-if __name__=="__main__": build()
 
+if __name__ == "__main__":
+    build()

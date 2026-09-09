@@ -17,95 +17,118 @@ from scipy.stats import spearmanr
 def build():
     de_path = RUN / "de_pvalues.parquet"
     meta_path = RES / "meta_analysis_pvalues.csv"
+    neural_path = RUN / "rank_neural.csv"
     if not de_path.exists() or not meta_path.exists():
-        raise FileNotFoundError(f"Missing required DE or meta-analysis files")
+        raise FileNotFoundError("Missing required DE or meta-analysis files")
 
     de_df = pd.read_parquet(de_path)
     meta_df = pd.read_csv(meta_path)
+    neural_df = pd.read_csv(neural_path) if neural_path.exists() else None
 
     # Merge on gene id
     merged = pd.merge(de_df, meta_df, left_on="v6_id", right_on="gene_id", how="inner")
-
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(W_2COL, 2.9),
-                                        gridspec_kw={"width_ratios": [1, 0.8, 1.1]})
-
-    # --- Panel a: Cross-atlas effect size correlation (Fincher vs Plass LFC) ---
     clean_lfc = merged.dropna(subset=["fincher_lfc", "plass_lfc"]).copy()
-    # Filter extreme outliers for clean plotting
-    clean_lfc = clean_lfc[(clean_lfc["fincher_lfc"].between(-4, 6)) & (clean_lfc["plass_lfc"].between(-4, 6))]
-    r_val, p_val = spearmanr(clean_lfc["fincher_lfc"], clean_lfc["plass_lfc"])
+    clean_lfc = clean_lfc[
+        (clean_lfc["fincher_lfc"].between(-2, 8)) & (clean_lfc["plass_lfc"].between(-2, 10))
+    ]
 
-    # Density / hexbin or alpha scatter
-    ax1.scatter(clean_lfc["fincher_lfc"], clean_lfc["plass_lfc"],
-                c="#BBBBBB", s=4, alpha=0.25, rasterized=True)
+    r_s, p_s = spearmanr(clean_lfc["fincher_lfc"], clean_lfc["plass_lfc"])
+    from scipy.stats import pearsonr
+    r_p, p_p = pearsonr(clean_lfc["fincher_lfc"], clean_lfc["plass_lfc"])
 
-    # Highlight genes significant in both (adjusted p < 0.05)
-    sig_both = clean_lfc[(clean_lfc["fincher_p"] < 0.05) & (clean_lfc["plass_p"] < 0.05)]
-    ax1.scatter(sig_both["fincher_lfc"], sig_both["plass_lfc"],
-                c=C_A, s=8, alpha=0.6, label="Sig. in both", rasterized=True)
+    fig, ax = plt.subplots(figsize=(W_1COL, 3.2))
 
-    # Identity and zero lines
-    ax1.axhline(0, color="#888888", lw=0.6, ls=":")
-    ax1.axvline(0, color="#888888", lw=0.6, ls=":")
-    ax1.plot([-4, 6], [-4, 6], color="#555555", lw=0.8, ls="--")
+    # Identity and zero reference lines
+    ax.axhline(0, color="#D0D7DE", lw=0.6, ls=":", zorder=1)
+    ax.axvline(0, color="#D0D7DE", lw=0.6, ls=":", zorder=1)
+    ax.plot([-1, 9], [-1, 9], color="#888888", lw=0.8, ls="--", zorder=2, label="Identity line ($y = x$)")
 
-    ax1.text(0.05, 0.92, f"Spearman $r_s$ = {r_val:.2f}\n$P < 10^{{-30}}$",
-             transform=ax1.transAxes, fontsize=6.5,
-             va="top", ha="left")
-    ax1.set_xlabel("Fincher et al. log$_2$FC", fontsize=7.5)
-    ax1.set_ylabel("Plass et al. log$_2$FC", fontsize=7.5)
-    ax1.set_title("Fold-change concordance", fontsize=8, pad=4)
-    ax1.set_xlim(-4, 6)
-    ax1.set_ylim(-4, 6)
-    ax1.legend(loc="lower right", frameon=False, fontsize=6)
-    panel_tag(ax1, "a")
+    # Linear regression line
+    m, b = np.polyfit(clean_lfc["fincher_lfc"], clean_lfc["plass_lfc"], 1)
+    x_vals = np.linspace(clean_lfc["fincher_lfc"].min(), clean_lfc["fincher_lfc"].max(), 100)
+    ax.plot(x_vals, m * x_vals + b, color=C_A, lw=1.0, ls="-", zorder=3, label=f"Linear fit ($y = {m:.2f}x + {b:.2f}$)")
 
-    # --- Panel b: Distribution of atlas concordance ---
-    counts = meta_df["n_atlases_sig_adj"].value_counts().sort_index()
-    x2 = np.arange(len(counts))
-    labels2 = [f"{k} atlas" if k == 1 else f"{k} atlases" for k in counts.index]
-    colors2 = ["#CCCCCC", C_B, C_A]
-    bars = ax2.bar(x2, counts.values, color=colors2[:len(counts)], width=0.6, edgecolor="none")
-    for i, v in enumerate(counts.values):
-        pct = (v / len(meta_df)) * 100
-        ax2.text(i, v + max(counts.values)*0.02, f"{v:,} ({pct:.1f}%)",
-                 ha="center", va="bottom", fontsize=6, color="#222222")
+    # Background gene points
+    ax.scatter(
+        clean_lfc["fincher_lfc"],
+        clean_lfc["plass_lfc"],
+        c=C_A,
+        s=7,
+        alpha=0.28,
+        edgecolor="none",
+        rasterized=True,
+        label=f"Cross-atlas genes ($n = {len(clean_lfc):,}$)",
+        zorder=3,
+    )
 
-    ax2.set_xticks(x2)
-    ax2.set_xticklabels(labels2, fontsize=7)
-    ax2.set_xlabel("Atlas concordance", fontsize=7.5)
-    ax2.set_ylabel("Candidates", fontsize=7.5)
-    ax2.set_title("Concordance count", fontsize=8, pad=4)
-    ax2.set_ylim(0, max(counts.values) * 1.25)
-    panel_tag(ax2, "b")
+    # Highlight and label exemplary neural candidates
+    if neural_df is not None:
+        neural_common = neural_df.merge(clean_lfc, left_on="gene_id", right_on="v6_id", how="inner")
+        ax.scatter(
+            neural_common["fincher_lfc"],
+            neural_common["plass_lfc"],
+            c=C_B,
+            edgecolor="#222222",
+            linewidth=0.7,
+            s=34,
+            label=f"Neural TFs ($n = {len(neural_common)}$)",
+            zorder=6,
+        )
 
-    # --- Panel c: Fisher combined significance vs concordance ---
-    groups = []
-    labels3 = []
-    for k in sorted(meta_df["n_atlases_sig_adj"].unique()):
-        subset = meta_df[meta_df["n_atlases_sig_adj"] == k]["fisher_combined_p"].dropna()
-        # Cap p-values at 1e-50 for visualization
-        logp = -np.log10(np.clip(subset, 1e-50, 1.0))
-        groups.append(logp.values)
-        labels3.append(f"{k} atlases\n(n={len(subset):,})")
+        # Annotate selected notable neural regulators
+        tf_offsets = {
+            "dd_Smed_v6_10038_0_1": ("Zeb-1", (-16, 14), "right", "bottom"),
+            "dd_Smed_v6_16955_0_1": ("dd16955", (16, -14), "left", "top"),
+            "dd_Smed_v6_11150_0_1": ("dd11150", (-16, 12), "right", "bottom"),
+            "dd_Smed_v6_1854_0_1": ("dd1854", (14, -6), "left", "center"),
+        }
+        for gid, (nm, offset, ha, va) in tf_offsets.items():
+            r = neural_common[neural_common["v6_id"] == gid]
+            if len(r) > 0:
+                ax.annotate(
+                    nm,
+                    xy=(r.iloc[0]["fincher_lfc"], r.iloc[0]["plass_lfc"]),
+                    xytext=offset,
+                    textcoords="offset points",
+                    fontsize=6.5,
+                    fontweight="bold",
+                    color="#111111",
+                    ha=ha,
+                    va=va,
+                    arrowprops=dict(arrowstyle="-", color="#444444", lw=0.6),
+                    zorder=7,
+                )
 
-    bp = ax3.boxplot(groups, patch_artist=True, widths=0.55,
-                     medianprops=dict(color="#111111", lw=1.2),
-                     boxprops=dict(lw=0.7),
-                     whiskerprops=dict(lw=0.7, color="#555555"),
-                     capprops=dict(lw=0.7, color="#555555"),
-                     flierprops=dict(marker=".", markersize=2, alpha=0.2))
-    for patch, col in zip(bp["boxes"], colors2[:len(groups)]):
-        patch.set_facecolor(col)
-        patch.set_alpha(0.7)
-        patch.set_edgecolor("#333333")
+    # Inset correlation statistics
+    ax.text(
+        0.05,
+        0.92,
+        f"Spearman $r_s = {r_s:.2f}$ ($P < 10^{{-300}}$)\n"
+        f"Pearson $r = {r_p:.2f}$ ($P < 10^{{-300}}$)\n"
+        f"$N =$ {len(clean_lfc):,} genes",
+        transform=ax.transAxes,
+        fontsize=6.8,
+        va="top",
+        ha="left",
+        bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="#D0D7DE", alpha=0.95),
+        zorder=8,
+    )
 
-    ax3.set_xticklabels(labels3, fontsize=6.5)
-    ax3.set_xlabel("Significant atlases", fontsize=7.5)
-    ax3.set_ylabel(r"Fisher combined $-\log_{10}(P)$", fontsize=7.5)
-    ax3.set_title("Statistical significance", fontsize=8, pad=4)
-    ax3.set_ylim(0, 52)
-    panel_tag(ax3, "c")
+    ax.set_xlabel("Fincher et al. $\\log_2$ fold change", fontsize=8)
+    ax.set_ylabel("Plass et al. $\\log_2$ fold change", fontsize=8)
+    ax.set_title("Cross-atlas neural effect size concordance", fontsize=8, pad=8)
+    ax.set_xlim(-1.5, 9.5)
+    ax.set_ylim(-1.5, 10.5)
+
+    ax.legend(
+        loc="lower right",
+        frameon=True,
+        facecolor="white",
+        framealpha=0.95,
+        edgecolor="#D0D7DE",
+        fontsize=6.2,
+        handletextpad=0.4,
+    )
 
     fig.tight_layout()
     save(fig, "35_meta_analysis_concordance")

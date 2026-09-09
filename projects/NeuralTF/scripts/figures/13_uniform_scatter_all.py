@@ -1,77 +1,86 @@
-"""Uniform Dirichlet — integrated score vs uniform median (all TF candidates)."""
+"""Uniform Dirichlet robustness — integrated score vs uninformative Dirichlet median (all candidates).
+
+Single-panel scatter plot evaluating global score stability across all planarian TFs under
+1,000 Dirichlet weight draws from a uniform prior (alpha = 1).
+"""
 from __future__ import annotations
-import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from style import *
-import matplotlib.pyplot as plt, numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from scipy.stats import spearmanr
+from matplotlib.lines import Line2D
+
 
 def build():
-    centered = load_centered_full()
     uniform = load_uniform_full()
     all_df = load_all()
 
     # Merge on gene_id
     df = all_df[["gene_id", "integrated_score", "proof_status"]].merge(
-        centered[["gene_id", "dirichlet_median_score"]], on="gene_id", how="inner"
-    ).merge(
         uniform[["gene_id", "uniform_median_score"]], on="gene_id", how="inner"
     )
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(W_2COL, 3.4), sharey=True)
+    fig, ax = plt.subplots(figsize=(W_15COL, 3.8), dpi=500)
 
     x = df["integrated_score"].values
+    y = df["uniform_median_score"].values
     proof = df["proof_status"].fillna("").values
-    colors = [C_A if "validated" in str(p).lower() else (C_B if "novel" in str(p).lower() else "#B0BEC5") for p in proof]
 
-    panels = [
-        (ax1, df["dirichlet_median_score"].values, "Centered Dirichlet (k=40)", "a"),
-        (ax2, df["uniform_median_score"].values, "Uniform Dirichlet (\u03b1=1)", "b")
-    ]
+    mask = ~(np.isnan(x) | np.isnan(y))
+    x_m, y_m = x[mask], y[mask]
+    proof_m = proof[mask]
 
-    for ax, y, title, tag in panels:
-        mask = ~(np.isnan(x) | np.isnan(y))
-        x_m, y_m = x[mask], y[mask]
-        
-        # Background candidates
-        bg_mask = np.array([c == "#B0BEC5" for c in colors])[mask]
-        ax.scatter(x_m[bg_mask], y_m[bg_mask], s=8, color="#B0BEC5", alpha=0.35, edgecolors="none")
-        
-        # Highlight candidates (Track A & B)
-        hl_mask = ~bg_mask
-        ax.scatter(x_m[hl_mask], y_m[hl_mask], s=22, c=np.array(colors)[mask][hl_mask],
-                   alpha=0.9, edgecolors="white", lw=0.4, zorder=5)
+    neural = load_neural()
+    track_a_ids = set(neural[neural["proof_status"] == "known_rnai_validated"]["gene_id"])
+    track_b_ids = set(neural[neural["proof_status"] == "novel_candidate"]["gene_id"])
 
-        lo, hi = -0.02, 1.05
-        ax.plot([lo, hi], [lo, hi], "--", color="#555555", lw=0.8, label="y = x (identity)")
-        
-        rho, p = spearmanr(x_m, y_m)
-        p_str = "P < 10^{-30}" if p < 1e-30 else f"P = {p:.1e}"
-        ax.text(0.06, 0.92, f"$r_s = {rho:.3f}$, ${p_str}$",
-                transform=ax.transAxes, fontsize=7.5, va="top", color="#222222")
+    # Partition into Background, Track A, Track B
+    is_val = np.array([gid in track_a_ids for gid in df["gene_id"]])[mask]
+    is_nov = np.array([gid in track_b_ids for gid in df["gene_id"]])[mask]
+    is_bg = ~(is_val | is_nov)
 
-        ax.set_xlabel("Fixed weight score", fontsize=8)
-        ax.set_title(title, fontweight="bold", fontsize=8.5, pad=6)
-        ax.set_xlim(lo, hi)
-        ax.set_ylim(lo, hi)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        panel_tag(ax, tag)
+    # 1. Background candidates (unfiltered transcriptome)
+    ax.scatter(x_m[is_bg], y_m[is_bg], s=8, color="#C8CED6", alpha=0.3,
+               edgecolors="none", label=f"Transcriptome-wide (n={np.sum(is_bg):,})")
 
-    ax1.set_ylabel("Dirichlet median score", fontsize=8)
+    # 2. Track A (RNAi-validated benchmark)
+    ax.scatter(x_m[is_val], y_m[is_val], s=28, color=C_A, alpha=0.92,
+               edgecolors="white", lw=0.5, zorder=5, label=f"Track A: Validated (n={np.sum(is_val)})")
 
-    from matplotlib.lines import Line2D
-    legend_handles = [
-        Line2D([0], [0], marker="o", color="w", markerfacecolor=C_A, markersize=6, label="Track A (benchmark)"),
-        Line2D([0], [0], marker="o", color="w", markerfacecolor=C_B, markersize=6, label="Track B (candidate)"),
-        Line2D([0], [0], marker="o", color="w", markerfacecolor="#B0BEC5", markersize=5, label="Other candidate"),
-        Line2D([0], [0], color="#555555", ls="--", lw=0.8, label="Identity")
-    ]
-    ax2.legend(handles=legend_handles, frameon=False, fontsize=6.8, loc="lower right")
+    # 3. Track B (Novel candidates)
+    ax.scatter(x_m[is_nov], y_m[is_nov], s=28, color=C_B, alpha=0.92,
+               edgecolors="white", lw=0.5, zorder=6, label=f"Track B: Novel (n={np.sum(is_nov)})")
 
-    fig.suptitle("Score concordance across weighting schemes",
-                 fontweight="bold", fontsize=8.5, y=0.99)
-    fig.tight_layout()
+    # Identity reference line
+    lo, hi = -0.02, 1.05
+    ax.plot([lo, hi], [lo, hi], "--", color="#666666", lw=0.8, label="y = x (identity)")
+
+    # Spearman correlation
+    rho, p = spearmanr(x_m, y_m)
+    p_str = "P < 10^{-300}" if p < 1e-300 else f"P = {p:.1e}"
+    ax.text(0.05, 0.93, f"Spearman $r_s = {rho:.3f}$\n${p_str}$\n$N = {len(x_m):,}$",
+            transform=ax.transAxes, fontsize=7.5, va="top", color="#222222",
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#DDDDDD", lw=0.5))
+
+    ax.set_xlabel("Fixed Weight Integrated Score", fontsize=8, fontweight="bold")
+    ax.set_ylabel("Uniform Dirichlet Median Score (1,000 Draws)", fontsize=8, fontweight="bold")
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, hi)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    # Legend cleanly positioned at lower right
+    ax.legend(loc="lower right", frameon=False, fontsize=7)
+
+    fig.suptitle("Score Invariance Under Uninformative Dirichlet Prior Weighting",
+                 fontweight="bold", fontsize=8.5, y=0.98)
+    fig.subplots_adjust(left=0.14, right=0.96, top=0.90, bottom=0.14)
     save(fig, "13_uniform_scatter_all")
 
-if __name__=="__main__": build()
 
+if __name__ == "__main__":
+    build()

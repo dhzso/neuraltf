@@ -14,89 +14,110 @@ import pandas as pd
 from collections import Counter
 
 def build():
-    data_path = RES / "ananse_top_regulators.csv"
+    data_path = RES / "ananse_network_full.csv"
+    if not data_path.exists():
+        data_path = RES / "ananse_top_regulators.csv"
     if not data_path.exists():
         raise FileNotFoundError(f"{data_path} missing")
 
     df = pd.read_csv(data_path)
+    if "is_ananse_tf" in df.columns:
+        tfs = df[df["is_ananse_tf"] == True].copy()
+    else:
+        tfs = df.copy()
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(W_2COL, 2.9),
-                                        gridspec_kw={"width_ratios": [1.1, 1.2, 0.9]})
+    neural_tfs = tfs[tfs["n_targets_neuron"] > 0].copy()
+    other_tfs = tfs[tfs["n_targets_neuron"] == 0].copy()
 
-    # --- Panel a: Neural vs total targets across all TFs ---
-    neural_tfs = df[df["n_targets_neuron"] > 0].copy()
-    other_tfs = df[df["n_targets_neuron"] == 0].copy()
+    fig, ax = plt.subplots(figsize=(W_1COL, 3.2))
 
-    ax1.scatter(other_tfs["n_targets_total"], [0]*len(other_tfs),
-                color="#CCCCCC", s=25, alpha=0.8, label="Other lineage TFs", zorder=3)
-    ax1.scatter(neural_tfs["n_targets_total"], neural_tfs["n_targets_neuron"],
-                color=C_A, s=35, edgecolor="#111111", lw=0.6,
-                label="Neural regulators", zorder=4)
+    # Reference line: 100% neuron-specific targets (y = x) anchored along specific candidates
+    ax.plot([0, 260], [0, 260], color="#888888", ls="--", lw=0.9, zorder=1, label="100% neuron-specific ($y = x$)")
 
-    # Annotate top neural TFs with staggered text offsets to avoid collisions
-    offsets = [(5, 3), (5, -8), (-35, 4), (5, 4), (5, -6)]
-    for i, (_, r) in enumerate(neural_tfs.iterrows()):
-        nm = clean_gene_symbol(r.get("gene_name"), r.get("v6_id"))
-        ox, oy = offsets[i % len(offsets)]
-        ax1.annotate(nm, (r["n_targets_total"], r["n_targets_neuron"]),
-                     xytext=(ox, oy), textcoords="offset points",
-                     fontsize=6, fontweight="bold", color=C_A)
+    # Non-neural lineage TFs (at y = 0)
+    ax.scatter(
+        other_tfs["n_targets_total"],
+        other_tfs["n_targets_neuron"],
+        color="#CCCCCC",
+        edgecolor="#888888",
+        linewidth=0.5,
+        s=28,
+        alpha=0.75,
+        label=f"Other lineage TFs ($n = {len(other_tfs)}$)",
+        zorder=2,
+    )
 
-    ax1.plot([0, 800], [0, 800], color="#999999", ls=":", lw=0.8, label="100% neural")
-    ax1.set_xlabel("Total target genes", fontsize=7.5)
-    ax1.set_ylabel("Neuron target genes", fontsize=7.5)
-    ax1.set_title("Target specificity", fontsize=8, pad=4)
-    ax1.set_xlim(-20, 950)
-    ax1.set_ylim(-20, 500)
-    ax1.legend(loc="upper left", frameon=False, fontsize=6)
-    panel_tag(ax1, "a")
+    # Status colors for neural TFs
+    status_colors = {
+        "known_rnai_validated": C_A,        # Deep navy
+        "novel_candidate": C_B,             # Muted terracotta
+        "prior_fstf_not_tested": "#5C82A6",  # Steel blue
+    }
+    status_labels = {
+        "known_rnai_validated": "RNAi validated",
+        "novel_candidate": "Novel candidate",
+        "prior_fstf_not_tested": "Prior FSTF candidate",
+    }
 
-    # --- Panel b: Top neural regulators out-degree ---
-    neural_sorted = neural_tfs.sort_values("n_targets_neuron", ascending=True)
-    y2 = np.arange(len(neural_sorted))
-    labels2 = [clean_gene_symbol(r.get("gene_name"), r.get("v6_id"))
-               for _, r in neural_sorted.iterrows()]
-    bar_cols = [C_A if r["proof_status"] == "known_rnai_validated"
-                else (C_B if r["proof_status"] == "novel_candidate" else C_NEURAL)
-                for _, r in neural_sorted.iterrows()]
+    # Plot neural TFs by status for clean legend grouping
+    for status, group in neural_tfs.groupby("proof_status"):
+        color = status_colors.get(status, C_A)
+        label_text = status_labels.get(status, status)
+        ax.scatter(
+            group["n_targets_total"],
+            group["n_targets_neuron"],
+            color=color,
+            edgecolor="#222222",
+            linewidth=0.8,
+            s=55,
+            label=label_text,
+            zorder=4,
+        )
 
-    bars = ax2.barh(y2, neural_sorted["n_targets_neuron"], color=bar_cols,
-                    height=0.55, edgecolor="none")
-    for i, (_, r) in enumerate(neural_sorted.iterrows()):
-        ax2.text(r["n_targets_neuron"] + 8, i, f"{int(r['n_targets_neuron'])}",
-                 va="center", ha="left", fontsize=6.5, color="#222222")
+    # Annotate all 5 neural regulators with deliberate non-overlapping offsets and callout lines
+    annotations = [
+        # (gene_id, text, xytext, ha, va)
+        ("dd_Smed_v6_10152_0_1", "dd10152\n(418 / 681)", (16, 4), "left", "center"),
+        ("dd_Smed_v6_2442_0_1", "dd2442\n(217 / 500)", (18, -12), "left", "top"),
+        ("dd_Smed_v6_8820_0_1", "islet1 (175)", (-14, 22), "center", "bottom"),
+        ("dd_Smed_v6_11150_0_1", "dd11150 (156)", (18, 6), "left", "center"),
+        ("dd_Smed_v6_18972_0_1", "dd18972 (149)", (18, -16), "left", "top"),
+    ]
 
-    ax2.set_yticks(y2)
-    ax2.set_yticklabels(labels2, fontsize=7)
-    ax2.set_xlabel("Neuron target genes", fontsize=7.5)
-    ax2.set_title("Neuron out-degree", fontsize=8, pad=4)
-    ax2.set_xlim(0, 500)
-    panel_tag(ax2, "b")
+    for gid, txt, offset, ha, va in annotations:
+        match = neural_tfs[neural_tfs["v6_id"] == gid]
+        if len(match) > 0:
+            x_val = match.iloc[0]["n_targets_total"]
+            y_val = match.iloc[0]["n_targets_neuron"]
+            ax.annotate(
+                txt,
+                xy=(x_val, y_val),
+                xytext=offset,
+                textcoords="offset points",
+                fontsize=6.5,
+                ha=ha,
+                va=va,
+                arrowprops=dict(arrowstyle="-", color="#555555", lw=0.6),
+                zorder=5,
+            )
 
-    # --- Panel c: Shared downstream neural targets ---
-    target_counts = Counter()
-    for _, r in neural_tfs.iterrows():
-        raw_tgts = str(r["top_5_targets"]).split(";")
-        for t in raw_tgts:
-            clean_t = clean_gene_symbol(t.strip())
-            if clean_t and clean_t.lower() not in ("nan", "hypothetical", "protein", "-"):
-                target_counts[clean_t] += 1
+    ax.set_xlabel("Total predicted target genes ($k_{\\mathrm{total}}$)", fontsize=8)
+    ax.set_ylabel("Neuron target genes ($k_{\\mathrm{neuron}}$)", fontsize=8)
+    ax.set_title("ANANSE regulatory network target specificity", fontsize=8, pad=8)
+    ax.set_xlim(-30, 950)
+    ax.set_ylim(-20, 520)
 
-    common_targets = target_counts.most_common(7)
-    if common_targets:
-        t_names, t_freqs = zip(*reversed(common_targets))
-        t_display = [tn if len(tn) <= 18 else tn[:16] + ".." for tn in t_names]
-        y3 = np.arange(len(t_names))
-        ax3.barh(y3, t_freqs, color=C_A, height=0.55, edgecolor="none")
-        for i, cnt in enumerate(t_freqs):
-            ax3.text(cnt + 0.1, i, f"{cnt}/{len(neural_tfs)}",
-                     va="center", ha="left", fontsize=6, color="#222222")
-        ax3.set_yticks(y3)
-        ax3.set_yticklabels(t_display, fontsize=6.5)
-        ax3.set_xlabel("Regulating TFs", fontsize=7.5)
-        ax3.set_title("Core regulated targets", fontsize=8, pad=4)
-        ax3.set_xlim(0, len(neural_tfs) + 1.2)
-    panel_tag(ax3, "c")
+    # Position legend cleanly in upper left with solid white background to eliminate interference
+    ax.legend(
+        loc="upper left",
+        frameon=True,
+        facecolor="white",
+        framealpha=1.0,
+        edgecolor="#D0D7DE",
+        fontsize=6.2,
+        handletextpad=0.4,
+        borderpad=0.5,
+    )
 
     fig.tight_layout()
     save(fig, "34_ananse_regulatory_network")

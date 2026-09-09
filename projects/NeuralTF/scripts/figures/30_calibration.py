@@ -1,94 +1,84 @@
-"""Calibration and rank discrimination diagram for the integrated score.
+"""Empirical decile calibration diagram for the integrated evidence score.
 
-The integrated score is an evidence-weight aggregation, not a probability.
-Rank discrimination measures whether top-ranked candidates enrich RNAi-validated
-neural TFs.
-Panel a: Empirical validation rate per score decile with Wilson 95% CIs.
-Panel b: Cumulative recovery of known validated neural TFs across score deciles.
+Single-panel evaluation of rank discrimination and score calibration:
+- Validated neural TF rate across score deciles (D1 lowest to D10 highest)
+- Wilson 95% binomial confidence intervals
+- Genome-wide background prevalence reference line
+- Top-decile enrichment fold-change annotation
 """
 from __future__ import annotations
-import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from style import *
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import json
 
+
 def build():
     data_path = RES / "calibration_stats.json"
     if not data_path.exists():
-        raise FileNotFoundError(f"{data_path} missing - run scripts/stats/calibration.py first")
+        raise FileNotFoundError(f"{data_path} missing — run scripts/stats/calibration.py first")
 
     with open(data_path) as f:
         data = json.load(f)
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(W_2COL, 2.7))
 
     stats_list = data.get("bin_stats", [])
     if not stats_list:
         raise ValueError("calibration_stats.json carries no bin_stats")
     bin_df = pd.DataFrame(stats_list)
-    # Order deciles from 1 (lowest) to 10 (highest score)
+
+    # Order deciles from D1 (lowest) to D10 (highest score)
     bin_df = bin_df.sort_values("mean_score", ascending=True).reset_index(drop=True)
-    decile_labels = [f"D{i+1}" for i in range(len(bin_df))]
+    decile_labels = [f"D{i+1}\n({bin_df.iloc[i]['mean_score']:.2f})" for i in range(len(bin_df))]
     x = np.arange(len(bin_df))
     observed = bin_df["empirical_positive_rate"].to_numpy(dtype=float)
     counts = bin_df["n_candidates"].to_numpy(dtype=float)
-    positives = bin_df["n_positives"].to_numpy(dtype=int)
     prevalence = float(data["prevalence"])
-    total_pos = int(data["n_positives"])
 
-    # Panel a: Empirical validation rate
-    colors = [C_A if obs > prevalence else "#CCCCCC" for obs in observed]
-    bars = ax1.bar(x, observed * 100, color=colors, width=0.65, edgecolor="none")
-    ax1.axhline(y=prevalence * 100, color=C_HL, lw=1.0, linestyle="--",
-                label=f"Genome prevalence ({prevalence*100:.2f}%)")
+    fig, ax = plt.subplots(figsize=(W_15COL, 3.8), dpi=500)
 
-    # Wilson 95% CI per bin
+    # Bars: Highlight bins enriched above background prevalence
+    colors = [C_A if obs >= prevalence else "#D0D7DE" for obs in observed]
+    bars = ax.bar(x, observed * 100, color=colors, width=0.62, edgecolor="none", zorder=3)
+
+    # Wilson 95% confidence intervals per decile
     z = 1.96
     p_hat = np.clip(observed, 0, 1)
     denom = 1 + z**2 / counts
-    center = (p_hat + z**2 / (2 * counts)) / denom
     half = z * np.sqrt(p_hat * (1 - p_hat) / counts + z**2 / (4 * counts**2)) / denom
-    ax1.errorbar(x, observed * 100, yerr=half * 100, fmt="none", ecolor="#333333",
-                 elinewidth=0.8, capsize=2)
+    ax.errorbar(x, observed * 100, yerr=half * 100, fmt="none", ecolor="#333333",
+                elinewidth=0.9, capsize=3, zorder=4, label="Wilson 95% CI")
 
-    # Top decile callout
+    # Prevalence reference line
+    ax.axhline(y=prevalence * 100, color=C_HL, lw=1.1, linestyle="--", zorder=2,
+                label=f"Genome prevalence ({prevalence*100:.2f}%)")
+
+    # Top decile callout annotation
     top_rate = observed[-1] * 100
-    ax1.text(x[-1], top_rate + 1.0, f"{top_rate:.1f}%",
-             ha="center", va="bottom", fontsize=6.5, color="#222222")
+    enrichment = observed[-1] / prevalence if prevalence > 0 else 0
+    ax.annotate(f"{top_rate:.1f}%\n({enrichment:.1f}\u00d7 enrichment)",
+                xy=(x[-1], top_rate + half[-1] * 100),
+                xytext=(x[-1] - 1.2, top_rate + half[-1] * 100 + 0.6),
+                arrowprops=dict(arrowstyle="->", color="#333333", lw=0.7),
+                fontsize=7.2, fontweight="bold", ha="center", color="#222222")
 
-    ax1.set_xticks(x)
-    ax1.set_xticklabels(decile_labels, fontsize=6.5)
-    ax1.set_xlabel("Score decile", fontsize=7.5)
-    ax1.set_ylabel("Validation rate (%)", fontsize=7.5)
-    ax1.set_title("Decile validation rate", fontsize=8, pad=4)
-    ax1.legend(loc="upper left", frameon=False, fontsize=6.5)
-    panel_tag(ax1, "a")
+    ax.set_xticks(x)
+    ax.set_xticklabels(decile_labels, fontsize=6.8)
+    ax.set_xlabel("Integrated Score Decile (Mean Score)", fontsize=8, fontweight="bold")
+    ax.set_ylabel("RNAi Validation Rate (%)", fontsize=8, fontweight="bold")
+    ax.set_title("Rank Discrimination and Score Calibration Across Transcriptome Deciles",
+                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.legend(loc="upper left", frameon=False, fontsize=7)
+    ax.set_ylim(-0.2, max(observed * 100 + half * 100) * 1.25)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
 
-    # Panel b: Cumulative positive recovery (from D10 downwards)
-    pos_desc = positives[::-1]
-    cum_recovered = np.cumsum(pos_desc)
-    cum_pct = (cum_recovered / total_pos) * 100
-    x_rev = np.arange(len(cum_pct))
-    rev_labels = [f"Top {i+1}0%" for i in range(len(cum_pct))]
-
-    ax2.plot(x_rev, cum_pct, marker="o", markersize=4, color=C_B, lw=1.5, clip_on=False)
-    ax2.fill_between(x_rev, 0, cum_pct, color=C_B, alpha=0.15)
-    ax2.plot([0, len(cum_pct)-1], [10, 100], color="#AAAAAA", lw=1.0, linestyle=":",
-             label="Random baseline")
-
-    ax2.set_xticks(x_rev)
-    ax2.set_xticklabels(rev_labels, rotation=35, ha="right", fontsize=6.5)
-    ax2.set_xlabel("Top candidates (%)", fontsize=7.5)
-    ax2.set_ylabel("Cumulative recovery (%)", fontsize=7.5)
-    ax2.set_title("Cumulative recovery", fontsize=8, pad=4)
-    ax2.set_ylim(0, 105)
-    ax2.legend(loc="lower right", frameon=False, fontsize=6.5)
-    panel_tag(ax2, "b")
-
-    fig.tight_layout()
+    fig.subplots_adjust(left=0.14, right=0.96, top=0.90, bottom=0.15)
     save(fig, "30_calibration")
+
 
 if __name__ == "__main__":
     build()

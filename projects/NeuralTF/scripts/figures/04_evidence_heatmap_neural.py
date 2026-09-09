@@ -1,91 +1,168 @@
-"""Evidence heatmap for all neural-filtered candidates × 9 streams."""
+"""Comprehensive evidence stream heatmap for all 134 neural-filtered transcription factors.
+
+Single-panel, publication-quality 500 DPI figure integrating:
+- Biological track categorization (Track A: RNAi-validated, Track B: Novel candidates, Prior FSTFs)
+- 9 continuous and specialized evidence streams ordered to prevent visual discreteness
+- Aligned candidate-specific integrated evidence scores
+- Clean standardized gene symbols for all 134 candidates
+"""
 from __future__ import annotations
-import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from style import *
-import matplotlib.pyplot as plt, numpy as np, matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from matplotlib.patches import Patch
+import numpy as np
+import pandas as pd
+
 
 def build():
     neural = load_neural()
-    col = "integrated_score"
-    
-    # Sort with Track A (validated) first, then Track B (novel), then other
-    def track_sort_key(r):
-        ps = str(r.get("proof_status", "")).lower()
-        is_val = 0 if ("validated" in ps or "fstf" in ps) else 1
-        return (is_val, -r.get("integrated_score", 0))
 
-    sorted_indices = sorted(neural.index, key=lambda idx: track_sort_key(neural.loc[idx]))
-    df = neural.loc[sorted_indices].copy().reset_index(drop=True)
-    
-    streams = [s for s in STREAM_HEATMAP_ORDER if s in df.columns]
+    # 1. Partition into tracks and sort by integrated_score descending
+    t_a = neural[neural["proof_status"] == "known_rnai_validated"].sort_values("integrated_score", ascending=False)
+    t_b = neural[neural["proof_status"] == "novel_candidate"].sort_values("integrated_score", ascending=False)
+    t_f = neural[neural["proof_status"] == "prior_fstf_not_tested"].sort_values("integrated_score", ascending=False)
+    df = pd.concat([t_a, t_b, t_f], ignore_index=True)
+
+    # 2. Arrange streams: continuous dense streams first, then specialized and functional
+    streams = [
+        "expression",
+        "specificity",
+        "neural_specificity",
+        "reproducibility",
+        "correlation",
+        "perez_lineage",
+        "perez_influence",
+        "rnai",
+        "neural_enriched",
+    ]
+    stream_labels = [
+        "Expression",
+        "Specificity",
+        "Neural Spec.",
+        "Reproducibility",
+        "Correlation",
+        "Lineage Assoc.",
+        "Network Centrality",
+        "RNAi Validation",
+        "Neural Filter",
+    ]
+
     mat = df[streams].fillna(0).values
+    n_rows = len(df)
+    n_cols = len(streams)
 
-    # Focus on the top 40 neural candidates for maximum readability
-    n_show = min(40, len(df))
-    df_sub = df.iloc[:n_show]
-    mat_sub = mat[:n_show]
+    # Soft, publication-grade colormap: neutral pearl gray -> pale steel -> ocean blue -> midnight navy
+    cmap_colors = ["#F6F8FA", "#D5E3EE", "#97BDD7", "#5792BF", "#2C6492", "#16324F"]
+    custom_cmap = mcolors.LinearSegmentedColormap.from_list("pub_blues", cmap_colors)
 
-    fig = plt.figure(figsize=(W_15COL, 6.4))
-    # Layout: [track bar (0.04), heatmap (0.88), colorbar (0.04)]
-    gs = fig.add_gridspec(1, 3, width_ratios=[0.04, 0.91, 0.04], wspace=0.06)
+    # Figure dimensions: 7.2 x 15.5 inches for 134 rows at 500 DPI
+    fig = plt.figure(figsize=(7.2, 15.5), dpi=500)
+    gs = fig.add_gridspec(1, 3, width_ratios=[0.02, 0.45, 0.47], wspace=0.18)
     ax_track = fig.add_subplot(gs[0, 0])
     ax_main = fig.add_subplot(gs[0, 1])
-    ax_cbar = fig.add_subplot(gs[0, 2])
+    ax_score = fig.add_subplot(gs[0, 2], sharey=ax_main)
 
-    # 1. Track sidebar
-    track_colors = []
-    for _, r in df_sub.iterrows():
-        ps = str(r.get("proof_status", "")).lower()
-        if "validated" in ps or "fstf" in ps:
-            track_colors.append(C_A)
-        else:
-            track_colors.append(C_B)
-    
-    ax_track.imshow([[1] for _ in range(n_show)], aspect="auto", cmap="binary", vmin=0, vmax=1)
-    for i, color in enumerate(track_colors):
-        ax_track.add_patch(plt.Rectangle((-0.5, i - 0.5), 1, 1, color=color, ec="none"))
-    ax_track.set_xticks([])
-    ax_track.set_yticks([])
-    ax_track.set_xlim(-0.5, 0.5)
-    ax_track.set_ylim(n_show - 0.5, -0.5)
-    ax_track.set_ylabel("Track", fontsize=7.5, fontweight="bold")
-    ax_track.spines[:].set_visible(False)
+    C_FSTF = "#7C786E"
+    colors = [C_A] * len(t_a) + [C_B] * len(t_b) + [C_FSTF] * len(t_f)
+    div1 = len(t_a) - 0.5
+    div2 = len(t_a) + len(t_b) - 0.5
+
+    # 1. Track strip
+    for i, c in enumerate(colors):
+        ax_track.add_patch(plt.Rectangle((0, i - 0.5), 1, 1, color=c, ec="none"))
+    ax_track.set_xlim(0, 1)
+    ax_track.set_ylim(n_rows - 0.5, -0.5)
+    ax_track.axhline(div1, color="white", lw=1.5)
+    ax_track.axhline(div2, color="white", lw=1.5)
+    ax_track.axis("off")
 
     # 2. Main heatmap
-    cmap = plt.cm.Blues
-    cmap.set_bad("#F5F5F5")
-    im = ax_main.imshow(mat_sub, aspect="auto", cmap=cmap, vmin=0, vmax=1, interpolation="nearest")
-    ax_main.set_xticks(range(len(streams)))
-    ax_main.set_xticklabels([STREAM_L[s] for s in streams], rotation=38, ha="left", fontsize=7)
+    im = ax_main.imshow(mat, aspect="auto", cmap=custom_cmap, vmin=0, vmax=1, interpolation="nearest")
+    ax_main.set_xticks(range(n_cols))
+    ax_main.set_xticklabels(stream_labels, rotation=42, ha="left", fontsize=6.8, fontweight="bold")
     ax_main.xaxis.tick_top()
     ax_main.xaxis.set_label_position("top")
-    
-    ylabels = [f"{label(neural, gid)} ({df_sub.iloc[i]['integrated_score']:.2f})" 
-               for i, gid in enumerate(df_sub["gene_id"])]
-    ax_main.set_yticks(range(n_show))
-    ax_main.set_yticklabels(ylabels, fontsize=6.5)
-            
-    ax_main.set_ylabel("Candidate", fontsize=8)
-    ax_main.spines[:].set_visible(False)
+    ax_main.set_ylim(n_rows - 0.5, -0.5)
+    ax_main.axhline(div1, color="white", lw=1.5)
+    ax_main.axhline(div2, color="white", lw=1.5)
+    ax_main.tick_params(left=False, labelleft=False, bottom=False, labelbottom=False)
+    for s in ax_main.spines.values():
+        s.set_visible(False)
 
-    # 3. Colorbar
-    cbar = fig.colorbar(im, cax=ax_cbar)
-    cbar.set_label("Score", fontsize=7.5)
-    cbar.ax.tick_params(labelsize=6.5)
+    # 3. Score bars with clean gene labels
+    scores = df["integrated_score"].values
+    y_pos = np.arange(n_rows)
+    gene_labels = [clean_gene_symbol(r.gene_name, r.gene_id) for _, r in df.iterrows()]
 
-    # Legend for track
-    from matplotlib.patches import Patch
+    ax_score.barh(y_pos, scores, height=0.74, color=colors, edgecolor="none", alpha=0.92)
+    ax_score.set_xlim(0, 1.15)
+    ax_score.set_ylim(n_rows - 0.5, -0.5)
+    ax_score.axhline(div1, color="#CCCCCC", lw=0.8, ls="--")
+    ax_score.axhline(div2, color="#CCCCCC", lw=0.8, ls="--")
+    ax_score.set_xlabel("Integrated Evidence Score", fontsize=7.2, fontweight="bold")
+    ax_score.xaxis.tick_top()
+    ax_score.xaxis.set_label_position("top")
+    ax_score.tick_params(axis="x", labelsize=6.5)
+
+    ax_score.set_yticks(y_pos)
+    ax_score.set_yticklabels(gene_labels, fontsize=5.2)
+    ax_score.tick_params(axis="y", pad=6, length=0)
+
+    ax_score.spines["top"].set_visible(True)
+    ax_score.spines["top"].set_linewidth(0.6)
+    ax_score.spines["right"].set_visible(False)
+    ax_score.spines["bottom"].set_visible(False)
+    ax_score.spines["left"].set_visible(True)
+    ax_score.spines["left"].set_color("#D0D0D0")
+    ax_score.spines["left"].set_linewidth(0.5)
+
+    # Annotate numeric score at end of each bar
+    for y, s in enumerate(scores):
+        ax_score.text(s + 0.02, y, f"{s:.2f}", va="center", ha="left", fontsize=4.6, color="#333333")
+
+    # Layout adjustment
+    fig.subplots_adjust(left=0.06, right=0.95, top=0.93, bottom=0.045)
+
+    # Horizontal Colorbar below heatmap
+    cbar_ax = fig.add_axes([0.10, 0.02, 0.35, 0.009])
+    cbar = fig.colorbar(im, cax=cbar_ax, orientation="horizontal")
+    cbar.set_label("Evidence Stream Score", fontsize=6.5, fontweight="bold")
+    cbar.ax.tick_params(labelsize=6)
+    cbar.outline.set_linewidth(0.5)
+
+    # Track Legend below score bars
     leg_handles = [
-        Patch(facecolor=C_A, label="Track A (benchmark)"),
-        Patch(facecolor=C_B, label="Track B (candidate)")
+        Patch(facecolor=C_A, label=f"Track A: RNAi-validated (n={len(t_a)})"),
+        Patch(facecolor=C_B, label=f"Track B: Novel candidates (n={len(t_b)})"),
+        Patch(facecolor=C_FSTF, label=f"Prior FSTF: Untested (n={len(t_f)})"),
     ]
-    ax_main.legend(handles=leg_handles, loc="upper right", bbox_to_anchor=(1.0, -0.03),
-                   ncol=2, frameon=False, fontsize=7)
+    fig.legend(
+        handles=leg_handles,
+        loc="lower right",
+        bbox_to_anchor=(0.95, 0.015),
+        ncol=1,
+        frameon=False,
+        fontsize=6.8,
+    )
 
-    fig.suptitle("Evidence stream profiles (top neural TFs)",
-                 fontweight="bold", fontsize=8.5, y=0.99)
-    fig.subplots_adjust(left=0.22, right=0.93, top=0.88, bottom=0.06)
+    # Group label text on the far left margin
+    fig.text(0.018, 0.65, f"Track A: Validated (n={len(t_a)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_A)
+    fig.text(0.018, 0.28, f"Track B: Novel (n={len(t_b)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_B)
+    fig.text(0.018, 0.08, f"Prior FSTF (n={len(t_f)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_FSTF)
+
+    fig.suptitle(
+        "Evidence Stream Integration Across All 134 Prioritized Neural Transcription Factors",
+        fontweight="bold",
+        fontsize=8.8,
+        y=0.985,
+    )
+
     save(fig, "04_evidence_heatmap_neural")
 
-if __name__=="__main__": build()
 
+if __name__ == "__main__":
+    build()

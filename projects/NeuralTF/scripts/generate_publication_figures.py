@@ -23,10 +23,11 @@ FIGURES = {
     15: ("15_method_bumpchart.py",                "3-method rank comparison"),
     18: ("18_composite_bonus_waterfall.py",       "Composite bonus waterfall"),
     20: ("20_stream_correlation.py",              "Stream correlation matrix"),
-    23: ("23_roc_pr_curve.py",                    "ROC and PR curves"),
+    23: ("23_roc_curve.py",                       "Receiver operating characteristic (ROC) curve"),
     24: ("24_negative_controls.py",               "Negative controls"),
     25: ("25_bootstrap_ci.py",                    "Bootstrap confidence intervals"),
     26: ("26_permutation_null.py",                "Permutation null distribution"),
+    27: ("27_pr_curve.py",                        "Precision-recall (PR) curve"),
     28: ("28_effect_sizes.py",                    "Effect sizes"),
     29: ("29_convergence_analysis.py",            "Convergence analysis"),
     30: ("30_calibration.py",                     "Calibration plot"),
@@ -38,11 +39,6 @@ FIGURES = {
     36: ("36_regeneration_temporal_dynamics.py",  "Regeneration temporal dynamics"),
 }
 
-COMPOSITE_SCRIPTS = [
-    ("composite_nature_figures.py", "Composite Nature manuscript figures (Figs 1-5)"),
-    ("supp_go_figures.py",          "Supplementary GO figures (Figs S1-S2)"),
-]
-
 def _load(path, name):
     spec = importlib.util.spec_from_file_location(name, str(path))
     mod = importlib.util.module_from_spec(spec)
@@ -52,45 +48,25 @@ def _load(path, name):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--figure", nargs="*", type=int)
-    p.add_argument("--composite-only", action="store_true", help="Only run composite Nature figures")
     args = p.parse_args()
 
     t0 = time.time()
     ok, fail = [], []
 
-    if not args.composite_only:
-        nums = args.figure if args.figure else sorted(FIGURES.keys())
-        for num in nums:
-            if num not in FIGURES:
-                print(f"  [SKIP] Figure {num}"); continue
-            fname, desc = FIGURES[num]
-            print(f"\n  [{num}] {desc}")
-            try:
-                mod = _load(FIGURES_DIR / fname, f"fig{num}")
-                mod.build()
-                ok.append(num)
-                print(f"    OK")
-            except Exception:
-                traceback.print_exc()
-                fail.append(num)
-
-    if not args.figure or args.composite_only:
-        for fname, desc in COMPOSITE_SCRIPTS:
-            print(f"\n  [COMPOSITE/SUPP] {desc}")
-            try:
-                mod = _load(FIGURES_DIR / fname, fname.replace(".py", ""))
-                if hasattr(mod, "build_all"):
-                    mod.build_all()
-                elif hasattr(mod, "build"):
-                    mod.build()
-                elif hasattr(mod, "fig_s1_go_landscape"):
-                    mod.fig_s1_go_landscape()
-                    mod.fig_s2_go_namespace_and_track()
-                ok.append(fname)
-                print("    OK")
-            except Exception:
-                traceback.print_exc()
-                fail.append(fname)
+    nums = args.figure if args.figure else sorted(FIGURES.keys())
+    for num in nums:
+        if num not in FIGURES:
+            print(f"  [SKIP] Figure {num}"); continue
+        fname, desc = FIGURES[num]
+        print(f"\n  [{num}] {desc}")
+        try:
+            mod = _load(FIGURES_DIR / fname, f"fig{num}")
+            mod.build()
+            ok.append(num)
+            print(f"    OK")
+        except Exception:
+            traceback.print_exc()
+            fail.append(num)
 
     print(f"\n{'='*50}")
     print(f"  Done: {len(ok)} succeeded, {len(fail)} failed, {time.time()-t0:.1f}s")

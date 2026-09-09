@@ -1,14 +1,18 @@
-"""Rank conservation across fixed-weight, centered, and uniform Dirichlet methods.
+"""Candidate rank stability trajectories across Dirichlet prior weighting schemes.
 
-Panel a: Track A benchmarks (RNAi-validated neural TFs) showing near-perfect rank conservation.
-Panel b: Track B novel candidates showing dynamic rank trajectories across Dirichlet priors.
+Single-panel bump chart tracking rank conservation from fixed weights to centered Dirichlet (k=40)
+and uniform Dirichlet (alpha=1) for top prioritized candidates.
 """
 from __future__ import annotations
-import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from style import *
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
+
 
 def build():
     f10 = load_top10()
@@ -16,78 +20,81 @@ def build():
     uf = load_uniform_full()
     neural = load_neural()
 
-    # Calculate within-track ranks across methods
-    records = []
-    for _, r in f10.iterrows():
-        gid = r["gene_id"]
-        tr = r["track"]
-        cf_tr = cf[cf["proof_status"] == r["proof_status"]] if tr == "A" else cf[cf["proof_status"] != "known_rnai_validated"]
-        uf_tr = uf[uf["proof_status"] == r["proof_status"]] if tr == "A" else uf[uf["proof_status"] != "known_rnai_validated"]
-        c_sub = cf_tr.reset_index(drop=True)
-        u_sub = uf_tr.reset_index(drop=True)
-        c_rank = c_sub[c_sub["gene_id"] == gid].index[0] + 1 if gid in c_sub["gene_id"].values else np.nan
-        u_rank = u_sub[u_sub["gene_id"] == gid].index[0] + 1 if gid in u_sub["gene_id"].values else np.nan
-        records.append({
-            "gene_id": gid,
-            "name": label(neural, gid),
-            "track": tr,
-            "fixed": r["rank"],
-            "centered": c_rank,
-            "uniform": u_rank,
-        })
+    fig, ax = plt.subplots(figsize=(W_15COL, 4.6), dpi=500)
 
-    df = pd.DataFrame(records)
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(W_2COL, 3.2), gridspec_kw={"width_ratios": [1, 1.2]})
-
-    methods = ["Fixed", "Centered\n(k=40)", "Uniform\n(\u03b1=1)"]
+    methods = ["Fixed Weight", "Dirichlet Centered\n(k=40)", "Dirichlet Uniform\n(\u03b1=1)"]
     x_pos = [0, 1, 2]
 
-    # --- Panel a: Track A ---
-    df_a = df[df["track"] == "A"].sort_values("fixed")
-    for _, r in df_a.iterrows():
-        ranks = [r["fixed"], r["centered"], r["uniform"]]
-        ax1.plot(x_pos, ranks, "o-", color=C_A, lw=1.3, markersize=4, alpha=0.85, zorder=3)
-        ax1.text(-0.08, ranks[0], f"{r['name']} (#{int(ranks[0])})",
-                 ha="right", va="center", fontsize=6.5, color=C_A, fontweight="bold")
-        ax1.text(2.08, ranks[2], f"#{int(ranks[2])}",
-                 ha="left", va="center", fontsize=6.5, color=C_A, fontweight="bold")
+    left_labels = []
+    right_labels = []
 
-    ax1.set_xticks(x_pos)
-    ax1.set_xticklabels(methods, fontsize=7)
-    ax1.set_ylabel("Within-track rank", fontsize=7.5)
-    ax1.set_ylim(0.5, 7.5)
-    ax1.set_yticks(range(1, 8))
-    ax1.invert_yaxis()
-    ax1.set_xlim(-1.1, 2.7)
-    ax1.set_title("Track A (benchmark)", fontsize=8, pad=4)
-    panel_tag(ax1, "a")
+    for _, r in f10.iterrows():
+        gid = r["gene_id"]
+        nm = clean_gene_symbol(r.get("gene_name", ""), gid)
+        tr = r["track"]
+        color = C_A if tr == "A" else C_B
+        ls = "-" if tr == "A" else "--"
 
-    # --- Panel b: Track B ---
-    df_b = df[df["track"] == "B"].sort_values("fixed")
-    for _, r in df_b.iterrows():
-        ranks = [r["fixed"], r["centered"], r["uniform"]]
-        ax2.plot(x_pos, ranks, "o-", color=C_B, lw=1.3, markersize=4, alpha=0.85, zorder=3)
-        disp_name = clean_gene_symbol(r["name"], r["gene_id"])
-        ax2.text(-0.08, ranks[0], f"{disp_name} (#{int(ranks[0])})",
-                 ha="right", va="center", fontsize=6.5, color=C_B, fontweight="bold")
-        ax2.text(2.08, ranks[2], f"#{int(ranks[2])}",
-                 ha="left", va="center", fontsize=6.5, color=C_B, fontweight="bold")
+        r_fix = neural[neural["gene_id"] == gid].index[0] + 1
+        c_sub = cf[cf["gene_id"].isin(neural["gene_id"])].reset_index(drop=True)
+        r_cen = c_sub[c_sub["gene_id"] == gid].index[0] + 1
+        u_sub = uf[uf["gene_id"].isin(neural["gene_id"])].reset_index(drop=True)
+        r_uni = u_sub[u_sub["gene_id"] == gid].index[0] + 1
 
-    ax2.set_xticks(x_pos)
-    ax2.set_xticklabels(methods, fontsize=7)
-    ax2.set_ylabel("Within-track rank", fontsize=7.5)
-    ax2.set_ylim(0.5, 24.5)
-    ax2.set_yticks([1, 5, 10, 15, 20])
-    ax2.invert_yaxis()
-    ax2.set_xlim(-1.1, 2.7)
-    ax2.set_title("Track B (candidate)", fontsize=8, pad=4)
-    panel_tag(ax2, "b")
+        ranks = [r_fix, r_cen, r_uni]
+        ax.plot(x_pos, ranks, marker="o", color=color, linestyle=ls, lw=1.5,
+                markersize=5, alpha=0.9, zorder=4)
+        left_labels.append((r_fix, f"{nm} (#{r_fix})", color))
+        right_labels.append((r_uni, f"#{r_uni} {nm}", color))
 
-    fig.tight_layout()
+    # Declutter left labels
+    left_labels.sort(key=lambda x: x[0])
+    adj_left = []
+    last_y = -999
+    for y, txt, c in left_labels:
+        cur_y = max(y, last_y + 2.2)
+        adj_left.append((cur_y, txt, c))
+        last_y = cur_y
+
+    for y, txt, c in adj_left:
+        ax.text(-0.06, y, txt, ha="right", va="center", fontsize=6.8, color=c, fontweight="bold")
+
+    # Declutter right labels
+    right_labels.sort(key=lambda x: x[0])
+    adj_right = []
+    last_y = -999
+    for y, txt, c in right_labels:
+        cur_y = max(y, last_y + 2.2)
+        adj_right.append((cur_y, txt, c))
+        last_y = cur_y
+
+    for y, txt, c in adj_right:
+        ax.text(2.06, y, txt, ha="left", va="center", fontsize=6.8, color=c, fontweight="bold")
+
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(methods, fontsize=7.5, fontweight="bold")
+    ax.set_ylabel("Neural Candidate Rank (1–134)", fontsize=8, fontweight="bold")
+    ax.set_ylim(-3, 72)
+    ax.invert_yaxis()
+    ax.set_xlim(-0.85, 2.55)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    # Legend placed cleanly in the middle corridor
+    legend_handles = [
+        Line2D([0], [0], color=C_A, ls="-", lw=1.5, marker="o", markersize=5,
+               label="Track A (RNAi-validated benchmark)"),
+        Line2D([0], [0], color=C_B, ls="--", lw=1.5, marker="o", markersize=5,
+               label="Track B (Novel candidate)"),
+    ]
+    ax.legend(handles=legend_handles, loc="upper left", bbox_to_anchor=(0.28, 0.68),
+              frameon=False, fontsize=7.2)
+
+    fig.suptitle("Candidate Rank Trajectories Across Dirichlet Prior Weighting",
+                 fontweight="bold", fontsize=8.5, y=0.98)
+    fig.subplots_adjust(left=0.22, right=0.88, top=0.90, bottom=0.10)
     save(fig, "15_method_bumpchart")
+
 
 if __name__ == "__main__":
     build()
-
-

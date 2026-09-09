@@ -19,73 +19,75 @@ def build():
     with open(data_path) as f:
         data = json.load(f)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(W_2COL, 2.7),
-                                   gridspec_kw={"width_ratios": [1.2, 1]})
-
-    # Panel a: Overlap counts (deduplicate symmetric comparisons)
-    overlaps = data.get("overlaps", {})
-    comparisons = [
-        ("Centered vs Uniform", "centered_vs_uniform"),
-        ("Fixed vs Centered", "fixed_vs_centered"),
-        ("Fixed vs Uniform", "fixed_vs_uniform"),
-        ("All Three Methods", "three_way"),
-    ]
-    labels = []
-    counts = []
-    pvals = []
-    for display_name, key in comparisons:
-        if key in overlaps:
-            labels.append(display_name)
-            counts.append(overlaps[key]["count"])
-            pvals.append(overlaps[key].get("p_value"))
-
-    y = np.arange(len(labels))
-    colors = [C_A if c > 5 else C_B for c in counts]
-    bars = ax1.barh(y, counts, color=colors, edgecolor="none", height=0.55)
-
-    for i, (c, p) in enumerate(zip(counts, pvals)):
-        ax1.text(c + 0.2, i, f"{c}/10", va="center", ha="left",
-                 fontsize=6.5, color="#222222")
-
-    ax1.set_yticks(y)
-    ax1.set_yticklabels(labels, fontsize=7)
-    ax1.set_xlabel("Shared candidates (top 10)", fontsize=7.5)
-    ax1.set_xlim(0, 11)
-    ax1.set_title("Top 10 candidate overlap", fontsize=8, pad=4)
-    ax1.invert_yaxis()
-    panel_tag(ax1, "a")
-
-    # Panel b: Pairwise Jaccard similarity matrix
+    # 3x3 Pairwise Jaccard similarity matrix across prioritization formulations
     methods = ["fixed", "centered", "uniform"]
-    display_methods = ["Fixed", "Centered", "Uniform"]
+    display_methods = [
+        "Fixed weights",
+        "Dirichlet Centered\n($k = 40$)",
+        "Dirichlet Uniform\n($\\alpha = 1$)",
+    ]
     pairwise = data.get("pairwise", {})
     matrix = np.zeros((3, 3))
+    counts = np.zeros((3, 3), dtype=int)
+
     for i, m1 in enumerate(methods):
         for j, m2 in enumerate(methods):
             if i == j:
                 matrix[i, j] = 1.0
+                counts[i, j] = 10
             else:
                 key = f"{m1}_vs_{m2}"
-                matrix[i, j] = pairwise.get(key, {}).get("jaccard", 0.0)
+                info = pairwise.get(key, {})
+                matrix[i, j] = info.get("jaccard", 0.0)
+                counts[i, j] = info.get("overlap_count", 0)
 
-    im = ax2.imshow(matrix, cmap=plt.cm.Blues, vmin=0, vmax=1, aspect="auto")
-    ax2.set_xticks(range(3))
-    ax2.set_xticklabels(display_methods, fontsize=7)
-    ax2.set_yticks(range(3))
-    ax2.set_yticklabels(display_methods, fontsize=7)
+    fig, ax = plt.subplots(figsize=(3.8, 3.3))
 
+    # Muted blue sequential colormap
+    from matplotlib.colors import LinearSegmentedColormap
+    cmap = LinearSegmentedColormap.from_list(
+        "custom_blues", ["#F5F8FA", "#D4E2EE", "#7AA2C0", "#2B4C6F"], N=256
+    )
+
+    im = ax.imshow(matrix, cmap=cmap, vmin=0.0, vmax=1.0, aspect="auto")
+
+    ax.set_xticks(range(3))
+    ax.set_xticklabels(display_methods, fontsize=6.8, rotation=25, ha="right")
+    ax.set_yticks(range(3))
+    ax.set_yticklabels(display_methods, fontsize=6.8)
+
+    # Cell annotations with both Jaccard index and candidate count
     for i in range(3):
         for j in range(3):
             val = matrix[i, j]
-            ax2.text(j, i, f"{val:.2f}", ha="center", va="center",
-                     fontsize=8,
-                     color="white" if val > 0.6 else "#222222")
+            cnt = counts[i, j]
+            text_color = "white" if val > 0.60 else "#222222"
+            if i == j:
+                cell_text = f"$J = 1.00$\n(10/10)"
+            else:
+                cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)"
+            ax.text(
+                j,
+                i,
+                cell_text,
+                ha="center",
+                va="center",
+                fontsize=7.0,
+                color=text_color,
+            )
 
-    ax2.set_title("Jaccard similarity", fontsize=8, pad=4)
-    cbar = fig.colorbar(im, ax=ax2, shrink=0.85, pad=0.04)
-    cbar.set_label("Jaccard index", fontsize=7)
+    ax.set_title("Prioritization method agreement (top 10 candidates)", fontsize=8, pad=8)
+
+    # Colorbar
+    cbar = fig.colorbar(im, ax=ax, shrink=0.82, pad=0.04)
+    cbar.set_label("Jaccard similarity index", fontsize=7)
     cbar.ax.tick_params(labelsize=6.5)
-    panel_tag(ax2, "b")
+
+    # Subtle grid lines between cells
+    ax.set_xticks(np.arange(-0.5, 3, 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, 3, 1), minor=True)
+    ax.grid(which="minor", color="white", linestyle="-", linewidth=1.5)
+    ax.tick_params(which="minor", bottom=False, left=False)
 
     fig.tight_layout()
     save(fig, "33_method_agreement_summary")

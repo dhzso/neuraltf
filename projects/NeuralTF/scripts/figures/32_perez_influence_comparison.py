@@ -1,87 +1,83 @@
-"""Perez influence comparison — TF lineage class vs neuron influence scores.
+"""Lineage-resolved evidence enrichment — integrated score by single-cell lineage class.
 
-Reads the Perez tables from the pipeline run:
-  Panel a: Per-gene integrated scores grouped by Perez TF lineage class
-           (neural-class, other-class, unclassified).
-  Panel b: Distribution of the Perez ANANSE neuron influence stream
-           for RBH-mapped candidates.
+Single-panel boxplot with jitter evaluating whether single-cell lineage classification
+from Perez et al. enriches for high integrated evidence scores.
 """
 from __future__ import annotations
-import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from style import *
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.stats import mannwhitneyu
+
 
 def build():
     rank = load_all()
 
-    has_lineage = "perez_lineage" in rank.columns and rank["perez_lineage"].notna().any()
-    has_infl = "perez_influence" in rank.columns and rank["perez_influence"].notna().any()
-    if not (has_lineage or has_infl):
-        raise FileNotFoundError(
-            "rank.csv carries no perez_lineage/perez_influence values."
-        )
+    if "perez_lineage" not in rank.columns or not rank["perez_lineage"].notna().any():
+        raise FileNotFoundError("rank.csv carries no perez_lineage values.")
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(W_2COL, 2.7))
+    fig, ax = plt.subplots(figsize=(W_15COL, 3.6), dpi=500)
 
-    # Panel a: neural-class vs other-class TFs (perez_lineage stream)
-    if has_lineage:
-        neural_cls = rank[rank["perez_lineage"] == 1.0]["integrated_score"].dropna()
-        other_cls = rank[rank["perez_lineage"] == 0.5]["integrated_score"].dropna()
-        absent = rank[rank["perez_lineage"] == 0.0]["integrated_score"].dropna()
-        data, labels, colors = [], [], []
-        for vals, lab, col in (
-            (neural_cls, "Neural-class TFs", C_A),
-            (other_cls, "Other-class TFs", C_B),
-            (absent, "Unclassified", "#CCCCCC"),
-        ):
-            if len(vals) > 0:
-                data.append(vals.values)
-                labels.append(f"{lab}\n(n={len(vals):,})")
-                colors.append(col)
-        if data:
-            bp = ax1.boxplot(data, patch_artist=True, widths=0.55,
-                             medianprops=dict(color="#111111", lw=1.2),
-                             boxprops=dict(lw=0.7),
-                             whiskerprops=dict(lw=0.7, color="#555555"),
-                             capprops=dict(lw=0.7, color="#555555"),
-                             flierprops=dict(marker=".", markersize=2, alpha=0.3))
-            for patch, col in zip(bp["boxes"], colors):
-                patch.set_facecolor(col)
-                patch.set_alpha(0.7)
-                patch.set_edgecolor("#333333")
-            ax1.set_xticklabels(labels, fontsize=7)
-        ax1.set_ylabel("Integrated score", fontsize=7.5)
-        ax1.set_title("Score by lineage classification", fontsize=8, pad=4)
-    else:
-        ax1.text(0.5, 0.5, "perez_lineage stream empty in this run",
-                 ha="center", va="center", transform=ax1.transAxes,
-                 fontsize=8, color="#999999")
-    panel_tag(ax1, "a")
+    neural_cls = rank[rank["perez_lineage"] == 1.0]["integrated_score"].dropna().values
+    other_cls = rank[rank["perez_lineage"] == 0.5]["integrated_score"].dropna().values
+    unclass = rank[rank["perez_lineage"] == 0.0]["integrated_score"].dropna().values
 
-    # Panel b: perez_influence stream distribution
-    if has_infl:
-        infl = rank["perez_influence"].dropna()
-        infl_nz = infl[infl > 0].values
-        ax2.hist(infl_nz, bins=25, color=STREAM_C["perez_influence"],
-                 alpha=0.75, edgecolor="none")
-        med = np.median(infl_nz) if len(infl_nz) > 0 else 0
-        ax2.axvline(x=med, color=C_HL, lw=1.2, linestyle="--",
-                    label=f"Median ({med:.2f})")
-        ax2.set_xlabel("ANANSE neuron influence score", fontsize=7.5)
-        ax2.set_ylabel("Number of candidates", fontsize=7.5)
-        ax2.set_title("Influence score distribution", fontsize=8, pad=4)
-        ax2.legend(loc="upper right", frameon=False, fontsize=7)
-    else:
-        ax2.text(0.5, 0.5, "perez_influence stream empty in this run",
-                 ha="center", va="center", transform=ax2.transAxes,
-                 fontsize=8, color="#999999")
-    panel_tag(ax2, "b")
+    groups = [
+        ("Neural Lineage\n(Perez et al.)", neural_cls, C_A),
+        ("Other Lineages\n(Non-neural)", other_cls, C_B),
+        ("Unclassified\n(Transcriptome)", unclass, "#D0D7DE"),
+    ]
 
-    fig.tight_layout()
+    data = [g[1] for g in groups]
+    labels = [f"{g[0]}\n(n={len(g[1]):,})" for g in groups]
+    colors = [g[2] for g in groups]
+
+    # Boxplot
+    bp = ax.boxplot(data, patch_artist=True, widths=0.52,
+                    medianprops=dict(color="#111111", lw=1.3),
+                    boxprops=dict(lw=0.8),
+                    whiskerprops=dict(lw=0.8, color="#555555"),
+                    capprops=dict(lw=0.8, color="#555555"),
+                    flierprops=dict(marker=".", markersize=2.5, alpha=0.25, color="#888888"))
+
+    for patch, col in zip(bp["boxes"], colors):
+        patch.set_facecolor(col)
+        patch.set_alpha(0.75)
+        patch.set_edgecolor("#333333")
+
+    # Overlay subtle jitter for small groups
+    np.random.seed(42)
+    for i, vals in enumerate([neural_cls, other_cls]):
+        jitter = np.random.normal(0, 0.04, size=len(vals))
+        ax.scatter(i + 1 + jitter, vals, s=12, color=colors[i], alpha=0.45,
+                   edgecolors="none", zorder=3)
+
+    # Statistical test between Neural and Other lineages
+    stat, pval = mannwhitneyu(neural_cls, other_cls, alternative="two-sided")
+    p_str = "P < 10^{-15}" if pval < 1e-15 else f"P = {pval:.1e}"
+
+    # Significance bracket between group 1 and group 2
+    y_bar = max(np.percentile(neural_cls, 95), np.percentile(other_cls, 95)) + 0.12
+    h = 0.02
+    ax.plot([1, 1, 2, 2], [y_bar, y_bar + h, y_bar + h, y_bar], color="#222222", lw=0.8)
+    ax.text(1.5, y_bar + h + 0.015, f"Mann–Whitney U: {p_str}",
+            ha="center", va="bottom", fontsize=7.2, fontweight="bold", color="#222222")
+
+    ax.set_xticklabels(labels, fontsize=7.5)
+    ax.set_ylabel("Integrated Evidence Score", fontsize=8, fontweight="bold")
+    ax.set_title("Evidence Score Stratification Across Single-Cell Lineage Classes",
+                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.set_ylim(-0.02, 1.15)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    fig.subplots_adjust(left=0.14, right=0.96, top=0.90, bottom=0.16)
     save(fig, "32_perez_influence_comparison")
+
 
 if __name__ == "__main__":
     build()
-
