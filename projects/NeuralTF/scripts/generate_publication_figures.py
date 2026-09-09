@@ -25,7 +25,6 @@ FIGURES = {
     20: ("20_stream_correlation.py",              "Stream correlation matrix"),
     23: ("23_roc_curve.py",                       "Receiver operating characteristic (ROC) curve"),
     24: ("24_negative_controls.py",               "Negative controls"),
-    25: ("25_bootstrap_ci.py",                    "Bootstrap confidence intervals"),
     26: ("26_permutation_null.py",                "Permutation null distribution"),
     27: ("27_pr_curve.py",                        "Precision-recall (PR) curve"),
     28: ("28_effect_sizes.py",                    "Effect sizes"),

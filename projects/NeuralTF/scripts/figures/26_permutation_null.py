@@ -81,24 +81,17 @@ def build():
         n_perm = int(df["n_perm"].iloc[0]) if "n_perm" in df.columns else 30
         p_floor = 1.0 / (n_perm + 1)
         
-        stats_card = (
-            r"$\bf{Joint\ Permutation\ Null}$" + "\n"
-            f"Min empirical $P \\leq {p_empirical:.4f}$\n"
-            f"Null iterations: $N = {n_perm}$\n"
-            f"Testable candidates: $n = {n_testable:,}$"
-        )
-        ax.text(0.85, 0.88, stats_card,
-                transform=ax.transAxes, ha="right", va="top", fontsize=6.2,
-                color="#222222",
-                bbox=dict(boxstyle="round,pad=0.5", facecolor="#F8F9FA", edgecolor="#D0D7DE", lw=0.6))
+        ax.set_xlabel("Integrated evidence score", fontsize=7.0)
+        ax.set_ylabel("Probability density", fontsize=7.0)
+        ax.set_title("Permutation Null vs Observed Top Candidate Scores",
+                     fontsize=8.0, fontweight="bold", pad=14)
+        ax.text(0.5, 1.02,
+                f"Empirical joint row permutation test ($N = {n_perm}$ draws, testable candidates $n = {n_testable:,}$, min empirical $P \\leq {p_empirical:.4f}$)",
+                transform=ax.transAxes, fontsize=6.3, ha="center", va="bottom", color="#444444")
 
-        ax.set_xlabel("Integrated score", fontsize=7.0)
-        ax.set_ylabel("Density", fontsize=7.0)
-        ax.set_title("Permutation Null vs Observed Candidate Scores",
-                     fontsize=8.0, pad=6)
-        # Ensure sufficient vertical headroom
+        # Vertical headroom for legend
         y_max = ax.get_ylim()[1]
-        ax.set_ylim(0, y_max * 1.25)
+        ax.set_ylim(0, y_max * 1.15)
         ax.legend(fontsize=6.2, frameon=False, loc="upper left")
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)

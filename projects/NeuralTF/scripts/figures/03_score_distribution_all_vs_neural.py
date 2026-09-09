@@ -35,19 +35,15 @@ def build():
 
     ks, p = ks_2samp(a, n)
     p_str = "P < 10^{-30}" if p < 1e-30 else f"P = {p:.1e}"
-    stats_card = (
-        r"$\bf{Two\text{-}Sample\ Kolmogorov–Smirnov\ Test}$" + "\n"
-        f"Statistic $D = {ks:.3f}$\n"
-        f"Significance: ${p_str}$"
-    )
-    ax.text(0.96, 0.92, stats_card,
-            transform=ax.transAxes, fontsize=6.2, ha="right", va="top", color="#222222",
-            bbox=dict(boxstyle="round,pad=0.5", facecolor="#F8F9FA", edgecolor="#D0D7DE", lw=0.6))
 
     ax.set_xlabel("Integrated evidence score", fontsize=7.0)
     ax.set_ylabel("Probability density", fontsize=7.0)
-    ax.set_title("Candidate score distribution (All TFs vs Neural-filtered)", fontsize=8.0, pad=6)
-    ax.set_ylim(0, 5.0)
+    ax.set_title("Integrated Evidence Score Separation: All TFs vs Neural Regulators",
+                 fontsize=8.0, fontweight="bold", pad=14)
+    ax.text(0.5, 1.02,
+            f"Two-sample Kolmogorov–Smirnov test: $D = {ks:.3f}$, ${p_str}$ (Background $n = {len(a):,}$, Neural $n = {len(n):,}$)",
+            transform=ax.transAxes, fontsize=6.3, ha="center", va="bottom", color="#444444")
+    ax.set_ylim(0, 4.3)
 
     ax.legend(frameon=False, fontsize=6.2, loc="upper left")
     ax.spines["top"].set_visible(False)

@@ -107,9 +107,9 @@ def build():
     ax.set_yticklabels(df["name"], fontsize=6.8)
 
     ax.set_xlabel("Prioritization score (base score + additive bonuses)", fontsize=7.0)
-    ax.set_ylabel("Candidate", fontsize=7.0)
-    ax.set_title("Score composition and bonus breakdown (Top 10 TFs)",
-                 fontsize=8.0, pad=16)
+    ax.set_ylabel("Candidate neural TF", fontsize=7.0)
+    ax.set_title("Additive Bonus Contributions to Candidate Prioritization (Top 10 TFs)",
+                 fontsize=8.0, fontweight="bold", pad=24)
     ax.legend(loc="lower left", bbox_to_anchor=(0.0, 1.02), ncol=4, frameon=False, fontsize=6.2)
     ax.set_xlim(0, 1.25)
     ax.spines["top"].set_visible(False)
