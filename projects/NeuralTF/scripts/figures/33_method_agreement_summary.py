@@ -72,16 +72,16 @@ def build():
                 cell_text,
                 ha="center",
                 va="center",
-                fontsize=7.0,
+                fontsize=6.2,
                 color=text_color,
             )
 
-    ax.set_title("Prioritization method agreement (top 10 candidates)", fontsize=8, pad=8)
+    ax.set_title("Prioritization Method Agreement (Top 10 Candidates)", fontsize=8.0, pad=6)
 
     # Colorbar
     cbar = fig.colorbar(im, ax=ax, shrink=0.82, pad=0.04)
-    cbar.set_label("Jaccard similarity index", fontsize=7)
-    cbar.ax.tick_params(labelsize=6.5)
+    cbar.set_label("Jaccard similarity index", fontsize=6.8)
+    cbar.ax.tick_params(labelsize=6.0)
 
     # Subtle grid lines between cells
     ax.set_xticks(np.arange(-0.5, 3, 1), minor=True)

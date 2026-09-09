@@ -63,15 +63,15 @@ def build():
                 xy=(x[-1], top_rate + half[-1] * 100),
                 xytext=(x[-1] - 1.2, top_rate + half[-1] * 100 + 0.6),
                 arrowprops=dict(arrowstyle="->", color="#333333", lw=0.7),
-                fontsize=7.2, fontweight="bold", ha="center", color="#222222")
+                fontsize=6.2, ha="center", color="#222222")
 
     ax.set_xticks(x)
-    ax.set_xticklabels(decile_labels, fontsize=6.8)
-    ax.set_xlabel("Integrated Score Decile (Mean Score)", fontsize=8, fontweight="bold")
-    ax.set_ylabel("RNAi Validation Rate (%)", fontsize=8, fontweight="bold")
+    ax.set_xticklabels(decile_labels, fontsize=6.2)
+    ax.set_xlabel("Integrated Score Decile (Mean Score)", fontsize=7.0)
+    ax.set_ylabel("RNAi Validation Rate (%)", fontsize=7.0)
     ax.set_title("Rank Discrimination and Score Calibration Across Transcriptome Deciles",
-                 fontweight="bold", fontsize=8.5, pad=8)
-    ax.legend(loc="upper left", frameon=False, fontsize=7)
+                 fontsize=8.0, pad=6)
+    ax.legend(loc="upper left", frameon=False, fontsize=6.2)
     ax.set_ylim(-0.2, max(observed * 100 + half * 100) * 1.25)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

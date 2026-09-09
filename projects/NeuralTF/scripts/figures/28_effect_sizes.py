@@ -39,18 +39,18 @@ def build():
 
         for i, (d, g, p) in enumerate(zip(deltas, gs, pvals)):
             ax.text(d + 0.03, y[i] + width/2, f"δ = {d:.2f}", va="center", ha="left",
-                    fontsize=6.5, color=C_A, fontweight="bold")
+                    fontsize=6.0, color=C_A)
             ax.text(g + 0.03, y[i] - width/2, f"g = {g:.2f}", va="center", ha="left",
-                    fontsize=6.5, color=C_B, fontweight="bold")
+                    fontsize=6.0, color=C_B)
 
         ax.set_yticks(y)
-        ax.set_yticklabels([LABELS[k][0] for k in comparisons], fontsize=7.5)
+        ax.set_yticklabels([LABELS[k][0] for k in comparisons], fontsize=6.8)
         ax.axvline(x=0, color="#555555", lw=0.6)
         ax.axvline(x=0.5, color="#999999", lw=0.6, linestyle=":", label="Reference (0.5)")
-        ax.set_xlabel("Effect size", fontsize=8)
-        ax.set_title("Effect sizes across candidate cohorts",
-                     fontweight="bold", fontsize=8.5, pad=6)
-        ax.legend(fontsize=7, loc="lower right", frameon=False)
+        ax.set_xlabel("Effect size", fontsize=7.0)
+        ax.set_title("Effect Sizes Across Candidate Cohorts",
+                     fontsize=8.0, pad=6)
+        ax.legend(fontsize=6.2, loc="lower right", frameon=False)
         ax.set_xlim(-0.05, max(max(deltas), max(gs)) * 1.25)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)

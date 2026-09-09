@@ -74,29 +74,29 @@ def build():
     gap = 1.2
     y_a = n_b + gap + np.arange(n_a)
 
-    fig, ax = plt.subplots(figsize=(W_15COL, 4.6), dpi=500)
+    fig, ax = plt.subplots(figsize=(W_15COL, 4.0), dpi=500)
 
     # Bars for Track B
     ax.barh(y_b, sub_b["composite"], height=0.62, color=C_B, alpha=0.88,
             edgecolor="none", label="Track B (Candidate)")
-    ax.scatter(sub_b["base"], y_b, color="#222222", s=28, zorder=4,
+    ax.scatter(sub_b["base"], y_b, color="#222222", s=24, zorder=4,
                edgecolors="white", lw=0.6, label="Base score")
 
     for i, (_, r) in enumerate(sub_b.iterrows()):
         ax.text(r["composite"] + 0.015, y_b[i],
                 f"{r['composite']:.2f} ({r['family']})",
-                fontsize=6.8, va="center", color="#222222")
+                fontsize=6.2, va="center", color="#333333")
 
     # Bars for Track A
     ax.barh(y_a, sub_a["composite"], height=0.62, color=C_A, alpha=0.88,
             edgecolor="none", label="Track A (Benchmark)")
-    ax.scatter(sub_a["base"], y_a, color="#222222", s=28, zorder=4,
+    ax.scatter(sub_a["base"], y_a, color="#222222", s=24, zorder=4,
                edgecolors="white", lw=0.6)
 
     for i, (_, r) in enumerate(sub_a.iterrows()):
         ax.text(r["composite"] + 0.015, y_a[i],
                 f"{r['composite']:.2f} ({r['family']})",
-                fontsize=6.8, va="center", color="#222222")
+                fontsize=6.2, va="center", color="#333333")
 
     # Divider line and section labels
     div_y = n_b + gap / 2.0 - 0.5
@@ -106,15 +106,15 @@ def build():
     all_y = np.concatenate([y_b, y_a])
     all_names = list(sub_b["name"]) + list(sub_a["name"])
     ax.set_yticks(all_y)
-    ax.set_yticklabels(all_names, fontsize=7.5)
+    ax.set_yticklabels(all_names, fontsize=6.8)
 
     # Section annotations on the right or near divider
-    ax.text(0.01, div_y + 0.25, "TRACK A: RNAi-Validated Regulators",
-            fontsize=7.0, fontweight="bold", color=C_A, va="bottom")
-    ax.text(0.01, div_y - 0.25, "TRACK B: Novel Candidate Regulators",
-            fontsize=7.0, fontweight="bold", color=C_B, va="top")
+    ax.text(0.01, div_y + 0.25, "Track A: RNAi-validated benchmark regulators",
+            fontsize=6.5, color=C_A, va="bottom")
+    ax.text(0.01, div_y - 0.25, "Track B: Novel candidate regulators",
+            fontsize=6.5, color=C_B, va="top")
 
-    ax.set_xlabel("Prioritization Score", fontsize=8, fontweight="bold")
+    ax.set_xlabel("Prioritization score (bar = composite score, point = base evidence score)", fontsize=7.0)
     ax.set_xlim(0, 1.48)
     ax.set_ylim(-0.8, y_a[-1] + 0.8)
 
@@ -126,14 +126,14 @@ def build():
         Patch(facecolor=C_A, label="Track A (RNAi-validated)"),
         Patch(facecolor=C_B, label="Track B (Novel candidate)"),
         Line2D([0], [0], marker="o", color="w", markerfacecolor="#222222",
-               markeredgecolor="white", markersize=5, label="Base score"),
+               markeredgecolor="white", markersize=4.5, label="Base score"),
     ]
     ax.legend(handles=leg_handles, loc="lower center", bbox_to_anchor=(0.5, 1.02),
-              ncol=3, frameon=False, fontsize=7)
+              ncol=3, frameon=False, fontsize=6.2)
 
-    fig.suptitle("Prioritized Neural Transcription Factors (Top 10 Candidates)",
-                 fontweight="bold", fontsize=8.5, y=0.98)
-    fig.subplots_adjust(left=0.18, right=0.96, top=0.88, bottom=0.12)
+    fig.suptitle("Prioritized neural transcription factors (Top 10 candidates)",
+                 fontsize=8.0, y=0.98)
+    fig.subplots_adjust(left=0.16, right=0.96, top=0.88, bottom=0.12)
     save(fig, "05_top10_candidate_atlas")
 
 

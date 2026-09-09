@@ -49,13 +49,13 @@ def build():
             ax.annotate(f"Convergence ($r_s \\geq 0.99$)\nat $n={conv_draw}$ draws",
                         xy=(conv_draw, y[sat_idx[0]]), xytext=(conv_draw + 40, y[sat_idx[0]] - 0.025),
                         arrowprops=dict(arrowstyle="->", color="#333333", lw=0.7),
-                        fontsize=7, fontweight="bold", color="#333333")
+                        fontsize=6.2, color="#333333")
 
-    ax.set_xlabel("Dirichlet Draws ($n$)", fontsize=8, fontweight="bold")
-    ax.set_ylabel("Rank Stability (Spearman $r_s$ vs Full 1,000 Draws)", fontsize=8, fontweight="bold")
+    ax.set_xlabel("Dirichlet Draws ($n$)", fontsize=7.0)
+    ax.set_ylabel("Rank Stability (Spearman $r_s$ vs Full 1,000 Draws)", fontsize=7.0)
     ax.set_title("Rank Stability Convergence Under Dirichlet Weight Resampling",
-                 fontweight="bold", fontsize=8.5, pad=8)
-    ax.legend(fontsize=7, frameon=False, loc="lower right")
+                 fontsize=8.0, pad=6)
+    ax.legend(fontsize=6.2, frameon=False, loc="lower right")
     ax.set_ylim(0.935, 1.015)
     ax.set_xlim(-10, max(x) + 30)
     ax.spines["top"].set_visible(False)

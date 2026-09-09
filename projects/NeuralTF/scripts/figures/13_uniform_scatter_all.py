@@ -63,21 +63,21 @@ def build():
     rho, p = spearmanr(x_m, y_m)
     p_str = "P < 10^{-300}" if p < 1e-300 else f"P = {p:.1e}"
     ax.text(0.05, 0.93, f"Spearman $r_s = {rho:.3f}$\n${p_str}$\n$N = {len(x_m):,}$",
-            transform=ax.transAxes, fontsize=7.5, va="top", color="#222222",
+            transform=ax.transAxes, fontsize=6.2, va="top", color="#222222",
             bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#DDDDDD", lw=0.5))
 
-    ax.set_xlabel("Fixed Weight Integrated Score", fontsize=8, fontweight="bold")
-    ax.set_ylabel("Uniform Dirichlet Median Score (1,000 Draws)", fontsize=8, fontweight="bold")
+    ax.set_xlabel("Fixed weight integrated score", fontsize=7.0)
+    ax.set_ylabel("Uniform Dirichlet median score (1,000 draws)", fontsize=7.0)
     ax.set_xlim(lo, hi)
     ax.set_ylim(lo, hi)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
     # Legend cleanly positioned at lower right
-    ax.legend(loc="lower right", frameon=False, fontsize=7)
+    ax.legend(loc="lower right", frameon=False, fontsize=6.0)
 
-    fig.suptitle("Score Invariance Under Uninformative Dirichlet Prior Weighting",
-                 fontweight="bold", fontsize=8.5, y=0.98)
+    fig.suptitle("Score concordance: Fixed weights vs Uniform Dirichlet prior",
+                 fontsize=8.0, y=0.98)
     fig.subplots_adjust(left=0.14, right=0.96, top=0.90, bottom=0.14)
     save(fig, "13_uniform_scatter_all")
 

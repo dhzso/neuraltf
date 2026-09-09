@@ -57,7 +57,7 @@ def build():
         last_y = cur_y
 
     for y, txt, c in adj_left:
-        ax.text(-0.06, y, txt, ha="right", va="center", fontsize=6.8, color=c, fontweight="bold")
+        ax.text(-0.06, y, txt, ha="right", va="center", fontsize=6.2, color=c)
 
     # Declutter right labels
     right_labels.sort(key=lambda x: x[0])
@@ -69,11 +69,11 @@ def build():
         last_y = cur_y
 
     for y, txt, c in adj_right:
-        ax.text(2.06, y, txt, ha="left", va="center", fontsize=6.8, color=c, fontweight="bold")
+        ax.text(2.06, y, txt, ha="left", va="center", fontsize=6.2, color=c)
 
     ax.set_xticks(x_pos)
-    ax.set_xticklabels(methods, fontsize=7.5, fontweight="bold")
-    ax.set_ylabel("Neural Candidate Rank (1–134)", fontsize=8, fontweight="bold")
+    ax.set_xticklabels(methods, fontsize=6.8)
+    ax.set_ylabel("Neural Candidate Rank (1–134)", fontsize=7.0)
     ax.set_ylim(-3, 72)
     ax.invert_yaxis()
     ax.set_xlim(-0.85, 2.55)
@@ -82,16 +82,16 @@ def build():
 
     # Legend placed cleanly in the middle corridor
     legend_handles = [
-        Line2D([0], [0], color=C_A, ls="-", lw=1.5, marker="o", markersize=5,
+        Line2D([0], [0], color=C_A, ls="-", lw=1.5, marker="o", markersize=4.5,
                label="Track A (RNAi-validated benchmark)"),
-        Line2D([0], [0], color=C_B, ls="--", lw=1.5, marker="o", markersize=5,
+        Line2D([0], [0], color=C_B, ls="--", lw=1.5, marker="o", markersize=4.5,
                label="Track B (Novel candidate)"),
     ]
     ax.legend(handles=legend_handles, loc="upper left", bbox_to_anchor=(0.28, 0.68),
-              frameon=False, fontsize=7.2)
+              frameon=False, fontsize=6.2)
 
     fig.suptitle("Candidate Rank Trajectories Across Dirichlet Prior Weighting",
-                 fontweight="bold", fontsize=8.5, y=0.98)
+                 fontsize=8.0, y=0.98)
     fig.subplots_adjust(left=0.22, right=0.88, top=0.90, bottom=0.10)
     save(fig, "15_method_bumpchart")
 

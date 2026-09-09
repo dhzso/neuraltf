@@ -29,23 +29,22 @@ def build():
                       "mean_abs":np.mean(np.abs(delta)), "n_displaced":n_displaced})
 
     stats = pd.DataFrame(stats).sort_values("median_abs", ascending=True)
-    fig, ax = plt.subplots(figsize=(W_15COL, 3.2))
+    fig, ax = plt.subplots(figsize=(W_15COL, 2.8))
     y = np.arange(len(stats))
     ax.barh(y, stats["median_abs"], color=[STREAM_C[s] for s in stats["stream"]],
             height=0.62, edgecolor="none")
     for i, (_, r) in enumerate(stats.iterrows()):
         nd = int(r["n_displaced"])
         txt = f"{r['median_abs']:.1f} ({nd} displaced)" if nd > 0 else f"{r['median_abs']:.1f}"
-        ax.text(r["median_abs"] + 0.08, i, txt, fontsize=6.8, va="center",
-                color="#222222", fontweight="bold" if nd > 0 else "normal")
+        ax.text(r["median_abs"] + 0.08, i, txt, fontsize=6.0, va="center",
+                color="#333333")
         
     ax.set_yticks(y)
-    ax.set_yticklabels([STREAM_L[s] for s in stats["stream"]], fontsize=7.5)
-    ax.set_xlabel("Median |Δrank|", fontsize=8)
-    ax.set_ylabel("Omitted stream", fontsize=8)
+    ax.set_yticklabels([STREAM_L[s] for s in stats["stream"]], fontsize=6.5)
+    ax.set_xlabel("Median |Δrank|", fontsize=7.0)
+    ax.set_ylabel("Omitted stream", fontsize=7.0)
     ax.set_xlim(0, max(stats["median_abs"]) * 1.35)
-    ax.set_title("Stream ablation impact",
-                 fontweight="bold", fontsize=8.5, pad=6)
+    ax.set_title("Global stream ablation impact", fontsize=8.0, pad=6)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()

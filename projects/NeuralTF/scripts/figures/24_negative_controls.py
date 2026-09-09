@@ -31,6 +31,9 @@ def build():
             pc.set_facecolor(color)
             pc.set_edgecolor("none")
             pc.set_alpha(0.35)
+        for key in ("cbars", "cmins", "cmaxes"):
+            if key in parts:
+                parts[key].set_visible(False)
 
         # Boxplot overlay
         bp = ax.boxplot(scores, positions=[pos], widths=0.22, patch_artist=True,
@@ -42,14 +45,13 @@ def build():
 
         median = np.median(scores)
         q1, q3 = np.percentile(scores, [25, 75])
-        ax.text(pos + 0.32, median, f"med = {median:.3f}",
-                fontsize=6.5, va="center", color="#222222")
+        ax.text(pos + 0.30, median, f"med = {median:.3f}",
+                fontsize=6.0, va="center", color="#444444")
 
     ax.set_xticks(positions)
-    ax.set_xticklabels(labels, fontsize=7.5)
-    ax.set_ylabel("Label-free score", fontsize=8)
-    ax.set_title("Score comparison vs controls",
-                 fontweight="bold", fontsize=8.5, pad=12)
+    ax.set_xticklabels(labels, fontsize=6.8)
+    ax.set_ylabel("Label-free score", fontsize=7.0)
+    ax.set_title("Score distribution vs empirical controls", fontsize=8.0, pad=10)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.set_xlim(0.4, 3.8)
@@ -60,16 +62,16 @@ def build():
     y_max = max([max(data[g]) for g in groups if data.get(g)]) * 1.05
 
     if p1 is not None:
-        ax.plot([1, 1, 2, 2], [y_max, y_max + 0.04, y_max + 0.04, y_max], color="#333333", lw=0.7)
+        ax.plot([1, 1, 2, 2], [y_max, y_max + 0.04, y_max + 0.04, y_max], color="#444444", lw=0.6)
         p1_str = "p < 10^{-10}" if p1 < 1e-10 else f"p = {p1:.1e}"
-        ax.text(1.5, y_max + 0.05, f"${p1_str}$", ha="center", va="bottom", fontsize=6.5, color="#222222")
+        ax.text(1.5, y_max + 0.05, f"${p1_str}$", ha="center", va="bottom", fontsize=6.0, color="#333333")
 
     if p2 is not None:
-        ax.plot([1, 1, 3, 3], [y_max + 0.12, y_max + 0.16, y_max + 0.16, y_max + 0.12], color="#333333", lw=0.7)
+        ax.plot([1, 1, 3, 3], [y_max + 0.12, y_max + 0.16, y_max + 0.16, y_max + 0.12], color="#444444", lw=0.6)
         p2_str = "p < 10^{-10}" if p2 < 1e-10 else f"p = {p2:.1e}"
-        ax.text(2.0, y_max + 0.17, f"${p2_str}$", ha="center", va="bottom", fontsize=6.5, color="#222222")
+        ax.text(2.0, y_max + 0.17, f"${p2_str}$", ha="center", va="bottom", fontsize=6.0, color="#333333")
 
-    ax.set_ylim(-0.02, y_max + 0.26)
+    ax.set_ylim(-0.02, y_max + 0.25)
     fig.tight_layout()
     save(fig, "24_negative_controls")
 

@@ -81,14 +81,14 @@ def build():
                 f"Min empirical $P = {p_empirical:.4f}$\n"
                 f"Permutations: {n_perm}\n"
                 f"Testable: {n_testable:,}",
-                transform=ax.transAxes, ha="right", va="top", fontsize=7,
+                transform=ax.transAxes, ha="right", va="top", fontsize=6.2,
                 color="#222222")
 
-        ax.set_xlabel("Integrated score", fontsize=8)
-        ax.set_ylabel("Density", fontsize=8)
-        ax.set_title("Permutation null vs observed scores",
-                     fontweight="bold", fontsize=8.5, pad=6)
-        ax.legend(fontsize=7, frameon=False, loc="upper left")
+        ax.set_xlabel("Integrated score", fontsize=7.0)
+        ax.set_ylabel("Density", fontsize=7.0)
+        ax.set_title("Permutation Null vs Observed Candidate Scores",
+                     fontsize=8.0, pad=6)
+        ax.legend(fontsize=6.2, frameon=False, loc="upper left")
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 

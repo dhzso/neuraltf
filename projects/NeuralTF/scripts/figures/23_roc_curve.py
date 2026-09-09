@@ -46,11 +46,11 @@ def build():
     ax.plot([0, 1], [0, 1], color="#888888", lw=0.8, linestyle=":",
             label="Random classifier (AUC = 0.500)")
 
-    ax.set_xlabel("False Positive Rate (1 - Specificity)", fontsize=8, fontweight="bold")
-    ax.set_ylabel("True Positive Rate (Sensitivity)", fontsize=8, fontweight="bold")
+    ax.set_xlabel("False Positive Rate (1 - Specificity)", fontsize=7.0)
+    ax.set_ylabel("True Positive Rate (Sensitivity)", fontsize=7.0)
     ax.set_title("Receiver Operating Characteristic: Neural TF Recovery",
-                 fontweight="bold", fontsize=8.5, pad=8)
-    ax.legend(loc="lower right", fontsize=7, frameon=False)
+                 fontsize=8.0, pad=6)
+    ax.legend(loc="lower right", fontsize=6.2, frameon=False)
     ax.set_xlim([-0.02, 1.02])
     ax.set_ylim([-0.02, 1.02])
     ax.spines["top"].set_visible(False)

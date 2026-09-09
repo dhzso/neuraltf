@@ -26,29 +26,28 @@ def build():
                 pvals[i,j] = p
                 pvals[j,i] = p
 
-    fig, ax = plt.subplots(figsize=(W_15COL, 4.2))
+    fig, ax = plt.subplots(figsize=(W_15COL, 4.0))
     im = ax.imshow(corr, cmap="RdBu_r", vmin=-0.4, vmax=1.0, aspect="equal")
     ax.set_xticks(range(n))
-    ax.set_xticklabels(labels, rotation=40, ha="right", fontsize=7)
+    ax.set_xticklabels(labels, rotation=40, ha="right", fontsize=6.5)
     ax.set_yticks(range(n))
-    ax.set_yticklabels(labels, fontsize=7)
+    ax.set_yticklabels(labels, fontsize=6.5)
 
-    # Annotate cells
+    # Annotate cells with adaptive contrast text color
     for i in range(n):
         for j in range(n):
             v = corr[i, j]
             if i == j:
-                ax.text(j, i, "1.00", ha="center", va="center", fontsize=6, color="#222222")
+                ax.text(j, i, "1.00", ha="center", va="center", fontsize=5.8, color="white")
             else:
                 sig = "***" if pvals[i, j] < 0.001 else ("**" if pvals[i, j] < 0.01 else ("*" if pvals[i, j] < 0.05 else ""))
-                tc = "white" if abs(v) > 0.55 else "#222222"
-                ax.text(j, i, f"{v:.2f}{sig}", ha="center", va="center", fontsize=5.8, color=tc)
+                tc = "white" if (v > 0.48 or v < -0.3) else "#222222"
+                ax.text(j, i, f"{v:.2f}{sig}", ha="center", va="center", fontsize=5.5, color=tc)
 
-    ax.set_title("Pairwise stream correlation (Spearman $r_s$)",
-                 fontweight="bold", fontsize=8.5, pad=8)
+    ax.set_title("Pairwise stream correlation (Spearman $r_s$)", fontsize=8.0, pad=6)
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-    cbar.set_label("Spearman $r_s$", fontsize=7.5)
-    cbar.ax.tick_params(labelsize=6.5)
+    cbar.set_label("Spearman $r_s$", fontsize=6.8)
+    cbar.ax.tick_params(labelsize=6.0)
     ax.spines[:].set_visible(False)
     fig.tight_layout()
     save(fig, "20_stream_correlation")

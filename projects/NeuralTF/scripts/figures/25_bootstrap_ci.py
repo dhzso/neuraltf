@@ -18,55 +18,50 @@ def build():
         raise FileNotFoundError(
             f"{path} missing — run scripts/stats/bootstrap_confidence.py first"
         )
-    df = pd.read_csv(path)
-
-    # prefer the observed integrated score for ordering (not the bootstrap
-    # mean — with weight uncertainty every mean shrinks toward the cohort)
-    order_col = "integrated_score" if "integrated_score" in df.columns \
-        else ("centered_mean" if "centered_mean" in df.columns else "bootstrap_mean")
-    mean_col = "centered_mean" if "centered_mean" in df.columns else "bootstrap_mean"
-    lo_col = "centered_ci_95_lo" if "centered_ci_95_lo" in df.columns else "ci_95_lo"
-    hi_col = "centered_ci_95_hi" if "centered_ci_95_hi" in df.columns else "ci_95_hi"
-
-    df = df.sort_values(order_col, ascending=True).tail(20)
+    ci_df = pd.read_csv(path)
+    top10 = load_top10()
     neural = load_neural()
-    proof_map = dict(zip(neural["gene_id"], neural.get("proof_status", [""] * len(neural))))
 
-    fig, ax = plt.subplots(figsize=(W_15COL, 4.4))
-    y = np.arange(len(df))
-    names = [label(neural, gid) for gid in df["gene_id"]]
-    means = df[order_col].values
-    lo = df[lo_col].values
-    hi = df[hi_col].values
+    # Merge credible intervals for top 10 prioritized candidates
+    sub = top10.merge(
+        ci_df[["gene_id", "centered_mean", "centered_ci_95_lo", "centered_ci_95_hi"]],
+        on="gene_id",
+        how="left"
+    )
+    # Sort ascending so top-ranked candidates appear at the top of the horizontal plot
+    sub = sub.iloc[::-1].reset_index(drop=True)
 
-    # Determine track color for each candidate
-    colors = []
-    for gid in df["gene_id"]:
-        ps = str(proof_map.get(gid, "")).lower()
-        colors.append(C_A if "validated" in ps or "fstf" in ps else C_B)
+    fig, ax = plt.subplots(figsize=(W_15COL, 3.8))
+    y = np.arange(len(sub))
+    names = [label(neural, gid) for gid in sub["gene_id"]]
+    means = sub["centered_mean"].values
+    lo = sub["centered_ci_95_lo"].values
+    hi = sub["centered_ci_95_hi"].values
+    tracks = sub["track"].values
+
+    colors = [C_A if t == "A" else C_B for t in tracks]
 
     # Point-range plot
-    for i in range(len(df)):
+    for i in range(len(sub)):
         c = colors[i]
-        # 95% uncertainty interval
-        ax.plot([lo[i], hi[i]], [y[i], y[i]], color=c, lw=1.6, alpha=0.75, zorder=3)
-        # Point estimate
-        ax.scatter([means[i]], [y[i]], color=c, s=36, edgecolors="white", lw=0.6, zorder=4)
+        ax.plot([lo[i], hi[i]], [y[i], y[i]], color=c, lw=1.5, alpha=0.8, zorder=3)
+        ax.scatter([means[i]], [y[i]], color=c, s=28, edgecolors="white", lw=0.6, zorder=4)
+
+    # Track separator (between index 4 and 5 in reversed top10)
+    ax.axhline(4.5, color="#888888", lw=0.6, ls="--")
 
     ax.set_yticks(y)
-    ax.set_yticklabels(names, fontsize=7.5)
-
-    ax.set_xlabel("Integrated score (point = median, bar = 95% CI)", fontsize=8)
-    ax.set_ylabel("Candidate", fontsize=8)
-    ax.set_title("Score credible intervals (1,000 Dirichlet draws)",
-                 fontweight="bold", fontsize=8.5, pad=6)
+    ax.set_yticklabels(names, fontsize=6.8)
+    ax.set_xlabel("Dirichlet credible score (point = mean, bar = 95% CI)", fontsize=7.0)
+    ax.set_ylabel("Candidate", fontsize=7.0)
+    ax.set_title("Score credible intervals across 1,000 Dirichlet draws", fontsize=8.0, pad=6)
     
     from matplotlib.lines import Line2D
     legend_handles = [
-        Line2D([0], [0], color=C_A, marker="o", lw=1.5, markersize=5, label="Track A (benchmark)"),
-        Line2D([0], [0], color=C_B, marker="o", lw=1.5, markersize=5, label="Track B (candidate)")
+        Line2D([0], [0], color=C_A, marker="o", lw=1.5, markersize=4.5, label="Track A (benchmark)"),
+        Line2D([0], [0], color=C_B, marker="o", lw=1.5, markersize=4.5, label="Track B (candidate)")
     ]
-    ax.legend(handles=legend_handles, loc="upper left", frameon=False, fontsize=7)
+    ax.legend(handles=legend_handles, loc="upper left", frameon=False, fontsize=6.2)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 

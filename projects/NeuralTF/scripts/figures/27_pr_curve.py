@@ -49,11 +49,11 @@ def build():
     ax.axhline(y=baseline, color="#888888", lw=0.8, linestyle=":",
                label=f"Random baseline ({baseline:.2f})")
 
-    ax.set_xlabel("Recall (Sensitivity)", fontsize=8, fontweight="bold")
-    ax.set_ylabel("Precision (Positive Predictive Value)", fontsize=8, fontweight="bold")
+    ax.set_xlabel("Recall (Sensitivity)", fontsize=7.0)
+    ax.set_ylabel("Precision (Positive Predictive Value)", fontsize=7.0)
     ax.set_title("Precision–Recall: Neural TF Recovery",
-                 fontweight="bold", fontsize=8.5, pad=8)
-    ax.legend(loc="upper right", fontsize=7, frameon=True,
+                 fontsize=8.0, pad=6)
+    ax.legend(loc="upper right", fontsize=6.2, frameon=True,
               facecolor="white", edgecolor="#DDDDDD", framealpha=0.95)
     ax.set_xlim([-0.02, 1.02])
     ax.set_ylim([-0.02, 1.02])

@@ -90,8 +90,7 @@ def build():
                     xy=(r.iloc[0]["fincher_lfc"], r.iloc[0]["plass_lfc"]),
                     xytext=offset,
                     textcoords="offset points",
-                    fontsize=6.5,
-                    fontweight="bold",
+                    fontsize=6.0,
                     color="#111111",
                     ha=ha,
                     va=va,
@@ -107,16 +106,16 @@ def build():
         f"Pearson $r = {r_p:.2f}$ ($P < 10^{{-300}}$)\n"
         f"$N =$ {len(clean_lfc):,} genes",
         transform=ax.transAxes,
-        fontsize=6.8,
+        fontsize=6.2,
         va="top",
         ha="left",
         bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="#D0D7DE", alpha=0.95),
         zorder=8,
     )
 
-    ax.set_xlabel("Fincher et al. $\\log_2$ fold change", fontsize=8)
-    ax.set_ylabel("Plass et al. $\\log_2$ fold change", fontsize=8)
-    ax.set_title("Cross-atlas neural effect size concordance", fontsize=8, pad=8)
+    ax.set_xlabel("Fincher et al. $\\log_2$ fold change", fontsize=7.0)
+    ax.set_ylabel("Plass et al. $\\log_2$ fold change", fontsize=7.0)
+    ax.set_title("Cross-Atlas Neural Effect Size Concordance", fontsize=8.0, pad=6)
     ax.set_xlim(-1.5, 9.5)
     ax.set_ylim(-1.5, 10.5)
 

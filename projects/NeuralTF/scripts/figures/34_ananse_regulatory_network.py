@@ -94,16 +94,16 @@ def build():
                 xy=(x_val, y_val),
                 xytext=offset,
                 textcoords="offset points",
-                fontsize=6.5,
+                fontsize=6.0,
                 ha=ha,
                 va=va,
                 arrowprops=dict(arrowstyle="-", color="#555555", lw=0.6),
                 zorder=5,
             )
 
-    ax.set_xlabel("Total predicted target genes ($k_{\\mathrm{total}}$)", fontsize=8)
-    ax.set_ylabel("Neuron target genes ($k_{\\mathrm{neuron}}$)", fontsize=8)
-    ax.set_title("ANANSE regulatory network target specificity", fontsize=8, pad=8)
+    ax.set_xlabel("Total predicted target genes ($k_{\\mathrm{total}}$)", fontsize=7.0)
+    ax.set_ylabel("Neuron target genes ($k_{\\mathrm{neuron}}$)", fontsize=7.0)
+    ax.set_title("ANANSE Regulatory Network Target Specificity", fontsize=8.0, pad=6)
     ax.set_xlim(-30, 950)
     ax.set_ylim(-20, 520)
 
@@ -114,7 +114,7 @@ def build():
         facecolor="white",
         framealpha=1.0,
         edgecolor="#D0D7DE",
-        fontsize=6.2,
+        fontsize=6.0,
         handletextpad=0.4,
         borderpad=0.5,
     )

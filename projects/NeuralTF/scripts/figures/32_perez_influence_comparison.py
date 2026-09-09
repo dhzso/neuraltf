@@ -65,12 +65,12 @@ def build():
     h = 0.02
     ax.plot([1, 1, 2, 2], [y_bar, y_bar + h, y_bar + h, y_bar], color="#222222", lw=0.8)
     ax.text(1.5, y_bar + h + 0.015, f"Mann–Whitney U: {p_str}",
-            ha="center", va="bottom", fontsize=7.2, fontweight="bold", color="#222222")
+            ha="center", va="bottom", fontsize=6.2, color="#222222")
 
-    ax.set_xticklabels(labels, fontsize=7.5)
-    ax.set_ylabel("Integrated Evidence Score", fontsize=8, fontweight="bold")
+    ax.set_xticklabels(labels, fontsize=6.8)
+    ax.set_ylabel("Integrated Evidence Score", fontsize=7.0)
     ax.set_title("Evidence Score Stratification Across Single-Cell Lineage Classes",
-                 fontweight="bold", fontsize=8.5, pad=8)
+                 fontsize=8.0, pad=6)
     ax.set_ylim(-0.02, 1.15)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

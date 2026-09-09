@@ -56,14 +56,14 @@ def build():
 
         # Annotation of median score and non-zero count
         ax.text(1.04, i, f"Med={medians[i]:.2f} (n={counts[i]:,})",
-                va="center", ha="left", fontsize=6.8, color="#333333")
+                va="center", ha="left", fontsize=6.0, color="#333333")
 
     ax.set_yticks(y)
-    ax.set_yticklabels(labels, fontsize=7.5, fontweight="bold")
-    ax.set_xlabel("Normalized Evidence Score", fontsize=8, fontweight="bold")
+    ax.set_yticklabels(labels, fontsize=6.5)
+    ax.set_xlabel("Normalized Evidence Score", fontsize=7.0)
     ax.set_xlim(-0.02, 1.35)
     ax.set_title("Empirical Score Distributions Across Nine Integrated Evidence Streams",
-                 fontweight="bold", fontsize=8.5, pad=8)
+                 fontsize=8.0, pad=6)
     ax.invert_yaxis()
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

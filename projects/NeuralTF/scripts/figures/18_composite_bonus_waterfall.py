@@ -36,35 +36,51 @@ def compute_bonuses(row):
     return bonuses
 
 def build():
-    s2 = pd.read_csv(RES / "supplementary_table_S2_fixed_all_candidates.csv")
+    s3 = pd.read_csv(RES / "supplementary_table_S3_centered_all_candidates.csv")
     neural = load_neural()
     top10 = load_top10()
     top10_ids = set(top10["gene_id"])
+    track_map = dict(zip(top10["gene_id"], top10["track"]))
 
+    sub = s3[s3["gene_id"].isin(top10_ids)].copy()
     rows = []
-    for _, row in s2[s2["gene_id"].isin(top10_ids)].iterrows():
-        base = row.get("integrated_score", 0)
-        bonuses = compute_bonuses(row)
-        total_bonus = sum(bonuses.values())
-        nm = label(neural, row["gene_id"])
-        track = "A" if row.get("proof_status", "") == "known_rnai_validated" else "B"
-        rows.append({"name": nm, "track": track, "base": base, **bonuses,
-                     "total_bonus": total_bonus})
+    for _, row in sub.iterrows():
+        gid = row["gene_id"]
+        nm = label(neural, gid)
+        track = track_map.get(gid, "B")
+        base = row["integrated_score"]
+        b_neural = row["bonus_go_neural"]
+        b_tf = row["bonus_go_tf"]
+        b_orth = row["bonus_human_ortholog"]
+        comp = base + b_neural + b_tf + b_orth
+        rows.append({
+            "gene_id": gid,
+            "name": nm,
+            "track": track,
+            "base": base,
+            "GO neural": b_neural,
+            "GO TF": b_tf,
+            "Human ortholog": b_orth,
+            "composite": comp
+        })
 
     df = pd.DataFrame(rows)
-    df["composite"] = df["base"] + df["total_bonus"]
-    df = df.sort_values("composite", ascending=True)
+    # Order by track (A first, then B) and within track by composite descending
+    df = df.sort_values(["track", "composite"], ascending=[False, True]).reset_index(drop=True)
     y = np.arange(len(df))
 
     bonus_cols = ["GO neural", "GO TF", "Human ortholog"]
-    bonus_colors = {"GO neural": "#B04A3E", "GO TF": "#4A7C59",
-                    "Human ortholog": "#5C82A6"}
+    bonus_colors = {
+        "GO neural": "#B04A3E",       # terracotta
+        "GO TF": "#4A7C59",           # sage green
+        "Human ortholog": "#5C82A6"   # steel blue
+    }
 
-    fig, ax = plt.subplots(figsize=(W_15COL, 4.2))
+    fig, ax = plt.subplots(figsize=(W_15COL, 3.8))
 
     # Base score bars
     ax.barh(y, df["base"], height=0.58, color="#788896", edgecolor="none",
-            label="Base score")
+            label="Base evidence score")
 
     # Stacked bonus bars
     left = df["base"].values.copy()
@@ -77,21 +93,24 @@ def build():
                     label=f"{bc} (+{vals[mask][0]:.2f})")
             left = left + vals
 
-    # Composite score label at end
+    # Composite score label at end of each bar
     for i, (_, r) in enumerate(df.iterrows()):
         comp = r["composite"]
-        ax.text(comp + 0.015, y[i], f"{comp:.2f}", fontsize=7,
-                va="center", color="#222222")
+        ax.text(comp + 0.015, y[i], f"{comp:.3f}", fontsize=6.2,
+                va="center", color="#333333")
+
+    # Track dividing line
+    ax.axhline(4.5, color="#888888", lw=0.6, ls="--")
 
     # Gene names
     ax.set_yticks(y)
-    ax.set_yticklabels(df["name"], fontsize=7.5)
+    ax.set_yticklabels(df["name"], fontsize=6.8)
 
-    ax.set_xlabel("Composite score", fontsize=8)
-    ax.set_ylabel("Candidate", fontsize=8)
-    ax.set_title("Score composition (top 10 TFs)",
-                 fontweight="bold", fontsize=8.5, pad=18)
-    ax.legend(loc="lower left", bbox_to_anchor=(0.0, 1.02), ncol=4, frameon=False, fontsize=6.8)
+    ax.set_xlabel("Prioritization score (base score + additive bonuses)", fontsize=7.0)
+    ax.set_ylabel("Candidate", fontsize=7.0)
+    ax.set_title("Score composition and bonus breakdown (Top 10 TFs)",
+                 fontsize=8.0, pad=16)
+    ax.legend(loc="lower left", bbox_to_anchor=(0.0, 1.02), ncol=4, frameon=False, fontsize=6.2)
     ax.set_xlim(0, 1.25)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

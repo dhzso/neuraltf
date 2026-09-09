@@ -83,21 +83,19 @@ def build():
     )
 
     ax.set_xticks(range(len(time_labels)))
-    ax.set_xticklabels(time_labels, rotation=25, ha="right", fontsize=7.2)
+    ax.set_xticklabels(time_labels, rotation=25, ha="right", fontsize=6.2)
     ax.set_yticks(range(n_genes))
-    ax.set_yticklabels(gene_labels, fontsize=7.2)
+    ax.set_yticklabels(gene_labels, fontsize=6.2)
 
     # Color y-tick labels by Track membership
     for i, ticklabel in enumerate(ax.get_yticklabels()):
         if merged.iloc[i]["track"] == "A":
             ticklabel.set_color(C_A)
-            ticklabel.set_fontweight("bold")
         else:
             ticklabel.set_color(C_B)
-            ticklabel.set_fontweight("bold")
 
     # Divider separating Track A and Track B
-    ax.axhline(4.5, color="#222222", lw=1.2, ls="--")
+    ax.axhline(4.5, color="#222222", lw=1.0, ls="--")
 
     # Legend above the axes indicating Track membership
     from matplotlib.patches import Patch
@@ -111,13 +109,13 @@ def build():
         bbox_to_anchor=(0.0, 1.02),
         ncol=2,
         frameon=False,
-        fontsize=6.5,
-        handletextpad=0.5,
-        columnspacing=1.2,
+        fontsize=6.0,
+        handletextpad=0.4,
+        columnspacing=1.0,
     )
 
-    ax.set_xlabel("Regeneration stage post-amputation", fontsize=8)
-    ax.set_title("Regeneration temporal dynamics (Cui et al. 2023)", fontsize=8.5, pad=22)
+    ax.set_xlabel("Regeneration stage post-amputation", fontsize=7.0)
+    ax.set_title("Regeneration Temporal Dynamics (Cui et al. 2023)", fontsize=8.0, pad=18)
 
     # Subtle cell borders
     ax.set_xticks(np.arange(-0.5, len(time_labels), 1), minor=True)
@@ -127,8 +125,8 @@ def build():
 
     # Colorbar
     cbar = fig.colorbar(im, ax=ax, shrink=0.85, pad=0.04)
-    cbar.set_label("Standardized expression ($z$-score)", fontsize=7)
-    cbar.ax.tick_params(labelsize=6.5)
+    cbar.set_label("Standardized expression ($z$-score)", fontsize=6.8)
+    cbar.ax.tick_params(labelsize=6.0)
 
     fig.tight_layout()
     save(fig, "36_regeneration_temporal_dynamics")

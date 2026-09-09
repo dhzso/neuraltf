@@ -40,52 +40,52 @@ def build():
     vmax = max(abs(pivot.values.min()), abs(pivot.values.max()), 1)
     norm = mcolors.TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
-    fig = plt.figure(figsize=(W_15COL, 4.2))
-    gs = fig.add_gridspec(1, 3, width_ratios=[0.04, 0.91, 0.04], wspace=0.06)
+    fig = plt.figure(figsize=(W_15COL, 3.8))
+    gs = fig.add_gridspec(1, 3, width_ratios=[0.035, 0.925, 0.04], wspace=0.03)
     ax_track = fig.add_subplot(gs[0, 0])
     ax = fig.add_subplot(gs[0, 1])
     ax_cbar = fig.add_subplot(gs[0, 2])
 
-    # 1. Track sidebar
+    # 1. Track sidebar with candidate labels on the left
     track_colors = [C_A if i < 5 else C_B for i in range(len(pivot))]
     ax_track.imshow([[1] for _ in range(len(pivot))], aspect="auto", cmap="binary", vmin=0, vmax=1)
     for i, color in enumerate(track_colors):
         ax_track.add_patch(plt.Rectangle((-0.5, i - 0.5), 1, 1, color=color, ec="none"))
+    ylabels = [label(neural, g) for g in pivot.index]
     ax_track.set_xticks([])
-    ax_track.set_yticks([])
+    ax_track.set_yticks(range(len(pivot)))
+    ax_track.set_yticklabels(ylabels, fontsize=6.5)
+    ax_track.tick_params(left=False, right=False, length=0)
     ax_track.set_xlim(-0.5, 0.5)
     ax_track.set_ylim(len(pivot) - 0.5, -0.5)
-    ax_track.set_ylabel("Track", fontsize=7.5, fontweight="bold")
     ax_track.spines[:].set_visible(False)
 
     # 2. Main heatmap
     im = ax.imshow(pivot.values, aspect="auto", cmap=plt.cm.RdBu_r, norm=norm, interpolation="nearest")
     ax.set_xticks(range(len(pivot.columns)))
-    ax.set_xticklabels([STREAM_L[s] for s in pivot.columns], rotation=38, ha="left", fontsize=7)
+    ax.set_xticklabels([STREAM_L[s] for s in pivot.columns], rotation=40, ha="left", fontsize=6.5)
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position("top")
-    
-    ylabels = [label(neural, g) for g in pivot.index]
-    ax.set_yticks(range(len(pivot)))
-    ax.set_yticklabels(ylabels, fontsize=7)
+    ax.set_yticks([])
+    ax.tick_params(length=0)
         
     for i in range(pivot.shape[0]):
         for j in range(pivot.shape[1]):
             v = pivot.values[i, j]
             if not np.isnan(v):
-                tc = "white" if abs(v) > vmax * 0.55 else "#222222"
+                tc = "white" if abs(v) > vmax * 0.45 else "#222222"
                 sign_str = f"+{int(v)}" if v > 0 else (f"{int(v)}" if v < 0 else "0")
-                ax.text(j, i, sign_str, ha="center", va="center", fontsize=6.5, color=tc, fontweight="bold")
+                ax.text(j, i, sign_str, ha="center", va="center", fontsize=5.8, color=tc)
 
     # Divider line between Track A and Track B
     ax.axhline(4.5, color="#555555", lw=0.8, ls="--")
-    ax.set_ylabel("Candidate", fontsize=8)
+    ax_track.axhline(4.5, color="#555555", lw=0.8, ls="--")
     ax.spines[:].set_visible(False)
     
     # 3. Colorbar
     cbar = fig.colorbar(im, cax=ax_cbar)
-    cbar.set_label("Rank shift (Δrank)", fontsize=7.5)
-    cbar.ax.tick_params(labelsize=6.5)
+    cbar.set_label("Rank shift (Δrank)", fontsize=6.8)
+    cbar.ax.tick_params(labelsize=6.0)
 
     # Legend for track
     from matplotlib.patches import Patch
@@ -94,11 +94,11 @@ def build():
         Patch(facecolor=C_B, label="Track B (candidate)")
     ]
     ax.legend(handles=leg_handles, loc="upper right", bbox_to_anchor=(1.0, -0.06),
-              ncol=2, frameon=False, fontsize=7)
+              ncol=2, frameon=False, fontsize=6.2)
 
     fig.suptitle("Candidate stream sensitivity (Δrank)",
-                 fontweight="bold", fontsize=8.5, y=0.99)
-    fig.subplots_adjust(left=0.22, right=0.93, top=0.84, bottom=0.10)
+                 fontsize=8.0, y=0.98)
+    fig.subplots_adjust(left=0.18, right=0.92, top=0.78, bottom=0.10)
     save(fig, "09_stream_ablation_candidate")
 
 if __name__=="__main__": build()

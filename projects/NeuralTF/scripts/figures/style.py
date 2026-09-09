@@ -19,18 +19,18 @@ SUP.mkdir(parents=True, exist_ok=True)
 plt.rcParams.update({
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 8,
+    "font.size": 7.0,
     "text.color": "#222222",
-    "axes.titlesize": 8.5,
-    "axes.labelsize": 8,
+    "axes.titlesize": 8.0,
+    "axes.labelsize": 7.0,
     "axes.labelcolor": "#222222",
     "axes.linewidth": 0.6,
     "axes.edgecolor": "#333333",
-    "axes.labelweight": "bold",
-    "axes.titleweight": "bold",
-    "axes.titlepad": 5.0,
-    "xtick.labelsize": 7,
-    "ytick.labelsize": 7,
+    "axes.labelweight": "normal",
+    "axes.titleweight": "normal",
+    "axes.titlepad": 4.0,
+    "xtick.labelsize": 6.0,
+    "ytick.labelsize": 6.0,
     "xtick.color": "#222222",
     "ytick.color": "#222222",
     "xtick.major.width": 0.6,
@@ -39,7 +39,7 @@ plt.rcParams.update({
     "ytick.major.size": 3.0,
     "xtick.direction": "out",
     "ytick.direction": "out",
-    "legend.fontsize": 7,
+    "legend.fontsize": 6.0,
     "legend.labelcolor": "#222222",
     "figure.dpi": 500,
     "pdf.fonttype": 42,
@@ -160,11 +160,11 @@ def load_uniform_full():
 
 def load_sens_draws():
     """Load all 1000 weight sensitivity draws without dropping repeated draws per gene."""
-    return _csv(FIG / "weight_sensitivity_draws.csv", allow_duplicates=True)
+    return _csv(RES / "weight_sensitivity_draws.csv", allow_duplicates=True)
 
 
 def load_sens_top10():
-    return _csv(FIG / "weight_sensitivity_top10_challengers.csv")
+    return _csv(RES / "weight_sensitivity_top10_challengers.csv")
 
 
 def save(fig, name, dpi=500):

@@ -12,7 +12,7 @@ def build():
     a = all_df[col].dropna().values
     n = neural[col].dropna().values
 
-    fig, ax = plt.subplots(figsize=(W_15COL, 3.4))
+    fig, ax = plt.subplots(figsize=(W_15COL, 2.8))
     bins = np.linspace(0, max(a.max(), n.max()) * 1.02, 35)
     
     # Histograms
@@ -24,19 +24,19 @@ def build():
     x_grid = np.linspace(bins[0], bins[-1], 300)
     kde_a = gaussian_kde(a)
     kde_n = gaussian_kde(n)
-    ax.plot(x_grid, kde_a(x_grid), color="#55606B", lw=1.3, label=f"All candidates (n = {len(a):,})")
-    ax.plot(x_grid, kde_n(x_grid), color=C_A, lw=1.6, label=f"Neural TFs (n = {len(n):,})")
+    ax.plot(x_grid, kde_a(x_grid), color="#55606B", lw=1.2, label=f"All candidates (n = {len(a):,})")
+    ax.plot(x_grid, kde_n(x_grid), color=C_A, lw=1.5, label=f"Neural TFs (n = {len(n):,})")
 
     ks, p = ks_2samp(a, n)
     p_str = "P < 10^{-30}" if p < 1e-30 else f"P = {p:.1e}"
     ax.text(0.96, 0.90, f"KS test: $D = {ks:.3f}$, ${p_str}$",
-            transform=ax.transAxes, fontsize=7, ha="right", va="top", color="#222222")
+            transform=ax.transAxes, fontsize=6.2, ha="right", va="top", color="#333333")
 
-    ax.set_xlabel("Integrated score", fontsize=8)
-    ax.set_ylabel("Density", fontsize=8)
-    ax.set_title("Score distribution", fontweight="bold", fontsize=8.5, pad=6)
+    ax.set_xlabel("Integrated evidence score", fontsize=7.0)
+    ax.set_ylabel("Probability density", fontsize=7.0)
+    ax.set_title("Candidate score distribution (All TFs vs Neural-filtered)", fontsize=8.0, pad=6)
 
-    ax.legend(frameon=False, fontsize=7, loc="upper left")
+    ax.legend(frameon=False, fontsize=6.2, loc="upper left")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()
