@@ -58,20 +58,20 @@ def build():
 
     # Statistical test between Neural and Other lineages
     stat, pval = mannwhitneyu(neural_cls, other_cls, alternative="two-sided")
-    p_str = "P < 10^{-15}" if pval < 1e-15 else f"P = {pval:.1e}"
+    p_str = r"P < 10^{-15}" if pval < 1e-15 else f"P = {pval:.1e}"
 
     # Significance bracket between group 1 and group 2
-    y_bar = max(np.percentile(neural_cls, 95), np.percentile(other_cls, 95)) + 0.12
-    h = 0.02
+    y_bar = 1.05
+    h = 0.025
     ax.plot([1, 1, 2, 2], [y_bar, y_bar + h, y_bar + h, y_bar], color="#222222", lw=0.8)
-    ax.text(1.5, y_bar + h + 0.015, f"Mann–Whitney U: {p_str}",
+    ax.text(1.5, y_bar + h + 0.015, f"Mann–Whitney $U$: ${p_str}$",
             ha="center", va="bottom", fontsize=6.2, color="#222222")
 
     ax.set_xticklabels(labels, fontsize=6.8)
     ax.set_ylabel("Integrated Evidence Score", fontsize=7.0)
     ax.set_title("Evidence Score Stratification Across Single-Cell Lineage Classes",
                  fontsize=8.0, pad=6)
-    ax.set_ylim(-0.02, 1.15)
+    ax.set_ylim(-0.02, 1.22)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 

@@ -36,28 +36,28 @@ def build():
     from scipy.stats import pearsonr
     r_p, p_p = pearsonr(clean_lfc["fincher_lfc"], clean_lfc["plass_lfc"])
 
-    fig, ax = plt.subplots(figsize=(W_1COL, 3.2))
+    fig, ax = plt.subplots(figsize=(W_1COL, 3.6))
 
     # Identity and zero reference lines
     ax.axhline(0, color="#D0D7DE", lw=0.6, ls=":", zorder=1)
     ax.axvline(0, color="#D0D7DE", lw=0.6, ls=":", zorder=1)
-    ax.plot([-1, 9], [-1, 9], color="#888888", lw=0.8, ls="--", zorder=2, label="Identity line ($y = x$)")
+    ax.plot([-1, 9], [-1, 9], color="#888888", lw=0.8, ls="--", zorder=2, label="Identity ($y = x$)")
 
     # Linear regression line
     m, b = np.polyfit(clean_lfc["fincher_lfc"], clean_lfc["plass_lfc"], 1)
     x_vals = np.linspace(clean_lfc["fincher_lfc"].min(), clean_lfc["fincher_lfc"].max(), 100)
-    ax.plot(x_vals, m * x_vals + b, color=C_A, lw=1.0, ls="-", zorder=3, label=f"Linear fit ($y = {m:.2f}x + {b:.2f}$)")
+    ax.plot(x_vals, m * x_vals + b, color=C_A, lw=1.1, ls="-", zorder=3, label=f"Fit ($y = {m:.2f}x + {b:.2f}$)")
 
     # Background gene points
     ax.scatter(
         clean_lfc["fincher_lfc"],
         clean_lfc["plass_lfc"],
         c=C_A,
-        s=7,
-        alpha=0.28,
+        s=6,
+        alpha=0.22,
         edgecolor="none",
         rasterized=True,
-        label=f"Cross-atlas genes ($n = {len(clean_lfc):,}$)",
+        label=f"All genes ($n = {len(clean_lfc):,}$)",
         zorder=3,
     )
 
@@ -70,17 +70,17 @@ def build():
             c=C_B,
             edgecolor="#222222",
             linewidth=0.7,
-            s=34,
+            s=32,
             label=f"Neural TFs ($n = {len(neural_common)}$)",
             zorder=6,
         )
 
-        # Annotate selected notable neural regulators
+        # Annotate selected notable neural regulators into clean whitespace
         tf_offsets = {
-            "dd_Smed_v6_10038_0_1": ("Zeb-1", (-16, 14), "right", "bottom"),
-            "dd_Smed_v6_16955_0_1": ("dd16955", (16, -14), "left", "top"),
-            "dd_Smed_v6_11150_0_1": ("dd11150", (-16, 12), "right", "bottom"),
-            "dd_Smed_v6_1854_0_1": ("dd1854", (14, -6), "left", "center"),
+            "dd_Smed_v6_10038_0_1": ("Zeb-1", (-20, 16), "right", "bottom"),
+            "dd_Smed_v6_16955_0_1": ("dd16955", (18, -16), "left", "top"),
+            "dd_Smed_v6_11150_0_1": ("dd11150", (-20, 4), "right", "center"),
+            "dd_Smed_v6_1854_0_1": ("dd1854", (-16, 16), "right", "bottom"),
         }
         for gid, (nm, offset, ha, va) in tf_offsets.items():
             r = neural_common[neural_common["v6_id"] == gid]
@@ -90,46 +90,45 @@ def build():
                     xy=(r.iloc[0]["fincher_lfc"], r.iloc[0]["plass_lfc"]),
                     xytext=offset,
                     textcoords="offset points",
-                    fontsize=6.0,
+                    fontsize=5.8,
                     color="#111111",
                     ha=ha,
                     va=va,
-                    arrowprops=dict(arrowstyle="-", color="#444444", lw=0.6),
+                    arrowprops=dict(arrowstyle="-", color="#555555", lw=0.5),
                     zorder=7,
                 )
 
-    # Inset correlation statistics
+    # Inset correlation statistics (compact, non-intrusive)
     ax.text(
         0.05,
-        0.92,
+        0.94,
         f"Spearman $r_s = {r_s:.2f}$ ($P < 10^{{-300}}$)\n"
-        f"Pearson $r = {r_p:.2f}$ ($P < 10^{{-300}}$)\n"
-        f"$N =$ {len(clean_lfc):,} genes",
+        f"Pearson $r = {r_p:.2f}$ ($P < 10^{{-300}}$)",
         transform=ax.transAxes,
-        fontsize=6.2,
+        fontsize=5.8,
         va="top",
         ha="left",
-        bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="#D0D7DE", alpha=0.95),
+        bbox=dict(boxstyle="square,pad=0.3", fc="#FFFFFF", ec="#CCCCCC", lw=0.5, alpha=0.9),
         zorder=8,
     )
 
     ax.set_xlabel("Fincher et al. $\\log_2$ fold change", fontsize=7.0)
     ax.set_ylabel("Plass et al. $\\log_2$ fold change", fontsize=7.0)
-    ax.set_title("Cross-Atlas Neural Effect Size Concordance", fontsize=8.0, pad=6)
     ax.set_xlim(-1.5, 9.5)
     ax.set_ylim(-1.5, 10.5)
 
+    # Legend placed cleanly above axes to eliminate any data masking
     ax.legend(
-        loc="lower right",
-        frameon=True,
-        facecolor="white",
-        framealpha=0.95,
-        edgecolor="#D0D7DE",
-        fontsize=6.2,
-        handletextpad=0.4,
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.02),
+        ncol=2,
+        frameon=False,
+        fontsize=5.8,
+        handletextpad=0.3,
+        columnspacing=1.2,
     )
 
-    fig.tight_layout()
+    fig.subplots_adjust(left=0.15, right=0.96, top=0.88, bottom=0.13)
     save(fig, "35_meta_analysis_concordance")
 
 if __name__ == "__main__":

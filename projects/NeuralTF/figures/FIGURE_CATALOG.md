@@ -15,8 +15,8 @@ This catalog provides an authoritative reference for all **26 publication figure
 | :--- | :--- | :--- | :--- |
 | `01_stream_coverage_all.png` | Empirical Completeness Across Nine Evidence Streams | Data Integration | Whole-transcriptome completeness ($N=11,675$) across all 9 evidence streams. |
 | `03_score_distribution_all_vs_neural.png` | Integrated Evidence Score Separation | Score Validation | Empirical KDE separating background transcriptome vs prioritized neural TFs (K-S test $P < 10^{-15}$). |
-| `04_evidence_heatmap_neural.png` | Multi-Stream Evidence Profiles of Neural Regulators | Candidate Landscape | Stream-by-stream normalized evidence heatmap for all 134 neural TFs with canonical gene nomenclature. |
-| `05_top10_candidate_atlas.png` | High-Confidence Neural Regulator Atlas (Top 10) | Candidate Profiling | Multi-stream score decomposition for Top 10 candidates (Track A RNAi benchmark & Track B novel candidates). |
+| `04_evidence_heatmap_neural.png` | Multi-Stream Evidence Landscape Across All 134 Prioritized Neural Transcription Factors | Candidate Landscape | Stream-by-stream normalized evidence heatmap for all 134 neural TFs with dual dense/specialized streams, missing data handling, and integrated score bars. |
+| `05_top10_candidate_atlas.png` | Candidate Atlas: High-Confidence & Novel Neural Transcription Factor Regulators | Candidate Profiling | Dual-panel atlas: (a) 6-stream normalized evidence matrix with numerical cell values; (b) Prioritization score bars with base evidence score markers, TF family badges, and human ortholog annotations. |
 | `06_weight_sensitivity_ranks.png` | Prior Sensitivity: Top-10 Rank Shifts (1,000 Draws) | Robustness | Rank distributions under 1,000 centered Dirichlet weight perturbations ($k=40$). |
 | `07_weight_sensitivity_ptop10.png` | Posterior Inclusion Probability $P(\text{Top } 10)$ | Robustness | Candidate inclusion probability in the top 10 under weight uncertainty. |
 | `08_stream_ablation_global.png` | Global Stream Ablation: Spearman Rank Degradation | Stream Importance | Impact on transcriptome-wide rankings when each evidence stream is omitted. |

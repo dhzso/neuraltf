@@ -50,7 +50,7 @@ def build():
         ax.set_xlabel("Effect size", fontsize=7.0)
         ax.set_title("Effect Sizes Across Candidate Cohorts",
                      fontsize=8.0, pad=6)
-        ax.legend(fontsize=6.2, loc="lower right", frameon=False)
+        ax.legend(fontsize=6.2, loc="upper right", frameon=False)
         ax.set_xlim(-0.05, max(max(deltas), max(gs)) * 1.25)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)

@@ -77,7 +77,7 @@ def build():
         n_perm = int(df["n_perm"].iloc[0]) if "n_perm" in df.columns else 30
         p_floor = 1.0 / (n_perm + 1)
         
-        ax.text(0.95, 0.92,
+        ax.text(0.78, 0.92,
                 f"Min empirical $P = {p_empirical:.4f}$\n"
                 f"Permutations: {n_perm}\n"
                 f"Testable: {n_testable:,}",

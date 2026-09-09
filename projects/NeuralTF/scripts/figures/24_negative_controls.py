@@ -22,6 +22,7 @@ def build():
     colors = [C_A, "#788896", C_B]
     positions = [1, 2, 3]
 
+    final_labels = []
     for pos, group, label_str, color in zip(positions, groups, labels, colors):
         scores = np.array(data[group]) if data.get(group) else np.array([])
         if len(scores) == 0:
@@ -44,12 +45,10 @@ def build():
                         capprops=dict(color="#555555", lw=0.8))
 
         median = np.median(scores)
-        q1, q3 = np.percentile(scores, [25, 75])
-        ax.text(pos + 0.30, median, f"med = {median:.3f}",
-                fontsize=6.0, va="center", color="#444444")
+        final_labels.append(f"{label_str}\n(med = {median:.2f})")
 
     ax.set_xticks(positions)
-    ax.set_xticklabels(labels, fontsize=6.8)
+    ax.set_xticklabels(final_labels, fontsize=6.8)
     ax.set_ylabel("Label-free score", fontsize=7.0)
     ax.set_title("Score distribution vs empirical controls", fontsize=8.0, pad=10)
     ax.spines["top"].set_visible(False)
