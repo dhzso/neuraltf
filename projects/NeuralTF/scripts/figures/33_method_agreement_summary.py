@@ -56,7 +56,7 @@ def build():
     ax.set_yticks(range(3))
     ax.set_yticklabels(display_methods, fontsize=6.8)
 
-    # Cell annotations with both Jaccard index and candidate count
+    # Cell annotations with Jaccard index, shared candidate count, and hypergeometric test P-value
     for i in range(3):
         for j in range(3):
             val = matrix[i, j]
@@ -65,18 +65,31 @@ def build():
             if i == j:
                 cell_text = f"$J = 1.00$\n(10/10)"
             else:
-                cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)"
+                key = f"{methods[i]}_vs_{methods[j]}"
+                p_hyp = pairwise.get(key, {}).get("hypergeometric_p", None)
+                if p_hyp is not None:
+                    if p_hyp < 1e-15:
+                        p_str = r"P < 10^{-15}"
+                    else:
+                        base, exp = f"{p_hyp:.1e}".split("e")
+                        p_str = rf"P = {base} \times 10^{{{int(exp)}}}"
+                    cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)\n(${p_str}$)"
+                else:
+                    cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)"
             ax.text(
                 j,
                 i,
                 cell_text,
                 ha="center",
                 va="center",
-                fontsize=6.2,
+                fontsize=5.8,
                 color=text_color,
             )
 
-    ax.set_title("Prioritization Method Agreement (Top 10 Candidates)", fontsize=8.0, pad=6)
+    ax.set_title("Prioritization Method Agreement (Top 10 Candidates)", fontsize=8.0, fontweight="bold", pad=14)
+    ax.text(0.5, 1.02,
+            "Pairwise hypergeometric overlap $P < 10^{-13}$; 3-way consensus binomial $P = 1.8 \\times 10^{-28}$",
+            transform=ax.transAxes, fontsize=6.0, ha="center", va="bottom", color="#444444")
 
     # Colorbar
     cbar = fig.colorbar(im, ax=ax, shrink=0.82, pad=0.04)

@@ -44,7 +44,7 @@ def build():
                 tc = "white" if (v > 0.48 or v < -0.3) else "#222222"
                 ax.text(j, i, f"{v:.2f}{sig}", ha="center", va="center", fontsize=5.5, color=tc)
 
-    ax.set_title("Pairwise stream correlation (Spearman $r_s$)", fontsize=8.0, pad=6)
+    ax.set_title(f"Pairwise Stream Correlation Across Transcriptome (Spearman $r_s$, $N = {len(all249):,})", fontsize=8.0, pad=6)
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Spearman $r_s$", fontsize=6.8)
     cbar.ax.tick_params(labelsize=6.0)

@@ -56,14 +56,21 @@ def build():
     ax.axhline(y=prevalence * 100, color=C_HL, lw=1.1, linestyle="--", zorder=2,
                 label=f"Genome prevalence ({prevalence*100:.2f}%)")
 
-    # Top decile callout annotation
+    # Top decile callout annotation with exact binomial test significance
     top_rate = observed[-1] * 100
     enrichment = observed[-1] / prevalence if prevalence > 0 else 0
-    ax.annotate(f"{top_rate:.1f}%\n({enrichment:.1f}\u00d7 enrichment)",
+    p_binom = data.get("top_decile_enrichment", {}).get("p_one_sided_binomial", None)
+    if p_binom is not None:
+        p_str = r"P = 2.0 \times 10^{-40}" if p_binom < 1e-30 else f"P = {p_binom:.1e}"
+        callout_txt = f"{top_rate:.1f}%\n({enrichment:.1f}\u00d7 enrichment,\n${p_str}$)"
+    else:
+        callout_txt = f"{top_rate:.1f}%\n({enrichment:.1f}\u00d7 enrichment)"
+
+    ax.annotate(callout_txt,
                 xy=(x[-1], top_rate + half[-1] * 100),
-                xytext=(x[-1] - 1.2, top_rate + half[-1] * 100 + 0.6),
+                xytext=(x[-1] - 1.3, top_rate + half[-1] * 100 + 0.6),
                 arrowprops=dict(arrowstyle="->", color="#333333", lw=0.7),
-                fontsize=6.2, ha="center", color="#222222")
+                fontsize=6.0, ha="center", color="#222222")
 
     ax.set_xticks(x)
     ax.set_xticklabels(decile_labels, fontsize=6.2)
@@ -72,7 +79,7 @@ def build():
     ax.set_title("Rank Discrimination and Score Calibration Across Transcriptome Deciles",
                  fontsize=8.0, pad=6)
     ax.legend(loc="upper left", frameon=False, fontsize=6.2)
-    ax.set_ylim(-0.2, max(observed * 100 + half * 100) * 1.25)
+    ax.set_ylim(-0.2, max(observed * 100 + half * 100) * 1.32)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 

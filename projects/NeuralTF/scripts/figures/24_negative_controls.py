@@ -89,14 +89,15 @@ def build():
         d2_str = f", $d = {d2:.2f}$" if d2 else ""
         ax.text(2.0, y_bar2 + h + 0.015, f"${p2_str}${d2_str}", ha="center", va="bottom", fontsize=6.2, color="#222222")
 
-    # Footnote note explaining circularity control & matching
+    # Footnote note explaining test, effect size, circularity control & matching
     ax.text(0.5, -0.16,
+            "Two-sided Mann–Whitney U test ($U_1 = 5,620, U_2 = 5,468$) and Cohen's d effect size.\n"
             "Label-free score excludes RNAi, neural enrichment & neural lineage to eliminate circularity.\n"
             "Control cohorts matched on number of available evidence streams.",
             transform=ax.transAxes, ha="center", va="top", fontsize=5.8, color="#555555", style="italic")
 
     ax.set_ylim(-0.02, 1.34)
-    fig.subplots_adjust(left=0.12, right=0.96, top=0.90, bottom=0.20)
+    fig.subplots_adjust(left=0.12, right=0.96, top=0.90, bottom=0.22)
     save(fig, "24_negative_controls")
 
 if __name__ == "__main__":

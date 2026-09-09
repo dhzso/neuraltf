@@ -25,7 +25,7 @@ def build():
     ax.set_xlabel("Coverage across all transcription factors (%)", fontsize=7.0)
     ax.set_ylabel("Evidence stream", fontsize=7.0)
     ax.set_xlim(0, 110)
-    ax.set_title("Evidence stream completeness", fontsize=8.0, pad=6)
+    ax.set_title(f"Evidence Stream Completeness Across Transcriptome (N = {total:,})", fontsize=8.0, pad=6)
 
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
