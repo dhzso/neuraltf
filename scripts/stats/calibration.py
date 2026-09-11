@@ -66,7 +66,7 @@ def main():
         return 1
 
     df = df.dropna(subset=[score_col]).copy()
-    df["is_positive"] = (df["proof_status"] == "known_rnai_validated").astype(int)
+    df["is_positive"] = (df["proof_status"] == "tested").astype(int)
 
     n_pos = df["is_positive"].sum()
     n_total = len(df)
@@ -167,8 +167,8 @@ def main():
             "could never be small for any top-concentrating score."
         ),
         "positive_label_note": (
-            "positives = proof_status == known_rnai_validated ONLY; the "
-            "near-positive prior_fstf_not_tested group (n~61) counts as "
+            "positives = proof_status == tested ONLY; the "
+            "near-positive known_fstf group (n~61) counts as "
             "negative here, so the metric measures RNAi-validated "
             "discrimination, not general 'neural TF-ness'."
         ),

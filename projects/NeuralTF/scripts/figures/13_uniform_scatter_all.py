@@ -35,8 +35,8 @@ def build():
     proof_m = proof[mask]
 
     neural = load_neural()
-    track_a_ids = set(neural[neural["proof_status"] == "known_rnai_validated"]["gene_id"])
-    track_b_ids = set(neural[neural["proof_status"] == "novel_candidate"]["gene_id"])
+    track_a_ids = set(neural[neural["proof_status"] == "tested"]["gene_id"])
+    track_b_ids = set(neural[neural["proof_status"] == "not_tested"]["gene_id"])
 
     # Partition into Background, Track A, Track B
     is_val = np.array([gid in track_a_ids for gid in df["gene_id"]])[mask]
@@ -47,13 +47,13 @@ def build():
     ax.scatter(x_m[is_bg], y_m[is_bg], s=8, color="#C8CED6", alpha=0.3,
                edgecolors="none", label=f"Transcriptome-wide (n={np.sum(is_bg):,})")
 
-    # 2. Track A (RNAi-validated benchmark)
+    # 2. Tested (RNAi-validated benchmark)
     ax.scatter(x_m[is_val], y_m[is_val], s=28, color=C_A, alpha=0.92,
-               edgecolors="white", lw=0.5, zorder=5, label=f"Track A: Validated (n={np.sum(is_val)})")
+               edgecolors="white", lw=0.5, zorder=5, label=f"Tested (n={np.sum(is_val)})\u2020")
 
-    # 3. Track B (Novel candidates)
+    # 3. Not tested (no RNAi record)
     ax.scatter(x_m[is_nov], y_m[is_nov], s=28, color=C_B, alpha=0.92,
-               edgecolors="white", lw=0.5, zorder=6, label=f"Track B: Novel (n={np.sum(is_nov)})")
+               edgecolors="white", lw=0.5, zorder=6, label=f"Not tested (n={np.sum(is_nov)})")
 
     # Identity reference line
     lo, hi = -0.02, 1.05

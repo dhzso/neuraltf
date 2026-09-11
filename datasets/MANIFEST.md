@@ -82,7 +82,7 @@ datasets/
 
 > **Note**: Verify checksums after download with `python scripts/verify_data.py` or `sha256sum <file>` (Linux/macOS) / `Get-FileHash -Algorithm SHA256 <file>` (Windows PowerShell).
 > 
-> **NOTE**: The pipeline integrates **five** atlases (Fincher, Plass, Cui, King, Perez) across **9 evidence streams**. Scoring weights: expression=0.200, all 8 others=0.100.
+> **NOTE**: The pipeline integrates **five** atlases (Fincher, Plass, Cui, King, Perez) across **11 evidence streams**. Scoring weights: expression/specificity/reproducibility/neural_enriched/neural_specificity/perez_lineage/perez_influence/fincher_brain/cui_temporal = 0.100 each; rnai/correlation = 0.050.
 
 ## Gene Ontology (go.obo)
 

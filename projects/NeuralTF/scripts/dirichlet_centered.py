@@ -56,8 +56,10 @@ STREAMS = [
     "neural_specificity",
     "perez_lineage",
     "perez_influence",
+    "fincher_brain",
+    "cui_temporal",
 ]
-W_DEFAULT = np.array([0.20, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10])
+W_DEFAULT = np.array([0.10, 0.10, 0.10, 0.05, 0.05, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10])
 N_DRAWS = 1000
 K_DIR = 40.0
 SEED = 2024
@@ -128,7 +130,7 @@ def build_csv(top: pd.DataFrame) -> pd.DataFrame:
 
     def _notes(r: pd.Series) -> str:
         parts: list[str] = []
-        if str(r.get("proof_status", "")).strip() == "known_rnai_validated":
+        if str(r.get("proof_status", "")).strip() == "tested":
             parts.append("Known validated neural TF (positive control)")
         orth = str(r.get("human_ortholog", "") or "").strip()
         if orth and orth.lower() not in ("nan", "none"):

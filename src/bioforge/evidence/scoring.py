@@ -19,20 +19,44 @@ from bioforge.evidence.schema import EvidenceRecord, EvidenceSource
 logger = get_logger("evidence.scoring")
 
 
+# Canonical evidence-stream order (single source of truth). Consumers that
+# need to enumerate streams positionally (stat scripts, sensitivity, LOO,
+# permutation nulls) MUST import STREAM_ORDER rather than hard-coding a
+# list — a hard-coded list is exactly how the 8- vs 9-stream drift arose.
+STREAM_ORDER: list[EvidenceSource] = [
+    EvidenceSource.EXPRESSION,
+    EvidenceSource.SPECIFICITY,
+    EvidenceSource.REPRODUCIBILITY,
+    EvidenceSource.RNai,
+    EvidenceSource.CORRELATION,
+    EvidenceSource.NEURAL_ENRICHED,
+    EvidenceSource.NEURAL_SPECIFICITY,
+    EvidenceSource.PEREZ_LINEAGE,
+    EvidenceSource.PEREZ_INFLUENCE,
+    EvidenceSource.FINCHER_BRAIN,
+    EvidenceSource.CUI_TEMPORAL,
+]
+
 DEFAULT_WEIGHTS: dict[EvidenceSource, float] = {
-    # Expression is weighted at 0.2 (highest priority — direct evidence).
-    # All other 8 streams are equal at 0.1 each (after renormalization).
-    # The EvidenceScorer always renormalizes over *present* streams, so
-    # these proportions are what matters, not that they sum to exactly 1.0.
-    EvidenceSource.EXPRESSION:          0.200,
+    # 11 streams, weights sum to exactly 1.0. The two label-bearing circular
+    # streams, RNAi and correlation (King mmc5/mmc6 — the ground-truth
+    # source), are down-weighted to 0.05 each; expression is no longer
+    # dominant (0.2 -> 0.1) so no single stream saturates the score. The two
+    # newly integrated independent-single-cell streams (Fincher brain 2018,
+    # Cui regeneration time-course 2023) each carry 0.10. The EvidenceScorer
+    # renormalizes over *present* streams per record, so these proportions
+    # are what matter, not that they sum to exactly 1.0.
+    EvidenceSource.EXPRESSION:          0.100,
     EvidenceSource.SPECIFICITY:         0.100,
     EvidenceSource.REPRODUCIBILITY:     0.100,
-    EvidenceSource.RNai:                0.100,
-    EvidenceSource.CORRELATION:         0.100,
+    EvidenceSource.RNai:                0.050,
+    EvidenceSource.CORRELATION:         0.050,
     EvidenceSource.NEURAL_ENRICHED:     0.100,
     EvidenceSource.NEURAL_SPECIFICITY:  0.100,
     EvidenceSource.PEREZ_LINEAGE:       0.100,   # Perez 2025 TF lineage evidence
     EvidenceSource.PEREZ_INFLUENCE:     0.100,   # Perez 2025 ANANSE regulatory influence
+    EvidenceSource.FINCHER_BRAIN:       0.100,   # Fincher 2018 BrainClustering neuronal evidence
+    EvidenceSource.CUI_TEMPORAL:        0.100,   # Cui 2023 regeneration time-course evidence
 }
 
 

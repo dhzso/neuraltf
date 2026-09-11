@@ -25,7 +25,7 @@ from bioforge.evidence.cards import (
 from bioforge.evidence.confidence import ConfidencePolicy, assign_tiers
 from bioforge.evidence.gene_mapping import BridgeTable, build_bridge_from_names, load_bridge
 from bioforge.evidence.harmonization import CANONICAL_TISSUES, AtlasHarmonizer
-from bioforge.evidence.scoring import DEFAULT_WEIGHTS, EvidenceScorer, rank_candidates
+from bioforge.evidence.scoring import DEFAULT_WEIGHTS, STREAM_ORDER, EvidenceScorer, rank_candidates
 from bioforge.evidence.schema import ConfidenceTier, EvidenceRecord, EvidenceSource
 
 __all__ = [
@@ -39,6 +39,7 @@ __all__ = [
     "CANONICAL_TISSUES",
     "EvidenceScorer",
     "DEFAULT_WEIGHTS",
+    "STREAM_ORDER",
     "rank_candidates",
     "ConfidencePolicy",
     "assign_tiers",

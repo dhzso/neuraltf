@@ -57,7 +57,7 @@ def main():
         return 1
 
     df = df.dropna(subset=[score_col])
-    df["is_positive"] = (df["proof_status"] == "known_rnai_validated").astype(int)
+    df["is_positive"] = (df["proof_status"] == "tested").astype(int)
 
     y_true = df["is_positive"].values.astype(float)
     y_score = df[score_col].values.astype(float)

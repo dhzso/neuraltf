@@ -1,6 +1,6 @@
 # BioForge · NeuralTF
 
-A reproducible pipeline for **planarian neural-fate-specific transcription factor** discovery. Integrates **five single-cell and regulatory atlases** (Fincher 2018, Plass 2018, Cui 2023, King 2024, Perez 2025) with 9 evidence streams, Bayesian Dirichlet uncertainty quantification, and ANANSE gene regulatory network validation to prioritize high-confidence targets for RNAi and functional validation.
+A reproducible pipeline for **planarian neural-fate-specific transcription factor** discovery. Integrates **five single-cell and regulatory atlases** (Fincher 2018, Plass 2018, Cui 2023, King 2024, Perez 2025) — including the previously unused Fincher *brain* sub-atlas and the Cui *regeneration time-course* — into **11 evidence streams**, with Bayesian Dirichlet uncertainty quantification, a cross-species ortholog benchmark, and ANANSE gene regulatory network validation to prioritize high-confidence targets for RNAi and functional validation.
 
 > **2026-09 hardening audit**: the three prioritization methods (fixed /
 > centered / uniform) now share one philosophy — the same all-candidate
@@ -10,6 +10,15 @@ A reproducible pipeline for **planarian neural-fate-specific transcription facto
 > suite reports circular AND circularity-controlled evaluations, and every
 > figure is audited for non-emptiness
 > (`projects/NeuralTF/scripts/audit_figures.py`).
+>
+> **2026-09 evidence model v2**: candidate testing status is now reported as
+> **Tested / Not tested / Known FSTF** (replacing the misleading "Track A/B" /
+> "novel" framing; † = status read from the source paper's own tables), and the
+> 9-stream model is extended to **11 streams** — two independent streams from
+> previously unused raw data (`fincher_brain`, `cui_temporal`) — with weights
+> rebalanced to sum to 1.0 (expression, `rnai`, and `correlation` were
+> down-weighted so no single stream dominates). An independent cross-species
+> ortholog benchmark (`ortholog_benchmark.py`) is added.
 
 ---
 
@@ -32,7 +41,7 @@ python scripts/generate_all.py
 
 # 3. Or run the pipeline and downstream analyses step-by-step:
 python scripts/run.py                        # Core pipeline (Fincher, Plass, Cui, King, Perez)
-python scripts/run_downstream.py             # Dirichlet UQ, ANANSE scan, tables & 33 figures
+python scripts/run_downstream.py             # Dirichlet UQ, ANANSE scan, tables & 25 figures
 
 # 4. Launch the interactive Streamlit UI
 bioforge ui                                  # http://localhost:8501
@@ -42,7 +51,7 @@ bioforge ui                                  # http://localhost:8501
 
 | File | Content |
 |------|---------|
-| `rank.csv` | All **11,672 candidates** with scores across all 9 evidence streams |
+| `rank.csv` | All **11,695 candidates** with scores across all 11 evidence streams |
 | `rank_neural.csv` | Neural-enriched candidates with proof status |
 | `evidence_cards.md` | Per-candidate markdown evidence summary |
 | `pipeline_results.json` | Machine-readable candidate metadata |
@@ -56,8 +65,8 @@ bioforge ui                                  # http://localhost:8501
 | `master_tf_catalog.csv` | Unified King + Perez TF catalog (14,682 unique v6 TFs) — in `projects/NeuralTF/data/` |
 | `dirichlet_centered_full_rank.csv` | Full Dirichlet-centered (k=40) composite rank (all candidates, 1 row/gene) |
 | `dirichlet_uniform_full_rank.csv` | Full Dirichlet-uniform (α=1) composite rank (all candidates, 1 row/gene) |
-| `dirichlet_centered_top10.csv` | Dual-track top-10 shortlist under centered Dirichlet (5 Track A + 5 Track B) |
-| `dirichlet_uniform_top10.csv` | Dual-track top-10 shortlist under uniform Dirichlet (5 Track A + 5 Track B) |
+| `dirichlet_centered_top10.csv` | Dual-track top-10 shortlist under centered Dirichlet (5 tested + 5 not-tested) |
+| `dirichlet_uniform_top10.csv` | Dual-track top-10 shortlist under uniform Dirichlet (5 tested + 5 not-tested) |
 | `dirichlet_*_draw_scores.csv` | Per-candidate draw-score matrices (bootstrap CIs, convergence) |
 | `ananse_network_full.csv` | ANANSE GRN scan across all candidates & 9 cell fates (RBH-mapped, neuron-share normalized) |
 | `ananse_top_regulators.csv` | Top planarian neural regulators (neuron-fate out-degree first) |
@@ -71,7 +80,7 @@ bioforge ui                                  # http://localhost:8501
 
 ## What It Does
 
-The pipeline seeds candidate TFs across five single-cell and regulatory atlases, computes a 9-stream multi-evidence matrix, evaluates scoring stability under Dirichlet uncertainty sampling, and maps candidates into cell-fate regulatory circuits.
+The pipeline seeds candidate TFs across five single-cell and regulatory atlases, computes an 11-stream multi-evidence matrix, evaluates scoring stability under Dirichlet uncertainty sampling, and maps candidates into cell-fate regulatory circuits.
 
 ### Atlases Integrated (5)
 
@@ -85,7 +94,7 @@ The pipeline seeds candidate TFs across five single-cell and regulatory atlases,
 
 ---
 
-## Evidence Streams & Scoring Model (9 Streams)
+## Evidence Streams & Scoring Model (11 Streams)
 
 Scoring utilizes a transparent, weighted multi-evidence integration model. Weights renormalize over streams present for each candidate:
 
@@ -93,15 +102,17 @@ $$\text{Integrated Score} = \sum_{i \in \text{Present}} w_i \cdot s_i \Bigg/ \su
 
 | # | Stream | Default Weight ($w_i$) | Biological Basis & Computation |
 |---|--------|------------------------|---------------------------------|
-| 1 | **Expression** | 0.200 | $\min(1.0, \max(\text{log}_2\text{FC})/5)$ across Fincher, Plass, Cui, and King scRNA-seq atlases |
+| 1 | **Expression** | 0.100 | $\min(1.0, \max(\text{log}_2\text{FC})/5)$ across Fincher, Plass, Cui, and King scRNA-seq atlases |
 | 2 | **Specificity** | 0.100 | $1 / n_{\text{clusters}}$ supporting differential expression |
 | 3 | **Reproducibility** | 0.100 | $n_{\text{atlases supporting}} / 5$ (Fincher, Plass, Cui, King, Perez) |
-| 4 | **RNAi** | 0.100 | Binary indicator (1.0) if functional phenotype observed in King mmc5 screen |
-| 5 | **Correlation** | 0.100 | $\min(1.0, \Delta r_{\text{G0-X1}} \times 3.0)$ co-expression gain from King mmc6 |
-| 6 | **Neural Enriched** | 0.100 | Binary indicator (1.0) for G0 neural subcluster log₂FC ≥ 2.0 (King mmc7) |
+| 4 | **RNAi** | 0.050 | Binary indicator (1.0) if functional phenotype observed in King mmc5 screen |
+| 5 | **Correlation** | 0.050 | $\min(1.0, \Delta r_{\text{G0-X1}} \times 3.0)$ co-expression gain from King mmc6 |
+| 6 | **Neural Enriched** | 0.100 | Binary indicator (1.0) for G0 neural subcluster log₂FC ≥ 1.5 (King mmc7) |
 | 7 | **Neural Specificity** | 0.100 | $1 / n_{\text{neural subclusters}}$ present in King atlas |
 | 8 | **Perez Lineage** | 0.100 | Perez 2025 lineage TF class: **1.0** for neural-class, **0.5** for other TF classes, **0.0** if absent |
 | 9 | **Perez Influence** | 0.100 | Perez 2025 ANANSE regulatory influence in neuron fate (MOESM19), normalized 0–1 rank |
+| 10 | **Fincher Brain** | 0.100 | Independent Fincher 2018 BrainClustering sub-atlas enrichment ($\min(1.0, \text{log}_2\text{FC}/5)$ over brain Leiden clusters) |
+| 11 | **Cui Temporal** | 0.100 | Cui 2023 regeneration time-course: neuronal temporal induction $\min(1.0, \log_2(\text{peak}/\text{baseline})/2)$ over the 8 timepoints |
 
 ### Confidence Tiers & Proof Status
 
@@ -109,31 +120,31 @@ $$\text{Integrated Score} = \sum_{i \in \text{Present}} w_i \cdot s_i \Bigg/ \su
   - **HIGH**: RNAi-validated OR (supporting streams ≥ 3 AND score ≥ 0.45)
   - **MEDIUM**: supporting streams ≥ 2 AND score ≥ 0.25
   - **LOW**: All other candidates
-- **Proof Status**:
-  - `known_rnai_validated` — Confirmed neural/regeneration phenotype in King et al. RNAi screen
-  - `novel_candidate` — Uncharacterized TF with strong multi-atlas support (priority for wet-lab knockout)
-  - `prior_fstf_not_tested` — Documented fate-specifying TF (FSTF) from literature without RNAi data
+- **Testing Status** (replaces the former "Track A/B" / proof-status framing; † = status read from the source paper's own tables):
+  - `tested` — RNAi phenotype reported in the King et al. screen (†)
+  - `not_tested` — no RNAi record; *untested* rather than "novel" (many carry conserved orthologs)
+  - `known_fstf` — documented fate-specifying TF (FSTF) from literature, no RNAi data (†)
 
 ---
 
-## Top Prioritized Candidates (Production Run — Full Atlases, 11,672 Candidates)
+## Top Prioritized Candidates (Production Run — Full Atlases, 11,695 Candidates)
 
-Consensus across all three unified methods (fixed / centered Dirichlet k=40 / uniform Dirichlet α=1; shared universe, bonus mask, and Track gates):
+Consensus across all three unified methods (fixed / centered Dirichlet k=40 / uniform Dirichlet α=1; shared universe, bonus mask, and gates) under the 11-stream model. 9 genes appear in the top-10 of **all three** methods (pairwise hypergeometric p ≤ 1e-29).
 
-| Track | Consensus candidates | Evidence |
+| Testing status | Consensus candidates | Evidence |
 |:---:|:---|:---|
-| **A #1** | `dd_Smed_v6_16955_0_1` (**dd16955**) | RNAi-validated; composite 1.000 in all 3 methods |
-| **A #2** | `dd_Smed_v6_14753_0_1` (**ascl-2**) | RNAi-validated proneural bHLH; recovered by the short-ID fix |
-| **A #3** | `dd_Smed_v6_11150_0_1` (**dd11150**) | RNAi-validated; fixed-method #2 |
-| **A #4** | `dd_Smed_v6_22163_0_1` (**dd22163 / UNCX**) | RNAi-validated; recovered by the short-ID fix |
-| **A #5** | `dd_Smed_v6_30562_0_1` (**dd30562**) | RNAi-validated in all 3 methods |
-| **B #1** | `dd_Smed_v6_13704_0_1` (**ptf-4**) | Novel POU-class candidate; top Track B in all 3 methods |
-| **B #2** | `dd_Smed_v6_18972_0_1` (**dd18972**) | Novel; consensus #2 Track B |
-| **B #3** | `dd_Smed_v6_18719_0_1` (**dd18719**) | Novel; top-3 Track B in all 3 methods |
-| **B #4** | `dd_Smed_v6_9596_0_1` (**dd9596**) | Novel homeobox; consistent across methods |
-| **B #5** | `dd_Smed_v6_10038_0_1` (**arh / dd10038**) | Novel; Dirichlet-consistent Track B |
+| **Tested #1** | `dd_Smed_v6_38342_0_1` (**dd38342** / POU3F4-class) | RNAi-validated (†); consistent top-1 across methods |
+| **Tested #2** | `dd_Smed_v6_34144_0_1` (**dd34144** / TCF7-LEF) | RNAi-validated (†) |
+| **Tested #3** | `dd_Smed_v6_29211_0_1` (**dd29211** / PRRX2) | RNAi-validated (†) |
+| **Tested #4** | `dd_Smed_v6_22163_0_1` (**dd22163** / UNCX) | RNAi-validated (†) |
+| **Tested #5** | `dd_Smed_v6_12722_0_1` (**dd12722** / BHLHE23) | RNAi-validated (†) |
+| **Not tested #1** | `dd_Smed_v6_5882_0_1` (**dd5882**) | Homeodomain; consensus top not-tested |
+| **Not tested #2** | `dd_Smed_v6_14362_0_1` (**dd14362** / PAX5) | Paired-domain; consensus |
+| **Not tested #3** | `dd_Smed_v6_12170_0_1` (**dd12170** / FOXJ2) | Forkhead; consensus |
+| **Not tested #4** | `dd_Smed_v6_16466_0_1` (**dd16466** / FOXG1) | Forkhead; oral/neural forebrain ortholog; 2/3 methods |
+| **Not tested #5** | `dd_Smed_v6_2442_0_1` (**dd2442** / HOXC6) | Homeobox; consensus |
 
-Per-method shortlists: `dirichlet_centered_top10.csv`, `dirichlet_uniform_top10.csv`, `top10_neural_tfs_prioritized.csv` (all 10-unique-gene dual-track lists). RNAi ground-truth recovery: honest ROC-AUC **0.933** (circularity-controlled, label-encoding streams excluded) vs 0.990 circular.
+Per-method shortlists: `dirichlet_centered_top10.csv`, `dirichlet_uniform_top10.csv`, `top10_neural_tfs_prioritized.csv`. RNAi ground-truth recovery under the 11-stream model: **honest ROC-AUC 0.846** (circularity-controlled, label-encoding streams excluded), **strict 0.807** (also excludes reproducibility), vs 0.976 circular. An independent cross-species ortholog benchmark (neural-fate vs non-neural human orthologs) gives ROC-AUC **0.712** (provisional, coverage-limited).
 
 ---
 
@@ -181,50 +192,17 @@ python scripts/run_statistical_tests.py
 
 ---
 
-## Publication Figures (33 Figures)
+## Publication Figures (25 active figures)
 
-### Main Figures (1–21)
-
-| # | File | Description |
-|---|------|-------------|
-| 01 | `01_stream_coverage_all.png` | Evidence stream coverage across all TF candidates |
-| 02 | `02_integrated_vs_composite.png` | Integrated vs composite score distribution |
-| 03 | `03_score_distribution_all_vs_neural.png` | Score distribution: all vs neural-filtered |
-| 04 | `04_evidence_heatmap_neural.png` | Evidence heatmap for neural candidates |
-| 05 | `05_top10_candidate_atlas.png` | Top-10 candidate atlas visualization |
-| 06 | `06_weight_sensitivity_ranks.png` | Weight sensitivity rank distributions |
-| 07 | `07_weight_sensitivity_ptop10.png` | Weight sensitivity P(Top10) |
-| 08 | `08_stream_ablation_global.png` | Stream ablation global impact |
-| 09 | `09_stream_ablation_candidate.png` | Stream ablation candidate sensitivity |
-| 10 | `10_centered_top10_scores.png` | Centered Dirichlet top-10 scores |
-| 11 | `11_centered_scatter_neural.png` | Fixed vs centered Dirichlet scatter |
-| 12 | `12_uniform_top10_scores.png` | Uniform Dirichlet top-10 scores |
-| 13 | `13_uniform_scatter_all.png` | Fixed vs uniform Dirichlet scatter |
-| 14 | `14_uniform_neural_vs_all_rankrank.png` | Neural vs all rank-rank comparison |
-| 15 | `15_method_bumpchart.png` | 3-method rank comparison |
-| 16 | `16_method_score_density.png` | 3-method score density |
-| 17 | `17_method_rank_correlation.png` | 3-method rank correlation |
-| 18 | `18_composite_bonus_waterfall.png` | Composite bonus waterfall |
-| 19 | `19_method_consensus.png` | Method consensus |
-| 20 | `20_stream_correlation.png` | Stream correlation matrix |
-| 21 | `21_centered_vs_uniform_scatter.png` | Centered vs uniform Dirichlet |
-
-### Statistical Figures (22–33)
-
-| # | File | Description |
-|---|------|-------------|
-| 22 | `22_pipeline_schematic.png` | Conceptual pipeline diagram |
-| 23 | `23_roc_pr_curve.png` | ROC and PR curves (RNAi ground truth) |
-| 24 | `24_negative_controls.png` | Negative control distributions |
-| 25 | `25_bootstrap_ci.png` | Bootstrap confidence intervals |
-| 26 | `26_permutation_null.png` | Permutation null distribution |
-| 27 | `27_loo_atlas_stability.png` | Leave-one-atlas-out stability |
-| 28 | `28_effect_sizes.png` | Effect size annotations |
-| 29 | `29_convergence_analysis.png` | Convergence analysis |
-| 30 | `30_calibration.png` | Calibration reliability diagram |
-| 31 | `31_score_distribution_all9.png` | Score distribution (9 streams) |
-| 32 | `32_perez_influence_comparison.png` | Perez influence comparison |
-| 33 | `33_method_agreement_summary.png` | Method agreement summary |
+The authoritative, up-to-date catalog is
+`projects/NeuralTF/figures/FIGURE_CATALOG.md` (25 single-panel 500-DPI figures
+under the Nature Communications palette). Figure numbering reflects the active
+set: data-integration (01, 03, 04, 20, 31), candidate atlas (05),
+robustness/ablation (06, 07, 08, 09, 13, 15), scoring decomposition (18),
+benchmark recovery (23, 24, 26, 27, 28, 30), convergence (29), lineage (32),
+method agreement (33), GRN (34), cross-atlas meta-analysis (35), and
+regeneration temporal dynamics (36). Figures 02, 10–12, 14, 16, 17, 19, 21, 22,
+25 were retired during the single-panel refactor.
 
 ---
 
@@ -238,7 +216,7 @@ Bioinformatics/
 │
 ├── src/bioforge/                             BioForge Core Framework
 │   ├── evidence/                             Multi-stream evidence engine
-│   │   ├── schema.py                         EvidenceRecord & 9-stream EvidenceSource enum
+│   │   ├── schema.py                         EvidenceRecord & 11-stream EvidenceSource enum
 │   │   ├── scoring.py                        Weighted score integration & DEFAULT_WEIGHTS
 │   │   ├── confidence.py                     Tier classification (HIGH/MEDIUM/LOW)
 │   │   └── cards.py                          Markdown evidence card generation

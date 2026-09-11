@@ -22,7 +22,7 @@ def _record_with_streams(streams):
     return r
 
 
-def test_card_classifies_known_rnai_validated() -> None:
+def test_card_classifies_tested() -> None:
     r = _record_with_streams([
         (EvidenceSource.EXPRESSION, 1.0),
         (EvidenceSource.SPECIFICITY, 0.8),
@@ -31,33 +31,33 @@ def test_card_classifies_known_rnai_validated() -> None:
         (EvidenceSource.CORRELATION, 0.6),
     ])
     card = build_evidence_card(r)
-    assert card.proof_status == ProofStatus.KNOWN_RNAI_VALIDATED
+    assert card.proof_status == ProofStatus.TESTED
     assert card.integrated_score > 0.6
     assert card.tier == ConfidenceTier.HIGH
     assert "RNAi phenotype" in card.suggested_followups[0]
 
 
-def test_card_classifies_novel_candidate_when_no_rnai_no_prior() -> None:
+def test_card_classifies_not_tested_when_no_rnai_no_prior() -> None:
     r = _record_with_streams([
         (EvidenceSource.EXPRESSION, 0.95),
         (EvidenceSource.SPECIFICITY, 0.9),
         (EvidenceSource.REPRODUCIBILITY, 0.66),
     ])
     card = build_evidence_card(r)
-    assert card.proof_status == ProofStatus.NOVEL_CANDIDATE
+    assert card.proof_status == ProofStatus.NOT_TESTED
     # suggest wet-lab followups like RNAi / FISH
     assert any("RNAi" in s for s in card.suggested_followups)
 
 
-def test_card_classifies_prior_fstf_not_tested() -> None:
+def test_card_classifies_known_fstf() -> None:
     r = _record_with_streams([
         (EvidenceSource.EXPRESSION, 1.0),
         (EvidenceSource.SPECIFICITY, 0.7),
         (EvidenceSource.REPRODUCIBILITY, 0.66),
     ])
-    # pass is_prior_fstf=True — no RNAi score (above), so should land in prior-not-tested
+    # pass is_prior_fstf=True — no RNAi score (above), so should land in known-fstf
     card = build_evidence_card(r, is_prior_fstf=True)
-    assert card.proof_status == ProofStatus.PRIOR_FSTF_NOT_TESTED
+    assert card.proof_status == ProofStatus.KNOWN_FSTF
     assert any("RNAi" in s for s in card.suggested_followups)
 
 

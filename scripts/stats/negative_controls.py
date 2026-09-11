@@ -54,8 +54,8 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 STREAMS = ["expression", "specificity", "reproducibility", "rnai",
            "correlation", "neural_enriched", "neural_specificity",
-           "perez_lineage", "perez_influence"]
-W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+           "perez_lineage", "perez_influence", "fincher_brain", "cui_temporal"]
+W_DEFAULT = np.array([0.1, 0.1, 0.1, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 # Streams that encode the RNAi/neural labels (or curated neural-family
 # membership). NEVER allowed into the tested score.
 LEAKING_STREAMS = ["rnai", "neural_enriched", "neural_specificity",
@@ -142,7 +142,7 @@ def main():
 
     # Neural candidates: RNAi-validated ONLY (neural_enriched is a scoring
     # stream — including it would make the control circular)
-    neural_mask = df["proof_status"] == "known_rnai_validated"
+    neural_mask = df["proof_status"] == "tested"
     # TF vs non-TF indicator
     if "perez_lineage" in df.columns:
         tf_mask = df["perez_lineage"].fillna(0) > 0

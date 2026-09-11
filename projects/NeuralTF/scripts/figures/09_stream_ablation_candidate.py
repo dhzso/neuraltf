@@ -90,8 +90,8 @@ def build():
     # Legend for track
     from matplotlib.patches import Patch
     leg_handles = [
-        Patch(facecolor=C_A, label="Track A (benchmark)"),
-        Patch(facecolor=C_B, label="Track B (candidate)")
+        Patch(facecolor=C_A, label="Tested\u2020"),
+        Patch(facecolor=C_B, label="Not tested")
     ]
     ax.legend(handles=leg_handles, loc="upper right", bbox_to_anchor=(1.0, -0.06),
               ncol=2, frameon=False, fontsize=6.2)

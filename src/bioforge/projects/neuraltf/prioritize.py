@@ -475,9 +475,9 @@ def select_top(track_df: pd.DataFrame, n: int = 5) -> pd.DataFrame:
 
 
 def assign_tracks(rank: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Split into Track A (known_rnai_validated) and Track B (novel)."""
-    a = rank[rank["proof_status"] == "known_rnai_validated"].copy()
-    b = rank[rank["proof_status"] == "novel_candidate"].copy()
+    """Split into Track A (tested) and Track B (novel)."""
+    a = rank[rank["proof_status"] == "tested"].copy()
+    b = rank[rank["proof_status"] == "not_tested"].copy()
     return a, b
 
 

@@ -141,12 +141,15 @@ def test_atlas_harmonizer_unknown_atlas_raises() -> None:
 
 
 def test_default_weights_valid_and_positive() -> None:
-    # 9 streams in total: expression=0.200 (highest priority), other 8=0.100 each.
+    # 11 streams in total; weights sum to 1.0 (expression was demoted from
+    # 0.20 -> 0.10 in the unified-weighting pass; rnai/correlation down to
+    # 0.05 because they are the ground-truth label streams).
     # EvidenceScorer renormalizes over streams present per record.
     assert len(DEFAULT_WEIGHTS) == len(EvidenceSource)
     assert all(w > 0 for w in DEFAULT_WEIGHTS.values())
-    assert DEFAULT_WEIGHTS[EvidenceSource.EXPRESSION] > DEFAULT_WEIGHTS[EvidenceSource.SPECIFICITY]
+    assert DEFAULT_WEIGHTS[EvidenceSource.RNai] < DEFAULT_WEIGHTS[EvidenceSource.EXPRESSION]
     assert abs(sum(DEFAULT_WEIGHTS.values()) - 1.000) < 1e-9
+    assert set(DEFAULT_WEIGHTS) == set(EvidenceSource)
 
 
 

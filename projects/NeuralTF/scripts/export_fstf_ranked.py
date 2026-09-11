@@ -179,7 +179,7 @@ def main() -> int:
     # --- RNAi phenotype notes -----------------------------------------------
     notes = []
     for _, r in cand.iterrows():
-        if r["proof_status"] == "known_rnai_validated":
+        if r["proof_status"] == "tested":
             notes.append(rnai_marker_notes(mmc5, r["gene_id"]))
         else:
             notes.append("Not RNAi-tested in King 2024 mmc5; novel candidate")
@@ -227,7 +227,7 @@ def main() -> int:
                 "track": "-",
                 "rank": len(fstf_74_in_cand) + len(missing_rows) + 1,
                 "composite_score": float("nan"),
-                "proof_status": "catalog_fstf_not_in_candidates",
+                "proof_status": "known_fstf",
                 "interpro_domains": "",
                 "human_ortholog": "",
                 "rnai_phenotype_notes": "",

@@ -27,9 +27,24 @@ logger = get_logger("evidence.cards")
 
 
 class ProofStatus(str, Enum):
-    KNOWN_RNAI_VALIDATED = "known_rnai_validated"
-    NOVEL_CANDIDATE = "novel_candidate"
-    PRIOR_FSTF_NOT_TESTED = "prior_fstf_not_tested"
+    """Functional-testing status of a candidate.
+
+    Renamed from the former ``tested`` / ``not_tested`` /
+    ``known_fstf`` to neutral, provenance-explicit labels that
+    no longer imply a "benchmark track" or that an untested gene is "novel":
+
+    - ``TESTED``      — an RNAi phenotype is recorded in the source paper's
+                        screen (King 2024, mmc5). Status is derived FROM that
+                        paper's tables (provenance marker ``\u2020``).
+    - ``NOT_TESTED``  — no RNAi record in the source screen. Untested, not
+                        necessarily "novel" (many have conserved orthologs).
+    - ``KNOWN_FSTF``  — documented fate-specifying TF reported in the
+                        literature but absent from the RNAi screen.
+    """
+
+    TESTED = "tested"
+    NOT_TESTED = "not_tested"
+    KNOWN_FSTF = "known_fstf"
 
 
 @dataclass
@@ -51,16 +66,16 @@ def _classify_proof(
 ) -> tuple[ProofStatus, list[str]]:
     rnai_score = record.scores.get(EvidenceSource.RNai, 0.0)
     if rnai_score > 0.0:
-        return ProofStatus.KNOWN_RNAI_VALIDATED, [
+        return ProofStatus.TESTED, [
             "Existing RNAi phenotype supports re-using for follow-up analysis",
             "Co-stain with new candidate TFs to test combinatorial codes",
         ]
     if is_prior_fstf_below_threshold:
-        return ProofStatus.PRIOR_FSTF_NOT_TESTED, [
+        return ProofStatus.KNOWN_FSTF, [
             "Prior FSTF reported in literature but no King RNAi phenotype",
             "Test by RNAi + FISH to confirm functional role",
         ]
-    return ProofStatus.NOVEL_CANDIDATE, [
+    return ProofStatus.NOT_TESTED, [
         "Knock down by RNAi and assay neural cell-type markers by FISH",
         "Validate with co-expression of known neural FSTFs in neoblasts",
         "Check ortholog function in vertebrate models",
@@ -118,7 +133,7 @@ def build_cards_for_records(
     `atlas_membership` maps gene_id → set of atlas names that supported it.
     `prior_fstf_ids` is an optional set of gene_ids that were prior FSTFs
     but had no RNAi phenotype, so the framework marks them
-    PRIOR_FSTF_NOT_TESTED rather than NOVEL_CANDIDATE.
+    KNOWN_FSTF rather than NOT_TESTED.
     '''
     s = scorer or EvidenceScorer()
     membership = atlas_membership or {}

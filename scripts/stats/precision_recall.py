@@ -3,7 +3,7 @@
 
 WS3 fix for circularity: the `rnai` and `neural_enriched` streams ARE
 part of the integrated score, and the ground truth (proof_status ==
-known_rnai_validated) is derived from the same King mmc5 RNAi table that
+tested) is derived from the same King mmc5 RNAi table that
 feeds the rnai stream — so a naive evaluation is circular and inflates
 ROC-AUC (~0.91 vs ~0.69 honest). This script therefore reports BOTH:
 
@@ -37,11 +37,11 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 STREAMS = ["expression", "specificity", "reproducibility", "rnai",
            "correlation", "neural_enriched", "neural_specificity",
-           "perez_lineage", "perez_influence"]
-W_DEFAULT = {"expression": 0.2, "specificity": 0.1, "reproducibility": 0.1,
-             "rnai": 0.1, "correlation": 0.1, "neural_enriched": 0.1,
+           "perez_lineage", "perez_influence", "fincher_brain", "cui_temporal"]
+W_DEFAULT = {"expression": 0.1, "specificity": 0.1, "reproducibility": 0.1,
+             "rnai": 0.05, "correlation": 0.05, "neural_enriched": 0.1,
              "neural_specificity": 0.1, "perez_lineage": 0.1,
-             "perez_influence": 0.1}
+             "perez_influence": 0.1, "fincher_brain": 0.1, "cui_temporal": 0.1}
 # streams that directly encode the ground-truth labels. 2026-09-06 audit:
 # perez_lineage is a hand-curated neural-TF-family membership list (AUC
 # 0.9903 alone on the RNAi-validated label — the same species of leakage
@@ -121,7 +121,7 @@ def compute_roc_curve(y_true, y_scores):
 
 
 def evaluate(df, score_col, label):
-    y_true = (df["proof_status"] == "known_rnai_validated").astype(int).values
+    y_true = (df["proof_status"] == "tested").astype(int).values
     y_scores = pd.to_numeric(df[score_col], errors="coerce").fillna(0).values
     n_pos = int(y_true.sum())
 

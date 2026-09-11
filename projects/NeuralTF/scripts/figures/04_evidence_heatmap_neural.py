@@ -41,15 +41,15 @@ def build():
     neural["base_symbol"] = [clean_gene_symbol(r.gene_name, r.gene_id) for _, r in neural.iterrows()]
 
     # 1. Partition into biological tracks, sorted by integrated_score descending within track
-    t_a = neural[neural["proof_status"] == "known_rnai_validated"].sort_values("integrated_score", ascending=False)
-    t_b = neural[neural["proof_status"] == "novel_candidate"].sort_values("integrated_score", ascending=False)
-    t_f = neural[neural["proof_status"] == "prior_fstf_not_tested"].sort_values("integrated_score", ascending=False)
+    t_a = neural[neural["proof_status"] == "tested"].sort_values("integrated_score", ascending=False)
+    t_b = neural[neural["proof_status"] == "not_tested"].sort_values("integrated_score", ascending=False)
+    t_f = neural[neural["proof_status"] == "known_fstf"].sort_values("integrated_score", ascending=False)
     df = pd.concat([t_a, t_b, t_f], ignore_index=True)
 
     # Clean unique gene labels
     gene_labels = [get_unique_gene_label(r, neural) for _, r in df.iterrows()]
 
-    # 2. Complete canonical 9 evidence streams in standard pipeline order
+    # 2. Complete canonical 11 evidence streams in standard pipeline order
     streams = [
         "expression",
         "specificity",
@@ -60,6 +60,8 @@ def build():
         "perez_lineage",
         "correlation",
         "perez_influence",
+        "fincher_brain",
+        "cui_temporal",
     ]
     stream_labels = [STREAM_L[s] for s in streams]
 
@@ -166,9 +168,9 @@ def build():
 
     # Track Legend below score bars
     leg_handles = [
-        Patch(facecolor=C_A, label=f"Track A: RNAi-validated (n={len(t_a)})"),
-        Patch(facecolor=C_B, label=f"Track B: Novel candidates (n={len(t_b)})"),
-        Patch(facecolor=C_FSTF, label=f"Prior FSTF: Untested (n={len(t_f)})"),
+        Patch(facecolor=C_A, label=f"Tested (n={len(t_a)})"),
+        Patch(facecolor=C_B, label=f"Not tested (n={len(t_b)})"),
+        Patch(facecolor=C_FSTF, label=f"Known FSTF (n={len(t_f)})"),
     ]
     fig.legend(
         handles=leg_handles,
@@ -180,9 +182,9 @@ def build():
     )
 
     # Track labels on far left margin
-    fig.text(0.02, 0.62, f"Track A: Validated (n={len(t_a)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_A)
-    fig.text(0.02, 0.25, f"Track B: Novel (n={len(t_b)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_B)
-    fig.text(0.02, 0.075, f"Prior FSTF (n={len(t_f)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_FSTF)
+    fig.text(0.02, 0.62, f"Tested (n={len(t_a)})\u2020", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_A)
+    fig.text(0.02, 0.25, f"Not tested (n={len(t_b)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_B)
+    fig.text(0.02, 0.075, f"Known FSTF (n={len(t_f)})\u2020", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_FSTF)
 
     fig.suptitle(
         "Multi-Stream Evidence Landscape Across All 134 Prioritized Neural Transcription Factors",

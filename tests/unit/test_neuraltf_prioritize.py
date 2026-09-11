@@ -152,7 +152,7 @@ def test_merge_annotations_annotation_values_win():
         "go_ids": ["GO:0001"], "planmine_human_ortholog_desc": ["d"],
     })
     rank = pd.DataFrame({"gene_id": ["g1"], "integrated_score": [0.5],
-                         "proof_status": ["novel_candidate"], "gene_name": ["g1"]})
+                         "proof_status": ["not_tested"], "gene_name": ["g1"]})
     pre = prepare_candidates(rank)  # initials with default feature columns
     merged = merge_annotations(pre, ann)
     assert merged["dna_binding_domains"].iloc[0] == "Homeobox_dom"
@@ -169,8 +169,8 @@ def _rank(n=8):
         "gene_name": [f"g{i}" for i in range(n)],
         "integrated_score": [0.9 - 0.05 * i for i in range(n)],
         "n_streams": [5] * n,
-        "proof_status": ["known_rnai_validated"] * (n // 2) +
-                        ["novel_candidate"] * (n - n // 2),
+        "proof_status": ["tested"] * (n // 2) +
+                        ["not_tested"] * (n - n // 2),
     })
 
 
@@ -196,7 +196,7 @@ def test_composite_bonus_once_per_category():
     df = pd.DataFrame({
         "gene_id": ["g"], "gene_name": ["g"],
         "integrated_score": [0.7], "n_streams": [5],
-        "proof_status": ["novel_candidate"],
+        "proof_status": ["not_tested"],
         "dna_binding_domains": ["Homeobox_dom"],
         "go_terms": ["brain development; neurogenesis; neuron differentiation; "
                      "synaptic transmission"],

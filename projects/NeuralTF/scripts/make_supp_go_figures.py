@@ -67,8 +67,8 @@ C_SKY = "#56B4E9"
 C_GRAY = "#999999"
 C_PRESENT = "#0072B2"
 
-PROOF_COLORS = {"known_rnai_validated": C_ORANGE, "novel_candidate": C_SKY}
-PROOF_LABELS = {"known_rnai_validated": "RNAi-validated", "novel_candidate": "Novel"}
+PROOF_COLORS = {"tested": C_ORANGE, "not_tested": C_SKY}
+PROOF_LABELS = {"tested": "Tested", "not_tested": "Not tested"}
 NS_LABELS = ["Biological process", "Molecular function",
              "Cellular component", "No namespace"]
 

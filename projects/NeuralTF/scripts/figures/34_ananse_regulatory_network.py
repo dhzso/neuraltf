@@ -49,14 +49,14 @@ def build():
 
     # Status colors for neural TFs
     status_colors = {
-        "known_rnai_validated": C_A,        # Deep navy
-        "novel_candidate": C_B,             # Muted terracotta
-        "prior_fstf_not_tested": "#5C82A6",  # Steel blue
+        "tested": C_A,        # Deep navy
+        "not_tested": C_B,             # Muted terracotta
+        "known_fstf": "#5C82A6",  # Steel blue
     }
     status_labels = {
-        "known_rnai_validated": "RNAi validated",
-        "novel_candidate": "Novel candidate",
-        "prior_fstf_not_tested": "Prior FSTF candidate",
+        "tested": "Tested",
+        "not_tested": "Not tested",
+        "known_fstf": "Known FSTF",
     }
 
     # Plot neural TFs by status for clean legend grouping

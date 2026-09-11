@@ -206,7 +206,7 @@ class TestSensitivityFixes:
     def test_build_shortlist_assigns_track(self):
         spec = importlib_util("scripts/run_weight_sensitivity.py")
         rows = {"gene_id": ["g1", "g2"], "gene_name": ["a", "b"],
-                "proof_status": ["known_rnai_validated", "novel_candidate"],
+                "proof_status": ["tested", "not_tested"],
                 "integrated_score": [0.9, 0.8], "n_streams": [9, 5],
                 "dna_binding_domains": ["Homeobox_dom", ""],
                 "mmc4_tf_flag": ["TF", ""], "go_terms": ["", ""],

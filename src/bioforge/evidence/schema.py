@@ -32,6 +32,8 @@ class EvidenceSource(str, Enum):
     NEURAL_SPECIFICITY = "neural_specificity"
     PEREZ_LINEAGE = "perez_lineage"   # Perez 2025 lineage subcluster TF classification
     PEREZ_INFLUENCE = "perez_influence"  # Perez 2025 ANANSE regulatory influence (MOESM19)
+    FINCHER_BRAIN = "fincher_brain"      # Fincher 2018 BrainClustering neuronal sub-atlas
+    CUI_TEMPORAL = "cui_temporal"        # Cui 2023 regeneration time-course temporal induction
 
 
 class ConfidenceTier(str, Enum):

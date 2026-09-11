@@ -62,8 +62,8 @@ python scripts/run.py
 
 | File | Format | Description |
 |------|--------|-------------|
-| `rank.csv` | CSV (278 rows) | All **278 TF candidates** ranked by 9-stream integrated score |
-| `rank_neural.csv` | CSV (101 rows) | **101 neural-enriched candidates** passing the neural gate |
+| `rank.csv` | CSV (278 rows) | All **11,695 candidates** ranked by 11-stream integrated score |
+| `rank_neural.csv` | CSV (101 rows) | **134 neural candidates** passing the neural gate |
 | `evidence_cards.md` | Markdown | Comprehensive per-candidate evidence cards with stream breakdown |
 | `pipeline_results.json` | JSON | Machine-readable candidate records with tier classifications |
 | `checkpoint_01_atlas_loads.parquet` | Parquet | QC checkpoint: Atlas cell and gene dimensions |
@@ -71,7 +71,7 @@ python scripts/run.py
 | `checkpoint_03_post_scoring.parquet` | Parquet | QC checkpoint: Per-atlas Wilcoxon DE scores |
 | `checkpoint_04_king_records.parquet` | Parquet | QC checkpoint: King G0 progenitor neural subcluster records |
 | `checkpoint_05_perez_records.parquet` | Parquet | QC checkpoint: Perez TF superfamily lineage scores |
-| `checkpoint_06_stream_matrix.parquet` | Parquet | Full 9-stream evidence feature matrix across all 278 candidates |
+| `checkpoint_06_stream_matrix.parquet` | Parquet | Full 11-stream evidence feature matrix across all 278 candidates |
 
 ---
 
@@ -117,7 +117,7 @@ bioforge ui [--port 8501] [--host localhost]
 Accessible at `http://localhost:8501` with four specialized tabs:
 1. **Run Page**: Real-time dataset discovery, QC monitoring, and pipeline execution controls.
 2. **Results Page**: Interactive rank tables, dynamic filtering, scatter/density plots, and evidence cards.
-3. **Prioritization Page**: Dual-track candidate evaluation (Track A: RNAi-validated vs Track B: Novel discovery).
+3. **Prioritization Page**: Dual-track candidate evaluation (Tested vs Not-tested candidates).
 4. **AI Assistant**: Conversational biology assistant for hypothesis generation and candidate interpretation (Need *API_Key* config).
 
 ---
@@ -138,12 +138,12 @@ NeuralTF unifies 5 independent planarian transcriptomic and regulatory atlases:
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                               9 EVIDENCE STREAMS MATRIX                                │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ 1. Expression ($w_1=0.200$)         : Best log2FC / 5.0 across scRNA-seq atlases       │
+│ 1. Expression ($w_1=0.100$)         : Best log2FC / 5.0 across scRNA-seq atlases       │
 │ 2. Specificity ($w_2=0.100$)        : Inverse cluster breadth (1 / n_clusters)         │
 │ 3. Reproducibility ($w_3=0.100$)    : Cross-atlas concordance (n_supporting / 5)       │
-│ 4. RNAi ($w_4=0.100$)               : Functional phenotype in King mmc5 screen (1 / 0) │
-│ 5. Correlation ($w_5=0.100$)        : G0 vs X1 co-expression correlation gain         │
-│ 6. Neural Enriched ($w_6=0.100$)    : King G0 neural subcluster log2FC ≥ 2.0 (1 / 0)   │
+│ 4. RNAi ($w_4=0.050$)               : Functional phenotype in King mmc5 screen (1 / 0) │
+│ 5. Correlation ($w_5=0.050$)        : G0 vs X1 co-expression correlation gain         │
+│ 6. Neural Enriched ($w_6=0.100$)    : King G0 neural subcluster log2FC ≥ 1.5 (1 / 0)   │
 │ 7. Neural Specificity ($w_7=0.100$) : Inverse neural subcluster breadth (1 / n_subs)   │
 │ 8. Perez Lineage ($w_8=0.100$)      : Perez TF structural class (1.0 / 0.5 / 0.0)      │
 │ 9. Perez Influence ($w_9=0.100$)    : Perez ANANSE neuron-fate influence (0.0 to 1.0)  │
@@ -177,8 +177,8 @@ NeuralTF unifies 5 independent planarian transcriptomic and regulatory atlases:
 
 1. **418 TF Targets** (`load_reference_tables`): Seeded from King 2024 `mmc4.xlsx` TF catalog (`TF? != NA`).
 2. **Cluster DE Candidates** (`score_atlases`): TFs displaying statistically significant differential expression (Wilcoxon rank-sum test, Benjamini-Hochberg $q \le 0.10$) across Leiden clusters in Fincher, Plass, and Cui's scRNA-seq atlases.
-3. **278 Total Scored Candidates** (`integrate_king_atlas`): Integrating King 2024 `mmc7.xlsx` G0 neural subclusters ($\text{log}_2\text{FC} \ge 2.0$), King mmc5 RNAi targets, and Perez 2025 regulatory data seeds these factors into `all_records` ($N=278$).
-4. **101 Neural Candidates** (`write_outputs`): Applying the neural filter `(neural_enriched > 0) | (rnai > 0)` yields **101 candidates** across Track A (RNAi-validated) and Track B (novel candidates).
+3. **11,695 Total Scored Candidates** (`integrate_king_atlas`): Integrating King 2024 `mmc7.xlsx` G0 neural subclusters ($\text{log}_2\text{FC} \ge 2.0$), King mmc5 RNAi targets, and Perez 2025 regulatory data seeds these factors into `all_records` ($N=278$).
+4. **134 Neural Candidates** (`write_outputs`): Applying the neural filter `(neural_enriched > 0) | (rnai > 0)` yields **134 candidates** across Track A (RNAi-validated) and Track B (novel candidates).
 
 ---
 
@@ -186,7 +186,7 @@ NeuralTF unifies 5 independent planarian transcriptomic and regulatory atlases:
 
 $$\text{Integrated Score}(g) = \frac{\sum_{i=1}^9 w_i \cdot s_i(g) \cdot \mathbb{I}(s_i(g) \text{ present})}{\sum_{i=1}^9 w_i \cdot \mathbb{I}(s_i(g) \text{ present})}$$
 
-Where default weights $\mathbf{w} = [0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100]$:
+Where default weights $\mathbf{w} = [0.100, 0.100, 0.100, 0.050, 0.050, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100]$:
 
 1. **Expression ($s_{\text{expr}}$)**:
    $$s_{\text{expr}} = \min\left(1.0, \frac{\max(\text{log}_2\text{FC})}{5.0}\right)$$
@@ -222,20 +222,22 @@ Where default weights $\mathbf{w} = [0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0
 
 ## 4. Top Prioritized Candidates
 
-Dual-track shortlist and concordance across fixed-weight, centered Dirichlet ($k=40$), and uniform Dirichlet ($\alpha=1$) models:
+Dual-track shortlist under the 11-stream model (updated 2026-09; see README for the canonical table):
 
-| Rank | Gene ID | Gene Name | TF Class / Family | Integrated Score | Dirichlet Median ($k=40$) | Proof Status | Track |
+| Rank | Gene ID | Gene Name | TF Class / Family | Integrated Score | Dirichlet Median ($k=40$) | Status | Testing |
 |:---:|:---|:---|:---|:---:|:---:|:---|:---:|
-| **1** | `dd2946` | *dd2946* | C2H2 ZNF | **0.852** | 0.857 | `known_rnai_validated` | Track A |
-| **2** | `dd38342` | *pou4-1* | POU / Homeobox | **0.782** | 0.783 | `known_rnai_validated` | Track A |
-| **3** | `dd14115` | *lhx1/5* | Homeobox / LIM | **0.764** | 0.762 | `known_rnai_validated` | Track A |
-| **4** | `dd14824` | *dd14824* | C2H2 ZNF | **0.756** | 0.762 | `known_rnai_validated` | Track A |
-| **5** | `dd19890` | *tbr1* | T-box | **0.753** | 0.753 | `known_rnai_validated` | Track A |
-| **6** | `dd31217` | *neurogenin* | bHLH | **0.751** | 0.760 | `novel_candidate` | **Track B** |
-| **7** | `dd7033` | *dd7033* | Homeobox / C2H2 ZNF | **0.734** | 0.734 | `novel_candidate` | **Track B** |
-| **8** | `dd4048` | *dd4048* | bHLH | **0.750** | 0.749 | `novel_candidate` | **Track B** |
-| **9** | `dd11930` | *dd11930* | C2H2 ZNF | **0.734** | 0.734 | `novel_candidate` | **Track B** |
-| **10** | `dd9596` | *dd9596* | Homeobox | **0.691** | 0.691 | `novel_candidate` | **Track B** |
+| **1** | `dd38342` | *dd38342* | POU / Homeobox | **0.905** | ~0.90 | `tested` | Tested |
+| **2** | `dd34144` | *dd34144* | HMG / TCF-LEF | **0.902** | ~0.90 | `tested` | Tested |
+| **3** | `dd29211` | *dd29211* | Homeobox / PRRX2 | **0.881** | ~0.88 | `tested` | Tested |
+| **4** | `dd22163` | *dd22163* | Homeobox / UNCX | **0.865** | ~0.86 | `tested` | Tested |
+| **5** | `dd12722` | *dd12722* | bHLH / BHLHE23 | **0.863** | ~0.86 | `tested` | Tested |
+| **6** | `dd5882` | *dd5882* | Homeodomain | **0.892** | ~0.89 | `not_tested` | Not tested |
+| **7** | `dd14362` | *dd14362* | Paired / PAX5 | **0.819** | ~0.82 | `not_tested` | Not tested |
+| **8** | `dd12170` | *dd12170* | Forkhead / FOXJ2 | **0.841** | ~0.84 | `not_tested` | Not tested |
+| **9** | `dd16466` | *dd16466* | Forkhead / FOXG1 | **0.857** | ~0.86 | `not_tested` | Not tested |
+| **10** | `dd2442` | *dd2442* | Homeobox / HOXC6 | **0.834** | ~0.83 | `not_tested` | Not tested |
+
+*Integrated scores shown are from the fixed-weight method; Dirichlet medians are approximate ($k=40$).*
 
 ---
 
@@ -244,7 +246,7 @@ Dual-track shortlist and concordance across fixed-weight, centered Dirichlet ($k
 ```
 src/bioforge/
 ├── core/                  # Configuration, logging, exception hierarchies
-├── evidence/              # 9-stream scoring engine, EvidenceScorer, EvidenceRecord
+├── evidence/              # 11-stream scoring engine, EvidenceScorer, EvidenceRecord
 ├── projects/neuraltf/     # Multi-atlas pipeline, PlanMine client, prioritization engine
 ├── omics/                 # Single-cell QC, normalization, clustering, Leiden algorithms
 ├── smapping/              # Cross-assembly identifier mapping (SMED ↔ v4 ↔ v6 ↔ h1SMcG)
@@ -254,7 +256,6 @@ src/bioforge/
 projects/NeuralTF/
 ├── data/                  # bridge.csv, king_atlas.tsv, master_tf_catalog.csv, perez_tf_summary.csv
 ├── results/               # Dirichlet CSVs, ANANSE network, top-10 prioritization, tables S1–S4
-├── figures/               # 33 Nature Communications compliant 300 DPI figures
+├── figures/               # 25 active single-panel 500 DPI figures
 └── runs/pipeline_run/     # rank.csv, rank_neural.csv, evidence_cards.md, audit checkpoints 01–06
 ```
-

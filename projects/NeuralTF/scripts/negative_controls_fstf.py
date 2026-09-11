@@ -120,7 +120,7 @@ def main() -> int:
     # Positive label: RNAi-validated ONLY. (The previous definition —
     # neural_enriched>0 OR rnai>0 — used a scoring stream as ground truth,
     # making the benchmark circular.)
-    pos_mask = rank["proof_status"] == "known_rnai_validated"
+    pos_mask = rank["proof_status"] == "tested"
     rank.loc[pos_mask & (rank["label"] == "unlabeled"), "label"] = "positive"
 
     n_neg = (rank["label"] == "negative_control").sum()

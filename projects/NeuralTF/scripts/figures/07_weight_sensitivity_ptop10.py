@@ -58,8 +58,8 @@ def build():
     handles = [
         Line2D([0], [0], color="#888888", lw=0.7, ls=":", label="High confidence (P ≥ 80%)"),
         Line2D([0], [0], color="#555555", lw=0.8, ls="--", label="Majority consensus (P ≥ 50%)"),
-        Patch(facecolor=C_A, edgecolor="none", label="Track A benchmark (n = 5)"),
-        Patch(facecolor=C_B, edgecolor="none", label="Track B novel candidate (n = 5)"),
+        Patch(facecolor=C_A, edgecolor="none", label="Tested (n = 5)\u2020"),
+        Patch(facecolor=C_B, edgecolor="none", label="Not tested (n = 5)"),
         Patch(facecolor=C_NEURAL, edgecolor="none", label="Challenger TF (n = 48)"),
     ]
     ax.legend(handles=handles, frameon=True, facecolor="white", edgecolor="#D0D7DE",

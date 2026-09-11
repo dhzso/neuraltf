@@ -59,7 +59,7 @@ C_NEURAL, C_ALL = "#687787", "#C8CED6"    # Slate gray, Soft light gray
 C_HL = "#9E3D34"                           # Muted crimson accent / reference
 STREAM_COLS = ["expression","specificity","reproducibility","rnai",
                "correlation","neural_enriched","neural_specificity",
-               "perez_lineage","perez_influence"]
+               "perez_lineage","perez_influence","fincher_brain","cui_temporal"]
 STREAM_C = {"expression":          "#2B4C6F",  # deep navy
             "specificity":         "#4A7C59",  # sage green
             "reproducibility":     "#5C82A6",  # steel blue
@@ -68,7 +68,9 @@ STREAM_C = {"expression":          "#2B4C6F",  # deep navy
             "neural_enriched":     "#3A6B7E",  # deep teal
             "neural_specificity":  "#C08A3E",  # muted warm ochre
             "perez_lineage":       "#7C786E",  # warm slate
-            "perez_influence":     "#65799B"}  # slate blue
+            "perez_influence":     "#65799B",  # slate blue
+            "fincher_brain":       "#8A4F8B",  # muted violet
+            "cui_temporal":        "#3E8E7E"}  # moss teal
 STREAM_L = {"expression":          "Expression",
             "specificity":         "Specificity",
             "reproducibility":     "Reproducibility",
@@ -77,7 +79,9 @@ STREAM_L = {"expression":          "Expression",
             "neural_enriched":     "Neural enriched",
             "neural_specificity":  "Neural specificity",
             "perez_lineage":       "Perez lineage",
-            "perez_influence":     "Perez influence"}
+            "perez_influence":     "Perez influence",
+            "fincher_brain":       "Fincher brain",
+            "cui_temporal":        "Cui temporal"}
 STREAM_HEATMAP_ORDER = [
     "expression",
     "specificity",
@@ -88,9 +92,13 @@ STREAM_HEATMAP_ORDER = [
     "perez_lineage",
     "correlation",
     "perez_influence",
+    "fincher_brain",
+    "cui_temporal",
 ]
-# expression=0.2, all 8 others=0.1 (matches EvidenceScorer DEFAULT_WEIGHTS)
-W = np.array([0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
+# 11 streams, weights sum to 1.0 (matches EvidenceScorer DEFAULT_WEIGHTS):
+# expression/specificity/neural*/perez*/fincher_brain/cui_temporal = 0.1,
+# rnai/correlation (ground-truth label streams) = 0.05.
+W = np.array([0.100, 0.100, 0.100, 0.050, 0.050, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
 
 def _nid(df):
     if "gene_id_v6" in df.columns and "gene_id" not in df.columns:
@@ -120,9 +128,9 @@ def _csv(path, allow_duplicates=False):
     present_any = any(s in df.columns for s in ["expression", "specificity", "rnai"])
     if present_any:
         base_streams = [s for s in STREAM_COLS if s in df.columns]
-        if len(base_streams) < 9:
+        if len(base_streams) < 11:
             print(f"[style.py] NOTE: {p.name} carries only {len(base_streams)} "
-                  f"of 9 streams: {base_streams} (run predates a stream?)")
+                  f"of 11 streams: {base_streams} (run predates a stream?)")
     return df
 
 

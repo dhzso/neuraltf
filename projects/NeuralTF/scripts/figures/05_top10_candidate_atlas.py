@@ -163,9 +163,9 @@ def build():
     ax_track.axis("off")
 
     # Track labels to the left of the track strip
-    fig.text(0.025, 0.65, "Track A: Benchmark (RNAi+)", rotation=90, va="center", ha="center",
+    fig.text(0.025, 0.65, "Tested (RNAi+)\u2020", rotation=90, va="center", ha="center",
              fontsize=6.8, fontweight="bold", color=C_A)
-    fig.text(0.025, 0.32, "Track B: Novel Candidates", rotation=90, va="center", ha="center",
+    fig.text(0.025, 0.32, "Not tested", rotation=90, va="center", ha="center",
              fontsize=6.8, fontweight="bold", color=C_B)
 
     # ------------------ PANEL A: Evidence Stream Matrix ------------------
@@ -253,8 +253,8 @@ def build():
 
     # Unified Legend below Panel B
     leg_handles = [
-        Patch(facecolor=C_A, label="Track A: Base score"),
-        Patch(facecolor=C_B, label="Track B: Base score"),
+        Patch(facecolor=C_A, label="Tested: base score"),
+        Patch(facecolor=C_B, label="Not tested: base score"),
         Patch(facecolor=C_BONUS, label="Composite bonus"),
     ]
     ax_score.legend(

@@ -18,6 +18,7 @@ import anndata as ad
 import numpy as np
 import pandas as pd
 import scanpy as sc
+from scipy import sparse as scipy_sparse
 from statsmodels.stats.multitest import multipletests
 
 from bioforge.evidence import load_bridge
@@ -89,6 +90,7 @@ class NeuralTFPipeline:
         self.data_dir = self.data_root / "projects" / "NeuralTF" / "data"
 
         self.fincher_path = self.proc_dir / "fincher_subsample.h5ad"
+        self.fincher_brain_path = self.proc_dir / "fincher_brain.h5ad"
         self.plass_path = self.proc_dir / "plass_v6.h5ad"
         self.cui_path = self.proc_dir / "cui_v6.h5ad"
         self.bridge_path = self.data_dir / "bridge.csv"
@@ -167,6 +169,14 @@ class NeuralTFPipeline:
             print(f"  Cui:     {self.adata_cui.n_obs} cells x {self.adata_cui.n_vars} genes (v6)")
         else:
             print(f"  Cui:     (missing {self.cui_path}, skipping)")
+
+        self.adata_fincher_brain = None
+        if self.fincher_brain_path.exists():
+            self.adata_fincher_brain = ad.read_h5ad(self.fincher_brain_path)
+            print(f"  Fincher brain: {self.adata_fincher_brain.n_obs} cells x "
+                  f"{self.adata_fincher_brain.n_vars} genes (v4)")
+        else:
+            print(f"  Fincher brain: (missing {self.fincher_brain_path}, skipping)")
 
         if self.subsample:
             for adata, name in [(self.adata_fincher, "Fincher"), (self.adata_plass, "Plass")]:
@@ -411,6 +421,8 @@ class NeuralTFPipeline:
         atlases = [(self.adata_fincher, "Fincher"), (self.adata_plass, "Plass")]
         if self.adata_cui is not None:
             atlases.append((self.adata_cui, "Cui"))
+        if self.adata_fincher_brain is not None:
+            atlases.append((self.adata_fincher_brain, "Fincher brain"))
         for adata, label in atlases:
             print(f"  {label}: ", end="", flush=True)
             sc.pp.filter_cells(adata, min_counts=1)
@@ -464,8 +476,175 @@ class NeuralTFPipeline:
         print(f"  Generated records: {len(self.all_records)}")
 
     # ------------------------------------------------------------------
-    # True log2FC helper
+    # Fincher brain sub-atlas (independent neuronal evidence)
     # ------------------------------------------------------------------
+
+    def integrate_fincher_brain(self):
+        """Score the Fincher 2018 BrainClustering sub-atlas as a SEPARATE
+        evidence stream (``EvidenceSource.FINCHER_BRAIN``).
+
+        The brain DGE is independent of the principal whole-animal clustering
+        (different head-cell dissociation, separate Leiden clustering), so its
+        per-cluster TF enrichment is genuinely independent neuronal evidence.
+        The score mirrors the expression convention (true log2FC capped at
+        5.0) but is written to its own stream so it does NOT double-count the
+        main Fincher expression/specificity evidence. It also does NOT count
+        toward the reproducibility denominator (which stays at the 5 original
+        atlases).
+        """
+        print("[6/10-brain] Fincher brain sub-atlas...")
+        adata = self.adata_fincher_brain
+        if adata is None or "leiden" not in adata.obs.columns:
+            print("  (missing/not clustered, skipping)")
+            return
+
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=pd.errors.PerformanceWarning)
+            warnings.simplefilter("ignore", category=FutureWarning)
+            sc.tl.rank_genes_groups(adata, "leiden", method="wilcoxon")
+        result = adata.uns["rank_genes_groups"]
+
+        bridge = self.bridge
+        v6_of = {v: bridge.v4_to_v6(v) for v in adata.var_names}
+        score_genes = [v for v, v6 in v6_of.items() if v6 in self.tf_ids_norm]
+        clusters = result["names"].dtype.names
+
+        all_pvals = []
+        gene_cluster_keys = []
+        for cl in clusters:
+            for g, lfc, pval in zip(
+                result["names"][cl],
+                result["logfoldchanges"][cl],
+                result["pvals"][cl],
+            ):
+                all_pvals.append(float(pval))
+                gene_cluster_keys.append((str(g), cl))
+        _, qvals, _, _ = multipletests(all_pvals, alpha=_FDR_THRESHOLD, method="fdr_bh")
+
+        cluster_lookups = {cl: {str(g): i for i, g in enumerate(result["names"][cl])}
+                           for cl in clusters}
+        gene_best: dict[str, tuple[float, float]] = {}
+        gene_best_cluster: dict[str, str] = {}
+        for (key, cl), qval in zip(gene_cluster_keys, qvals):
+            idx = cluster_lookups[cl].get(key)
+            if idx is None:
+                continue
+            pos_lfc = max(0.0, float(result["logfoldchanges"][cl][idx]))
+            if qval <= _FDR_THRESHOLD and pos_lfc > 0:
+                if key not in gene_best or pos_lfc > gene_best[key][0]:
+                    gene_best[key] = (pos_lfc, qval)
+                    gene_best_cluster[key] = cl
+
+        matched = 0
+        for gene in score_genes:
+            if gene not in gene_best:
+                continue
+            v6_id = v6_of[gene]
+            if not v6_id:
+                continue
+            rec = self.all_records.get(v6_id)
+            if rec is None:
+                gn = bridge.v6_to_name(v6_id) if v6_id else None
+                rec = EvidenceRecord(gene_id=v6_id, gene_name=gn)
+                self.all_records[v6_id] = rec
+            true_l2fc = self._cluster_log2fc(adata, gene, gene_best_cluster.get(gene))
+            score = min(1.0, max(0.0, true_l2fc / 5.0))
+            rec.add_score(
+                EvidenceSource.FINCHER_BRAIN,
+                score,
+                note=f"brain_l2fc={true_l2fc:.2f},cluster={gene_best_cluster.get(gene)}",
+            )
+            matched += 1
+        print(f"  Fincher brain enrichment match: {matched}")
+
+    # ------------------------------------------------------------------
+    # Cui regeneration time-course (temporal induction evidence)
+    # ------------------------------------------------------------------
+
+    def integrate_cui_temporal(self):
+        """Score the Cui 2023 regeneration time-course as a SEPARATE evidence
+        stream (``EvidenceSource.CUI_TEMPORAL``).
+
+        Computes the temporal induction of each candidate in *Neuronal* cells
+        (``BigCellType == 'Neuronal'``) across the 8 regeneration timepoints,
+        as a log2 fold-change of the peak post-amputation mean expression over
+        the cut0d baseline. A >=4-fold (log2FC=2) induction saturates at 1.0.
+
+        This is a graded heuristic (analogous to the expression log2FC/5 cap);
+        TFs with no neuronal expression receive score 0. It does not count
+        toward the reproducibility denominator.
+        """
+        print("[10/10-temporal] Cui regeneration temporal dynamics...")
+        adata = self.adata_cui
+        if adata is None:
+            print("  (missing, skipping)")
+            return
+        if "TimePoint" not in adata.obs.columns or "BigCellType" not in adata.obs.columns:
+            print("  (TimePoint/BigCellType obs missing, skipping)")
+            return
+
+        neural_mask = (adata.obs["BigCellType"].astype(str) == "Neuronal").to_numpy()
+        if int(neural_mask.sum()) == 0:
+            print("  (no Neuronal cells, skipping)")
+            return
+
+        src = adata.raw if adata.raw is not None else adata
+        tp_all = adata.obs["TimePoint"].astype(str).to_numpy()
+        tp_neur = tp_all[neural_mask]
+        timepoints = sorted(set(tp_neur.tolist()))
+        if "cut0d" not in timepoints:
+            print("  (cut0d baseline missing, skipping)")
+            return
+
+        base_pos = timepoints.index("cut0d")
+        n_t = len(timepoints)
+        tp_idx = {t: i for i, t in enumerate(timepoints)}
+        cell_tp = np.array([tp_idx[t] for t in tp_neur])
+        counts = np.bincount(cell_tp, minlength=n_t)
+
+        gene_idx = {g: i for i, g in enumerate(src.var_names)}
+        Xn = src.X[neural_mask]
+        if not scipy_sparse.issparse(Xn):
+            Xn = scipy_sparse.csr_matrix(Xn)
+        Xn = Xn.tocsr()
+
+        CAP_FOLD_LOG2 = 2.0  # log2(fc)=2 (4-fold induction) saturates the score
+        EXPR_FLOOR = 0.1     # linear counts-per-10k: below this, no temporal claim
+        PC = 0.1              # pseudocount in linear space (guards near-zero baseline)
+
+        matched = 0
+        for rec in list(self.all_records.values()):
+            gid = rec.gene_id
+            key = gid if gid in gene_idx else None
+            if key is None and gid.endswith("_1"):
+                candidate = gid.removesuffix("_1")
+                key = candidate if candidate in gene_idx else None
+            if key is None:
+                continue
+            ci = gene_idx[key]
+            col = np.asarray(Xn[:, ci].todense()).ravel().astype(np.float64)
+            lin = np.expm1(col)
+            lin = np.where(lin < 0, 0.0, lin)
+            sums = np.bincount(cell_tp, weights=lin, minlength=n_t)
+            means = np.where(counts > 0, sums / np.maximum(counts, 1), 0.0)
+            base = float(means[base_pos])
+            peak = float(max(means[i] for i in range(n_t) if i != base_pos))
+            # Guard: below detection floor in neurons -> no temporal evidence.
+            if peak < EXPR_FLOOR:
+                score = 0.0
+                l2fc = 0.0
+            else:
+                fc = (peak + PC) / (base + PC)
+                l2fc = float(np.log2(fc)) if fc > 0 else 0.0
+                score = min(1.0, max(0.0, l2fc / CAP_FOLD_LOG2))
+            rec.add_score(
+                EvidenceSource.CUI_TEMPORAL,
+                score,
+                note=f"neuronal_peak_l2fc={l2fc:.2f},baseline={base:.3f},peak={peak:.3f}",
+            )
+            matched += 1
+        print(f"  Cui temporal match: {matched}")
 
     @staticmethod
     def _cluster_log2fc(adata, gene: str, cluster: str | None) -> float:
@@ -1204,6 +1383,7 @@ class NeuralTFPipeline:
         rows = []
         for label, adata in [
             ("fincher", self.adata_fincher),
+            ("fincher_brain", self.adata_fincher_brain),
             ("plass", self.adata_plass),
             ("cui", self.adata_cui),
         ]:
@@ -1220,6 +1400,7 @@ class NeuralTFPipeline:
         rows = []
         for label, adata in [
             ("fincher", self.adata_fincher),
+            ("fincher_brain", self.adata_fincher_brain),
             ("plass", self.adata_plass),
             ("cui", self.adata_cui),
         ]:
@@ -1322,6 +1503,7 @@ class NeuralTFPipeline:
         self._checkpoint_post_qc()              # checkpoint 02
         self.score_atlases()
         self._checkpoint_post_scoring()         # checkpoint 03
+        self.integrate_fincher_brain()
         self.integrate_king_atlas()
         self._checkpoint_king_records()         # checkpoint 04
         self.integrate_perez()
@@ -1329,6 +1511,7 @@ class NeuralTFPipeline:
         self.integrate_perez_influence()
         self.integrate_rnai()
         self.integrate_correlations()
+        self.integrate_cui_temporal()
         self.assign_reproducibility()
         self._checkpoint_stream_matrix()        # checkpoint 06
         self.write_outputs()

@@ -197,25 +197,26 @@ def compute_x1_dynamics(plass_path: Path, genes: list[str],
 def select_shortlist(cand: pd.DataFrame, mmc5: pd.DataFrame | None) -> pd.DataFrame:
     """Top-5 per track with RNAi phenotype notes attached.
 
-    Track B requires a tangible TF identity: a DNA-binding protein-domain hit
-    in PlanMine or an mmc4 "TF" flag — no hypothetical factors without domain
-    evidence. The gate lives in prioritize.gate_track_b so all three methods
-    (fixed / centered / uniform) apply it identically.
+    The "Not tested" group requires a tangible TF identity: a DNA-binding
+    protein-domain hit in PlanMine or an mmc4 "TF" flag — no hypothetical
+    factors without domain evidence. The gate lives in
+    prioritize.gate_track_b so all three methods (fixed / centered / uniform)
+    apply it identically.
     """
     from bioforge.projects.neuraltf.prioritize import gate_track_b
     a, b = assign_tracks(cand)
     n_b_before = len(b)
     b = gate_track_b(b)
-    print(f"  Track B after TF-domain filter: {len(b)}/{n_b_before}")
+    print(f"  Not-tested after TF-domain filter: {len(b)}/{n_b_before}")
     ta = select_top(a, 5).assign(track="A")
     tb = select_top(b, 5).assign(track="B")
     top = pd.concat([ta, tb], ignore_index=True)
     notes = []
     for _, r in top.iterrows():
-        if r["proof_status"] == "known_rnai_validated":
+        if r["proof_status"] == "tested":
             notes.append(rnai_marker_notes(mmc5, r["gene_id"]))
         else:
-            notes.append("Not RNAi-tested in King 2024 mmc5; novel neural-fate candidate")
+            notes.append("Not RNAi-tested in King 2024 mmc5; not-tested neural-fate candidate")
     top["rnai_phenotype_notes"] = notes
     return top.sort_values(["track", "rank"]).reset_index(drop=True)
 
@@ -261,18 +262,18 @@ def build_report(top: pd.DataFrame, g0: dict, x1: dict,
         "catalog, mmc5 FSTF RNAi screen), G0 atlas (`king_atlas.tsv`).\n")
     lines.append("## Method\n")
     lines.append(
-        "Two independent tracks:\n\n"
-        "- **Track A** — `proof_status == known_rnai_validated`: RNAi-validated "
+        "Two testing groups (reported for the 5+5 shortlist):\n\n"
+        "- **Tested** — `proof_status == tested`: RNAi-validated "
         "benchmark TFs from the King 2024 FSTF screen. Top 5 by composite "
         "score.\n"
-        "- **Track B** — `proof_status == novel_candidate`: no published RNAi "
+        "- **Not tested** — `proof_status == not_tested`: no published RNAi "
         "data; filtered to candidates with a clear DNA-binding TF domain "
         "(PlanMine protein-domain hits or mmc4 TF flag), then top 5 by "
         "composite score.\n\n"
         "`composite_score = integrated_score + bonuses` (formula in "
         "`bioforge/projects/neuraltf/prioritize.py`): neural GO +0.03, "
         "TF GO +0.02, human ortholog +0.02. The identical bonus mask and "
-        "Track-B gate are applied by the Dirichlet-centered and "
+        "not-tested-domain gate are applied by the Dirichlet-centered and "
         "Dirichlet-uniform methods.\n")
     lines.append("## Shortlist\n")
     lines.append("| v6 id | gene_name | track | rank | composite | human ortholog |")
@@ -351,11 +352,11 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  v6->v4 mapping: {flags.to_dict()}")
 
     top = select_shortlist(cand, mmc5)
-    print("\n  === Track A (RNAi-validated) top 5 ===")
+    print("\n  === Tested (RNAi-validated) top 5 ===")
     print(top[top["track"] == "A"][
         ["gene_id", "gene_name", "composite_score", "integrated_score",
          "dna_binding_domains"]].to_string(index=False))
-    print("  === Track B (novel) top 5 ===")
+    print("  === Not tested (no RNAi record) top 5 ===")
     print(top[top["track"] == "B"][
         ["gene_id", "gene_name", "composite_score", "integrated_score",
          "dna_binding_domains"]].to_string(index=False))

@@ -82,7 +82,7 @@ def load_candidates(rank_csv: Path, repo: Path | None = None,
       1. every gene in rank_neural.csv (the neural candidates — the
          previous 134-gene universe, fully preserved);
       2. the top ``n_top_novel`` NOVEL candidates (proof_status !=
-         known_rnai_validated) by base integrated_score from rank.csv —
+         tested) by base integrated_score from rank.csv —
          a conservative superset of the Track-B gate-passing pool;
       3. every rank.csv gene carrying a King mmc4 TF flag (the gate's
          second arm) when mmc4 is locatable.
@@ -119,7 +119,7 @@ def load_candidates(rank_csv: Path, repo: Path | None = None,
 
     # 2) top novel frontier by base score
     df["_score"] = pd.to_numeric(df["integrated_score"], errors="coerce").fillna(0)
-    novel = df[df["proof_status"] != "known_rnai_validated"] \
+    novel = df[df["proof_status"] != "tested"] \
         if "proof_status" in df.columns else df
     for _, r in novel.sort_values("_score", ascending=False).head(n_top_novel).iterrows():
         gid = str(r["gene_id"]).strip()

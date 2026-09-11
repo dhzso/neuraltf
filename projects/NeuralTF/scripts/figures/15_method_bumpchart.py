@@ -15,9 +15,9 @@ import pandas as pd
 
 def get_track_ranks(df, score_col="composite_score"):
     df_sorted = df.sort_values(score_col, ascending=False).reset_index(drop=True)
-    df_a = df_sorted[df_sorted["proof_status"] == "known_rnai_validated"].reset_index(drop=True)
+    df_a = df_sorted[df_sorted["proof_status"] == "tested"].reset_index(drop=True)
     df_a["rank_a"] = df_a.index + 1
-    df_b = df_sorted[df_sorted["proof_status"] == "novel_candidate"].reset_index(drop=True)
+    df_b = df_sorted[df_sorted["proof_status"] == "not_tested"].reset_index(drop=True)
     df_b["rank_b"] = df_b.index + 1
     return df_a.set_index("gene_id")["rank_a"], df_b.set_index("gene_id")["rank_b"]
 
@@ -44,9 +44,9 @@ def build():
     palette_a = ["#1B365D", "#2B4C6F", "#4A7C59", "#7D5A7D", "#C08A3E", "#65799B"]
     palette_b = ["#B04A3E", "#D9822B", "#5C82A6", "#8C564B", "#2CA02C", "#9467BD", "#E377C2"]
 
-    # ------------------ PANEL A: Track A (RNAi-Validated) ------------------
+    # ------------------ PANEL A: Tested (RNAi-validated) ------------------
     panel_tag(ax1, "a", x=-0.14, y=1.05)
-    ax1.set_title("Track A: RNAi-Validated Benchmark Regulators", fontsize=7.5, pad=8, fontweight="bold")
+    ax1.set_title("Tested (RNAi-validated benchmark) regulators\u2020", fontsize=7.5, pad=8, fontweight="bold")
 
     # Baseline 5 candidates + uniform entrant dd12722
     genes_a = [
@@ -78,7 +78,7 @@ def build():
 
     ax1.set_xticks(x_pos)
     ax1.set_xticklabels(methods, fontsize=6.8)
-    ax1.set_ylabel("Prioritization Rank (Track A)", fontsize=7.0, fontweight="bold")
+    ax1.set_ylabel("Prioritization Rank (Tested)", fontsize=7.0, fontweight="bold")
     ax1.set_ylim(0.5, 6.5)
     ax1.invert_yaxis()
     ax1.set_xlim(-0.75, 2.75)
@@ -88,9 +88,9 @@ def build():
     ax1.spines["left"].set_visible(False)
     ax1.grid(axis="y", color="#EEEEEE", lw=0.6, ls=":")
 
-    # ------------------ PANEL B: Track B (Novel Candidates) ------------------
+    # ------------------ PANEL B: Not tested ------------------
     panel_tag(ax2, "b", x=-0.14, y=1.05)
-    ax2.set_title("Track B: Novel Neural TF Candidates", fontsize=7.5, pad=8, fontweight="bold")
+    ax2.set_title("Not tested (no RNAi record) neural TF candidates", fontsize=7.5, pad=8, fontweight="bold")
 
     genes_b = [
         "dd_Smed_v6_13704_0_1",  # ptf-4 (1 -> 1 -> 1)
@@ -119,7 +119,7 @@ def build():
 
     ax2.set_xticks(x_pos)
     ax2.set_xticklabels(methods, fontsize=6.8)
-    ax2.set_ylabel("Prioritization Rank (Track B)", fontsize=7.0, fontweight="bold")
+    ax2.set_ylabel("Prioritization Rank (Not tested)", fontsize=7.0, fontweight="bold")
     ax2.set_ylim(0.5, 9.8)
     ax2.invert_yaxis()
     ax2.set_xlim(-0.75, 2.90)

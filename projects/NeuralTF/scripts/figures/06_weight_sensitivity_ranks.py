@@ -70,8 +70,8 @@ def build():
     
     from matplotlib.lines import Line2D
     leg_handles = [
-        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=5.5, label="Track A: Benchmark (RNAi+)"),
-        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=5.5, label="Track B: Novel candidate"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=5.5, label="Tested (RNAi+)\u2020"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=5.5, label="Not tested"),
         Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=5.5, label="Top-10 challenger (n=48)"),
         Line2D([0],[0], color="#666666", lw=0.8, ls="--", label="Top-30 threshold (Rank = 30)"),
     ]

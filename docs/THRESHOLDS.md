@@ -87,14 +87,38 @@ $$\text{Score}_{\text{perez-influence}} = \text{Influence}_{\text{neuron fate}}$
 
 ### 1.8 Evidence Stream Weight Normalization
 
-The 9 evidence streams are weighted as follows:
+The 11 evidence streams are weighted as follows (single source of truth:
+`bioforge.evidence.scoring.DEFAULT_WEIGHTS` / `STREAM_ORDER`):
 
-$$\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$$
+$$\mathbf{w}_{\text{default}} = [0.10, 0.10, 0.10, 0.05, 0.05, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10]$$
 
-- **Expression** (0.2): Highest weight — direct evidence of transcriptional activity
-- **All other 8 streams** (0.1 each): Equal weight — supporting evidence streams
+- **Expression, Specificity, Reproducibility, Neural Enriched, Neural Specificity,
+  Perez Lineage, Perez Influence, Fincher Brain, Cui Temporal** (0.10 each) — the
+  independent or widely-supported evidence streams.
+- **RNAi, Correlation** (0.05 each) — the two streams that encode the ground-truth
+  label (King mmc5/mmc6); deliberately de-emphasized so no single label stream
+  saturates the integrated score.
 
 The EvidenceScorer always renormalizes over **present** streams per candidate, so the effective weight depends on which streams have data for each candidate. This ensures that missing evidence does not penalize candidates as *absence of evidence is not evidence of absence*.
+
+#### 1.8a Fincher Brain stream (`fincher_brain`, w=0.10)
+
+$$\text{Score}_{\text{fincher-brain}} = \min\left(1.0, \frac{\max(\text{log}_2\text{FC}_{\text{brain clusters}})}{5.0}\right)$$
+
+Computed from the **independent** Fincher 2018 `BrainClustering` DGE (7,766 head cells,
+26,565 v4 genes; `scripts/convert_fincher_brain.py`), de-novo Leiden clustered and
+scored exactly like the principal expression stream (Wilcoxon DE, global BH-FDR
+q ≤ 0.10, true log2FC via `_cluster_log2fc`). It does **not** count toward the
+reproducibility denominator (which stays at the 5 original atlases).
+
+#### 1.8b Cui Temporal stream (`cui_temporal`, w=0.10)
+
+$$\text{Score}_{\text{cui-temporal}} = \min\left(1.0, \frac{\log_2\!\left(\frac{\text{peak} + 0.1}{\text{baseline} + 0.1}\right)}{2.0}\right)$$
+
+Computed in `BigCellType == "Neuronal"` cells across the 8 Cui 2023 regeneration
+timepoints (cut0d ... cut7d), as the log2 fold-change of the peak post-amputation
+mean over the cut0d baseline. Genes below a 0.1 (linear counts-per-10k) neuronal
+expression floor receive score 0 (no temporal claim from near-zero expression).
 
 ### 1.9 Formula Revisions
 
@@ -128,12 +152,11 @@ The following refinements define the current behavior:
    previous stricter gate of 2.0 dropped 7 TFs the paper itself reports as
    neural-enriched (dd17385/sp6-9 1.75, dd19255 1.78, dd36480 1.93,
    dd47123 1.77, dd5882 1.70, dd63520 1.51, dd7442 1.97).
-7. **Unused raw atlas arms (scope decision)** — the following
-   downloaded data are deliberately OUT OF SCOPE for the current 5-atlas
-   scRNA evidence model and are documented for future extensions:
-   - Fincher GSE111764 `BrainClustering` DGE (10,637-cell neuronal
-     sub-atlas) and `SexualClustering` DGE — a dedicated Fincher-brain
-     evidence stream (neuronal-subtype refinement) is future work.
+7. **Raw atlas arms (scope decision)** — the following downloaded data are
+   now IN SCOPE as dedicated streams (§1.8a/1.8b): Fincher `BrainClustering`
+   DGE (`fincher_brain`), and Cui regeneration time-course (`cui_temporal`).
+   Remaining FUTURE work (documented, not integrated):
+   - Fincher `SexualClustering` DGE.
    - Cui OMIX003867 spatial arm: 12 Visium h5ads (0/6/12 hpa, 1/3/7 dpa,
      OMIX003867-02/-03) plus `adata_Neoblast.h5ad` and `plk1_cut5d.h5ad` —
      spatially-resolved and neoblast-perturbation streams are future work.
@@ -222,14 +245,14 @@ $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
                                 │ - MOESM19 ANANSE regulatory influence
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 278 Total Candidate TFs (rank.csv)                              │
-│ Scored across all 9 evidence streams                            │
+│ 11,695 Total Candidate TFs (rank.csv)                              │
+│ Scored across all 11 evidence streams                            │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │ Neural Gate:
                                 │ (neural_enriched > 0) | (rnai > 0)
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │ 101 Neural-Enriched Candidate TFs (rank_neural.csv)             │
-│ (Dual-track shortlist: Track A + Track B)                       │
+│ (Dual-track shortlist: tested + not-tested)                       │
 └─────────────────────────────────────────────────────────────────┘
 ```

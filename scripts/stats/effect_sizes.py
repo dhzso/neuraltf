@@ -34,8 +34,8 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 STREAMS = ["expression", "specificity", "reproducibility", "rnai",
            "correlation", "neural_enriched", "neural_specificity",
-           "perez_lineage", "perez_influence"]
-W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+           "perez_lineage", "perez_influence", "fincher_brain", "cui_temporal"]
+W_DEFAULT = np.array([0.1, 0.1, 0.1, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 # 2026-09-06 audit: perez_lineage alone has AUC 0.9903 on the RNAi-validated
 # label (hand-curated neural-family membership — same species of leakage as
 # rnai); reproducibility alone 0.9078 (King-neural-G0 membership embedded
@@ -122,7 +122,7 @@ def main():
     top10_scores = df.loc[df[gene_col].isin(top10_genes), score_col].values
     rest_scores = df.loc[~df[gene_col].isin(top10_genes), score_col].values
 
-    neural_mask = df["proof_status"] == "known_rnai_validated"
+    neural_mask = df["proof_status"] == "tested"
     neural_scores = df.loc[neural_mask, score_col].values
     non_neural_scores = df.loc[~neural_mask, score_col].values
 

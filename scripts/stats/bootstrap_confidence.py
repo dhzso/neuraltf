@@ -50,10 +50,10 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 STREAMS = [
     "expression", "specificity", "reproducibility", "rnai",
     "correlation", "neural_enriched", "neural_specificity",
-    "perez_lineage", "perez_influence",
+    "perez_lineage", "perez_influence", "fincher_brain", "cui_temporal",
 ]
 # Must match bioforge.evidence.scoring.DEFAULT_WEIGHTS exactly.
-W_DEFAULT = np.array([0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+W_DEFAULT = np.array([0.1, 0.1, 0.1, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 
 
 def load_score_matrix() -> pd.DataFrame:

@@ -68,7 +68,7 @@ RAW_DIR = ROOT / "datasets" / "raw"
 
 STREAMS = ["expression", "specificity", "reproducibility", "rnai",
            "correlation", "neural_enriched", "neural_specificity",
-           "perez_lineage", "perez_influence"]
+           "perez_lineage", "perez_influence", "fincher_brain", "cui_temporal"]
 N_DRAWS = 1000
 SEED = 42
 # Tie-breaks mirror select_top: the method's OWN base score first (for a

@@ -100,8 +100,8 @@ def build():
     # Legend above the axes indicating Track membership
     from matplotlib.patches import Patch
     legend_elements = [
-        Patch(facecolor=C_A, edgecolor="#222222", lw=0.5, label="Track A (RNAi validated)"),
-        Patch(facecolor=C_B, edgecolor="#222222", lw=0.5, label="Track B (Novel candidates)"),
+        Patch(facecolor=C_A, edgecolor="#222222", lw=0.5, label="Tested (RNAi validated)\u2020"),
+        Patch(facecolor=C_B, edgecolor="#222222", lw=0.5, label="Not tested"),
     ]
     ax.legend(
         handles=legend_elements,
