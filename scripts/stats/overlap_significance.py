@@ -65,31 +65,26 @@ def _binom_p(k, n, p):
 def main():
     print("=== Overlap Significance Tests ===")
 
-    centered_path = RESULTS_DIR / "dirichlet_centered_full_rank.csv"
-    uniform_path = RESULTS_DIR / "dirichlet_uniform_full_rank.csv"
+    centered_path = RESULTS_DIR / "dirichlet_centered_top10.csv"
+    uniform_path = RESULTS_DIR / "dirichlet_uniform_top10.csv"
     fixed_path = RESULTS_DIR / "top10_neural_tfs_prioritized.csv"
 
     methods = {}
-    total_centered = total_uniform = total_fixed = 0
 
     if centered_path.exists():
-        df_c = pd.read_csv(centered_path).drop_duplicates(subset="gene_id", keep="first")
-        gene_col = "gene_id" if "gene_id" in df_c.columns else "gene_id_v6"
-        score_col = "composite_score" if "composite_score" in df_c.columns \
-            else "dirichlet_median_score"
-        methods["centered"] = set(df_c.sort_values(score_col, ascending=False)[gene_col].head(10).values)
-        total_centered = len(df_c)
+        df_c = pd.read_csv(centered_path)
+        gene_col = "gene_id_v6" if "gene_id_v6" in df_c.columns else (
+            "gene_id" if "gene_id" in df_c.columns else "gene_id_v6")
+        methods["centered"] = set(df_c[gene_col].astype(str))
     else:
         print(f"Warning: {centered_path} not found")
         methods["centered"] = set()
 
     if uniform_path.exists():
-        df_u = pd.read_csv(uniform_path).drop_duplicates(subset="gene_id", keep="first")
-        gene_col = "gene_id" if "gene_id" in df_u.columns else "gene_id_v6"
-        score_col = "composite_score" if "composite_score" in df_u.columns \
-            else "uniform_median_score"
-        methods["uniform"] = set(df_u.sort_values(score_col, ascending=False)[gene_col].head(10).values)
-        total_uniform = len(df_u)
+        df_u = pd.read_csv(uniform_path)
+        gene_col = "gene_id_v6" if "gene_id_v6" in df_u.columns else (
+            "gene_id" if "gene_id" in df_u.columns else "gene_id_v6")
+        methods["uniform"] = set(df_u[gene_col].astype(str))
     else:
         print(f"Warning: {uniform_path} not found")
         methods["uniform"] = set()
@@ -101,7 +96,6 @@ def main():
         gene_col = "gene_id_v6" if "gene_id_v6" in df_f.columns else (
             "gene_id" if "gene_id" in df_f.columns else "gene_id_v6")
         methods["fixed"] = set(df_f[gene_col].astype(str))
-        total_fixed = len(methods["fixed"])  # not used for N; N below
     else:
         print(f"Warning: {fixed_path} not found")
         methods["fixed"] = set()
@@ -109,8 +103,7 @@ def main():
     # Population size: the SHARED candidate universe - one row per gene in
     # rank.csv (never the row-exploded Dirichlet CSVs).
     rank_csv = RUN_DIR / "rank.csv"
-    N = pd.read_csv(rank_csv)["gene_id"].nunique() if rank_csv.exists() else \
-        max(total_centered, total_uniform)
+    N = pd.read_csv(rank_csv)["gene_id"].nunique() if rank_csv.exists() else 11695
     n = 10
 
     results = {"pairwise": {}, "three_way": {}, "binomial": {}, "overlaps": {}}

@@ -61,7 +61,11 @@ def build():
     enrichment = observed[-1] / prevalence if prevalence > 0 else 0
     p_binom = data.get("top_decile_enrichment", {}).get("p_one_sided_binomial", None)
     if p_binom is not None:
-        p_str = r"P = 2.0 \times 10^{-40}" if p_binom < 1e-30 else f"P = {p_binom:.1e}"
+        if p_binom < 1e-15:
+            base, exp = f"{p_binom:.1e}".split("e")
+            p_str = rf"P = {base} \times 10^{{{int(exp)}}}"
+        else:
+            p_str = f"P = {p_binom:.1e}"
         callout_txt = f"{top_rate:.1f}%\n({enrichment:.1f}\u00d7 enrichment,\n${p_str}$)"
     else:
         callout_txt = f"{top_rate:.1f}%\n({enrichment:.1f}\u00d7 enrichment)"

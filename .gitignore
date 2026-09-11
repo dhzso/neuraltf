@@ -57,6 +57,8 @@ projects/NeuralTF/figures/*.png
 projects/NeuralTF/figures/*.pdf
 projects/NeuralTF/figures/weight_sensitivity_draws.csv
 projects/NeuralTF/figures/weight_sensitivity_top10_challengers.csv
+projects/NeuralTF/figures/figure_completeness_report.json
+projects/NeuralTF/figures/go_term_reference.csv
 projects/NeuralTF/figures/supplementary/*
 !projects/NeuralTF/figures/supplementary/.gitkeep
 
@@ -95,6 +97,9 @@ src/bioforge.egg-info/
 # Presentation/one-time scripts (not needed for replication)
 projects/NeuralTF/scripts/generate_neuraltf_sota.py
 projects/NeuralTF/scripts/count_slides.py
+projects/NeuralTF/scripts/build_master_deck*.py
+projects/NeuralTF/scripts/deck_*.py
+uv.lock
 
 # Stray output CSVs
 analysis_results.csv
@@ -114,6 +119,8 @@ projects/NeuralTF/results.zip
 # Internal audit/guide docs (not for replication)
 projects/NeuralTF/FIGURE_AUDIT.md
 projects/NeuralTF/FIGURE_GUIDE.md
+projects/NeuralTF/figures/FIGURE_CATALOG.md
+projects/NeuralTF/scripts/audit_figures.py
 
 # Legacy duplicate
 neuraltf-repo/

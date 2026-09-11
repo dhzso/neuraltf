@@ -287,7 +287,7 @@ def main():
     stream_idx = {c: STREAMS.index(c) for c in stream_cols}
     observed = {}
     for _, row in real_rank.iterrows():
-        S = np.full(9, np.nan)
+        S = np.full(len(STREAMS), np.nan)
         for c in stream_cols:
             v = row[c]
             S[stream_idx[c]] = float(v) if pd.notna(v) else np.nan

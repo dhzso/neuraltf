@@ -221,6 +221,28 @@ def select_shortlist(cand: pd.DataFrame, mmc5: pd.DataFrame | None) -> pd.DataFr
     return top.sort_values(["track", "rank"]).reset_index(drop=True)
 
 
+def _deterministic_full_rank(cand: pd.DataFrame) -> pd.DataFrame:
+    """Sort all candidates by composite_score with deterministic tie-breaks.
+
+    Order: composite_score -> integrated_score -> n_streams -> gene_id ascending.
+    Ensures fixed_full_rank.csv matches the WS2 tie-break discipline.
+    """
+    out = cand.copy()
+    tie_cols = [c for c in ("integrated_score", "n_streams") if c in out.columns]
+    for c in ["composite_score"] + tie_cols:
+        if c in out.columns:
+            out[c] = pd.to_numeric(out[c], errors="coerce").fillna(0.0)
+    out["_gene_id_desc"] = [
+        "".join(chr(0x10FFFF - ord(ch)) for ch in str(g))
+        for g in out["gene_id"]
+    ]
+    sort_cols = ["composite_score"] + tie_cols + ["_gene_id_desc"]
+    out = out.sort_values(by=sort_cols, ascending=False).reset_index(drop=True)
+    out = out.drop(columns=["_gene_id_desc"])
+    out["rank"] = range(1, len(out) + 1)
+    return out
+
+
 def clean_ortholog(value: str, planmine_desc: str = "") -> str:
     """Normalise a human-ortholog label; falls back to the PlanMine symbol."""
     v = str(value or "").strip()
@@ -367,6 +389,13 @@ def main(argv: list[str] | None = None) -> int:
     csv_path = out_dir / "top10_neural_tfs_prioritized.csv"
     _atomic_write_csv(csv, csv_path, index=False)
     print(f"  wrote {csv_path} ({len(csv)} rows)")
+
+    # Save full fixed-method ranking across all candidates (composite + bonuses + deterministic rank)
+    # so supplementary_table_S1 and S2 compare identical composite quantities.
+    full_rank = _deterministic_full_rank(cand)
+    full_rank_path = out_dir / "fixed_full_rank.csv"
+    _atomic_write_csv(full_rank, full_rank_path, index=False)
+    print(f"  wrote {full_rank_path} ({len(full_rank)} rows)")
 
     g0 = {}
     if paths["king_atlas"].exists():

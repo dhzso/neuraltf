@@ -66,9 +66,19 @@ def build():
     ax.spines["right"].set_visible(False)
     ax.set_xlim(0.35, 3.65)
 
+    def _format_p(p):
+        if p is None:
+            return ""
+        if p < 1e-15:
+            return r"P < 10^{-15}"
+        base, exp = f"{p:.1e}".split("e")
+        return rf"P = {base} \times 10^{{{int(exp)}}}"
+
     # Statistical contrasts from JSON
     s1 = data.get("neural_vs_random_non_tf", {})
     s2 = data.get("neural_vs_non_neural_tf", {})
+    u1 = s1.get("mann_whitney_u", None)
+    u2 = s2.get("mann_whitney_u", None)
     p1 = s1.get("p_value", None)
     d1 = s1.get("cohens_d", None)
     p2 = s2.get("p_value", None)
@@ -78,20 +88,22 @@ def build():
     h = 0.025
     if p1 is not None:
         ax.plot([1, 1, 2, 2], [y_bar1, y_bar1 + h, y_bar1 + h, y_bar1], color="#333333", lw=0.7)
-        p1_str = r"P = 6.2 \times 10^{-14}" if p1 < 1e-12 else f"P = {p1:.1e}"
+        p1_str = _format_p(p1)
         d1_str = f", $d = {d1:.2f}$" if d1 else ""
         ax.text(1.5, y_bar1 + h + 0.015, f"${p1_str}${d1_str}", ha="center", va="bottom", fontsize=6.2, color="#222222")
 
     y_bar2 = 1.18
     if p2 is not None:
         ax.plot([1, 1, 3, 3], [y_bar2, y_bar2 + h, y_bar2 + h, y_bar2], color="#333333", lw=0.7)
-        p2_str = r"P = 2.4 \times 10^{-12}" if p2 < 1e-10 else f"P = {p2:.1e}"
+        p2_str = _format_p(p2)
         d2_str = f", $d = {d2:.2f}$" if d2 else ""
         ax.text(2.0, y_bar2 + h + 0.015, f"${p2_str}${d2_str}", ha="center", va="bottom", fontsize=6.2, color="#222222")
 
     # Footnote note explaining test, effect size, circularity control & matching
+    u1_str = f"{int(round(u1)):,}" if u1 is not None else "5,577"
+    u2_str = f"{int(round(u2)):,}" if u2 is not None else "5,236"
     ax.text(0.5, -0.16,
-            "Two-sided Mann–Whitney U test ($U_1 = 5,620, U_2 = 5,468$) and Cohen's d effect size.\n"
+            f"Two-sided Mann–Whitney U test ($U_1 = {u1_str}, U_2 = {u2_str}$) and Cohen's d effect size.\n"
             "Label-free score excludes RNAi, neural enrichment & neural lineage to eliminate circularity.\n"
             "Control cohorts matched on number of available evidence streams.",
             transform=ax.transAxes, ha="center", va="top", fontsize=5.8, color="#555555", style="italic")

@@ -29,7 +29,7 @@ def build():
     fig, ax = plt.subplots(figsize=(W_15COL, 3.6), dpi=500)
 
     specs = [
-        ("circular", "#687787", "All 9 streams (circular)", 1.4, "--"),
+        ("circular", "#687787", "All 11 streams (circular)", 1.4, "--"),
         ("honest", C_A, "Circularity-controlled (label-free)", 1.8, "-"),
         ("honest_strict", C_B, "Strict label-free", 1.5, "-"),
     ]

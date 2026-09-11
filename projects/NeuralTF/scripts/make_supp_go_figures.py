@@ -67,8 +67,8 @@ C_SKY = "#56B4E9"
 C_GRAY = "#999999"
 C_PRESENT = "#0072B2"
 
-PROOF_COLORS = {"tested": C_ORANGE, "not_tested": C_SKY}
-PROOF_LABELS = {"tested": "Tested", "not_tested": "Not tested"}
+PROOF_COLORS = {"tested": C_ORANGE, "not_tested": C_SKY, "known_fstf": "#706E65"}
+PROOF_LABELS = {"tested": "Tested", "not_tested": "Not tested", "known_fstf": "Known FSTF"}
 NS_LABELS = ["Biological process", "Molecular function",
              "Cellular component", "No namespace"]
 

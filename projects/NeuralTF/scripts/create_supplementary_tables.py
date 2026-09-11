@@ -41,8 +41,15 @@ def _dedup(df: pd.DataFrame, score_col: str) -> pd.DataFrame:
 
 
 def main() -> int:
-    rank = pd.read_csv(RUN_DIR / "rank.csv")
-    rank = _dedup(rank, "integrated_score")
+    fixed_path = IN_DIR / "fixed_full_rank.csv"
+    if fixed_path.exists():
+        fixed = pd.read_csv(fixed_path)
+        fixed = _dedup(fixed, "composite_score")
+    else:
+        fixed = pd.read_csv(RUN_DIR / "rank.csv")
+        fixed = _dedup(fixed, "integrated_score")
+        if "composite_score" not in fixed.columns:
+            fixed["composite_score"] = fixed["integrated_score"]
 
     centered = pd.read_csv(IN_DIR / "dirichlet_centered_full_rank.csv")
     centered = _dedup(centered, "composite_score")
@@ -53,11 +60,8 @@ def main() -> int:
     # "fixed_composite" is the fixed method's composite (integrated score
     # + the same bonuses as the other two methods), NOT the raw integrated
     # score — all three columns must be the same quantity class.
-    merged = rank[["gene_id", "gene_name", "integrated_score", "proof_status"]].copy()
-    if "composite_score" in rank.columns:
-        merged["fixed_composite"] = rank["composite_score"]
-    else:
-        merged["fixed_composite"] = rank["integrated_score"]
+    merged = fixed[["gene_id", "gene_name", "integrated_score", "proof_status"]].copy()
+    merged["fixed_composite"] = fixed["composite_score"]
 
     centered_sub = centered[
         ["gene_id", "composite_score", "dirichlet_median_score"]
@@ -89,7 +93,7 @@ def main() -> int:
     print("Created supplementary_table_S1_method_comparison.csv "
           f"({len(merged)} genes)")
 
-    _atomic_write_csv(rank, OUT_DIR / "supplementary_table_S2_fixed_all_candidates.csv", index=False)
+    _atomic_write_csv(fixed, OUT_DIR / "supplementary_table_S2_fixed_all_candidates.csv", index=False)
     print("Created supplementary_table_S2_fixed_all_candidates.csv")
 
     _atomic_write_csv(centered, OUT_DIR / "supplementary_table_S3_centered_all_candidates.csv", index=False)

@@ -83,8 +83,16 @@ def main():
     if "perez_influence" in rank.columns:
         n_infl = rank["perez_influence"].notna().sum()
         print(f"[INFO] perez_influence column present: {n_infl} non-null values")
+    if "fincher_brain" in rank.columns:
+        n_fb = rank["fincher_brain"].notna().sum()
+        print(f"[INFO] fincher_brain column present: {n_fb} non-null values")
     else:
-        print("[WARN] perez_influence column MISSING from rank.csv - pipeline may not have included Perez influence")
+        print("[WARN] fincher_brain column MISSING from rank.csv - pipeline may not have included Fincher brain stream")
+    if "cui_temporal" in rank.columns:
+        n_cui = rank["cui_temporal"].notna().sum()
+        print(f"[INFO] cui_temporal column present: {n_cui} non-null values")
+    else:
+        print("[WARN] cui_temporal column MISSING from rank.csv - pipeline may not have included Cui temporal stream")
 
     errors = []
 
@@ -93,6 +101,7 @@ def main():
         ("Fixed-weight prioritization",
          ["scripts", "prioritize_neural_tfs.py"],
          [RES / "top10_neural_tfs_prioritized.csv",
+          RES / "fixed_full_rank.csv",
           RES / "candidate_summary_report.md"]),
 
         # Step 1: Dirichlet robustness analyses across all candidates

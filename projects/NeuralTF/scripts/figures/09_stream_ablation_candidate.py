@@ -8,9 +8,11 @@ def _ablate(df, exclude_idx):
     scores = np.zeros(len(df))
     for i, (_, row) in enumerate(df.iterrows()):
         vals = np.array([row.get(s, np.nan) for s in STREAM_COLS], dtype=float)
-        w = W.copy(); w[exclude_idx] = 0
-        present = ~np.isnan(vals) & (vals != 0)
-        if present.any():
+        w = W.copy()
+        if exclude_idx >= 0:
+            w[exclude_idx] = 0
+        present = ~np.isnan(vals)
+        if present.any() and np.sum(w[present]) > 0:
             scores[i] = np.sum(w[present]*vals[present]) / np.sum(w[present])
     return scores
 

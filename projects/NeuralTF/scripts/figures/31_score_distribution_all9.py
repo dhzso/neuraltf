@@ -62,7 +62,7 @@ def build():
     ax.set_yticklabels(labels, fontsize=6.5)
     ax.set_xlabel("Normalized Evidence Score", fontsize=7.0)
     ax.set_xlim(-0.02, 1.35)
-    ax.set_title("Empirical Score Distributions Across Nine Integrated Evidence Streams",
+    ax.set_title("Empirical Score Distributions Across 11 Integrated Evidence Streams",
                  fontsize=8.0, pad=6)
     ax.invert_yaxis()
     ax.spines["top"].set_visible(False)

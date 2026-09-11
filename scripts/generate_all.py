@@ -60,6 +60,10 @@ def _ready(root: Path, step: str) -> str | None:
             (raw / "GSE111764_GEO_Fincher_atlas"
              / "GSE111764_PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz").exists(),
             "GSE111764 DGE .txt.gz missing (README 'Datasets' -> Fincher)"),
+        "Fincher brain h5ad": (
+            (raw / "GSE111764_GEO_Fincher_atlas"
+             / "GSE111764_BrainClusteringDigitalExpressionMatrix.dge.txt.gz").exists(),
+            "GSE111764 BrainClustering DGE .txt.gz missing (README 'Datasets' -> Fincher brain)"),
         "Plass h5ad": (
             any(p.suffix == ".tar" and ("RAW" in p.name.upper() or "GSE103633" in p.name.upper())
                 for p in raw.rglob("*")) if raw.exists() else False,
@@ -84,6 +88,7 @@ def _ready(root: Path, step: str) -> str | None:
             "King mmc4/mmc7 xlsx missing"),
         "Pipeline run": (
             (proc / "fincher_subsample.h5ad").exists()
+            and (proc / "fincher_brain.h5ad").exists()
             and (proc / "plass_v6.h5ad").exists()
             and (any(king.glob("*mmc4*.xlsx")) if king.exists() else False)
             and (any(king.glob("*mmc5*.xlsx")) if king.exists() else False)
@@ -148,13 +153,6 @@ def _ready(root: Path, step: str) -> str | None:
         "Statistical tests": (
             (run / "rank.csv").exists(),
             "rank.csv missing (run the pipeline first)"),
-        "Supplementary GO figures S5-S7": (
-            (root / "projects" / "NeuralTF" / "figures"
-             / "go_term_reference.csv").exists()
-            and (root / "projects" / "NeuralTF" / "figures"
-                 / "supplementary" / "go_gene_term_matrix_reduced.csv").exists(),
-            "go_term_reference.csv / go_gene_term_matrix_reduced.csv missing "
-            "(run make_supp_go_figures.py first)"),
     }
     # 2026-09-06 audit fix: the previous two lines unpacked `ok` and then
     # IGNORED it — `return why or None` returned the failure message
@@ -169,6 +167,8 @@ def _ready(root: Path, step: str) -> str | None:
 STEPS = [
     ("Fincher h5ad", ["scripts", "convert_fincher.py"], [],
      [["datasets", "processed", "fincher_subsample.h5ad"]]),
+    ("Fincher brain h5ad", ["scripts", "convert_fincher_brain.py"], [],
+     [["datasets", "processed", "fincher_brain.h5ad"]]),
     ("Plass h5ad", ["scripts", "consolidate_plass.py"], [],
      [["datasets", "processed", "plass_v6.h5ad"]]),
     ("Cui atlas", ["projects/NeuralTF/scripts/convert_cui.py"], [],
@@ -190,9 +190,12 @@ STEPS = [
      [["datasets", "processed", "planmine_annotations.parquet"]]),
     ("Prioritization", ["scripts", "prioritize_neural_tfs.py"], ["--repo", str(REPO)],
      [["projects", "NeuralTF", "results", "top10_neural_tfs_prioritized.csv"],
+      ["projects", "NeuralTF", "results", "fixed_full_rank.csv"],
       ["projects", "NeuralTF", "results", "candidate_summary_report.md"]]),
     ("GO supp figures", ["projects/NeuralTF/scripts/make_supp_go_figures.py"], [],
      [["projects", "NeuralTF", "figures", "supplementary", "fig_s1_go_gene_term_map.png"],
+      ["projects", "NeuralTF", "figures", "supplementary", "fig_s2_go_top10_dotmatrix.png"],
+      ["projects", "NeuralTF", "figures", "supplementary", "fig_s3_go_top_terms.png"],
       ["projects", "NeuralTF", "figures", "supplementary", "fig_s4_go_neural_focus.png"],
       ["projects", "NeuralTF", "figures", "supplementary",
        "go_gene_term_matrix_reduced.csv"],
@@ -245,11 +248,12 @@ STEPS = [
       ["projects", "NeuralTF", "results", "calibration_stats.json"],
       ["projects", "NeuralTF", "results", "brier_score.json"],
       ["projects", "NeuralTF", "results", "cross_method_significance.json"],
-      ["projects", "NeuralTF", "results", "score_shuffling_pvalues.csv"]]),
+      ["projects", "NeuralTF", "results", "score_shuffling_pvalues.csv"],
+      ["projects", "NeuralTF", "results", "convergence_draws.csv"],
+      ["projects", "NeuralTF", "results", "ortholog_benchmark.json"]]),
     ("Generate publication figures",
      ["projects/NeuralTF/scripts/generate_publication_figures.py"], [],
      [["projects", "NeuralTF", "figures", "01_stream_coverage_all.png"],
-      ["projects", "NeuralTF", "figures", "02_integrated_vs_composite.png"],
       ["projects", "NeuralTF", "figures", "03_score_distribution_all_vs_neural.png"],
       ["projects", "NeuralTF", "figures", "04_evidence_heatmap_neural.png"],
       ["projects", "NeuralTF", "figures", "05_top10_candidate_atlas.png"],
@@ -257,35 +261,23 @@ STEPS = [
       ["projects", "NeuralTF", "figures", "07_weight_sensitivity_ptop10.png"],
       ["projects", "NeuralTF", "figures", "08_stream_ablation_global.png"],
       ["projects", "NeuralTF", "figures", "09_stream_ablation_candidate.png"],
-      ["projects", "NeuralTF", "figures", "10_centered_top10_scores.png"],
-      ["projects", "NeuralTF", "figures", "11_centered_scatter_neural.png"],
-      ["projects", "NeuralTF", "figures", "12_uniform_top10_scores.png"],
       ["projects", "NeuralTF", "figures", "13_uniform_scatter_all.png"],
-      ["projects", "NeuralTF", "figures", "14_uniform_neural_vs_all_rankrank.png"],
       ["projects", "NeuralTF", "figures", "15_method_bumpchart.png"],
-      ["projects", "NeuralTF", "figures", "16_method_score_density.png"],
-      ["projects", "NeuralTF", "figures", "17_method_rank_correlation.png"],
       ["projects", "NeuralTF", "figures", "18_composite_bonus_waterfall.png"],
-      ["projects", "NeuralTF", "figures", "19_method_consensus.png"],
       ["projects", "NeuralTF", "figures", "20_stream_correlation.png"],
-      ["projects", "NeuralTF", "figures", "21_centered_vs_uniform_scatter.png"],
-      ["projects", "NeuralTF", "figures", "22_pipeline_schematic.png"],
-      ["projects", "NeuralTF", "figures", "23_roc_pr_curve.png"],
+      ["projects", "NeuralTF", "figures", "23_roc_curve.png"],
       ["projects", "NeuralTF", "figures", "24_negative_controls.png"],
-      ["projects", "NeuralTF", "figures", "25_bootstrap_ci.png"],
       ["projects", "NeuralTF", "figures", "26_permutation_null.png"],
-      ["projects", "NeuralTF", "figures", "27_loo_atlas_stability.png"],
+      ["projects", "NeuralTF", "figures", "27_pr_curve.png"],
       ["projects", "NeuralTF", "figures", "28_effect_sizes.png"],
       ["projects", "NeuralTF", "figures", "29_convergence_analysis.png"],
       ["projects", "NeuralTF", "figures", "30_calibration.png"],
       ["projects", "NeuralTF", "figures", "31_score_distribution_all9.png"],
-       ["projects", "NeuralTF", "figures", "32_perez_influence_comparison.png"],
-       ["projects", "NeuralTF", "figures", "33_method_agreement_summary.png"]]),
-    ("Supplementary GO figures S5-S7",
-     ["projects", "NeuralTF", "scripts", "figures", "supp_go_figures.py"], [],
-     [["projects", "NeuralTF", "figures", "supplementary", "fig_s5_go_heatmap_neural.png"],
-      ["projects", "NeuralTF", "figures", "supplementary", "fig_s6_top10_go_profiles.png"],
-      ["projects", "NeuralTF", "figures", "supplementary", "fig_s7_go_namespace_track.png"]]),
+      ["projects", "NeuralTF", "figures", "32_perez_influence_comparison.png"],
+      ["projects", "NeuralTF", "figures", "33_method_agreement_summary.png"],
+      ["projects", "NeuralTF", "figures", "34_ananse_regulatory_network.png"],
+      ["projects", "NeuralTF", "figures", "35_meta_analysis_concordance.png"],
+      ["projects", "NeuralTF", "figures", "36_regeneration_temporal_dynamics.png"]]),
 ]
 
 

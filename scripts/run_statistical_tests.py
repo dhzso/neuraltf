@@ -43,6 +43,7 @@ TESTS = [
     ("brier_score.py", []),
     ("cross_method_correction.py", []),
     ("score_shuffling_permutation.py", ["--n-perm", "1000", "--candidates"]),
+    ("ortholog_benchmark.py", []),
 ]
 
 
