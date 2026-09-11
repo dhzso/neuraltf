@@ -348,12 +348,12 @@ def main() -> int:
         "frac_draws_in_top10", ascending=False).reset_index(drop=True)
 
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    draws_path = FIG_DIR / "weight_sensitivity_draws.csv"
-    challengers_path = FIG_DIR / "weight_sensitivity_top10_challengers.csv"
-    draws_df.to_csv(draws_path, index=False)
-    challengers_df.to_csv(challengers_path, index=False)
-    print(f"\nSaved {len(draws_df)} draw rows -> {draws_path}")
-    print(f"Saved {len(challengers_df)} challengers -> {challengers_path}")
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    for out_dir in (FIG_DIR, RESULTS_DIR):
+        draws_df.to_csv(out_dir / "weight_sensitivity_draws.csv", index=False)
+        challengers_df.to_csv(out_dir / "weight_sensitivity_top10_challengers.csv", index=False)
+    print(f"\nSaved {len(draws_df)} draw rows -> {FIG_DIR / 'weight_sensitivity_draws.csv'} and {RESULTS_DIR / 'weight_sensitivity_draws.csv'}")
+    print(f"Saved {len(challengers_df)} challengers -> {FIG_DIR / 'weight_sensitivity_top10_challengers.csv'} and {RESULTS_DIR / 'weight_sensitivity_top10_challengers.csv'}")
     return 0
 
 

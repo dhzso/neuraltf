@@ -143,7 +143,9 @@ def main():
         ("Weight sensitivity analysis",
          ["scripts", "run_weight_sensitivity.py"],
          [FIG / "weight_sensitivity_draws.csv",
-          FIG / "weight_sensitivity_top10_challengers.csv"]),
+          FIG / "weight_sensitivity_top10_challengers.csv",
+          RES / "weight_sensitivity_draws.csv",
+          RES / "weight_sensitivity_top10_challengers.csv"]),
 
         # Step 4c: Supplementary GO figures (fig_s1-s7)
         ("Supplementary GO figures",

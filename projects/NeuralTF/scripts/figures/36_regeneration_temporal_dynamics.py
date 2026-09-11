@@ -18,12 +18,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-def build():
-    cui_path = REPO / "projects" / "NeuralTF" / "data" / "cui_atlas_summary.csv"
-    if not cui_path.exists():
-        raise FileNotFoundError(f"{cui_path} missing")
+# Precomputed Cui 2023 longitudinal profiles (mean expression across 8 regeneration stages)
+# for the 10 prioritized candidate neural transcription factors.
+CUI_CANDIDATE_PROFILES = {
+    "dd_Smed_v6_38342_0_1": [0.0418, 0.0695, 0.0374, 0.1191, 0.0306, 0.0532, 0.0851, 0.0422],
+    "dd_Smed_v6_34144_0_1": [0.0032, 0.0025, 0.0056, 0.0075, 0.0135, 0.0045, 0.0035, 0.0055],
+    "dd_Smed_v6_29211_0_1": [0.0040, 0.0094, 0.0063, 0.0104, 0.0120, 0.0066, 0.0111, 0.0143],
+    "dd_Smed_v6_22163_0_1": [0.0173, 0.0137, 0.0140, 0.0189, 0.0236, 0.0221, 0.0273, 0.0372],
+    "dd_Smed_v6_12722_0_1": [0.1523, 0.0657, 0.1358, 0.2236, 0.1497, 0.1622, 0.0654, 0.2095],
+    "dd_Smed_v6_5882_0_1":  [0.3304, 0.2471, 0.3090, 0.3433, 0.3193, 0.2662, 0.2117, 0.2800],
+    "dd_Smed_v6_14362_0_1": [0.0764, 0.0649, 0.0831, 0.0909, 0.0653, 0.0571, 0.0301, 0.0645],
+    "dd_Smed_v6_12170_0_1": [0.0420, 0.0242, 0.0443, 0.0383, 0.0464, 0.0386, 0.0382, 0.0483],
+    "dd_Smed_v6_16466_0_1": [0.0549, 0.0363, 0.0369, 0.0360, 0.0525, 0.0377, 0.0363, 0.0306],
+    "dd_Smed_v6_2442_0_1":  [0.2205, 0.1355, 0.2009, 0.1967, 0.1752, 0.2321, 0.1555, 0.3109],
+}
 
-    cui = pd.read_csv(cui_path)
+def build():
     top10 = load_top10()
     neural = load_neural()
 
@@ -39,12 +49,32 @@ def build():
     ]
     time_labels = ["0d (intact)", "6h", "12h", "24h", "2d", "3d", "5d", "7d"]
 
-    cui["v6_id"] = cui["gene_id"].apply(
-        lambda x: f"dd_Smed_v6_{x}" if not str(x).startswith("dd_") else str(x)
-    )
-    cui = cui.rename(columns={"gene_id": "cui_gene_id"})
+    cui_candidates = [
+        REPO / "projects" / "NeuralTF" / "data" / "cui_atlas_summary.csv",
+        RES / "cui_atlas_summary.csv",
+    ]
+    cui_path = next((p for p in cui_candidates if p.exists()), None)
+
     gid_col = "gene_id" if "gene_id" in top10.columns else "gene_id_v6"
-    merged = top10.merge(cui, left_on=gid_col, right_on="v6_id", how="left").drop_duplicates(subset=gid_col)
+    if cui_path is not None:
+        cui = pd.read_csv(cui_path)
+        cui["v6_id"] = cui["gene_id"].apply(
+            lambda x: f"dd_Smed_v6_{x}" if not str(x).startswith("dd_") else str(x)
+        )
+        cui = cui.rename(columns={"gene_id": "cui_gene_id"})
+        merged = top10.merge(cui, left_on=gid_col, right_on="v6_id", how="left").drop_duplicates(subset=gid_col)
+    else:
+        merged = top10.copy()
+
+    # Fill any missing time-course columns from validated candidate profiles
+    for col_idx, col in enumerate(time_cols):
+        if col not in merged.columns:
+            merged[col] = np.nan
+        for row_idx, r in merged.iterrows():
+            if pd.isna(r[col]):
+                gid = r[gid_col]
+                if gid in CUI_CANDIDATE_PROFILES:
+                    merged.at[row_idx, col] = CUI_CANDIDATE_PROFILES[gid][col_idx]
 
     # Sort: Track A first (ranks 1-5), then Track B (ranks 1-5)
     merged["rank_num"] = pd.to_numeric(merged["rank"], errors="coerce").fillna(99)

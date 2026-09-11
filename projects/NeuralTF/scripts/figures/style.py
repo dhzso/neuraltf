@@ -168,11 +168,17 @@ def load_uniform_full():
 
 def load_sens_draws():
     """Load all 1000 weight sensitivity draws without dropping repeated draws per gene."""
-    return _csv(RES / "weight_sensitivity_draws.csv", allow_duplicates=True)
+    p = FIG / "weight_sensitivity_draws.csv"
+    if not p.exists():
+        p = RES / "weight_sensitivity_draws.csv"
+    return _csv(p, allow_duplicates=True)
 
 
 def load_sens_top10():
-    return _csv(RES / "weight_sensitivity_top10_challengers.csv")
+    p = FIG / "weight_sensitivity_top10_challengers.csv"
+    if not p.exists():
+        p = RES / "weight_sensitivity_top10_challengers.csv"
+    return _csv(p)
 
 
 def save(fig, name, dpi=500):
