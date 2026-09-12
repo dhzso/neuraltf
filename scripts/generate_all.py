@@ -279,7 +279,8 @@ STEPS = [
       ["projects", "NeuralTF", "figures", "33_method_agreement_summary.png"],
       ["projects", "NeuralTF", "figures", "34_ananse_regulatory_network.png"],
       ["projects", "NeuralTF", "figures", "35_meta_analysis_concordance.png"],
-      ["projects", "NeuralTF", "figures", "36_regeneration_temporal_dynamics.png"]]),
+      ["projects", "NeuralTF", "figures", "36_regeneration_temporal_dynamics.png"],
+      ["projects", "NeuralTF", "figures", "37_ortholog_benchmark.png"]]),
 ]
 
 

@@ -84,6 +84,8 @@ def build():
         track = row.get("track", "B")
         rank = row.get("rank", 1)
         nm = label(neural, gid)
+        is_pheno = bool(row.get("phenotype_confirmed", False))
+        disp_nm = f"{nm}†" if is_pheno else nm
         n_row = neural[neural["gene_id"] == gid]
         base = n_row.iloc[0].get("integrated_score", np.nan) if len(n_row) > 0 else np.nan
         comp = row.get("composite_score", np.nan)
@@ -102,7 +104,7 @@ def build():
 
         records.append({
             "gene_id": gid,
-            "name": nm,
+            "name": disp_nm,
             "track": track,
             "rank": rank,
             "base": base,
@@ -116,6 +118,7 @@ def build():
             "s_repro": s_repro,
             "s_lineage": s_lineage,
             "s_inf": s_inf,
+            "pheno": is_pheno,
         })
     df = pd.DataFrame(records)
 
@@ -146,10 +149,9 @@ def build():
     fig = plt.figure(figsize=(8.6, 4.8), dpi=500)
 
     # Deterministic pixel-perfect axes layout
-    # [left, bottom, width, height]
-    ax_track = fig.add_axes([0.045, 0.15, 0.015, 0.68])
-    ax_mat   = fig.add_axes([0.145, 0.15, 0.355, 0.68])
-    ax_score = fig.add_axes([0.550, 0.15, 0.410, 0.68], sharey=ax_mat)
+    ax_track = fig.add_axes([0.045, 0.16, 0.015, 0.67])
+    ax_mat   = fig.add_axes([0.145, 0.16, 0.355, 0.67])
+    ax_score = fig.add_axes([0.550, 0.16, 0.410, 0.67], sharey=ax_mat)
 
     div_y = 4.5  # Track A is 0..4, Track B is 5..9
     colors = [C_A] * len(sub_a) + [C_B] * len(sub_b)
@@ -162,11 +164,10 @@ def build():
     ax_track.axhline(div_y, color="white", lw=2.5)
     ax_track.axis("off")
 
-    # Track labels to the left of the track strip ("RNAi+" = screened in
-    # King 2024 mmc5; phenotype status is NOT implied — see groundtruth.py)
-    fig.text(0.025, 0.65, "Tested (RNAi-screened)\u2020", rotation=90, va="center", ha="center",
+    # Track labels to the left of the track strip
+    fig.text(0.025, 0.66, "Track A: RNAi-screened", rotation=90, va="center", ha="center",
              fontsize=6.8, fontweight="bold", color=C_A)
-    fig.text(0.025, 0.32, "Not tested", rotation=90, va="center", ha="center",
+    fig.text(0.025, 0.33, "Track B: Unscreened", rotation=90, va="center", ha="center",
              fontsize=6.8, fontweight="bold", color=C_B)
 
     # ------------------ PANEL A: Evidence Stream Matrix ------------------
@@ -240,7 +241,7 @@ def build():
     ax_score.spines["left"].set_color("#DDDDDD")
 
     # Colorbar below Panel A
-    cbar_ax = fig.add_axes([0.145, 0.038, 0.18, 0.016])
+    cbar_ax = fig.add_axes([0.145, 0.048, 0.18, 0.016])
     cbar = fig.colorbar(im, cax=cbar_ax, orientation="horizontal")
     cbar.set_label("Stream Score", fontsize=6.2, fontweight="bold")
     cbar.set_ticks([0.0, 0.5, 1.0])
@@ -248,14 +249,14 @@ def build():
     cbar.outline.set_linewidth(0.5)
 
     # Missing / N/A swatch below Panel A
-    fig.patches.append(plt.Rectangle((0.345, 0.038), 0.012, 0.016, transform=fig.transFigure,
+    fig.patches.append(plt.Rectangle((0.345, 0.048), 0.012, 0.016, transform=fig.transFigure,
                                      facecolor="#ECEFF1", edgecolor="#CCCCCC", lw=0.5, clip_on=False))
-    fig.text(0.365, 0.044, "N/A", fontsize=6.0, va="center", color="#555555")
+    fig.text(0.365, 0.054, "N/A", fontsize=6.0, va="center", color="#555555")
 
     # Unified Legend below Panel B
     leg_handles = [
-        Patch(facecolor=C_A, label="Tested: base score"),
-        Patch(facecolor=C_B, label="Not tested: base score"),
+        Patch(facecolor=C_A, label="Track A: base score"),
+        Patch(facecolor=C_B, label="Track B: base score"),
         Patch(facecolor=C_BONUS, label="Composite bonus"),
     ]
     ax_score.legend(
@@ -266,6 +267,11 @@ def build():
         frameon=False,
         fontsize=6.2,
     )
+
+    # Footnote explaining FISH phenotype confirmation
+    fig.text(0.045, 0.008,
+             "\u2020 FISH phenotype-confirmed neural regulator (King et al., 2024); other Track A candidates RNAi-screened without confirmed neural phenotype.",
+             fontsize=5.8, fontstyle="italic", color="#555555")
 
     fig.suptitle(
         "Candidate Atlas: High-Confidence & Novel Neural Transcription Factor Regulators",
@@ -279,4 +285,3 @@ def build():
 
 if __name__ == "__main__":
     build()
-

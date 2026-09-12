@@ -30,12 +30,13 @@ FIGURES = {
     28: ("28_effect_sizes.py",                    "Effect sizes"),
     29: ("29_convergence_analysis.py",            "Convergence analysis"),
     30: ("30_calibration.py",                     "Calibration plot"),
-    31: ("31_score_distribution_all9.py",         "Score distribution (9 streams)"),
+    31: ("31_score_distribution_all11.py",        "Score distribution (11 streams)"),
     32: ("32_perez_influence_comparison.py",      "Perez influence comparison"),
     33: ("33_method_agreement_summary.py",        "Method agreement summary"),
     34: ("34_ananse_regulatory_network.py",       "ANANSE regulatory network & targets"),
     35: ("35_meta_analysis_concordance.py",       "Cross-atlas meta-analysis concordance"),
     36: ("36_regeneration_temporal_dynamics.py",  "Regeneration temporal dynamics"),
+    37: ("37_ortholog_benchmark.py",             "Cross-species ortholog benchmark"),
 }
 
 def _load(path, name):
