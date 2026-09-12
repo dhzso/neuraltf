@@ -12,6 +12,8 @@ Public API
 - :class:`AtlasHarmonizer` — canonical tissue-label harmonization.
 - :class:`EvidenceScorer`, :func:`rank_candidates` — multi-criterion scoring.
 - :func:`assign_tiers`, :class:`ConfidencePolicy` — high/medium/low tiering.
+- :mod:`bioforge.evidence.groundtruth` — King 2024 RNAi screen ground truth
+  (screened vs phenotype-confirmed labels).
 - :mod:`bioforge.evidence.readers` — King/Fincher/Plass readers.
 """
 from bioforge.evidence.cards import (
@@ -24,6 +26,14 @@ from bioforge.evidence.cards import (
 )
 from bioforge.evidence.confidence import ConfidencePolicy, assign_tiers
 from bioforge.evidence.gene_mapping import BridgeTable, build_bridge_from_names, load_bridge
+from bioforge.evidence.groundtruth import (
+    MMC5_GROUND_TRUTH_NOTE,
+    PHENOTYPE_CONFIRMED_NAMES,
+    PHENOTYPE_CONFIRMED_SHORT,
+    PHENOTYPE_CONFIRMED_V6,
+    is_phenotype_confirmed,
+    phenotype_status,
+)
 from bioforge.evidence.harmonization import CANONICAL_TISSUES, AtlasHarmonizer
 from bioforge.evidence.scoring import DEFAULT_WEIGHTS, STREAM_ORDER, EvidenceScorer, rank_candidates
 from bioforge.evidence.schema import ConfidenceTier, EvidenceRecord, EvidenceSource
@@ -49,4 +59,10 @@ __all__ = [
     "build_cards_for_records",
     "render_card_markdown",
     "render_cards_markdown",
+    "MMC5_GROUND_TRUTH_NOTE",
+    "PHENOTYPE_CONFIRMED_NAMES",
+    "PHENOTYPE_CONFIRMED_SHORT",
+    "PHENOTYPE_CONFIRMED_V6",
+    "is_phenotype_confirmed",
+    "phenotype_status",
 ]

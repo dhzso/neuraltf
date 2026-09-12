@@ -34,7 +34,10 @@ def test_card_classifies_tested() -> None:
     assert card.proof_status == ProofStatus.TESTED
     assert card.integrated_score > 0.6
     assert card.tier == ConfidenceTier.HIGH
-    assert "RNAi phenotype" in card.suggested_followups[0]
+    # 2026-09-11 semantics: TESTED = screened (gene dd_Smed_v6_42 is not in
+    # the FISH-confirmed set), so the followup must carry the caveat.
+    assert card.phenotype_confirmed is False
+    assert "no published phenotype" in card.suggested_followups[0]
 
 
 def test_card_classifies_not_tested_when_no_rnai_no_prior() -> None:

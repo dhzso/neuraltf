@@ -817,7 +817,7 @@ def render_prioritization_page() -> None:
             st.caption(f"{len(df)} TFs (5A + 5B) — fixed-weight baseline")
             ta = df[df["track"] == "A"]
             tb = df[df["track"] == "B"]
-            st.markdown("**Track A — RNAi-validated**")
+            st.markdown("**Track A — RNAi-screened**")
             st.dataframe(ta, use_container_width=True, hide_index=True)
             st.markdown("**Track B — novel candidates**")
             st.dataframe(tb, use_container_width=True, hide_index=True)
@@ -835,7 +835,7 @@ def render_prioritization_page() -> None:
             st.caption(f"{len(df)} TFs (5A + 5B) — Dirichlet-centered (k=40)")
             ta = df[df["track"] == "A"]
             tb = df[df["track"] == "B"]
-            st.markdown("**Track A — RNAi-validated**")
+            st.markdown("**Track A — RNAi-screened**")
             st.dataframe(ta, use_container_width=True, hide_index=True)
             st.markdown("**Track B — novel candidates**")
             st.dataframe(tb, use_container_width=True, hide_index=True)
@@ -861,7 +861,7 @@ def render_prioritization_page() -> None:
             st.caption(f"{len(df)} TFs (5A + 5B) — Dirichlet-uniform (alpha=1)")
             ta = df[df["track"] == "A"]
             tb = df[df["track"] == "B"]
-            st.markdown("**Track A — RNAi-validated**")
+            st.markdown("**Track A — RNAi-screened**")
             st.dataframe(ta, use_container_width=True, hide_index=True)
             st.markdown("**Track B — novel candidates**")
             st.dataframe(tb, use_container_width=True, hide_index=True)

@@ -4,10 +4,10 @@ A :class:`EvidenceCard` aggregates the per-source evidence for one TF
 candidate into a single user-facing object, then renders it as a markdown
 fragment suitable for both `runs/<ts>/ai_summary.md` and the Streamlit UI.
 
-The key thesis-facing concern (per ADR-0003) is that novel *untested*
-candidates should be surfaced separately from RNAi-validated known TFs
-— so we attach a :class:`ProofStatus` to every card. The two classes feed
-into the same integrated confidence tier/model.
+The key thesis-facing concern (per ADR-0003) is that untested candidates
+should be surfaced separately from screened known TFs — so we attach a
+:class:`ProofStatus` to every card. The two classes feed into the same
+integrated confidence tier/model.
 
 Proof status is written back to ``record.proof_status`` so downstream
 serialization (JSON, rank CSV) carries it.
@@ -20,6 +20,7 @@ from typing import Iterable, Optional
 
 from bioforge.core.logging import get_logger
 from bioforge.evidence.confidence import ConfidencePolicy, assign_tiers
+from bioforge.evidence.groundtruth import is_phenotype_confirmed
 from bioforge.evidence.scoring import EvidenceScorer
 from bioforge.evidence.schema import ConfidenceTier, EvidenceRecord, EvidenceSource
 
@@ -29,17 +30,25 @@ logger = get_logger("evidence.cards")
 class ProofStatus(str, Enum):
     """Functional-testing status of a candidate.
 
-    Renamed from the former ``tested`` / ``not_tested`` /
-    ``known_fstf`` to neutral, provenance-explicit labels that
-    no longer imply a "benchmark track" or that an untested gene is "novel":
+    2026-09-11 ground-truth correction: King 2024 mmc5 is titled "All
+    Transcription Factors Inhibited" — it records every TF for which RNAi
+    was PERFORMED, not only TFs with phenotypes (phenotype status is a
+    font colour in the original table; the distributed xlsx copy is
+    monochrome). Therefore:
 
-    - ``TESTED``      — an RNAi phenotype is recorded in the source paper's
-                        screen (King 2024, mmc5). Status is derived FROM that
-                        paper's tables (provenance marker ``\u2020``).
+    - ``TESTED``      — RNAi was PERFORMED in the source screen (King 2024,
+                        mmc5). Status is derived FROM that paper's tables
+                        (provenance marker ``\u2020``). Means *screened*;
+                        phenotype NOT implied. The boolean companion
+                        ``phenotype_confirmed`` on the card / record marks
+                        the FISH-confirmed subset.
     - ``NOT_TESTED``  — no RNAi record in the source screen. Untested, not
                         necessarily "novel" (many have conserved orthologs).
     - ``KNOWN_FSTF``  — documented fate-specifying TF reported in the
                         literature but absent from the RNAi screen.
+
+    Downstream consumers MUST use ``phenotype_confirmed`` (not TESTED
+    membership) for any "validated / benchmark" claim.
     """
 
     TESTED = "tested"
@@ -58,6 +67,11 @@ class EvidenceCard:
     per_source: dict[EvidenceSource, tuple[float, str]] = field(default_factory=dict)
     atlases_supported: set[str] = field(default_factory=set)
     suggested_followups: list[str] = field(default_factory=list)
+    # 2026-09-11 ground-truth fix: FISH-confirmed phenotype in King 2024.
+    # Only True for genes in
+    # bioforge.evidence.groundtruth.PHENOTYPE_CONFIRMED_V6; TESTED alone
+    # means "was in the RNAi screening list".
+    phenotype_confirmed: bool = False
 
 
 def _classify_proof(
@@ -66,13 +80,22 @@ def _classify_proof(
 ) -> tuple[ProofStatus, list[str]]:
     rnai_score = record.scores.get(EvidenceSource.RNai, 0.0)
     if rnai_score > 0.0:
-        return ProofStatus.TESTED, [
-            "Existing RNAi phenotype supports re-using for follow-up analysis",
-            "Co-stain with new candidate TFs to test combinatorial codes",
-        ]
+        confirmed = is_phenotype_confirmed(record.gene_id)
+        if confirmed:
+            followups = [
+                "FISH-confirmed cell-type-loss phenotype in King 2024 — strongest positive control",
+                "Co-stain with new candidate TFs to test combinatorial codes",
+            ]
+        else:
+            followups = [
+                "RNAi-screened in King 2024 (no published phenotype shown) — screening-list control",
+                "Re-examine the published screen's marker panels before treating as validated",
+                "Co-stain with new candidate TFs to test combinatorial codes",
+            ]
+        return ProofStatus.TESTED, followups
     if is_prior_fstf_below_threshold:
         return ProofStatus.KNOWN_FSTF, [
-            "Prior FSTF reported in literature but no King RNAi phenotype",
+            "Prior FSTF reported in literature but absent from the King RNAi screen",
             "Test by RNAi + FISH to confirm functional role",
         ]
     return ProofStatus.NOT_TESTED, [
@@ -99,11 +122,14 @@ def build_evidence_card(
     # Determine tier via the confidence module (single-record call).
     tiered = assign_tiers([record], scorer=s, policy=policy)[0]
     tier: ConfidenceTier = tiered[1]
+    rnai_score = record.scores.get(EvidenceSource.RNai, 0.0)
     proof_status, followups = _classify_proof(
-        record, is_prior_fstf_below_threshold=is_prior_fstf and record.scores.get(
-            EvidenceSource.RNai, 0.0) == 0.0
+        record, is_prior_fstf_below_threshold=is_prior_fstf and rnai_score == 0.0
     )
     record.proof_status = proof_status.value
+    # 2026-09-11: phenotype flag lives on the record too so the pipeline's
+    # CSV/JSON writers can serialize it without re-deriving.
+    record.phenotype_confirmed = bool(rnai_score > 0.0 and is_phenotype_confirmed(record.gene_id))
     return EvidenceCard(
         gene_id=record.gene_id,
         gene_name=record.gene_name,
@@ -117,6 +143,7 @@ def build_evidence_card(
         },
         atlases_supported=set(atlases_supported or set()),
         suggested_followups=followups,
+        phenotype_confirmed=record.phenotype_confirmed,
     )
 
 
@@ -157,7 +184,8 @@ def render_card_markdown(card: EvidenceCard) -> str:
         f"- **Gene ID:** `{card.gene_id}`",
         f"- **Integrated score:** {card.integrated_score:.3f}",
         f"- **Confidence tier:** {card.tier.value}",
-        f"- **Proof status:** {card.proof_status.value}",
+        f"- **Proof status:** {card.proof_status.value}"
+        + (" (phenotype-confirmed †)" if card.phenotype_confirmed else ""),
         f"- **Supporting streams:** {card.supporting_streams}",
     ]
     if card.atlases_supported:

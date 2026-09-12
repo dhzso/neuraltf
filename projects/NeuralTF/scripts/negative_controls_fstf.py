@@ -117,7 +117,7 @@ def main() -> int:
     rank.loc[
         rank["gene_id"].isin(NEGATIVE_CONTROLS), "label"
     ] = "negative_control"
-    # Positive label: RNAi-validated ONLY. (The previous definition —
+    # Positive label: RNAi-screened ONLY. (The previous definition —
     # neural_enriched>0 OR rnai>0 — used a scoring stream as ground truth,
     # making the benchmark circular.)
     pos_mask = rank["proof_status"] == "tested"

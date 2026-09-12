@@ -166,7 +166,7 @@ def summarize_candidates(cards: list, **kwargs) -> dict:
     prompt = (
         "I have ranked these planarian TF candidates by evidence. Write a "
         "short paragraph naming the top novel (not-yet-RNAi-tested) TFs to "
-        "prioritate, separate from any already RNAi-validated, and note what "
+        "prioritate, separate from any already RNAi-screened, and note what "
         "I should chase next experimentally.\n\n" + "\n".join(summary_lines)
     )
     resp = assistant.complete([ChatMessage(role="user", content=prompt)])

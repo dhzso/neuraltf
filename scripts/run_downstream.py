@@ -97,6 +97,16 @@ def main():
     errors = []
 
     steps = [
+        # Step -1: Ground-truth annotation (2026-09-11 fix). MUST run
+        # before prioritization so every downstream consumer sees the
+        # phenotype_confirmed flag; idempotent, and re-stamps existing
+        # rank.csv outputs without a full pipeline re-run. Always runs
+        # (cheap, idempotent) — no skip markers, so a rank.csv regenerated
+        # by a fresh pipeline run is guaranteed to be re-stamped.
+        ("Phenotype ground-truth annotation",
+         ["projects", "NeuralTF", "scripts", "annotate_phenotype_groundtruth.py"],
+         []),
+
         # Step 0: Fixed-weight dual-track prioritization
         ("Fixed-weight prioritization",
          ["scripts", "prioritize_neural_tfs.py"],

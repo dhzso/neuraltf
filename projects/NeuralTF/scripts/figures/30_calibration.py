@@ -79,7 +79,7 @@ def build():
     ax.set_xticks(x)
     ax.set_xticklabels(decile_labels, fontsize=6.2)
     ax.set_xlabel("Integrated Score Decile (Mean Score)", fontsize=7.0)
-    ax.set_ylabel("RNAi Validation Rate (%)", fontsize=7.0)
+    ax.set_ylabel("RNAi-screened rate (%)", fontsize=7.0)
     ax.set_title("Rank Discrimination and Score Calibration Across Transcriptome Deciles",
                  fontsize=8.0, pad=6)
     ax.legend(loc="upper left", frameon=False, fontsize=6.2)

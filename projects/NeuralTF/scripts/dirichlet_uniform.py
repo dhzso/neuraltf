@@ -129,7 +129,12 @@ def build_csv(top: pd.DataFrame) -> pd.DataFrame:
     def _notes(r: pd.Series) -> str:
         parts: list[str] = []
         if str(r.get("proof_status", "")).strip() == "tested":
-            parts.append("Known validated neural TF (positive control)")
+            # 2026-09-11: mmc5 lists ALL inhibited TFs — "tested" means
+            # screened; only the FISH-confirmed subset is phenotype-positive.
+            if bool(r.get("phenotype_confirmed", False)):
+                parts.append("FISH phenotype-confirmed neural TF (King 2024)")
+            else:
+                parts.append("RNAi-screened in King 2024 (no published phenotype)")
         orth = str(r.get("human_ortholog", "") or "").strip()
         if orth and orth.lower() not in ("nan", "none"):
             parts.append(f"Human TF ortholog: {orth}")
@@ -150,6 +155,7 @@ def build_csv(top: pd.DataFrame) -> pd.DataFrame:
         "uniform_median_score",
         "bonus_total",
         "proof_status",
+        "phenotype_confirmed",
         "rnai_screen_or_marker_notes",
     ]
     cols = [c for c in preferred_cols if c in out.columns]
@@ -221,6 +227,12 @@ def main() -> int:
         f"row explosion detected: {len(cand)} rows / "
         f"{cand['gene_id'].nunique()} unique genes"
     )
+
+    # 2026-09-11 ground-truth fix: FISH-confirmed phenotype flag (King 2024
+    # Fig 3J/4E, S4, S7, S8). "tested" alone means screened (mmc5 lists ALL
+    # inhibited TFs; the distributed copy lost the phenotype colour coding).
+    from bioforge.evidence.groundtruth import is_phenotype_confirmed
+    cand["phenotype_confirmed"] = cand["gene_id"].map(is_phenotype_confirmed)
 
     # Streams
     available_streams = [s for s in STREAMS if s in cand.columns]

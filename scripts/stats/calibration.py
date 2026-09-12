@@ -2,19 +2,27 @@
 """Calibration / discrimination analysis for integrated scores.
 
 Bins integrated scores into deciles and computes the empirical positive
-rate (RNAi-validated TFs) per bin. NOTE (WS3): the integrated score is
-an evidence-weight score in [0,1], not a calibrated probability, so a
-classic "perfect calibration" diagonal is conceptually invalid. We
-report two honest discrimination metrics:
+rate per bin. NOTE (WS3): the integrated score is an evidence-weight
+score in [0,1], not a calibrated probability, so a classic "perfect
+calibration" diagonal is conceptually invalid. We report the honest
+discrimination metrics:
 
   - rank-discrimination error: mean |empirical positive rate - prevalence|
-    per decile (how far decile rates deviate from the base rate — this is
-    what the old code called "ECE")
-  - true ECE against prevalence-weighted decile means (documented as a
-    discrimination proxy)
+    per decile (how far decile rates deviate from the base rate)
+  - TOP-DECILE ENRICHMENT with an exact binomial CI and one-sided p-value
+    (the quantity the selection funnel actually needs)
 
-The reliability plot itself (score decile vs observed rate) is valid and
-is what figure 30 renders.
+2026-09-11 ground-truth correction: deciles are computed for BOTH labels:
+  - 'screened'  = proof_status == tested (King mmc5 RNAi screening list;
+                  phenotype NOT implied — mmc5 is titled "All
+                  Transcription Factors Inhibited" and the distributed
+                  copy lost the red/green phenotype font encoding)
+  - 'phenotype_confirmed' = FISH-confirmed loss-of-cell-type phenotypes
+                  (paper Fig 3J/4E, S4, S7, S8), the strictest defensible
+                  "validated" label
+The historical top-level keys stay on the 'screened' label for figure
+compatibility; the phenotype_confirmed arm lives under
+results["phenotype_confirmed"].
 
 Usage:
     python scripts/stats/calibration.py --n-bins 10
@@ -29,6 +37,12 @@ import numpy as np
 import pandas as pd
 
 REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "src"))
+
+from bioforge.evidence.groundtruth import (  # noqa: E402
+    PHENOTYPE_CONFIRMED_V6,
+)
+
 RUN_DIR = REPO / "projects" / "NeuralTF" / "runs" / "pipeline_run"
 RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
 FIG_DIR = REPO / "projects" / "NeuralTF" / "figures"
@@ -67,11 +81,17 @@ def main():
 
     df = df.dropna(subset=[score_col]).copy()
     df["is_positive"] = (df["proof_status"] == "tested").astype(int)
+    # 2026-09-11 ground-truth fix: second label — FISH phenotype-confirmed
+    # genes (strict subset of 'tested'; see groundtruth module).
+    df["is_phenotype_confirmed"] = (
+        df["gene_id"].astype(str).isin(PHENOTYPE_CONFIRMED_V6).astype(int))
 
     n_pos = df["is_positive"].sum()
     n_total = len(df)
     prevalence = n_pos / n_total if n_total > 0 else 0
-    print(f"Candidates: {n_total}, Positives: {n_pos}, Prevalence: {prevalence:.4f}")
+    print(f"Candidates: {n_total}, Screened positives: {n_pos}, "
+          f"Prevalence: {prevalence:.4f}")
+    print(f"Phenotype-confirmed positives: {int(df['is_phenotype_confirmed'].sum())}")
 
     # 2026-09-06 audit note: qcut over rank(method='first') splits tied
     # scores across decile boundaries by row order (verified: the
@@ -138,6 +158,26 @@ def main():
                                 alternative="greater").pvalue) \
         if hasattr(_st, "binomtest") else float(_st.binom_test(k_top, n_top, prevalence))
 
+    # ---- 2026-09-11: phenotype-confirmed arm (same machinery) ---------
+    # Deciles are shared (defined by score rank); only the positive
+    # indicator changes, so the enrichment test is directly comparable.
+    conf_col = "is_phenotype_confirmed"
+    n_conf = int(df[conf_col].sum())
+    prev_conf = n_conf / n_total if n_total > 0 else 0.0
+    top_bin = df[df["decile"] == top["decile"]]
+    k_top_c, n_top_c = int(top_bin[conf_col].sum()), int(len(top_bin))
+    ci_lo_c = float(_st.beta.ppf(0.025, k_top_c, n_top_c - k_top_c + 1)) if k_top_c > 0 else 0.0
+    ci_hi_c = float(_st.beta.ppf(0.975, k_top_c + 1, n_top_c - k_top_c)) if k_top_c < n_top_c else 1.0
+    enrich_c = (k_top_c / n_top_c) / prev_conf if prev_conf > 0 else float("nan")
+    p_c = float(_st.binomtest(k_top_c, n_top_c, prev_conf,
+                              alternative="greater").pvalue) \
+        if hasattr(_st, "binomtest") and prev_conf > 0 else float("nan")
+    per_decile_pos_conf = [
+        int(df[df["decile"] == d][conf_col].sum()) for d in sorted(df["decile"].unique())
+    ]
+    print(f"\n[phenotype_confirmed] positives={n_conf}, prevalence={prev_conf:.5f}; "
+          f"top-decile {k_top_c}/{n_top_c}, enrichment={enrich_c:.1f}x, p={p_c:.3e}")
+
     per_decile_ci = []
     for b in bin_stats:
         k, nb = b["n_positives"], b["n_candidates"]
@@ -167,11 +207,27 @@ def main():
             "could never be small for any top-concentrating score."
         ),
         "positive_label_note": (
-            "positives = proof_status == tested ONLY; the "
-            "near-positive known_fstf group (n~61) counts as "
-            "negative here, so the metric measures RNAi-validated "
-            "discrimination, not general 'neural TF-ness'."
+            "positives = proof_status == tested ONLY; per the 2026-09-11 "
+            "ground-truth correction 'tested' means RNAi-SCREENED in King "
+            "2024 mmc5 ('All Transcription Factors Inhibited') — phenotype "
+            "NOT implied. The phenotype_confirmed arm below uses the "
+            "FISH-confirmed subset (paper Fig 3J/4E, S4, S7, S8). The "
+            "near-positive known_fstf group (n~61) counts as negative "
+            "under both labels."
         ),
+        "phenotype_confirmed": {
+            "n_positives": n_conf,
+            "prevalence": float(prev_conf),
+            "top_decile_enrichment": {
+                "fold_enrichment": float(enrich_c),
+                "top_positive_rate": float(k_top_c / n_top_c) if n_top_c else 0.0,
+                "rate_ci95": [ci_lo_c, ci_hi_c],
+                "p_one_sided_binomial": None if p_c != p_c else float(p_c),
+                "n_positives_top_decile": k_top_c,
+                "n_candidates_top_decile": n_top_c,
+            },
+            "positives_per_decile": per_decile_pos_conf,
+        },
         "discrimination_note": (
             "integrated_score is an evidence-weight score, not a probability; "
             "the top-decile enrichment (with exact binomial inference) is the "

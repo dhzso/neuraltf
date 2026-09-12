@@ -1,23 +1,43 @@
 #!/usr/bin/env python
-"""Precision-recall analysis using RNAi-validated TFs as ground truth.
+"""Precision-recall analysis with multiple ground-truth labels.
 
 WS3 fix for circularity: the `rnai` and `neural_enriched` streams ARE
-part of the integrated score, and the ground truth (proof_status ==
-tested) is derived from the same King mmc5 RNAi table that
-feeds the rnai stream — so a naive evaluation is circular and inflates
-ROC-AUC (~0.91 vs ~0.69 honest). This script therefore reports BOTH:
+part of the integrated score, and the primary ground truth (proof_status ==
+tested) is derived from the same King mmc5 RNAi table that feeds the rnai
+stream — so a naive evaluation is circular and inflates ROC-AUC
+(~0.91 vs ~0.69 honest). This script therefore reports:
 
-  1. circular   — score includes rnai + neural_enriched streams
-  2. honest     — score recomputed EXCLUDING rnai, neural_enriched, and
-                  neural_specificity (any stream directly encoding the
-                  RNAi/neural labels)
+  1. circular   — score includes rnai + neural_enriched streams,
+                  label = "tested" (RNAi-screened in King 2024 mmc5)
+  2. honest     — score recomputed EXCLUDING rnai, neural_enriched,
+                  neural_specificity, perez_lineage (streams directly
+                  encoding the labels)
+  3. strict     — honest additionally excludes reproducibility
+                  (atlas membership embeds King-neural-G0 hits)
 
-The honest number is the publishable estimate of how well the remaining
-multi-atlas evidence recovers known neural TFs.
+Each of the above is evaluated against BOTH labels (2026-09-11
+ground-truth correction):
+  - "screened"            proof_status == tested (King 2024 mmc5 RNAi
+                          screening list; phenotype NOT implied — mmc5 is
+                          titled "All Transcription Factors Inhibited"
+                          and the distributed copy lost the red/green
+                          phenotype font encoding)
+  - "phenotype_confirmed" FISH-confirmed loss-of-cell-type phenotypes
+                          (paper Fig 3J/4E, S4, S7, S8; the strictest
+                          defensible "validated" label), via
+                          bioforge.evidence.groundtruth
+
+Also reports a per-stream AUC table (both labels) and a
+presence-conditioned AUC diagnostic for fincher_brain — its
+missing-vs-present pattern carries signal that an unconditional
+fillna(0) AUC hides.
+
+The phenotype_confirmed numbers are the publishable "recovery of
+validated neural TFs" estimates; the screened numbers describe recovery
+of the King screening list.
 
 Outputs:
-  results/precision_recall.json (curves for both evaluations)
-  figure rendered by the numbered script (23_roc_pr_curve.py).
+  results/precision_recall.json (curves + per-stream AUCs, both labels)
 
 Usage:
     python scripts/stats/precision_recall.py
@@ -31,6 +51,13 @@ import numpy as np
 import pandas as pd
 
 REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "src"))
+
+from bioforge.evidence.groundtruth import (  # noqa: E402
+    MMC5_GROUND_TRUTH_NOTE,
+    PHENOTYPE_CONFIRMED_V6,
+)
+
 RUN_DIR = REPO / "projects" / "NeuralTF" / "runs" / "pipeline_run"
 RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -120,10 +147,9 @@ def compute_roc_curve(y_true, y_scores):
     return np.array(fpr), np.array(tpr)
 
 
-def evaluate(df, score_col, label):
-    y_true = (df["proof_status"] == "tested").astype(int).values
-    y_scores = pd.to_numeric(df[score_col], errors="coerce").fillna(0).values
+def evaluate(df, score_col, label, y_true):
     n_pos = int(y_true.sum())
+    y_scores = pd.to_numeric(df[score_col], errors="coerce").fillna(0).values
 
     recalls, precisions = compute_pr_curve(y_true, y_scores)
     fpr, tpr = compute_roc_curve(y_true, y_scores)
@@ -135,8 +161,9 @@ def evaluate(df, score_col, label):
     prec_at_k = {}
     order = np.argsort(-y_scores, kind="stable")
     for k in (5, 10, 15, 20):
-        top_k_true = y_true[order[:k]]
-        prec_at_k[f"precision@{k}"] = float(top_k_true.sum() / k)
+        if k <= len(y_true):
+            top_k_true = y_true[order[:k]]
+            prec_at_k[f"precision@{k}"] = float(top_k_true.sum() / k)
 
     print(f"\n[{label}] n={len(y_true)}, positives={n_pos}")
     print(f"  PR-AUC: {pr_auc:.4f}  ROC-AUC: {roc_auc:.4f}  AP: {ap:.4f}")
@@ -165,6 +192,43 @@ def evaluate(df, score_col, label):
     }
 
 
+def per_stream_auc(df, y_by_label):
+    """AUC of each single stream against each label (leakage diagnosis).
+
+    Also reports a presence-conditioned AUC per stream: among genes where
+    the stream is PRESENT, does its value still rank positives higher?
+    An unconditional fillna(0) AUC conflates presence with value when a
+    stream is mostly absent for positives (e.g. fincher_brain scored
+    ~0.41 unconditionally but ~0.66 present-only on the screened label).
+    """
+    from scipy import stats as _st
+
+    def _auc(y, s):
+        r = _st.rankdata(np.nan_to_num(s, nan=0.0))
+        n_pos = int(y.sum())
+        n_neg = int(len(y) - n_pos)
+        if n_pos == 0 or n_neg == 0:
+            return float("nan")
+        return float((r[y == 1].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
+
+    out = {}
+    for stream in STREAMS:
+        if stream not in df.columns:
+            continue
+        v = pd.to_numeric(df[stream], errors="coerce")
+        row = {"n_present": int(v.notna().sum())}
+        for lname, y in y_by_label.items():
+            yv = y.astype(int).to_numpy()
+            row[f"auc_{lname}"] = _auc(yv, v.to_numpy())
+            m = v.notna().to_numpy()
+            if m.sum() > 10 and yv[m].sum() > 0 and (yv[m] == 0).sum() > 0:
+                row[f"auc_{lname}_present_only"] = _auc(yv[m], v.to_numpy()[m])
+            else:
+                row[f"auc_{lname}_present_only"] = float("nan")
+        out[stream] = row
+    return out
+
+
 def main():
     print("=== Precision-Recall Analysis (circularity-controlled) ===")
 
@@ -175,25 +239,74 @@ def main():
         print("Error: proof_status column not found")
         return 1
 
-    # 1) Circular evaluation (as previously reported)
-    circular = evaluate(df, "integrated_score", "circular (all 9 streams)")
+    # 2026-09-11 ground-truth correction: evaluate every score variant
+    # against BOTH labels.
+    #   screened            = proof_status == tested (King mmc5 RNAi
+    #                         screening list; phenotype NOT implied)
+    #   phenotype_confirmed = FISH-confirmed loss-of-cell-type phenotype
+    #                         (paper Fig 3J/4E, S4, S7, S8)
+    y_screened = (df["proof_status"] == "tested").astype(int)
+    y_conf = df["gene_id"].astype(str).isin(PHENOTYPE_CONFIRMED_V6).astype(int)
+    labels = {
+        "screened": y_screened,
+        "phenotype_confirmed": y_conf,
+    }
+
+    # 1) Circular evaluation (score includes the label-bearing streams)
+    circular = {
+        lname: evaluate(df, "integrated_score",
+                        f"circular [label={lname}] (all 11 streams)", y)
+        for lname, y in labels.items()
+    }
 
     # 2) Honest evaluation (label-encoding streams excluded — including
     #    perez_lineage, which alone carries AUC 0.99 on the label)
     df["_honest_score"] = recompute_excluding_circular(df)
-    honest = evaluate(df, "_honest_score",
-                      "honest (rnai/neural_*/perez_lineage excluded)")
+    honest = {
+        lname: evaluate(df, "_honest_score",
+                        f"honest [label={lname}] "
+                        f"(rnai/neural_*/perez_lineage excluded)", y)
+        for lname, y in labels.items()
+    }
 
     # 3) Strict honest evaluation (additionally excludes reproducibility:
     #    King-neural-G0 membership leakage via atlas_membership)
     df["_strict_score"] = recompute_excluding_circular(df, CIRCULAR_STREAMS_STRICT)
-    strict = evaluate(df, "_strict_score",
-                      "strict (also reproducibility excluded)")
+    strict = {
+        lname: evaluate(df, "_strict_score",
+                        f"strict [label={lname}] "
+                        f"(also reproducibility excluded)", y)
+        for lname, y in labels.items()
+    }
+
+    # 4) Per-stream leakage diagnosis (both labels, present-only variants)
+    stream_aucs = per_stream_auc(df, labels)
 
     results = {
-        "circular": circular,
-        "honest": honest,
-        "honest_strict": strict,
+        "circular": circular["screened"],
+        "honest": honest["screened"],
+        "honest_strict": strict["screened"],
+        # Keys consumers already read stay bound to the screened label for
+        # continuity; the phenotype_confirmed arms are the publishable
+        # "validated TF recovery" numbers.
+        "phenotype_confirmed": {
+            "circular": circular["phenotype_confirmed"],
+            "honest": honest["phenotype_confirmed"],
+            "honest_strict": strict["phenotype_confirmed"],
+        },
+        "per_stream_auc": stream_aucs,
+        "labels_note": (
+            "Two labels are evaluated (2026-09-11): 'screened' = "
+            "proof_status=='tested' (King mmc5 'All Transcription Factors "
+            "Inhibited' — RNAi performed, phenotype NOT implied; the "
+            "distributed mmc5 lost its red/green phenotype font encoding). "
+            "'phenotype_confirmed' = FISH-confirmed loss-of-cell-type "
+            "phenotypes from the paper (Fig 3J/4E, S4, S7, S8): "
+            f"{len(PHENOTYPE_CONFIRMED_V6)} genes. The circular/honest/"
+            "honest_strict top-level keys remain on the 'screened' label "
+            "for figure compatibility; use results.phenotype_confirmed.* "
+            "for any 'validated recovery' claim."
+        ),
         "circularity_note": (
             "The 'circular' evaluation includes the rnai/neural_enriched/"
             "neural_specificity streams that share the King mmc5 ground "
@@ -207,6 +320,7 @@ def main():
             "bound on true discrimination. Only honest/honest_strict are "
             "publishable."
         ),
+        "ground_truth_note": MMC5_GROUND_TRUTH_NOTE,
     }
 
     out_path = RESULTS_DIR / "precision_recall.json"

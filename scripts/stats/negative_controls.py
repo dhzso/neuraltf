@@ -27,10 +27,11 @@ necessary but not sufficient):
    headline.
 
 Groups:
-  - "neural":    RNAi-validated (proof_status) — known neural TFs.
+  - "neural":    RNAi-screened (proof_status) — King mmc5 screening-list
+                 genes (phenotype status tracked separately).
   - "non_tf":    candidates with no Perez TF-class evidence
                  (perez_lineage == 0/NaN) — lowest-confidence controls.
-  - "non_neural_tf": TF-classified candidates WITHOUT the RNAi-validated
+  - "non_neural_tf": TF-classified candidates WITHOUT the screened
                  label AND without King-neural enrichment — the
                  strictest like-for-like control.
 
@@ -140,7 +141,7 @@ def main():
 
     gene_col = "gene_id" if "gene_id" in df.columns else "gene_id_v6"
 
-    # Neural candidates: RNAi-validated ONLY (neural_enriched is a scoring
+    # Neural candidates: RNAi-screened ONLY (neural_enriched is a scoring
     # stream — including it would make the control circular)
     neural_mask = df["proof_status"] == "tested"
     # TF vs non-TF indicator
@@ -187,7 +188,7 @@ def main():
 
     neural_scores = neural_df[score_col].values
     if len(neural_scores) == 0:
-        print("ERROR: no RNAi-validated genes with scores; nothing to test")
+        print("ERROR: no RNAi-screened genes with scores; nothing to test")
         return 1
 
     # ---- Draw-uncertainty: repeat the matched draw across seeds -------
@@ -220,7 +221,7 @@ def main():
     ctrl_non_neural_tf = ctrl_tf_df[score_col].values if ctrl_tf_df is not None and len(ctrl_tf_df) else np.array([])
 
     print(f"Test score: label-free (excludes {'/'.join(LEAKING_STREAMS)})")
-    print(f"Neural TFs (RNAi-validated ground truth): {len(neural_scores)} "
+    print(f"Neural TFs (King mmc5 RNAi-screened label): {len(neural_scores)} "
           f"(median streams available: {target_avail})")
     print(f"Non-TF controls (matched, no Perez TF class): {len(ctrl_non_tf)} "
           f"(median streams: "
@@ -286,7 +287,7 @@ def main():
     # availability-matched, neural-free TF controls (not permutations)
     results["random"] = [float(x) for x in ctrl_non_neural_tf[:100]] if len(ctrl_non_neural_tf) else []
     results["group_labels"] = {
-        "neural_tfs": "RNAi-validated neural TFs (ground truth)",
+        "neural_tfs": "RNAi-screened TFs (King mmc5 screening list; phenotype status tracked separately)",
         "non_tfs": "availability-matched candidates without Perez TF class",
         "random": "availability-matched TF-classified, non-validated, non-neural-enriched candidates",
     }
@@ -301,6 +302,54 @@ def main():
 
     # NOTE: no standalone PNG — the numbered publication figure
     # (figures/24_negative_controls.py) renders the showcase version.
+
+    # ---- 2026-09-11: phenotype-confirmed label arm ----------------------
+    # 'tested' = King mmc5 SCREENED list ("All Transcription Factors
+    # Inhibited"; the distributed copy lost the red/green phenotype font
+    # encoding). The FISH-confirmed subset (paper Fig 3J/4E, S4, S7, S8)
+    # is the strictest defensible positive group; rerun the primary
+    # contrast against it with the same matched controls.
+    from bioforge.evidence.groundtruth import PHENOTYPE_CONFIRMED_V6
+    conf_mask = (neural_mask
+                 & df[gene_col].astype(str).isin(PHENOTYPE_CONFIRMED_V6)
+                 & df[score_col].notna())
+    conf_scores = df.loc[conf_mask, score_col].values
+    results["phenotype_confirmed_arm"] = {
+        "n_positives": int(len(conf_scores)),
+        "label_note": ("FISH-confirmed loss-of-cell-type phenotypes "
+                       "(King 2024 Fig 3J/4E, S4, S7, S8)"),
+    }
+    if len(conf_scores) >= 2 and len(ctrl_non_tf) > 0:
+        u3, p3 = stats.mannwhitneyu(conf_scores, ctrl_non_tf, alternative="greater")
+        d3 = pooled_cohens_d(conf_scores, ctrl_non_tf)
+        results["phenotype_confirmed_arm"]["vs_non_tf"] = {
+            "mann_whitney_u": float(u3),
+            "p_value": float(p3),
+            "cohens_d": float(d3),
+            "positive_mean": float(np.mean(conf_scores)),
+            "control_mean": float(np.mean(ctrl_non_tf)),
+        }
+        print(f"  Phenotype-confirmed vs Random Non-TF: U={u3:.1f}, "
+              f"p={p3:.4e}, d={d3:.3f}")
+    if len(conf_scores) >= 2 and len(ctrl_non_neural_tf) > 0:
+        u4, p4 = stats.mannwhitneyu(conf_scores, ctrl_non_neural_tf,
+                                    alternative="greater")
+        d4 = pooled_cohens_d(conf_scores, ctrl_non_neural_tf)
+        results["phenotype_confirmed_arm"]["vs_non_neural_tf"] = {
+            "mann_whitney_u": float(u4),
+            "p_value": float(p4),
+            "cohens_d": float(d4),
+            "positive_mean": float(np.mean(conf_scores)),
+            "control_mean": float(np.mean(ctrl_non_neural_tf)),
+        }
+        print(f"  Phenotype-confirmed vs Non-Neural TF: U={u4:.1f}, "
+              f"p={p4:.4e}, d={d4:.3f}")
+
+    results["label_note"] = (
+        "2026-09-11: the 'neural' group (proof_status=='tested') is the "
+        "King mmc5 RNAi SCREENING list — screened, not phenotype-validated. "
+        "The phenotype_confirmed_arm keys hold the stricter-label contrasts."
+    )
 
     out_path = RESULTS_DIR / "negative_control_stats.json"
     with open(out_path, "w") as f:

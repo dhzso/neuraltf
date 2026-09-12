@@ -60,7 +60,12 @@ def main() -> int:
     # "fixed_composite" is the fixed method's composite (integrated score
     # + the same bonuses as the other two methods), NOT the raw integrated
     # score — all three columns must be the same quantity class.
-    merged = fixed[["gene_id", "gene_name", "integrated_score", "proof_status"]].copy()
+    # phenotype_confirmed (2026-09-11 ground-truth fix) is carried through
+    # so every supplementary table exposes the corrected label.
+    base_cols = ["gene_id", "gene_name", "integrated_score", "proof_status"]
+    if "phenotype_confirmed" in fixed.columns:
+        base_cols.append("phenotype_confirmed")
+    merged = fixed[base_cols].copy()
     merged["fixed_composite"] = fixed["composite_score"]
 
     centered_sub = centered[

@@ -82,7 +82,7 @@ def _short_dd(gene_id: str) -> str | None:
     (mmc5's first column holds bare dd#### tokens, NOT full v6 IDs —
     the 2026-09-06 audit found the previous direct-equality check
     `gene_id not in mmc5['fstf_rnai'].values` was ALWAYS true, so every
-    gene, including RNAi-validated ones, exported as "Not RNAi-tested".)
+    gene, including RNAi-screened ones, exported as "Not RNAi-tested".)
     """
     import re
     if not gene_id or not isinstance(gene_id, str):

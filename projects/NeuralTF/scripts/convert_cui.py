@@ -1,9 +1,9 @@
 """Convert Cui 2023 h5ad from SMED IDs to dd_Smed_v6 for pipeline integration.
 
 Reads the raw Cui h5ad (SMED var_names), maps to v6 via Rosetta Stone,
-deduplicates 1-to-many mappings (highest total counts wins), normalizes
-(target_sum=1e4, log1p), and saves a v6-named h5ad that the pipeline
-can load directly.
+deduplicates 1-to-many mappings (highest total counts wins), preserves
+the RAW integer count matrix (the pipeline normalizes once in run_qc),
+and saves a v6-named h5ad the pipeline can load directly.
 
 Checkpoints written:
   datasets/processed/cui_conversion_checkpoint.parquet  (mapping/QC stats)

@@ -5,12 +5,23 @@
 Each has 3 aligned sheets: TF Atlas, Pvalues, Log2FC.
 Gene names are short aliases -> mapped to v6 IDs via multiple strategies.
 
+2026-09-11: the TF Atlas sheets encode extra information by FONT COLOUR
+(preserved in the distributed xlsx, unlike mmc5):
+    red   (FF0000)   pvalue < 1E-30 (G0) / < 1E-100 (X1)  — highly significant
+    green (00B050)   "validated or previously reported FSTFs for any cell
+                     type in the general tissue class" (per the legend)
+The green annotation is now captured as a per-TF boolean column
+``previously_reported_fstf`` (compartment-level union), and the red/green
+pvalue-significance flag per row as ``sig_color``.
+
 Usage: python scripts/build_king_atlas.py
        python -m scripts.build_king_atlas
 """
 import re
 import pandas as pd
 from pathlib import Path
+
+import openpyxl
 
 # Repo-relative paths
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -26,6 +37,10 @@ SHEET_NAMES = {
     "X1": ("X1 TF Atlas", "X1 Pvalues", "X1 Log2FC"),
     "X1 Major Tissue": ("X1 Major Tissue Atlas", "X1 Major Tissue Atlas Pvalues", "X1 Major Tissue Atlas Log2F"),
 }
+
+# Font colours in the TF Atlas sheets (verified against the distributed file):
+RED_RGB = "FFFF0000"     # highly significant p-value (< 1E-30 G0 / < 1E-100 X1)
+GREEN_RGB = "FF00B050"   # validated or previously reported FSTFs (tissue class)
 
 
 def build_name_lookup():
@@ -132,11 +147,42 @@ def _map_to_v6(name, dd_id, goods):
     return (None, None)
 
 
-def parse_compartment(compartment, goods):
+def _load_color_lookup():
+    """Build {(row, col): color_rgb} for the TF Atlas sheets via openpyxl.
+
+    Returns a dict of {sheet_name: {(row_idx, col_idx): rgb_string}} where
+    row/col are 1-based openpyxl coordinates. The distributed mmc7 xlsx
+    preserves the red/green font encoding (unlike mmc5).
+    """
+    wb = openpyxl.load_workbook(MMC7, data_only=True)
+    out = {}
+    for sheets in SHEET_NAMES.values():
+        sheet = sheets[0]  # the TF Atlas sheet carries the colours
+        if sheet not in wb.sheetnames:
+            continue
+        ws = wb[sheet]
+        lookup = {}
+        for row in ws.iter_rows(min_row=1, max_row=ws.max_row,
+                                max_col=ws.max_column):
+            for cell in row:
+                if cell.value is None:
+                    continue
+                c = cell.font.color if cell.font else None
+                rgb = c.rgb if (c is not None and c.type == "rgb") else None
+                if rgb in (RED_RGB, GREEN_RGB):
+                    lookup[(cell.row, cell.column)] = rgb
+        out[sheet] = lookup
+    return out
+
+
+def parse_compartment(compartment, goods, color_lookup=None):
     atlas_sheet, pval_sheet, fc_sheet = SHEET_NAMES[compartment]
     df_atlas = pd.read_excel(MMC7, sheet_name=atlas_sheet, header=None)
     df_pval = pd.read_excel(MMC7, sheet_name=pval_sheet, header=None)
     df_fc = pd.read_excel(MMC7, sheet_name=fc_sheet, header=None)
+
+    # openpyxl colours are 1-based; pandas positions are 0-based
+    sheet_colors = (color_lookup or {}).get(atlas_sheet, {})
 
     is_major = (compartment == "X1 Major Tissue")
     if is_major:
@@ -188,6 +234,14 @@ def parse_compartment(compartment, goods):
                 if pd.notna(fv):
                     log2fc = float(fv)
 
+            # Font-colour annotations (2026-09-11):
+            #   red   = highly significant p (<1E-30 G0 / <1E-100 X1)
+            #   green = validated or previously reported FSTF for a cell
+            #           type in this general tissue class
+            rgb = sheet_colors.get((idx + 1, c + 1))
+            sig_color = "red" if rgb == RED_RGB else ("green" if rgb == GREEN_RGB else "")
+            previously_reported = rgb == GREEN_RGB
+
             for name, dd_id in _clean_tf_name(raw_str):
                 v6_id, gene_name = _map_to_v6(name, dd_id, goods)
                 if v6_id is None:
@@ -203,6 +257,8 @@ def parse_compartment(compartment, goods):
                     "fincher_cluster": fincher_cl,
                     "log2fc": log2fc,
                     "pval": pval,
+                    "sig_color": sig_color,
+                    "previously_reported_fstf": previously_reported,
                 })
 
     return records
@@ -213,11 +269,16 @@ def main():
     goods = build_name_lookup()
     print(f"  Name->v6 lookup: {len(goods)} entries")
 
+    print("  Reading mmc7 font-colour annotations (red=sig p, green=published FSTF)...")
+    color_lookup = _load_color_lookup()
+    n_color_cells = sum(len(v) for v in color_lookup.values())
+    print(f"    {n_color_cells} coloured TF cells found across TF Atlas sheets")
+
     compartmentables = ["G0 Progenitor", "X1", "X1 Major Tissue"]
     all_records = []
     for comp in compartmentables:
         print(f"  Parsing {comp}...")
-        recs = parse_compartment(comp, goods)
+        recs = parse_compartment(comp, goods, color_lookup=color_lookup)
         print(f"    {len(recs)} mapped records")
         all_records.extend(recs)
 
@@ -237,6 +298,9 @@ def main():
         print(f"  {comp}: {len(sub)} records, {sub['v6_id'].nunique()} unique TFs")
 
     print(f"  Neural subclusters: {df['subcluster'].astype(str).str.startswith('neural').sum()} neural rows")
+    green = df[df["previously_reported_fstf"]]
+    print(f"  Previously-reported FSTF cells (green font): {len(green)} rows, "
+          f"{green['v6_id'].nunique()} unique TFs")
 
 
 if __name__ == "__main__":

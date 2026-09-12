@@ -3,8 +3,12 @@
 Tiers are assigned based on cheap signals available on every
 :class:`bioforge.evidence.schema.EvidenceRecord`:
 
-1. RNAi-validated (score > 0 in :attr:`EvidenceSource.RNAi`) is always
-   ``HIGH`` — an existing phenotype is the strongest possible evidence.
+1. RNAi-screened (score > 0 in :attr:`EvidenceSource.RNAi`) is always
+   ``HIGH`` — membership in the King 2024 functional screen marks the
+   gene as a screened control. NOTE (2026-09-11): this means *screened*,
+   not *phenotype-validated*; the FISH-confirmed subset is tracked
+   separately via ``record.phenotype_confirmed`` (see
+   :mod:`bioforge.evidence.groundtruth`).
 2. The integrated score computed by :class:`bioforge.evidence.scoring.EvidenceScorer`.
 3. The number of evidence streams with a non-zero normalized score
    (``record.supporting_streams()``).
@@ -53,9 +57,11 @@ def assign_tiers(
 ) -> list[tuple[EvidenceRecord, ConfidenceTier, float]]:
     """Return ``(record, tier, integrated_score)`` tuples.
 
-    Tiers are assigned greedily: RNAi-validated always HIGH, then HIGH
-    thresholds, then MEDIUM, then LOW.  Records with zero supporting
-    streams are always LOW regardless of score (which is also zero).
+    Tiers are assigned greedily: RNAi-screened always HIGH (screened
+    control; phenotype status is tracked separately via
+    ``record.phenotype_confirmed``), then HIGH thresholds, then MEDIUM,
+    then LOW. Records with zero supporting streams are always LOW
+    regardless of score (which is also zero).
     """
     s = scorer or EvidenceScorer()
     p = policy or ConfidencePolicy()

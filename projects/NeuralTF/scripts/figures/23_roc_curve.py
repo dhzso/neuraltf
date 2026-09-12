@@ -1,7 +1,9 @@
 """Receiver Operating Characteristic (ROC) curve with circularity control.
 
-Evaluates recovery of RNAi-validated neural regulators comparing:
-- Circular benchmark (all 9 streams including RNAi label)
+Evaluates recovery of RNAi-screened neural regulators (King 2024 mmc5
+screening list; phenotype status tracked separately via
+`phenotype_confirmed`) comparing:
+- Circular benchmark (all 11 streams including RNAi label)
 - Honest circularity-controlled model (label-free streams)
 - Strict label-free model
 """

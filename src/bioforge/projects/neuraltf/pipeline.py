@@ -1097,23 +1097,34 @@ class NeuralTFPipeline:
     # ------------------------------------------------------------------
 
     def integrate_rnai(self):
-        print("[9/10] RNAi phenotypes...")
+        """Score RNAi screening membership from King mmc5.
+
+        NOTE (2026-09-11 ground-truth correction): mmc5 is titled "All
+        Transcription Factors Inhibited" — it lists every TF for which
+        RNAi was PERFORMED and markers assayed. Phenotype status was
+        encoded by font colour in the original table, but the distributed
+        xlsx copy is monochrome, so the rnai stream means SCREENED, not
+        phenotype-validated. The FISH-confirmed subset is re-derived from
+        the paper's figures and tracked via record.phenotype_confirmed /
+        bioforge.evidence.groundtruth.
+        """
+        print("[9/10] RNAi screening records (mmc5)...")
         if self.rnai_table is None:
             print("  (no table, skipping)")
             return
 
         rnai_targets = self._build_rna_target_set()
-        print(f"  Parsed {len(rnai_targets)} RNAi targets from mmc5")
+        print(f"  Parsed {len(rnai_targets)} RNAi-screened targets from mmc5")
 
         matched = 0
         for rec in self.all_records.values():
             ids = self._all_ids_for_record(rec)
             hit = any(x in rnai_targets for x in ids if x)
             rec.add_score(EvidenceSource.RNai, 1.0 if hit else 0.0,
-                          note=f"in_mmc5={hit}")
+                          note=f"in_mmc5_screen={hit}")
             if hit:
                 matched += 1
-        print(f"  RNAi match: {matched} candidates")
+        print(f"  RNAi screening match: {matched} candidates")
 
     def _build_rna_target_set(self) -> set[str]:
         """Parse mmc5 column 0 into a cleaned target set.
@@ -1167,7 +1178,6 @@ class NeuralTFPipeline:
 
         data = self.correlations.iloc[4:].copy()
         data.columns = ["tf1", "tf2", "x1_corr", "g0_corr", "g0_cluster"]
-
         def normalize(val) -> set[str]:
             s = str(val).strip()
             if not s or s.lower() == "nan":
@@ -1295,6 +1305,12 @@ class NeuralTFPipeline:
                 "n_streams": rec.supporting_streams(),
                 "completeness": round(rec.completeness, 3),
                 "proof_status": rec.proof_status or "unknown",
+                # 2026-09-11 ground-truth fix: FISH-confirmed phenotype
+                # (King 2024 Fig 3J/4E, S4, S7, S8). "tested" alone means
+                # "was in the King RNAi screening list (mmc5)" — the screen
+                # lists ALL inhibited TFs and the distributed mmc5 copy
+                # lost the red/green phenotype font encoding.
+                "phenotype_confirmed": bool(rec.phenotype_confirmed),
                 "tier": tier_of.get(rec.gene_id, "low"),
             }
             for src in EvidenceSource:
@@ -1311,6 +1327,10 @@ class NeuralTFPipeline:
             | (rank_df["rnai"].fillna(0) > 0)
         ]
         if len(neural_df) == 0:
+            # Documented dev-run fallback ONLY (subsampled runs can lose all
+            # neural evidence); production runs never trigger it.
+            print("  WARNING: no neural_enriched/rnai candidates found; "
+                  "falling back to top-25 by score (dev-run fallback)")
             neural_df = rank_df.head(25)
 
         # Write full
@@ -1331,10 +1351,12 @@ class NeuralTFPipeline:
 
         # Quick terminal summary
         print("\n=== NEURAL CANDIDATES FOR VALIDATION ===")
+        print(f"{'gene':<24}{'score':>7}  {'status':<12} {'phenotype'}")
         for _, row in neural_df.head(30).iterrows():
             nm = row["gene_name"] or row["gene_id"]
             st = row["proof_status"]
-            print(f"  {nm:<20} {row['integrated_score']:.3f}  {st}")
+            ph = "confirmed" if bool(row.get("phenotype_confirmed")) else "-"
+            print(f"  {nm:<22} {row['integrated_score']:.3f}  {st:<12} {ph}")
 
         # JSON
         top_50: list[dict[str, Any]] = []
@@ -1345,6 +1367,7 @@ class NeuralTFPipeline:
                 "score": round(score, 4),
                 "tier": tier.value,
                 "proof_status": rec.proof_status or "unknown",
+                "phenotype_confirmed": bool(rec.phenotype_confirmed),
                 "sources": sorted([k for k in rec.scores]),
             })
 

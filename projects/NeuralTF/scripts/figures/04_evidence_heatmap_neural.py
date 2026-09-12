@@ -1,7 +1,7 @@
 """Comprehensive evidence stream heatmap for all 134 neural-filtered transcription factors.
 
 Publication-quality single-panel 500 DPI figure integrating:
-- Biological track categorization (Track A: RNAi-validated, Track B: Novel candidates, Prior FSTFs)
+- Biological track categorization (Track A: RNAi-screened in King 2024, Track B: Untested candidates, Prior FSTFs)
 - 7 informative continuous & specialized evidence streams ordered to maintain visual coherence
 - Distinguishes missing/unmeasured values with neutral gray fill instead of false zeros
 - Integrated evidence score representation with clean scale and no text clutter

@@ -47,7 +47,7 @@ def build():
     ax.scatter(x_m[is_bg], y_m[is_bg], s=8, color="#C8CED6", alpha=0.3,
                edgecolors="none", label=f"Transcriptome-wide (n={np.sum(is_bg):,})")
 
-    # 2. Tested (RNAi-validated benchmark)
+    # 2. Tested (RNAi-screened benchmark; phenotype status tracked separately)
     ax.scatter(x_m[is_val], y_m[is_val], s=28, color=C_A, alpha=0.92,
                edgecolors="white", lw=0.5, zorder=5, label=f"Tested (n={np.sum(is_val)})\u2020")
 

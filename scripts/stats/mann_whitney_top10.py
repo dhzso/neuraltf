@@ -173,6 +173,14 @@ def main():
         "honest_exclude": HONEST_EXCLUDE,
         "honest_strict_exclude": HONEST_STRICT_EXCLUDE,
         "top10_genes": sorted(list(top10_genes)),
+        "label_note": (
+            "2026-09-11 ground-truth correction: the historical label "
+            "('tested') is the King mmc5 RNAi SCREENING list — mmc5 is "
+            "titled 'All Transcription Factors Inhibited' and the "
+            "distributed copy lost the red/green phenotype font encoding, "
+            "so membership means RNAi was performed, not that a phenotype "
+            "was observed."
+        ),
     }
 
     print(f"\nTop-10 genes (by integrated_score):")

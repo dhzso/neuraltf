@@ -54,9 +54,9 @@ def build():
     palette_a = ["#1B365D", "#2B4C6F", "#4A7C59", "#7D5A7D", "#C08A3E", "#65799B"]
     palette_b = ["#B04A3E", "#D9822B", "#5C82A6", "#8C564B", "#2CA02C", "#9467BD", "#E377C2"]
 
-    # ------------------ PANEL A: Tested (RNAi-validated) ------------------
+    # ------------------ PANEL A: Tested (RNAi-screened benchmark) ------------------
     panel_tag(ax1, "a", x=-0.14, y=1.05)
-    ax1.set_title("Tested (RNAi-validated benchmark) regulators\u2020", fontsize=7.5, pad=8, fontweight="bold")
+    ax1.set_title("Tested (RNAi-screened benchmark) regulators\u2020", fontsize=7.5, pad=8, fontweight="bold")
 
     # Union of Track A candidates across all 3 methods
     gid_col_f = "gene_id" if "gene_id" in top10_fixed.columns else "gene_id_v6"

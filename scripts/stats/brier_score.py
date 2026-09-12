@@ -58,6 +58,12 @@ def main():
 
     df = df.dropna(subset=[score_col])
     df["is_positive"] = (df["proof_status"] == "tested").astype(int)
+    # 2026-09-11 ground-truth correction: 'tested' = King mmc5 RNAi
+    # SCREENING list ("All Transcription Factors Inhibited") — phenotype
+    # NOT implied. The FISH-confirmed subset is evaluated separately.
+    from bioforge.evidence.groundtruth import PHENOTYPE_CONFIRMED_V6
+    df["is_phenotype_confirmed"] = (
+        df["gene_id"].astype(str).isin(PHENOTYPE_CONFIRMED_V6).astype(int))
 
     y_true = df["is_positive"].values.astype(float)
     y_score = df[score_col].values.astype(float)
@@ -67,6 +73,13 @@ def main():
 
     brier = np.mean((y_score - y_true) ** 2)
     uncertainty = prevalence * (1 - prevalence)
+
+    # ---- Same descriptive Brier on the phenotype-confirmed label --------
+    y_conf = df["is_phenotype_confirmed"].values.astype(float)
+    n_conf = y_conf.sum()
+    prev_conf = n_conf / n
+    brier_conf = np.mean((y_score - y_conf) ** 2)
+    unc_conf = prev_conf * (1 - prev_conf)
 
     # ---- Proper Murphy decomposition on binned empirical rates ---------
     # Bins: equal-count deciles of the score. rate_b = positives rate in
@@ -125,6 +138,15 @@ def main():
             ),
         },
         "score_column": score_col,
+        "phenotype_confirmed_arm": {
+            "n_positives": int(n_conf),
+            "prevalence": float(prev_conf),
+            "brier_score_descriptive": float(brier_conf),
+            "uncertainty": float(unc_conf),
+            "label_note": ("FISH-confirmed loss-of-cell-type phenotypes "
+                           "(King 2024 Fig 3J/4E, S4, S7, S8); 'tested' "
+                           "alone means screened in the King mmc5 list."),
+        },
         "interpretation_note": (
             "The integrated score is an evidence-weight composite, not a "
             "calibrated probability; the Brier number is a descriptive "
@@ -142,6 +164,9 @@ def main():
 
     print(f"Candidates: {n}; positives: {int(n_pos)} ({prevalence:.4f})")
     print(f"Brier (descriptive scale-distance): {brier:.6f}")
+    print(f"Phenotype-confirmed label: {int(n_conf)} positives "
+          f"({prev_conf:.5f}); descriptive Brier {brier_conf:.6f} "
+          f"(uncertainty {unc_conf:.6f})")
     print(f"Binned Murphy: uncertainty={uncertainty:.6f} "
           f"resolution={resolution_b:.6f} reliability={reliability_b:.6f} "
           f"(resolution <= uncertainty: {resolution_b <= uncertainty + 1e-12})")

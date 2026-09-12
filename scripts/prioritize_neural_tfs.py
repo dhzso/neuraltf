@@ -195,28 +195,37 @@ def compute_x1_dynamics(plass_path: Path, genes: list[str],
 
 
 def select_shortlist(cand: pd.DataFrame, mmc5: pd.DataFrame | None) -> pd.DataFrame:
-    """Top-5 per track with RNAi phenotype notes attached.
+    """Top-5 per track with RNAi screening notes attached.
 
-    The "Not tested" group requires a tangible TF identity: a DNA-binding
+    Track A = RNAi-screened in King 2024 (mmc5; "All Transcription Factors
+    Inhibited" — screened, phenotype status tracked separately). Track B
+    ("Not tested") requires a tangible TF identity: a DNA-binding
     protein-domain hit in PlanMine or an mmc4 "TF" flag — no hypothetical
     factors without domain evidence. The gate lives in
     prioritize.gate_track_b so all three methods (fixed / centered / uniform)
     apply it identically.
     """
     from bioforge.projects.neuraltf.prioritize import gate_track_b
+    from bioforge.evidence.groundtruth import is_phenotype_confirmed
     a, b = assign_tracks(cand)
     n_b_before = len(b)
     b = gate_track_b(b)
     print(f"  Not-tested after TF-domain filter: {len(b)}/{n_b_before}")
+    # Stamp the FISH-confirmed phenotype flag on every shortlist row.
+    for df in (a, b):
+        df["phenotype_confirmed"] = df["gene_id"].map(is_phenotype_confirmed)
     ta = select_top(a, 5).assign(track="A")
     tb = select_top(b, 5).assign(track="B")
     top = pd.concat([ta, tb], ignore_index=True)
     notes = []
     for _, r in top.iterrows():
         if r["proof_status"] == "tested":
-            notes.append(rnai_marker_notes(mmc5, r["gene_id"]))
+            suffix = ("; FISH phenotype-confirmed (King 2024 Fig 3J/4E, S4, S7, S8)"
+                      if bool(r.get("phenotype_confirmed"))
+                      else "; no published phenotype (screened only)")
+            notes.append(rnai_marker_notes(mmc5, r["gene_id"]) + suffix)
         else:
-            notes.append("Not RNAi-tested in King 2024 mmc5; not-tested neural-fate candidate")
+            notes.append("Not RNAi-screened in King 2024 mmc5; not-tested neural-fate candidate")
     top["rnai_phenotype_notes"] = notes
     return top.sort_values(["track", "rank"]).reset_index(drop=True)
 
@@ -226,8 +235,12 @@ def _deterministic_full_rank(cand: pd.DataFrame) -> pd.DataFrame:
 
     Order: composite_score -> integrated_score -> n_streams -> gene_id ascending.
     Ensures fixed_full_rank.csv matches the WS2 tie-break discipline.
+    Stamps phenotype_confirmed so supplementary tables carry the corrected
+    ground truth (2026-09-11).
     """
+    from bioforge.evidence.groundtruth import is_phenotype_confirmed
     out = cand.copy()
+    out["phenotype_confirmed"] = out["gene_id"].map(is_phenotype_confirmed)
     tie_cols = [c for c in ("integrated_score", "n_streams") if c in out.columns]
     for c in ["composite_score"] + tie_cols:
         if c in out.columns:
@@ -262,6 +275,10 @@ def build_csv(top: pd.DataFrame) -> pd.DataFrame:
     out["rank"] = top["rank"]
     out["composite_score"] = top["composite_score"]
     out["proof_status"] = top["proof_status"]
+    # 2026-09-11: FISH-confirmed phenotype flag (True only for the paper's
+    # phenotype-positive TFs; "tested" alone = screened in King 2024).
+    out["phenotype_confirmed"] = top.get(
+        "phenotype_confirmed", pd.Series(False, index=top.index))
     out["interpro_domains"] = top["domains_all"]
     out["human_ortholog"] = [
         clean_ortholog(r["human_ortholog"], r.get("planmine_human_ortholog_desc", ""))
@@ -285,11 +302,13 @@ def build_report(top: pd.DataFrame, g0: dict, x1: dict,
     lines.append("## Method\n")
     lines.append(
         "Two testing groups (reported for the 5+5 shortlist):\n\n"
-        "- **Tested** — `proof_status == tested`: RNAi-validated "
-        "benchmark TFs from the King 2024 FSTF screen. Top 5 by composite "
-        "score.\n"
+        "- **Tested** — `proof_status == tested`: RNAi-screened benchmark "
+        "TFs from the King 2024 FSTF screen (mmc5 lists ALL inhibited TFs; "
+        "presence means RNAi was performed, not that a phenotype was "
+        "observed — `phenotype_confirmed` marks the FISH-confirmed subset). "
+        "Top 5 by composite score.\n"
         "- **Not tested** — `proof_status == not_tested`: no published RNAi "
-        "data; filtered to candidates with a clear DNA-binding TF domain "
+        "record; filtered to candidates with a clear DNA-binding TF domain "
         "(PlanMine protein-domain hits or mmc4 TF flag), then top 5 by "
         "composite score.\n\n"
         "`composite_score = integrated_score + bonuses` (formula in "
@@ -297,25 +316,34 @@ def build_report(top: pd.DataFrame, g0: dict, x1: dict,
         "TF GO +0.02, human ortholog +0.02. The identical bonus mask and "
         "not-tested-domain gate are applied by the Dirichlet-centered and "
         "Dirichlet-uniform methods.\n")
+    lines.append(
+        "> **Ground-truth note (2026-09-11):** King 2024 mmc5 is titled "
+        "'All Transcription Factors Inhibited' — it records the full RNAi "
+        "screening list, and the phenotype font-colour encoding is absent "
+        "from the distributed xlsx copy. 'Tested' therefore means *screened*. "
+        "Genes with FISH-confirmed loss-of-cell-type phenotypes (paper Fig "
+        "3J/4E, S4, S7, S8) carry `phenotype_confirmed = True`.\n")
     lines.append("## Shortlist\n")
-    lines.append("| v6 id | gene_name | track | rank | composite | human ortholog |")
-    lines.append("|---|---|---|---|---|---|")
+    lines.append("| v6 id | gene_name | track | rank | composite | phenotype-confirmed | human ortholog |")
+    lines.append("|---|---|---|---|---|:---:|---|")
     for _, r in top.iterrows():
         ho = clean_ortholog(r["human_ortholog"], r.get("planmine_human_ortholog_desc", ""))
+        ph = "†" if bool(r.get("phenotype_confirmed")) else ""
         lines.append(
             f"| {r['gene_id']} | {r['gene_name']} | {r['track']} | {r['rank']} "
-            f"| {r['composite_score']:.3f} | {ho} |")
+            f"| {r['composite_score']:.3f} | {ph} | {ho} |")
     lines.append("")
 
     for _, r in top.iterrows():
         gid = r["gene_id"]
         lines.append(f"## {r['gene_name'] or gid} (Track {r['track']}, "
                      f"rank {r['rank']})\n")
+        ph = " (FISH phenotype-confirmed †)" if bool(r.get("phenotype_confirmed")) else ""
         lines.append(f"- v6 `{gid}` · v4 `{r['gene_id_v4'] or '-'}` · "
-                     f"`{r['proof_status']}`")
+                     f"`{r['proof_status']}`{ph}")
         lines.append(f"- composite `{r['composite_score']:.3f}` "
-                     f"(pipeline integrated `{r['integrated_score']:.3f}`, "
-                     f"{int(r['n_streams'])} evidence streams)")
+                      f"(pipeline integrated `{r['integrated_score']:.3f}`, "
+                      f"{int(r['n_streams'])} evidence streams)")
         lines.append(f"- DNA-binding domains (PlanMine): "
                      f"`{r.get('dna_binding_domains') or 'none annotated'}`")
         go = str(r.get("go_terms", "")).strip()
@@ -374,10 +402,10 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  v6->v4 mapping: {flags.to_dict()}")
 
     top = select_shortlist(cand, mmc5)
-    print("\n  === Tested (RNAi-validated) top 5 ===")
+    print("\n  === Tested (RNAi-screened in King 2024) top 5 ===")
     print(top[top["track"] == "A"][
         ["gene_id", "gene_name", "composite_score", "integrated_score",
-         "dna_binding_domains"]].to_string(index=False))
+         "phenotype_confirmed", "dna_binding_domains"]].to_string(index=False))
     print("  === Not tested (no RNAi record) top 5 ===")
     print(top[top["track"] == "B"][
         ["gene_id", "gene_name", "composite_score", "integrated_score",

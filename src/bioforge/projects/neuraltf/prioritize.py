@@ -3,7 +3,8 @@
 Combines the pipeline ranking (``rank.csv`` / ``rank_neural.csv``),
 PlanMine functional annotations, the v6<->v4 identifier bridge, and the King
 2024 supplementary tables into a transparent, reproducible shortlist: top 5
-RNAi-validated benchmark TFs (Track A) and top 5 uncharacterized novel TFs
+RNAi-screened benchmark TFs (Track A; FISH-phenotype-confirmed status tracked
+separately via ``phenotype_confirmed``) and top 5 uncharacterized TFs
 (Track B).
 
 Unified method philosophy (WS2)
@@ -487,13 +488,18 @@ def assign_tracks(rank: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
 def rnai_marker_notes(
     mmc5: pd.DataFrame | None, gene_id: str, extras: str = ""
 ) -> str:
-    """Build a human-readable RNAi phenotype note from the King mmc5 table.
+    """Build a human-readable RNAi screening note from the King mmc5 table.
 
     mmc5 rows list the silenced TF first and the cell-type markers assayed in
-    the following columns.  Returns ``"screened; markers assayed: ..."``.
+    the following columns. Returns ``"screened; markers assayed: ..."``.
+    NOTE (2026-09-11): mmc5 lists ALL TFs inhibited ("All Transcription
+    Factors Inhibited") — presence means RNAi was PERFORMED, not that a
+    phenotype was observed (the original table encodes phenotype status by
+    font colour; the distributed copy is monochrome). Never phrase this
+    as "RNAi-validated".
     """
     if mmc5 is None or mmc5.empty:
-        return extras or "RNAi-validated (King 2024 mmc5); no marker detail available"
+        return extras or "RNAi-screened (King 2024 mmc5); no marker detail available"
     tokens = set()
     for _, row in mmc5.iterrows():
         first = row.iloc[0]
@@ -504,7 +510,7 @@ def rnai_marker_notes(
                     c = cell.strip()
                     if c and c != "nan":
                         tokens.add(c)
-    prefix = extras if extras else "RNAi-validated (King 2024, mmc5)"
+    prefix = extras if extras else "RNAi-screened (King 2024, mmc5)"
     if tokens:
         return f"{prefix}; phenotype screen markers assayed: {', '.join(sorted(tokens))}"
     return prefix

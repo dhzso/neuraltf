@@ -162,8 +162,9 @@ def build():
     ax_track.axhline(div_y, color="white", lw=2.5)
     ax_track.axis("off")
 
-    # Track labels to the left of the track strip
-    fig.text(0.025, 0.65, "Tested (RNAi+)\u2020", rotation=90, va="center", ha="center",
+    # Track labels to the left of the track strip ("RNAi+" = screened in
+    # King 2024 mmc5; phenotype status is NOT implied — see groundtruth.py)
+    fig.text(0.025, 0.65, "Tested (RNAi-screened)\u2020", rotation=90, va="center", ha="center",
              fontsize=6.8, fontweight="bold", color=C_A)
     fig.text(0.025, 0.32, "Not tested", rotation=90, va="center", ha="center",
              fontsize=6.8, fontweight="bold", color=C_B)

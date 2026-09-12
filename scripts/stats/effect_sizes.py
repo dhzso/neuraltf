@@ -7,11 +7,17 @@ plus Mann-Whitney U tests.
 2026-09-04 audit notes (documented circularity + corrections):
 - Top-10 vs rest is TAUTOLOGICAL (groups defined by the tested score) -
   reported for continuity, flagged as such.
-- Neural (RNAi-validated) vs rest on the raw integrated score is
+- Screened (King mmc5 RNAi list) vs rest on the raw integrated score is
   CIRCULAR (the rnai stream IS the label): the honest variant recomputes
   the score excluding rnai/neural_enriched/neural_specificity.
 - Hedges' g (small-sample bias-corrected d, J = 1 - 3/(4(n1+n2)-9)) is
   added alongside Cohen's d; at n1=10 the correction is ~4%.
+
+2026-09-11 ground-truth correction: every contrast is additionally run
+against the FISH-phenotype-confirmed label (King 2024 Fig 3J/4E, S4,
+S7, S8) — the strictest defensible "validated" set. mmc5 lists ALL
+inhibited TFs, so the historical "tested" label means SCREENED, not
+phenotype-validated. Results live under results["*_phenotype_confirmed"].
 
 Usage:
     python scripts/stats/effect_sizes.py
@@ -26,6 +32,10 @@ import pandas as pd
 from scipy import stats
 
 REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "src"))
+
+from bioforge.evidence.groundtruth import PHENOTYPE_CONFIRMED_V6  # noqa: E402
+
 RUN_DIR = REPO / "projects" / "NeuralTF" / "runs" / "pipeline_run"
 RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
 FIG_DIR = REPO / "projects" / "NeuralTF" / "figures"
@@ -160,7 +170,8 @@ def main():
     print(f"\n--- Neural vs Non-Neural ---")
     print(f"  Neural:     n={len(neural_scores)}, mean={np.mean(neural_scores):.4f}")
     print(f"  Non-neural: n={len(non_neural_scores)}, mean={np.mean(non_neural_scores):.4f}")
-    print(f"  (circular: the rnai stream IS the proof_status label)")
+    print(f"  (circular: the rnai stream IS the proof_status label; label = "
+          f"King mmc5 SCREENED list, phenotype not implied)")
 
     cd_neural = cliffs_delta(neural_scores, non_neural_scores)
     d_neural = cohens_d(neural_scores, non_neural_scores)
@@ -168,7 +179,11 @@ def main():
     u_neural, p_neural = stats.mannwhitneyu(neural_scores, non_neural_scores, alternative="greater")
 
     results["neural_vs_non_neural"] = {
-        "caveat": "circular: the rnai stream encodes the proof_status label",
+        "caveat": ("circular: the rnai stream encodes the proof_status "
+                   "label. NOTE (2026-09-11): the label is the King mmc5 "
+                   "RNAi SCREENING list ('All Transcription Factors "
+                   "Inhibited') — screened, not phenotype-validated. See "
+                   "the *_phenotype_confirmed keys for the stricter label."),
         "cliffs_delta": float(cd_neural),
         "cohens_d": float(d_neural),
         "hedges_g": float(g_neural),
@@ -243,6 +258,41 @@ def main():
     print(f"  Cohen's d:     {d_s:.4f}")
     print(f"  Hedges' g:     {g_s:.4f}")
     print(f"  Mann-Whitney U: {u_s:.1f}, p={p_s:.4e}")
+
+    # ---- 2026-09-11: phenotype-confirmed label arms ---------------------
+    # The FISH-phenotype-confirmed subset (King 2024 Fig 3J/4E, S4, S7,
+    # S8) is the strictest defensible "validated" label. Run the honest
+    # and strict-honest contrasts against it.
+    conf_mask = df[gene_col].astype(str).isin(PHENOTYPE_CONFIRMED_V6)
+    results["phenotype_confirmed"] = {
+        "n_positives": int(conf_mask.sum()),
+        "label_note": ("FISH-confirmed loss-of-cell-type phenotypes "
+                       "(King 2024 Fig 3J/4E, S4, S7, S8); a strict subset "
+                       "of the screened label."),
+    }
+    for arm, score_series in (("honest", hs), ("honest_strict", ss)):
+        pos = score_series[conf_mask].values
+        neg = score_series[~conf_mask].values
+        if len(pos) < 2 or len(neg) < 2:
+            results["phenotype_confirmed"][arm] = None
+            continue
+        u_pc, p_pc = stats.mannwhitneyu(pos, neg, alternative="greater")
+        results["phenotype_confirmed"][arm] = {
+            "cliffs_delta": float(cliffs_delta(pos, neg)),
+            "cohens_d": float(cohens_d(pos, neg)),
+            "hedges_g": float(hedges_g(pos, neg)),
+            "mann_whitney_u": float(u_pc),
+            "p_value": float(p_pc),
+            "positive_n": int(len(pos)),
+            "negative_n": int(len(neg)),
+            "positive_mean": float(np.mean(pos)),
+            "negative_mean": float(np.mean(neg)),
+        }
+        print(f"\n--- Phenotype-confirmed vs rest ({arm} score) ---")
+        print(f"  Positives: n={len(pos)}, mean={np.mean(pos):.4f}")
+        print(f"  Rest:       n={len(neg)}, mean={np.mean(neg):.4f}")
+        print(f"  Cliff's delta: {cliffs_delta(pos, neg):.4f}  "
+              f"Hedges' g: {hedges_g(pos, neg):.4f}  p={p_pc:.3e}")
 
     out_path = RESULTS_DIR / "effect_sizes.json"
     with open(out_path, "w") as f:

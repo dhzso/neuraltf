@@ -69,6 +69,15 @@ class EvidenceRecord:
     scores: dict[EvidenceSource, float] = field(default_factory=dict)
     notes: dict[EvidenceSource, str] = field(default_factory=dict)
     proof_status: Optional[str] = None
+    # 2026-09-11 ground-truth fix: True iff the gene has a FISH-confirmed
+    # loss-of-cell-type phenotype in King 2024 (see
+    # bioforge.evidence.groundtruth). ``proof_status == "tested"`` alone
+    # means "was in the King RNAi screening list (mmc5)" — the screen
+    # performed RNAi on all listed TFs, but only a subset have published
+    # phenotypes (phenotype status was font-colour-encoded in the original
+    # mmc5; the distributed copy is monochrome, so it is re-derived from
+    # the paper's figures here).
+    phenotype_confirmed: bool = False
 
     def add_score(self, source: EvidenceSource, score: float, note: str = "") -> None:
         """Attach or overwrite a per-source score (clipped to [0, 1])."""

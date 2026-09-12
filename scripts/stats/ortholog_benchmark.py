@@ -198,11 +198,16 @@ def main() -> int:
     eval_df["label"] = eval_df["gene_id"].isin(pos).astype(int)
 
     tested_pos = pos & set(rank[rank["proof_status"] == "tested"]["gene_id"])
-    print(f"Cross-species ortholog benchmark (Homo sapiens BLAST descriptions)")
+    conf_pos = pos & set(rank.loc[
+        rank.get("phenotype_confirmed", pd.Series(False, index=rank.index))
+        .astype(bool), "gene_id"])
+    print("Cross-species ortholog benchmark (Homo sapiens BLAST descriptions)")
     print(f"  positive (neural-fate orthologs):  {len(pos)} labeled, {len(pos & set(rank['gene_id']))} in rank")
     print(f"  negative (non-neural orthologs):   {len(neg)} labeled, {len(neg & set(rank['gene_id']))} in rank")
     print(f"  covered (in-rank, classified):     {len(covered)}")
-    print(f"  tested-gene overlap among positives (indicates shared biology, not leakage): {len(tested_pos)}")
+    print(f"  tested-gene overlap among positives (shared biology, not leakage): "
+          f"{len(tested_pos)}")
+    print(f"  phenotype-confirmed overlap among positives: {len(conf_pos)}")
 
     auc = roc_auc(eval_df["label"].to_numpy(), eval_df["integrated_score"].to_numpy())
     print(f"  ROC-AUC (positive vs negative, integrated score): {auc:.3f}")
