@@ -61,7 +61,7 @@ python scripts/generate_all.py
 
 # 3. Or run the pipeline and downstream analyses step-by-step:
 python scripts/run.py                        # Core pipeline (Fincher, Plass, Cui, King, Perez)
-python scripts/run_downstream.py             # Dirichlet UQ, ANANSE scan, tables & 25 figures
+python scripts/run_downstream.py             # Dirichlet UQ, ANANSE scan, tables & 26 figures
 
 # 4. Launch the interactive Streamlit UI
 bioforge ui                                  # http://localhost:8501
@@ -198,7 +198,7 @@ To test sensitivity against arbitrary weighting assumptions, we employ Monte Car
 
 ---
 
-## Statistical Validation Suite (14 Tests)
+## Statistical Validation Suite (15 Tests)
 
 The pipeline includes a comprehensive statistical validation suite to ensure publication-grade rigor:
 
@@ -218,6 +218,7 @@ The pipeline includes a comprehensive statistical validation suite to ensure pub
 | 12 | **Brier Score** | `scripts/stats/brier_score.py` | Probabilistic classification accuracy |
 | 13 | **Cross-Method Correction** | `scripts/stats/cross_method_correction.py` | Bonferroni/BH-FDR for 3-method consensus |
 | 14 | **Score Shuffling Permutation** | `scripts/stats/score_shuffling_permutation.py` | Stream-assignment null model |
+| 15 | **Cross-Species Ortholog Benchmark** | `scripts/stats/ortholog_benchmark.py` | Conserved *H. sapiens* neural TF ROC-AUC (0.712) & Mann-Whitney test |
 
 Run all tests:
 ```bash
@@ -226,14 +227,14 @@ python scripts/run_statistical_tests.py
 
 ---
 
-## Publication Figures (25 active figures)
+## Publication Figures (26 active figures)
 
 The authoritative, up-to-date catalog is
-`projects/NeuralTF/figures/FIGURE_CATALOG.md` (25 single-panel 500-DPI figures
+`projects/NeuralTF/figures/FIGURE_CATALOG.md` (26 publication figures: 25 single-panel + dual-panel 23/27/37, 500-DPI PNG
 under the Nature Communications palette). Figure numbering reflects the active
 set: data-integration (01, 03, 04, 20, 31), candidate atlas (05),
 robustness/ablation (06, 07, 08, 09, 13, 15), scoring decomposition (18),
-benchmark recovery (23, 24, 26, 27, 28, 30), convergence (29), lineage (32),
+benchmark recovery (23, 24, 26, 27, 28, 30, 37), convergence (29), lineage (32),
 method agreement (33), GRN (34), cross-atlas meta-analysis (35), and
 regeneration temporal dynamics (36). Figures 02, 10–12, 14, 16, 17, 19, 21, 22,
 25 were retired during the single-panel refactor.
@@ -285,10 +286,10 @@ Bioinformatics/
 │   │   ├── ananse_full_scan.py               ANANSE GRN scan across all candidates
 │   │   ├── export_fstf_ranked.py             Export ranked TF tables
 │   │   ├── create_supplementary_tables.py    Generate supplementary tables S1–S4
-│   │   ├── generate_publication_figures.py   Generate 33 publication figures
-│   │   └── figures/                          33 modular figure generation scripts & style.py
+│   │   ├── generate_publication_figures.py   Generate 26 publication figures
+│   │   └── figures/                          26 modular figure generation scripts & style.py
 │   ├── results/                              Dirichlet, ANANSE, and supplementary tables (gitignored)
-│   ├── figures/                              33 publication-ready PNG figures (gitignored)
+│   ├── figures/                              26 publication + 4 supplementary PNG figures (gitignored)
 │   └── runs/pipeline_run/                    rank.csv, rank_neural.csv, 6 checkpoint parquets
 │
 └── scripts/                                  Master Orchestration & Build Scripts

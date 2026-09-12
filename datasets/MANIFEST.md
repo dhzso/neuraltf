@@ -12,7 +12,7 @@ The generated outputs live in `datasets/processed/` (fincher/plass/cui h5ads,
 PlanMine parquet + fasta), `projects/NeuralTF/data/` (bridge.csv,
 king_atlas.tsv, master_tf_catalog.csv), `projects/NeuralTF/results/`
 (Dirichlet CSVs, ANANSE network, supplementary tables S1–S4),
-`projects/NeuralTF/figures/` (33 publication figures) and
+`projects/NeuralTF/figures/` (26 publication figures + 4 supplementary) and
 `projects/NeuralTF/runs/pipeline_run/` (rank.csv, rank_neural.csv,
 evidence_cards.md, 6 checkpoint parquets).
 

@@ -207,14 +207,14 @@ The following refinements define the current behavior:
 
 $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(k \cdot \mathbf{w}_{\text{default}}), \quad m = 1, \dots, 1000$$
 
-- **Mathematical Rationale**: Fixed-weight scoring models assume exact certainty in parameter weights. The centered Dirichlet model formalizes weight uncertainty by drawing 1,000 weight vectors centered on $\mathbf{w}_{\text{default}} = [0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]$. Setting the concentration parameter to $k = 40.0$ corresponds to 40 pseudo-observations of evidence reliability, yielding a 95% credible interval of approximately $\pm 0.10$ around each baseline weight.
+- **Mathematical Rationale**: Fixed-weight scoring models assume exact certainty in parameter weights. The centered Dirichlet model formalizes weight uncertainty by drawing 1,000 weight vectors centered on $\mathbf{w}_{\text{default}} = [0.100, 0.100, 0.100, 0.050, 0.050, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100]$. Setting the concentration parameter to $k = 40.0$ corresponds to 40 pseudo-observations of evidence reliability, yielding a 95% credible interval of approximately $\pm 0.10$ around each baseline weight.
 - **Location**: `projects/NeuralTF/scripts/dirichlet_centered.py` (evaluated across all candidates in `rank.csv`)
 
 ### 3.2 Uniform Dirichlet Prior ($\alpha_i = 1.0, \, \forall i$)
 
-$$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
+$$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_{11})$$
 
-- **Mathematical Rationale**: To demonstrate that candidate rankings are driven by intrinsic biological signal rather than investigator weight choices, the uniform Dirichlet samples uniformly across the 9-dimensional probability simplex ($\alpha_i = 1$). Concordance between uniform Dirichlet medians and fixed-weight rankings confirms high stability across all candidates without prior weighting assumptions.
+- **Mathematical Rationale**: To demonstrate that candidate rankings are driven by intrinsic biological signal rather than investigator weight choices, the uniform Dirichlet samples uniformly across the 11-dimensional probability simplex ($\alpha_i = 1$). Concordance between uniform Dirichlet medians and fixed-weight rankings confirms high stability across all candidates without prior weighting assumptions.
 - **Location**: `projects/NeuralTF/scripts/dirichlet_uniform.py` (evaluated across all candidates in `rank.csv`)
 
 ---
@@ -252,7 +252,7 @@ $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
                                 │ (neural_enriched > 0) | (rnai > 0)
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 101 Neural-Enriched Candidate TFs (rank_neural.csv)             │
+│ 134 Neural-Enriched Candidate TFs (rank_neural.csv)             │
 │ (Dual-track shortlist: tested + not-tested)                       │
 └─────────────────────────────────────────────────────────────────┘
 ```

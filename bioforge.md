@@ -62,8 +62,8 @@ python scripts/run.py
 
 | File | Format | Description |
 |------|--------|-------------|
-| `rank.csv` | CSV (278 rows) | All **11,695 candidates** ranked by 11-stream integrated score |
-| `rank_neural.csv` | CSV (101 rows) | **134 neural candidates** passing the neural gate |
+| `rank.csv` | CSV (11,695 rows) | All **11,695 candidates** ranked by 11-stream integrated score |
+| `rank_neural.csv` | CSV (134 rows) | **134 neural candidates** passing the neural gate |
 | `evidence_cards.md` | Markdown | Comprehensive per-candidate evidence cards with stream breakdown |
 | `pipeline_results.json` | JSON | Machine-readable candidate records with tier classifications |
 | `checkpoint_01_atlas_loads.parquet` | Parquet | QC checkpoint: Atlas cell and gene dimensions |
@@ -101,7 +101,7 @@ python scripts/prioritize_neural_tfs.py
 # Statistical validation suite (14 tests)
 python scripts/run_statistical_tests.py
 
-# Supplementary tables & 33 publication figures
+# Supplementary tables & 26 publication figures
 python projects/NeuralTF/scripts/create_supplementary_tables.py
 python projects/NeuralTF/scripts/generate_publication_figures.py
 ```
@@ -157,9 +157,9 @@ NeuralTF unifies 5 independent planarian transcriptomic and regulatory atlases:
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ • Baseline Integrated Score : Weighted linear combination (renormalized over present)  │
 │ • Dirichlet UQ (Centered)   : 1,000 draws from Dirichlet(k=40 * w_default)             │
-│ • Dirichlet UQ (Uniform)    : 1,000 draws from Dirichlet(alpha=1_9)                    │
+│ • Dirichlet UQ (Uniform)    : 1,000 draws from Dirichlet(alpha=1_11)                    │
 │ • ANANSE GRN Validation     : 13,746 TF-target edges across 9 cell fate lineages       │
-│ • Statistical Suite         : 14 validation tests (permutations, bootstrap, calibration)│
+│ • Statistical Suite         : 15 validation tests (permutations, bootstrap, calibration)│
 └──────────────────────────────────────────┬─────────────────────────────────────────────┘
                                            │
                                            ▼

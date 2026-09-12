@@ -30,7 +30,7 @@ The following files exist in `datasets/raw/` from upstream repository downloads 
 
 | File Name | Location | Type | Notes |
 |-----------|----------|------|-------|
-| `GSE111764_BrainClustering...` | `raw/GSE111764_GEO_Fincher_atlas/` | Expression (.txt.gz ~15 MB) | Supplementary brain-specific subset; whole-animal is used |
+| `GSE111764_BrainClustering...` | `raw/GSE111764_GEO_Fincher_atlas/` | Expression (.txt.gz ~15 MB) | Fincher brain-specific sub-atlas (converted via `convert_fincher_brain.py` for Stream 10: `fincher_brain`) |
 | `GSE111764_SexualClustering...` | `raw/GSE111764_GEO_Fincher_atlas/` | Expression (.txt.gz ~21 MB) | Supplementary sexual-cell subset |
 | `GSE111764_Saturation.txt.gz` | `raw/GSE111764_GEO_Fincher_atlas/` | QC / Saturation | Reference metadata |
 | `GSE103633_family.soft.gz` | `raw/GSE103633_GEO_Plass_atlas/` | GEO Metadata | Study annotations |
