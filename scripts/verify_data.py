@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 """Verify data integrity checksums for NeuralTF pipeline.
 
 Usage:
@@ -22,6 +22,7 @@ RAW_DIR = REPO / "datasets" / "raw"
 EXPECTED_FILES = [
     "GSE103633_GEO_Plass_atlas/GSE103633_RAW.tar",
     "GSE111764_GEO_Fincher_atlas/GSE111764_PrincipalClusteringDigitalExpressionMatrix.dge.txt.gz",
+    "GSE111764_GEO_Fincher_atlas/GSE111764_BrainClusteringDigitalExpressionMatrix.dge.txt.gz",
     "OMIX003867_OMIX_Cui_atlas/OMIX003867-01/singlecell_h5ad/adata_scRNA_Annotated.h5ad",
     "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc2.xlsx",
     "Supplementary_Data_ King_2024/1-s2.0-S2211124724001712-mmc3.xlsx",
