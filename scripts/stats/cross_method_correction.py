@@ -117,6 +117,22 @@ def universe_size() -> int:
     return int(rank["gene_id"].nunique())
 
 
+def strata_sizes() -> dict[str, int]:
+    """Dual-track stratum sizes from rank.csv (2026-09-13 fix).
+
+    The three shortlists are stratified 5 tested + 5 not-tested, not
+    uniform random 10-subsets. p0 = 10/N understated per-gene membership
+    probability for tested genes by ~73x (5/67 vs 10/11,695) and the
+    set-level hypergeometric overstated significance by ~25 orders of
+    magnitude. The stratified null is reported alongside the legacy one.
+    """
+    rank = pd.read_csv(RUN_DIR / "rank.csv")
+    if "proof_status" not in rank.columns:
+        return {}
+    n_tested = int((rank["proof_status"].astype(str) == "tested").sum())
+    return {"tested": n_tested, "not_tested": int(len(rank) - n_tested)}
+
+
 def main():
     print("=== Cross-Method Consensus (valid randomization null) ===")
 
@@ -130,8 +146,17 @@ def main():
     N = universe_size()
     n_methods = len(methods)
     p0 = N_TOP / N
+    N_strata = strata_sizes()
+    # per-stratum membership probability under the dual-track 5+5 design
+    p0_strata = (
+        {s: 5 / max(N_strata[s], 1) for s in N_strata}
+        if N_strata else {}
+    )
     print(f"Universe N = {N}; chance of landing in one method's top-{N_TOP}: "
-          f"p0 = {p0:.3e}")
+          f"p0 = {p0:.3e} (legacy uniform null)")
+    if p0_strata:
+        print(f"Stratified null (dual-track 5+5 design): per-gene p0 = "
+              f"{p0_strata} from strata {N_strata}")
 
     all_genes = set()
     for s in methods.values():
@@ -141,35 +166,64 @@ def main():
 
     # ---- Global set-level overlap (primary statistic) -----------------
     # Pairwise hypergeometric overlap tests between the methods' top-10
-    # sets: P(X >= k) under random 10-subsets of the N-gene universe.
+    # sets. TWO nulls are reported (2026-09-13):
+    #   legacy:      random 10-subsets of the N-gene universe (upper bound
+    #                on significance; ignores the 5+5 stratification)
+    #   stratified:  Poisson approx over the within-stratum null
+    #                (E[k] = 5^2/67 + 5^2/(N-67) ~ 0.375)
     pair_names = []
     pair_overlaps = []
     pair_pvals = []
+    pair_pvals_strat = []
     method_list = sorted(methods)
+    lam_strat = None
+    if p0_strata:
+        lam_strat = sum((5 ** 2) / max(N_strata[s], 1) for s in N_strata)
     for i in range(len(method_list)):
         for j in range(i + 1, len(method_list)):
             a, b = method_list[i], method_list[j]
             k = len(methods[a] & methods[b])
             p = float(stats.hypergeom.sf(k - 1, N, N_TOP, N_TOP))
+            p_strat = (float(stats.poisson.sf(k - 1, lam_strat))
+                       if lam_strat is not None else None)
             pair_names.append(f"{a}~{b}")
             pair_overlaps.append(k)
             pair_pvals.append(p)
-            print(f"  overlap {a} vs {b}: {k}/{N_TOP}  hypergeom p = {p:.3e}")
+            pair_pvals_strat.append(p_strat)
+            msg = f"  overlap {a} vs {b}: {k}/{N_TOP}  hypergeom p = {p:.3e}"
+            if p_strat is not None:
+                msg += f"  | stratified p = {p_strat:.3e}"
+            print(msg)
 
     # ---- Per-gene consensus strength -----------------------------------
-    # Binomial(k successes of n_methods trials at p0 = 10/N). Positively
-    # correlated memberships (shared matrix/bonus layer by design) make
-    # these descriptive; the set-level hypergeometric is the primary stat.
+    # Binomial(k successes of n_methods trials). Under the stratified
+    # design a tested gene's membership probability is 5/67 (not 10/N);
+    # the per-gene p is computed with the stratum-appropriate p0 when the
+    # gene's stratum is known from rank.csv. Positively correlated
+    # memberships (shared matrix/bonus layer by design) make these
+    # descriptive; the set-level hypergeometric is the primary stat.
+    rank = pd.read_csv(RUN_DIR / "rank.csv")
+    gene_stratum = {}
+    if "proof_status" in rank.columns:
+        gene_stratum = dict(zip(
+            rank["gene_id"].astype(str),
+            rank["proof_status"].astype(str).map(
+                lambda s: "tested" if s == "tested" else "not_tested"),
+        ))
     consensus_data = []
     for gene in all_genes:
         methods_present = [m for m in methods if gene in methods[m]]
         k = len(methods_present)
-        binom_p = _binom_p(k, n_methods, p0)
+        p_gene = p0
+        if p0_strata and gene in gene_stratum:
+            p_gene = p0_strata.get(gene_stratum[gene], p0)
+        binom_p = _binom_p(k, n_methods, p_gene)
         consensus_data.append({
             "gene_id": gene,
             "n_methods_present": k,
             "methods": ",".join(sorted(methods_present)),
             "p_binom": binom_p,
+            "p0_used": p_gene,
             "is_consensus": k >= 2,
         })
 
@@ -231,8 +285,23 @@ def main():
         "n_significant_bonferroni": int(df["significant_bonferroni"].sum()),
         "n_significant_fdr": int(df["significant_fdr"].sum()),
         "pairwise_overlap": {
-            name: {"overlap": int(k), "hypergeom_p": p}
-            for name, k, p in zip(pair_names, pair_overlaps, pair_pvals)
+            name: {"overlap": int(k), "hypergeom_p": p,
+                   "hypergeom_p_note": "legacy uniform-subset null (upper bound)",
+                   "stratified_poisson_p": (float(ps) if ps is not None else None)}
+            for name, k, p, ps in zip(pair_names, pair_overlaps, pair_pvals,
+                                      pair_pvals_strat)
+        },
+        "stratified_null": {
+            "design": "dual-track 5 tested + 5 not-tested per method",
+            "N_strata": N_strata,
+            "p0_strata": p0_strata,
+            "expected_pairwise_overlap": (float(lam_strat)
+                                          if lam_strat is not None else None),
+            "note": (
+                "The shortlists are stratified (5+5); the stratified null "
+                "samples within stratum. Legacy uniform-subset p-values "
+                "(hypergeom at 10/N) overstate significance by ~25 orders "
+                "of magnitude and are retained only for transparency."),
         },
         "caveat": (
             "The three methods share rank.csv, apply_bonuses(), and "

@@ -48,6 +48,8 @@ STREAMS = [
 # Must match bioforge.evidence.scoring.DEFAULT_WEIGHTS exactly
 # (the old perez_lineage=0.2 made "real" scores differ from rank.csv).
 W_DEFAULT = np.array([0.1, 0.1, 0.1, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+# 2026-09-13: name-keyed weight lookup (immune to stream-order/absence drift)
+W_BY_NAME = dict(zip(STREAMS, W_DEFAULT.tolist()))
 
 
 def compute_all_integrated_scores(scores: np.ndarray, weights: np.ndarray) -> np.ndarray:
@@ -102,7 +104,10 @@ def main():
         stream_cols = [c for c in df.columns if c in STREAMS]
 
     scores_matrix = df[stream_cols].values.astype(float)
-    weights = W_DEFAULT[:len(stream_cols)]
+    # 2026-09-13 fix: weights are looked up BY STREAM NAME (the previous
+    # positional W_DEFAULT[:len(stream_cols)] silently misaligned weights
+    # whenever a middle stream was absent from rank.csv).
+    weights = np.array([W_BY_NAME[s] for s in stream_cols])
     weights = weights / weights.sum()
 
     real_scores = compute_all_integrated_scores(scores_matrix, weights)
@@ -182,6 +187,16 @@ def main():
           f"(family Bonferroni alpha = {0.05 / len(pvals):.2e} is "
           f"{'RESOLVABLE' if p_floor < 0.05 / len(pvals) else 'NOT resolvable at this n'})")
     print(f"Family-mean statistic (candidate family mean vs null draws): real={family_real_mean:.4f}, p={family_p:.4e}")
+    if args.candidates:
+        print(
+            "\nCIRCULARITY DISCLOSURE (2026-09-13): the --candidates family is\n"
+            "DEFINED as neural_enriched>0 OR rnai>0, and the tested statistic is\n"
+            "the FULL score including those streams — family members are extreme\n"
+            "BY CONSTRUCTION. The per-gene p/q values in this file therefore\n"
+            "quantify population-relative extremeness, NOT evidence of neural\n"
+            "function. The label-free evaluation lives in precision_recall.py\n"
+            "(honest/king_free arms) and negative_controls.py."
+        )
 
     print("\nTop-10 by score with shuffled-null p-values (with family q):")
     for i, (_, row) in enumerate(df_out.head(10).iterrows()):

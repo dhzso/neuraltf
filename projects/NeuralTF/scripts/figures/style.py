@@ -98,7 +98,13 @@ STREAM_HEATMAP_ORDER = [
 # 11 streams, weights sum to 1.0 (matches EvidenceScorer DEFAULT_WEIGHTS):
 # expression/specificity/neural*/perez*/fincher_brain/cui_temporal = 0.1,
 # rnai/correlation (ground-truth label streams) = 0.05.
-W = np.array([0.100, 0.100, 0.100, 0.050, 0.050, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100])
+# 2026-09-13: weights imported from the single source of truth instead of
+# a duplicated vector (scoring.py forbids hard-coded copies).
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
+from bioforge.evidence.scoring import DEFAULT_WEIGHTS as _DW
+W = np.array([_DW[s] for s in STREAM_COLS])
+assert abs(W.sum() - 1.0) < 1e-9
 
 def _nid(df):
     if "gene_id_v6" in df.columns and "gene_id" not in df.columns:

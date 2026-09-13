@@ -20,11 +20,28 @@ def build():
     if "perez_lineage" not in rank.columns or not rank["perez_lineage"].notna().any():
         raise FileNotFoundError("rank.csv carries no perez_lineage values.")
 
+    # 2026-09-13 circularity fix: the groups are DEFINED by perez_lineage,
+    # but the compared score was integrated_score — which CONTAINS
+    # perez_lineage (weight 0.10). The neural-lineage group received a
+    # +0.1-weight boost from the very stream defining it. The comparison
+    # now uses the label-free score (perez_lineage, rnai, neural_enriched,
+    # neural_specificity excluded), mirroring fig 24's discipline.
+    excl = {"rnai", "neural_enriched", "neural_specificity", "perez_lineage"}
+    stream_cols = [s for s in STREAM_COLS if s in rank.columns and s not in excl]
+    S = rank[stream_cols].to_numpy(dtype=float)
+    Wv = np.array([W[STREAM_COLS.index(s)] for s in stream_cols])
+    Wv = Wv / Wv.sum()
+    valid = ~np.isnan(S)
+    num = np.nan_to_num(S, nan=0.0) @ Wv
+    den = valid.astype(float) @ Wv
+    den = np.where(den > 0, den, 1.0)
+    rank = rank.assign(_label_free_score=num / den)
+
     fig, ax = plt.subplots(figsize=(W_15COL, 3.6), dpi=500)
 
-    neural_cls = rank[rank["perez_lineage"] == 1.0]["integrated_score"].dropna().values
-    other_cls = rank[rank["perez_lineage"] == 0.5]["integrated_score"].dropna().values
-    unclass = rank[rank["perez_lineage"] == 0.0]["integrated_score"].dropna().values
+    neural_cls = rank[rank["perez_lineage"] == 1.0]["_label_free_score"].dropna().values
+    other_cls = rank[rank["perez_lineage"] == 0.5]["_label_free_score"].dropna().values
+    unclass = rank[rank["perez_lineage"] == 0.0]["_label_free_score"].dropna().values
 
     groups = [
         ("Neural Lineage\n(Perez et al.)", neural_cls, C_A),
@@ -91,9 +108,13 @@ def build():
 
     ax.set_xticks([1, 2, 3])
     ax.set_xticklabels(labels, fontsize=6.8)
-    ax.set_ylabel("Integrated Evidence Score", fontsize=7.0, fontweight="bold")
+    ax.set_ylabel("Label-Free Evidence Score", fontsize=7.0, fontweight="bold")
     ax.set_title("Evidence Score Stratification Across Single-Cell Lineage Classes",
                  fontsize=8.0, pad=8, fontweight="bold")
+    ax.text(0.5, 1.005,
+            "Label-free score (perez_lineage, rnai and neural streams excluded) — "
+            "the compared score no longer contains the stream that defines the groups",
+            transform=ax.transAxes, fontsize=5.8, ha="center", va="bottom", color="#555555", style="italic")
     ax.set_ylim(-0.02, 1.30)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

@@ -52,8 +52,13 @@ STREAMS = [
     "correlation", "neural_enriched", "neural_specificity",
     "perez_lineage", "perez_influence", "fincher_brain", "cui_temporal",
 ]
-# Must match bioforge.evidence.scoring.DEFAULT_WEIGHTS exactly.
-W_DEFAULT = np.array([0.1, 0.1, 0.1, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+# 2026-09-13: import the single-source-of-truth weights (previously a
+# hand-copied vector with a "must match exactly" comment but no check).
+import os
+sys.path.insert(0, os.environ.get("BIOFORGE_SRC", str(REPO / "src")))
+from bioforge.evidence.scoring import DEFAULT_WEIGHTS as _DW  # noqa: E402
+W_DEFAULT = np.array([_DW[s] for s in STREAMS])
+assert abs(W_DEFAULT.sum() - 1.0) < 1e-9
 
 
 def load_score_matrix() -> pd.DataFrame:

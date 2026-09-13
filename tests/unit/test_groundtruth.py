@@ -52,15 +52,25 @@ class TestCuratedSet:
             "dd_Smed_v6_14753_0_1",  # ascl-2
             "dd_Smed_v6_8096_0_1",   # fer3l-1
             "dd_Smed_v6_8104_0_1",   # SOX2 / soxB1-2
-            "dd_Smed_v6_6470_0_1",   # Tbx2/3b (via build_king_atlas manual map)
+            "dd_Smed_v6_17143_0_1",  # Tbx2/3b (2026-09-13 remap: the paper's
+                                      # own mmc5 row lists dd17143 with the
+                                      # GLIPR1/dd210 marker of the Fig 4E/S8G
+                                      # Tbx2/3b phenotype)
             "dd_Smed_v6_11693_0_1",  # Tbx2/3c
             "dd_Smed_v6_9061_0_1",   # Post-2b
         ):
             assert gid in PHENOTYPE_CONFIRMED_V6, gid
 
+    def test_retired_tbx23b_assignment(self):
+        # The dd6470 assignment (PlanMine alias 'tbx2/3b') is retired:
+        # dd6470 is in neither mmc5 nor the King TF catalog, and its own
+        # PlanMine descriptions are aminopeptidase-related.
+        assert "dd_Smed_v6_6470_0_1" not in PHENOTYPE_CONFIRMED_V6
+
     def test_screened_without_phenotype_excluded(self):
-        # dd17143 (TBX2) was screened but shows no published phenotype
-        assert "dd_Smed_v6_17143_0_1" not in PHENOTYPE_CONFIRMED_V6
+        # Screened genes with no published phenotype stay out (spot checks)
+        for gid in ("dd_Smed_v6_13343_0_1", "dd_Smed_v6_17476_0_1"):
+            assert gid not in PHENOTYPE_CONFIRMED_V6
 
 
 class TestIsPhenotypeConfirmed:
@@ -79,10 +89,10 @@ class TestIsPhenotypeConfirmed:
         assert not is_phenotype_confirmed("dd_Smed_v6_10911_0_2")
 
     def test_negative(self):
-        assert not is_phenotype_confirmed("dd_Smed_v6_17143_0_1")
         assert not is_phenotype_confirmed("dd_Smed_v6_38342_0_1")  # top-1 tested, screened only
         assert not is_phenotype_confirmed("dd_Smed_v6_99999_0_1")
         assert not is_phenotype_confirmed("dd_Smed_v6_10911_0_2")  # sibling isoform
+        assert not is_phenotype_confirmed("dd_Smed_v6_6470_0_1")   # retired Tbx2/3b assignment
 
     def test_garbage_safe(self):
         assert not is_phenotype_confirmed(None)
@@ -98,14 +108,16 @@ class TestPhenotypeStatus:
 
     def test_screened_no_phenotype(self):
         assert phenotype_status(1.0, "dd_Smed_v6_38342_0_1") == "screened_no_phenotype"
-        assert phenotype_status(1.0, "dd_Smed_v6_17143_0_1") == "screened_no_phenotype"
+        assert phenotype_status(1.0, "dd_Smed_v6_19255_0_1") == "screened_no_phenotype"
+
+    def test_dd17143_now_phenotype_confirmed(self):
+        # 2026-09-13 remap: dd17143 IS the paper's Tbx2/3b RNAi target
+        # (mmc5 row 69, marker dd210/GLIPR1 = the Fig 4E/S8G phenotype)
+        assert phenotype_status(1.0, "dd_Smed_v6_17143_0_1") == "phenotype_confirmed"
 
     def test_not_screened(self):
         assert phenotype_status(0.0, "dd_Smed_v6_5882_0_1") == "not_screened"
         assert phenotype_status(None, "dd_Smed_v6_5882_0_1") == "not_screened"
-        # confirmed genes that were never matched to the screening list
-        # (name-form gaps like GCM2/Tbx2/3b) still report their phenotype
-        assert phenotype_status(0.0, "dd_Smed_v6_6470_0_1") == "not_screened"
 
 
 class TestProofStatusSemantics:

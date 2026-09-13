@@ -46,9 +46,12 @@ def build():
         d = data[key]
         precision = np.array(d["pr"]["precision"])
         recall = np.array(d["pr"]["recall"])
+        # 2026-09-13: trapezoidal area over the PR curve — labelled as
+        # PR-AUC (NOT "AP"; average precision is a different, non-
+        # interpolated quantity and the two differ, e.g. 0.047 vs 0.049).
         pr_auc = auc(recall, precision)
         ax1.plot(recall, precision, color=color, lw=lw, linestyle=ls,
-                 label=f"{label_str} (AP={pr_auc:.3f})")
+                 label=f"{label_str} (PR-AUC={pr_auc:.3f})")
 
     base_a = data.get("honest", data.get("circular", {})).get("pr", {}).get("baseline", 0.0057)
     ax1.axhline(y=base_a, color="#888888", lw=0.8, linestyle=":",
@@ -74,7 +77,7 @@ def build():
         recall = np.array(d["pr"]["recall"])
         pr_auc = auc(recall, precision)
         ax2.plot(recall, precision, color=color, lw=lw, linestyle=ls,
-                 label=f"{label_str} (AP={pr_auc:.3f})")
+                 label=f"{label_str} (PR-AUC={pr_auc:.3f})")
 
     base_b = pheno_data.get("honest", pheno_data.get("circular", {})).get("pr", {}).get("baseline", 0.0016)
     ax2.axhline(y=base_b, color="#888888", lw=0.8, linestyle=":",

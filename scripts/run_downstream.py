@@ -130,7 +130,9 @@ def main():
         # Step 2: TF catalog exports and regulatory networks
         ("Export ranked FSTF",
          ["projects", "NeuralTF", "scripts", "export_fstf_ranked.py"],
-         [RES / "tf_ranked_neural_top19.csv"]),
+         [RES / "tf_ranked_neural_top19.csv",
+          RES / "tf_ranked_all_top43.csv",
+          RES / "tf_ranked_catalog_top74.csv"]),
 
         ("ANANSE full scan",
          ["projects", "NeuralTF", "scripts", "ananse_full_scan.py"],
@@ -157,7 +159,7 @@ def main():
           RES / "weight_sensitivity_draws.csv",
           RES / "weight_sensitivity_top10_challengers.csv"]),
 
-        # Step 4c: Supplementary GO figures (fig_s1-s7)
+        # Step 4c: Supplementary GO figures (fig_s1-s4)
         ("Supplementary GO figures",
          ["projects", "NeuralTF", "scripts", "make_supp_go_figures.py"],
          [FIG / "supplementary" / "fig_s1_go_gene_term_map.png",
@@ -168,19 +170,22 @@ def main():
          ["projects", "NeuralTF", "scripts", "create_supplementary_tables.py"],
          [RES / "supplementary_table_S1_method_comparison.csv"]),
 
-        # Step 6: Publication figures (all 33 figures)
+        # Step 5b (2026-09-13 fix): re-stamp the ground-truth AFTER the
+        # exporters. export_fstf_ranked.py and create_supplementary_tables.py
+        # regenerate tf_ranked_*.csv / S5-S7 WITHOUT the phenotype_confirmed
+        # column (it is not in their out_cols), so the single annotate pass
+        # at Step -1 was being undone for exactly those tables. A second
+        # idempotent pass here guarantees every published table carries the
+        # flag regardless of regeneration order.
+        ("Phenotype ground-truth re-annotation (post-tables)",
+         ["projects", "NeuralTF", "scripts", "annotate_phenotype_groundtruth.py"],
+         []),
+
+        # Step 6: Publication figures (26 numbered figures)
         ("Publication figures",
          ["projects", "NeuralTF", "scripts", "generate_publication_figures.py"],
          [FIG / "01_stream_coverage_all.png",
-          FIG / "33_method_agreement_summary.png"]),
-
-        # Step 7: Supplementary GO figures S5-S7 (built by the figure-script
-        # supp_go_figures.py; a fresh regeneration previously skipped them)
-        ("Supplementary GO figures S5-S7",
-         ["projects", "NeuralTF", "scripts", "figures", "supp_go_figures.py"],
-         [FIG / "supplementary" / "fig_s5_go_heatmap_neural.png",
-          FIG / "supplementary" / "fig_s6_top10_go_profiles.png",
-          FIG / "supplementary" / "fig_s7_go_namespace_track.png"]),
+          FIG / "37_ortholog_benchmark.png"]),
     ]
 
     for label, script_parts, outputs in steps:

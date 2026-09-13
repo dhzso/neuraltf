@@ -55,7 +55,7 @@ from pathlib import Path
 #     INSM2    spp-4+ loss             (S7A)       -> dd_Smed_v6_28888_0_1
 #     PHOX2A   dd_8060+ loss           (4E, S8E)   -> dd_Smed_v6_29211_0_1
 #     POU4F3   CALM2 (dd_23127)+ loss  (4E, S8F)   -> dd_Smed_v6_30562_0_1
-#     Tbx2/3b  GLIPR1 (dd_210)+ loss   (4E, S8G)   -> dd_Smed_v6_6470_0_1
+#     Tbx2/3b  GLIPR1 (dd_210)+ loss   (4E, S8G)   -> dd_Smed_v6_17143_0_1
 #     IRX2     th+ loss                (S7F)       -> dd_Smed_v6_11500_0_1
 #     UNCX     sert+ loss              (S7B)       -> dd_Smed_v6_22163_0_1
 #     dd_20282 dd_1248+ loss           (S7C)
@@ -66,8 +66,17 @@ from pathlib import Path
 #     (soxB1-2, dd_8104, is additionally cited as the published regulator
 #      of the CALM2+ population.)
 #
-# dd17143 (TBX2) was screened but shows NO published phenotype; it is NOT
-# in this set.
+# 2026-09-13 Tbx2/3b RE-MAPPING (naming-conflict resolution):
+#     The paper's own RNAi table (mmc5 row 69) lists dd_17143 with marker
+#     dd_210 (GLIPR1) — the exact Tbx2/3b phenotype of Fig 4E/S8G — and
+#     King's mmc4 catalog names dd_17143 "T-box 2/3b protein" (human
+#     TBX2 blast). dd_6470, which PlanMine labels "tbx2/3b", appears in
+#     NEITHER mmc5 NOR mmc4, and its own PlanMine descriptions are
+#     aminopeptidase-related (alanyl aminopeptidase / CG14516) — an
+#     internally inconsistent alias, most likely a Rosetta-Stone
+#     many-to-many artifact. The ground truth follows the EXPERIMENT:
+#     Tbx2/3b = dd_Smed_v6_17143_0_1. (The earlier dd_6470 assignment
+#     came from the PlanMine official name and is retired.)
 #
 # COVERAGE NOTE: dd_Smed_v6_48508_0_1 (dd_1936+ neuron-loss phenotype, S8B)
 # is phenotype-confirmed but is NOT part of the pipeline's candidate
@@ -89,7 +98,9 @@ PHENOTYPE_CONFIRMED_V6: frozenset[str] = frozenset({
     "dd_Smed_v6_28888_0_1",   # INSM2; spp-4+ loss
     "dd_Smed_v6_29211_0_1",   # PHOX2A; dd_8060+ loss
     "dd_Smed_v6_30562_0_1",   # POU4F3; CALM2+ loss
-    "dd_Smed_v6_6470_0_1",    # Tbx2/3b; GLIPR1+ loss
+    "dd_Smed_v6_17143_0_1",   # Tbx2/3b; GLIPR1+ loss (2026-09-13: remapped
+                               # from dd6470 to the paper's actual RNAi
+                               # target — see the header note above)
     "dd_Smed_v6_11500_0_1",   # IRX2; th+ (dopaminergic) loss
     "dd_Smed_v6_22163_0_1",   # UNCX; sert+ (serotonergic) loss
     "dd_Smed_v6_20282_0_1",   # dd_20282; dd_1248+ loss
@@ -115,6 +126,24 @@ PHENOTYPE_CONFIRMED_NAMES: frozenset[str] = frozenset({
     "irx6", "insm2", "phox2a", "pou4f3", "tbx2/3b", "irx2", "uncx",
     "tbx2/3c", "sox2", "soxb1-2",
 })
+
+# Curated symbol -> v6 map for RNAi/phenotype genes that King's tables
+# name symbolically (mmc5 stores 'GCM2', 'post2b', 'fer3l-1', 'pax2b'
+# with no dd#### token). Every mapping is anchored to the paper's own
+# figure labels (the PHENOTYPE_CONFIRMED_V6 curation above) or mmc4's
+# GenBank descriptions — NOT guessed:
+#   GCM2      Fig S4G KCP+ loss (curated set: dd7752)
+#   post2b    Fig S4B dd_829+ loss; mmc5 'post2b (dd9061)' (curated: dd9061)
+#   fer3l-1   Fig S4E SSPO+ loss (curated: dd8096); mmc4 'fer3l-1 protein'
+#   pax2b     mmc5 symbolic row (no phenotype tie; mmc4 description)
+SYMBOL_TO_V6: dict[str, str] = {
+    "gcm2": "dd_Smed_v6_7752_0_1",
+    "post2b": "dd_Smed_v6_9061_0_1",
+    "post-2b": "dd_Smed_v6_9061_0_1",
+    "fer3l-1": "dd_Smed_v6_8096_0_1",
+    "tbx2/3b": "dd_Smed_v6_17143_0_1",   # 2026-09-13 remap, see header note
+    "ascl-2": "dd_Smed_v6_14753_0_1",
+}
 
 
 def is_phenotype_confirmed(gene_id: str | None) -> bool:

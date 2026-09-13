@@ -149,7 +149,12 @@ def main() -> int:
     tf_col = _col(ananse, "TF (gene ID)", "TF gene ID", "TF_gene_id", "TF")
     tgt_col = _col(ananse, "Target gene (gene ID)", "Target gene", "Target_gene")
     fate_col = _col(ananse, "Fate", "fate", "cell_type")
-    tf_sym_col = _col(ananse, "TF (gene symbol)", "TF_symbol")
+    # 2026-09-13 fix: the actual MOESM22 header is "TF(gene symbol)" —
+    # NO space after "TF" (verified against the file). The previous
+    # "TF (gene symbol)" lookup never matched, so `regulating_tfs`
+    # silently emitted raw h1SMcG IDs instead of gene symbols,
+    # contradicting the script's own schema.
+    tf_sym_col = _col(ananse, "TF(gene symbol)", "TF (gene symbol)", "TF_symbol")
     tgt_sym_col = _col(ananse, "Target (gene symbol)", "Target_symbol")
 
     if tf_col is None or tgt_col is None:

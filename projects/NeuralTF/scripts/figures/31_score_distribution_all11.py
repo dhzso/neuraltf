@@ -72,12 +72,6 @@ def build():
     fig.subplots_adjust(left=0.22, right=0.96, top=0.90, bottom=0.12)
     save(fig, "31_score_distribution_all11")
 
-    # Maintain backwards compatibility with legacy 31_score_distribution_all9.png
-    src_img = FIG / "31_score_distribution_all11.png"
-    dst_img = FIG / "31_score_distribution_all9.png"
-    if src_img.exists():
-        shutil.copy2(src_img, dst_img)
-
 
 if __name__ == "__main__":
     build()

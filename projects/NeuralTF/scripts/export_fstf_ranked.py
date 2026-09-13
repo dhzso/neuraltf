@@ -1,20 +1,31 @@
 #!/usr/bin/env python
 """Export ranked TF (Transcription Factor) CSVs.
 
-Three scope levels from King 2024 mmc4 TF catalog:
+Three scope levels from the King 2024 mmc4 TF catalog (unified
+TF?-filtered view; see load_mmc4_tf_catalog):
 
-  19 TFs — neural-filtered: TFs with King neural signal or RNAi evidence
-  43 TFs — candidates: TFs that passed expression filter (p ≤ 0.05)
-  74 TFs — catalog: all TFs from King mmc4 TF sheet
+  neural view  — FSTF-catalog TFs with King neural signal or RNAi
+                 evidence that are candidates in rank.csv
+  all view     — FSTF-catalog TFs that are candidates in rank.csv
+  catalog view — the full FSTF catalog: candidates plus the
+                 non-candidate FSTFs synthesized with NaN scores
+
+2026-09-13 honesty fix: the filenames carry legacy counts (top19/top43/
+top74) that no longer match the emitted row counts (the scope logic
+itself is unchanged; only the docstrings/filenames lied). The files now
+carry `scope`-named exports with the legacy names kept as stable
+aliases, and the row counts are computed and printed at export time.
+The docstring's old claim of a "p <= 0.05 expression filter" described
+a filter that never existed in the code and has been removed.
 
 All outputs sorted by composite score (descending), with rich columns:
   gene_id_v6, gene_id_v4, gene_name, track, rank, composite_score,
   proof_status, interpro_domains, human_ortholog, rnai_phenotype_notes
 
 Outputs:
-  projects/NeuralTF/results/tf_ranked_neural_top19.csv
-  projects/NeuralTF/results/tf_ranked_all_top43.csv
-  projects/NeuralTF/results/tf_ranked_catalog_top74.csv
+  projects/NeuralTF/results/tf_ranked_neural.csv      (+legacy alias top19)
+  projects/NeuralTF/results/tf_ranked_all.csv         (+legacy alias top43)
+  projects/NeuralTF/results/tf_ranked_catalog.csv     (+legacy alias top74)
 
 Usage:
     python projects/NeuralTF/scripts/export_fstf_ranked.py
@@ -46,20 +57,14 @@ def _resolve(king_dir: Path, name: str) -> Path:
 
 
 def read_mmc4(path: Path) -> pd.DataFrame:
-    raw = pd.read_excel(path, header=None)
-    header_row = None
-    for i in range(min(len(raw), 6)):
-        vals = [str(x) for x in raw.iloc[i].tolist()[:8]]
-        if "Gene ID" in vals and "Human Best Blast Hit" in vals:
-            header_row = i
-            break
-    if header_row is None:
+    """UNIFIED King mmc4 TF catalog (2026-09-13 fix; see
+    ``bioforge.projects.neuraltf.prioritize.load_mmc4_tf_catalog``).
+    All-sheet filtered to TF?=='TF' — identical view for every consumer."""
+    try:
+        from bioforge.projects.neuraltf.prioritize import load_mmc4_tf_catalog
+        return load_mmc4_tf_catalog(path)
+    except Exception:
         return pd.DataFrame()
-    df = pd.DataFrame(raw.iloc[header_row + 1:].values,
-                      columns=raw.iloc[header_row].tolist())
-    df = df.dropna(subset=["Gene ID"]).reset_index(drop=True)
-    df["Gene ID"] = df["Gene ID"].astype(str).str.strip()
-    return df
 
 
 def read_mmc5(path: Path) -> pd.DataFrame:
@@ -193,52 +198,60 @@ def main() -> int:
 
     out_cols = [
         "gene_id_v6", "gene_id_v4", "gene_name", "track", "rank",
-        "composite_score", "proof_status", "interpro_domains",
-        "human_ortholog", "rnai_phenotype_notes",
+        "composite_score", "proof_status", "phenotype_confirmed",
+        "interpro_domains", "human_ortholog", "rnai_phenotype_notes",
     ]
 
-    # --- Scope 1: 19 TFs in neural-filtered set --------------------------
+    # 2026-09-13: stamp phenotype_confirmed at export time (the
+    # ground-truth annotate pass previously ran only before this script,
+    # so a --force re-run silently stripped the flag from these tables).
+    from bioforge.evidence.groundtruth import PHENOTYPE_CONFIRMED_V6
+    cand["phenotype_confirmed"] = cand["gene_id"].isin(PHENOTYPE_CONFIRMED_V6)
+
+    # --- Scope 1: neural-filtered FSTFs ------------------------------------
     neural_mask = cand["neural_enriched"].notna() | (cand["rnai"] > 0)
-    fstf_19 = cand[neural_mask & cand["gene_id"].isin(fstf_ids_74)].copy()
-    fstf_19["rank"] = range(1, len(fstf_19) + 1)
-    fstf_19[out_cols].to_csv(OUT / "tf_ranked_neural_top19.csv", index=False)
-    print(f"  wrote tf_ranked_neural_top19.csv ({len(fstf_19)} rows)")
+    fstf_neural = cand[neural_mask & cand["gene_id"].isin(fstf_ids_74)].copy()
+    fstf_neural["rank"] = range(1, len(fstf_neural) + 1)
+    fstf_neural[out_cols].to_csv(OUT / "tf_ranked_neural.csv", index=False)
+    fstf_neural[out_cols].to_csv(OUT / "tf_ranked_neural_top19.csv", index=False)  # legacy alias
+    print(f"  wrote tf_ranked_neural.csv (+legacy alias top19) ({len(fstf_neural)} rows)")
 
-    # --- Scope 2: 43 TFs in all candidates -------------------------------
-    fstf_43 = cand[cand["gene_id"].isin(fstf_ids_74)].copy()
-    fstf_43["rank"] = range(1, len(fstf_43) + 1)
-    fstf_43[out_cols].to_csv(OUT / "tf_ranked_all_top43.csv", index=False)
-    print(f"  wrote tf_ranked_all_top43.csv ({len(fstf_43)} rows)")
+    # --- Scope 2: all candidate FSTFs --------------------------------------
+    fstf_all = cand[cand["gene_id"].isin(fstf_ids_74)].copy()
+    fstf_all["rank"] = range(1, len(fstf_all) + 1)
+    fstf_all[out_cols].to_csv(OUT / "tf_ranked_all.csv", index=False)
+    fstf_all[out_cols].to_csv(OUT / "tf_ranked_all_top43.csv", index=False)  # legacy alias
+    print(f"  wrote tf_ranked_all.csv (+legacy alias top43) ({len(fstf_all)} rows)")
 
-    # --- Scope 3: 74 TFs from catalog (full list) ------------------------
-    # For catalog FSTFs not in 249 candidates, create rows with available data
-    fstf_74_in_cand = cand[cand["gene_id"].isin(fstf_ids_74)].copy()
-    fstf_74_in_cand["rank"] = range(1, len(fstf_74_in_cand) + 1)
+    # --- Scope 3: full FSTF catalog (candidates + synthesized rows) ---------
+    fstf_cat_in_cand = cand[cand["gene_id"].isin(fstf_ids_74)].copy()
+    fstf_cat_in_cand["rank"] = range(1, len(fstf_cat_in_cand) + 1)
 
     # Catalog FSTFs not in candidates (no expression data)
-    fstf_74_missing_ids = fstf_ids_74 - set(fstf_74_in_cand["gene_id"])
-    if fstf_74_missing_ids:
+    fstf_missing_ids = fstf_ids_74 - set(fstf_cat_in_cand["gene_id"])
+    if fstf_missing_ids:
         missing_rows = []
-        for gid in sorted(fstf_74_missing_ids):
+        for gid in sorted(fstf_missing_ids):
             missing_rows.append({
                 "gene_id_v6": gid,
                 "gene_id_v4": "",
                 "gene_name": gid.replace("dd_Smed_v6_", "dd").replace("_0_1", "").replace("_1_1", ""),
                 "track": "-",
-                "rank": len(fstf_74_in_cand) + len(missing_rows) + 1,
+                "rank": len(fstf_cat_in_cand) + len(missing_rows) + 1,
                 "composite_score": float("nan"),
                 "proof_status": "known_fstf",
                 "interpro_domains": "",
                 "human_ortholog": "",
                 "rnai_phenotype_notes": "",
             })
-        fstf_74_missing = pd.DataFrame(missing_rows)
-        fstf_74 = pd.concat([fstf_74_in_cand[out_cols], fstf_74_missing], ignore_index=True)
+        fstf_missing = pd.DataFrame(missing_rows)
+        fstf_cat = pd.concat([fstf_cat_in_cand[out_cols], fstf_missing], ignore_index=True)
     else:
-        fstf_74 = fstf_74_in_cand[out_cols]
+        fstf_cat = fstf_cat_in_cand[out_cols]
 
-    fstf_74.to_csv(OUT / "tf_ranked_catalog_top74.csv", index=False)
-    print(f"  wrote tf_ranked_catalog_top74.csv ({len(fstf_74)} rows)")
+    fstf_cat.to_csv(OUT / "tf_ranked_catalog.csv", index=False)
+    fstf_cat.to_csv(OUT / "tf_ranked_catalog_top74.csv", index=False)  # legacy alias
+    print(f"  wrote tf_ranked_catalog.csv (+legacy alias top74) ({len(fstf_cat)} rows)")
 
     print(f"\n  Done.")
     return 0

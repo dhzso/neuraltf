@@ -31,6 +31,40 @@ A reproducible pipeline for **planarian neural-fate-specific transcription facto
 > figure is audited for non-emptiness
 > (`projects/NeuralTF/scripts/audit_figures.py`).
 >
+> **2026-09-13 senior-review remediation**: (1) `build_king_atlas.py`
+> was rebuilt — value sheets are now keyed by subcluster NAME (the old
+> positional join was off by one row, attaching a *different gene's*
+> p-value/log2FC to ~836/1,046 atlas rows), X1's lead-TF column is
+> captured (X1 has no Fincher-cluster column), and the paper-derived
+> symbol map resolves all 20 phenotype-confirmed genes into the atlas.
+> (2) The **Tbx2/3b ground-truth entry was remapped to
+> dd_Smed_v6_17143_0_1** — the paper's own RNAi table (mmc5) lists
+> dd17143 with the GLIPR1 (dd210) marker, i.e. the actual Tbx2/3b
+> phenotype experiment; the previous dd6470 assignment came from a
+> PlanMine alias whose own descriptions are aminopeptidase-related.
+> (3) All three prioritization methods now share ONE King catalog view
+> (`load_mmc4_tf_catalog`: All-sheet TF?-filtered, 421 TFs incl.
+> eya/meis) — the bonus mask and Track-B gate are now genuinely
+> identical across methods. (4) Overlap/consensus p-values are
+> stratification-corrected for the dual-track 5+5 design (the legacy
+> uniform-subset nulls overstated significance by ~25–38 orders of
+> magnitude; both are reported). (5) A **king_free** evaluation arm
+> (all King-2024 streams excluded) was added alongside honest/strict,
+> and the ortholog benchmark now reports the honest-score AUC with a
+> 95% CI. (6) Figure 26's permutation null was rebuilt as a
+> within-stream shuffle (the previous row-shuffle null was vacuous —
+> the null multiset equaled the foreground distribution by
+> (6) Figure 26's permutation null was rebuilt as a within-stream shuffle
+> (the previous row-shuffle null was vacuous — the null multiset equaled
+> the foreground distribution by construction); figures 06/07/24/27/28/32
+> fixed for stale cohort sizes, label conflation, metric mislabels, and
+> circular contrasts; the figure catalog now lists all 26 figures
+> including fig 37. Full re-run downstream: honest ROC-AUC 0.866
+> (screened) / 0.944 (phenotype_confirmed), strict 0.821 / 0.893, king-free
+> 0.820 / 0.893; the three methods now emit an identical top-10; the
+> flagship permutation artifact is a valid n=1000 run (74/143 BH-FDR
+> significant) replacing a degenerate n=10 file.
+
 > **2026-09 evidence model v2**: candidate testing status is now reported as
 > **Tested / Not tested / Known FSTF** (replacing the misleading "Track A/B" /
 > "novel" framing; † = status read from the source paper's own tables), and the
@@ -151,34 +185,35 @@ $$\text{Integrated Score} = \sum_{i \in \text{Present}} w_i \cdot s_i \Bigg/ \su
 
 ---
 
-## Top Prioritized Candidates (Production Run — Full Atlases, 11,695 Candidates)
+## Top Prioritized Candidates (Production Run — Full Atlases, 11,696 Candidates)
 
-Consensus across all three unified methods (fixed / centered Dirichlet k=40 / uniform Dirichlet α=1; shared universe, bonus mask, and gates) under the 11-stream model. 9 genes appear in the top-10 of **all three** methods — note the three methods share most streams by design, so this consensus measures weight-robustness, not method independence (see `overlap_significance.json` caveat).
+Consensus across all three unified methods (fixed / centered Dirichlet k=40 / uniform Dirichlet α=1; shared universe, bonus mask, and gates) under the 11-stream model. After the 2026-09-13 fixes all three methods now emit **identical** top-10 shortlists (10/10 consensus) — by design the methods share most streams, so this consensus measures weight-robustness, not method independence (see `overlap_significance.json` caveat; the stratification-corrected null is reported alongside the legacy upper bound).
 
 | Testing status | Consensus candidates | Evidence |
 |:---:|:---|:---|
 | **Tested #1** | `dd_Smed_v6_38342_0_1` (**dd38342** / POU3F4-class) | RNAi-screened (†); consistent top-1 across methods |
 | **Tested #2** | `dd_Smed_v6_34144_0_1` (**dd34144** / TCF7-LEF) | RNAi-screened (†) |
-| **Tested #3** | `dd_Smed_v6_29211_0_1` (**dd29211** / PRRX2) | RNAi-screened (†); **FISH phenotype-confirmed** (dd8060+ neuron loss) |
-| **Tested #4** | `dd_Smed_v6_22163_0_1` (**dd22163** / UNCX) | RNAi-screened (†); **FISH phenotype-confirmed** (sert+ neuron loss) |
-| **Tested #5** | `dd_Smed_v6_12722_0_1` (**dd12722** / BHLHE23) | RNAi-screened (†) |
-| **Not tested #1** | `dd_Smed_v6_5882_0_1` (**dd5882**) | Homeodomain; consensus top not-tested |
-| **Not tested #2** | `dd_Smed_v6_14362_0_1` (**dd14362** / PAX5) | Paired-domain; consensus |
-| **Not tested #3** | `dd_Smed_v6_12170_0_1` (**dd12170** / FOXJ2) | Forkhead; consensus |
-| **Not tested #4** | `dd_Smed_v6_16466_0_1` (**dd16466** / FOXG1) | Forkhead; oral/neural forebrain ortholog; 2/3 methods |
-| **Not tested #5** | `dd_Smed_v6_2442_0_1` (**dd2442** / HOXC6) | Homeobox; consensus |
+| **Tested #3** | `dd_Smed_v6_12722_0_1` (**dd12722** / BHLHE23) | RNAi-screened (†) |
+| **Tested #4** | `dd_Smed_v6_29211_0_1` (**dd29211** / PHOX2A) | RNAi-screened (†); **FISH phenotype-confirmed** (dd8060+ neuron loss) |
+| **Tested #5** | `dd_Smed_v6_22163_0_1` (**dd22163** / UNCX) | RNAi-screened (†); **FISH phenotype-confirmed** (sert+ neuron loss) |
+| **Not tested #1** | `dd_Smed_v6_33456_0_1` (**dd33456**) | Homeodomain; consensus top not-tested |
+| **Not tested #2** | `dd_Smed_v6_16466_0_1` (**dd16466** / FOXG1) | Forkhead; oral/neural forebrain ortholog |
+| **Not tested #3** | `dd_Smed_v6_18505_0_1` (**dd18505** / MSH1) | Homeodomain (msh1) |
+| **Not tested #4** | `dd_Smed_v6_2442_0_1` (**dd2442** / HOXC6) | Homeobox |
+| **Not tested #5** | `dd_Smed_v6_13704_0_1` (**dd13704** / PTF-4) | bHLH |
 
 Per-method shortlists: `dirichlet_centered_top10.csv`, `dirichlet_uniform_top10.csv`, `top10_neural_tfs_prioritized.csv` (all carry `phenotype_confirmed`).
 
-Ground-truth recovery under the 11-stream model (both labels, circularity-controlled — label-encoding streams excluded): **screened** label (67 genes): honest ROC-AUC **0.846**, strict **0.807**, vs 0.976 circular; **phenotype_confirmed** label (19 in-universe genes): honest ROC-AUC **0.875**, strict **0.833**. An independent cross-species ortholog benchmark (neural-fate vs non-neural human orthologs) gives ROC-AUC **0.712** (provisional, coverage-limited).
+Ground-truth recovery under the 11-stream model (both labels, circularity-controlled — label-encoding streams excluded): **screened** label (68 genes): honest ROC-AUC **0.866**, strict **0.821**, king-free **0.820**, vs 0.978 circular; **phenotype_confirmed** label (19 in-universe genes): honest ROC-AUC **0.944**, strict **0.893**, king-free **0.893**. The **king_free** arm (2026-09-13) excludes every stream drawing on King 2024 — the study that also defines the labels — quantifying how much discrimination the independent atlases (Fincher, Plass, Cui, Perez-influence, Fincher-brain) provide alone; residual caveat: expression/specificity still carry King-mmc7 floors fused at pipeline time, so even king_free is an upper bound. An independent cross-species ortholog benchmark (neural-fate vs non-neural human orthologs, honest label-free score) gives ROC-AUC **0.634** (95% CI 0.52–0.74, one-sided Mann-Whitney p=0.011; the pre-fix 0.712 was computed on the full circular score and measured label re-encoding). Provisional, coverage-limited (~101 genes).
 
 ### Known limitations (honest reading list)
 
-1. **"Tested" = screened.** 48 of 67 screened TFs have no published phenotype; only 20 genes are FISH phenotype-confirmed (`bioforge.evidence.groundtruth`). All "validated" claims must use the `phenotype_confirmed` flag.
+1. **"Tested" = screened.** 48 of 68 screened TFs have no published phenotype; only 20 genes are FISH phenotype-confirmed (`bioforge.evidence.groundtruth`). All "validated" claims must use the `phenotype_confirmed` flag.
 2. **Recall is imperfect.** `dd_Smed_v6_48508_0_1` has a confirmed neuron-loss phenotype but never entered the candidate universe (no seeded evidence) — the funnel misses it.
-3. **Cross-method consensus is not independence.** The three methods share 9 of 11 streams, the bonus mask, and the King floors; the hypergeometric overlap p-values are an upper bound on significance.
-4. **`fincher_brain` presence, not value, carries most of its signal.** Its unconditional per-stream AUC (~0.41 against the screened label) is a missingness artifact: among genes where the stream is present, the value-only AUC is ~0.66. The per-stream table in `precision_recall.json` now reports both variants.5. **King-derived expression still enters the honest score.** The honest/strict AUCs exclude label-encoding streams but keep King mmc7 expression floors; they are an upper bound on true label-free discrimination.
-6. **Ortholog benchmark is provisional** (~101 classified genes from PlanMine BLAST descriptions; a full Compara/DIOPT table is needed for a definitive benchmark).
+3. **Cross-method consensus is not independence.** The three methods share 9 of 11 streams, the bonus mask, and the King floors; the overlap p-values are an upper bound on significance, and both the legacy uniform-subset null and the stratification-corrected (dual-track 5+5) null are reported in `overlap_significance.json`.
+4. **`fincher_brain` presence, not value, carries most of its signal.** Its unconditional per-stream AUC (~0.41 against the screened label) is a missingness artifact: among genes where the stream is present, the value-only AUC is ~0.66. The per-stream table in `precision_recall.json` now reports both variants.
+5. **King-derived expression still enters the honest score.** The honest/strict AUCs exclude label-encoding streams but keep King mmc7 expression floors; they are an upper bound on true label-free discrimination. The king_free arm removes the pure King streams but cannot un-fuse the King floors — see `precision_recall.json`.
+6. **Ortholog benchmark is provisional** (~101 classified genes from PlanMine BLAST descriptions; a full Compara/DIOPT table is needed for a definitive benchmark). The honest-score AUC (0.634) carries a wide CI (0.52–0.74) at this coverage.
 
 ---
 
@@ -192,8 +227,8 @@ To test sensitivity against arbitrary weighting assumptions, we employ Monte Car
    - `python projects/NeuralTF/scripts/dirichlet_centered.py`
 
 2. **Uniform Dirichlet ($\alpha_i = 1$)**:
-   $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_9)$$
-   Samples uniformly across the entire 9-simplex to discover robust data-driven signals without prior preference.
+   $$\mathbf{w}^{(m)} \sim \text{Dirichlet}(\mathbf{1}_{11})$$
+   Samples uniformly across the entire 11-simplex to discover robust data-driven signals without prior preference.
    - `python projects/NeuralTF/scripts/dirichlet_uniform.py`
 
 ---

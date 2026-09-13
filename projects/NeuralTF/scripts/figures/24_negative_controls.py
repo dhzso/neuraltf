@@ -16,8 +16,11 @@ def build():
     fig, ax = plt.subplots(figsize=(5.4, 4.0), dpi=500)
 
     groups = ["neural_tfs", "non_tfs", "random"]
+    # 2026-09-13: "RNAi+" implied phenotype-positivity — exactly the
+    # tested≠validated conflation the project's own audit corrected. The
+    # group is the King mmc5 screening list; label reflects that.
     labels = [
-        "Neural TFs\n(RNAi+, n=67)",
+        "Neural TFs\n(King screen list, n=67)",
         "Matched Non-TFs\n(n=100)",
         "Matched Non-neural TFs\n(n=100)",
     ]
@@ -100,11 +103,20 @@ def build():
         ax.text(2.0, y_bar2 + h + 0.015, f"${p2_str}${d2_str}", ha="center", va="bottom", fontsize=6.2, color="#222222")
 
     # Footnote note explaining test, effect size, circularity control & matching
-    u1_str = f"{int(round(u1)):,}" if u1 is not None else "5,577"
-    u2_str = f"{int(round(u2)):,}" if u2 is not None else "5,236"
+    # 2026-09-13: the U fallbacks previously printed hardcoded values
+    # ("5,577"/"5,236") when JSON keys changed — invented statistics. A
+    # missing stat now degrades to an explicit note, never a fake number.
+    if u1 is None or u2 is None:
+        u_note = ("U statistics unavailable in the stats JSON — "
+                  "regenerate negative_controls.py output")
+        u1_str = u2_str = "n/a"
+    else:
+        u1_str = f"{int(round(u1)):,}"
+        u2_str = f"{int(round(u2)):,}"
+        u_note = f"$U_1 = {u1_str}, U_2 = {u2_str}$"
     ax.text(0.5, -0.16,
-            f"Two-sided Mann–Whitney U test ($U_1 = {u1_str}, U_2 = {u2_str}$) and Cohen's d effect size.\n"
-            "Label-free score excludes RNAi, neural enrichment & neural lineage to eliminate circularity.\n"
+            f"Two-sided Mann–Whitney U test ({u_note}) and Cohen's d effect size.\n"
+            "Label-free score excludes RNAi, neural enrichment, neural specificity & neural lineage to eliminate circularity.\n"
             "Control cohorts matched on number of available evidence streams.",
             transform=ax.transAxes, ha="center", va="top", fontsize=5.8, color="#555555", style="italic")
 

@@ -30,15 +30,32 @@ def build():
         deltas = [data[k]["cliffs_delta"] for k in comparisons]
         gs = [data[k].get("hedges_g", data[k].get("cohens_d", 0.0)) for k in comparisons]
         pvals = [data[k].get("p_value", None) for k in comparisons]
+        # 2026-09-13: the honesty flag (LABELS[k][1], defined but never
+        # used before) now drives both bar transparency and an explicit
+        # "diagnostic" annotation. The top10_vs_rest / all-streams rows
+        # are tautological (their own JSON note says "DIAGNOSTIC ONLY —
+        # carries zero evidential value"); rendering them like the honest
+        # rows misrepresented circular contrasts as evidence.
+        honest_flags = [not LABELS[k][1] for k in comparisons]
 
         width = 0.32
-        bars_d = ax.barh(y + width/2, deltas, height=width, color=C_A,
-                         edgecolor="none", label="Cliff's δ")
-        bars_g = ax.barh(y - width/2, gs, height=width, color=C_B,
-                         edgecolor="none", label="Hedges' g")
+        alphas_d = [1.0 if h else 0.35 for h in honest_flags]
+        for i, (d, al) in enumerate(zip(deltas, alphas_d)):
+            ax.barh(y[i] + width/2, d, height=width, color=C_A, alpha=al,
+                    edgecolor="none")
+        alphas_g = [1.0 if h else 0.35 for h in honest_flags]
+        for i, (g, al) in enumerate(zip(gs, alphas_g)):
+            ax.barh(y[i] - width/2, g, height=width, color=C_B, alpha=al,
+                    edgecolor="none")
+        from matplotlib.patches import Patch
+        handles = [Patch(facecolor=C_A, label="Cliff's δ"),
+                   Patch(facecolor=C_B, label="Hedges' g"),
+                   Patch(facecolor="#AAAAAA", alpha=0.35,
+                         label="Diagnostic (circular — not evidence)")]
 
-        for i, (d, g, p) in enumerate(zip(deltas, gs, pvals)):
-            ax.text(d + 0.03, y[i] + width/2, f"δ = {d:.2f}", va="center", ha="left",
+        for i, (d, g, p, h) in enumerate(zip(deltas, gs, pvals, honest_flags)):
+            suffix = "" if h else "  (diagnostic)"
+            ax.text(d + 0.03, y[i] + width/2, f"δ = {d:.2f}{suffix}", va="center", ha="left",
                     fontsize=6.0, color=C_A)
             if p is not None:
                 if p < 1e-15:
@@ -53,13 +70,17 @@ def build():
                     fontsize=6.0, color=C_B)
 
         ax.set_yticks(y)
-        ax.set_yticklabels([LABELS[k][0] for k in comparisons], fontsize=6.8)
+        ytick_labels = []
+        for k in comparisons:
+            lbl, circular = LABELS[k]
+            ytick_labels.append(lbl + (" †circ." if circular else ""))
+        ax.set_yticklabels(ytick_labels, fontsize=6.8)
         ax.axvline(x=0, color="#555555", lw=0.6)
         ax.axvline(x=0.5, color="#999999", lw=0.6, linestyle=":", label="Reference (0.5)")
         ax.set_xlabel("Effect size (Cliff's δ and Hedges' g)", fontsize=7.0)
-        ax.set_title("Effect Sizes and Significance Across Candidate Cohorts",
+        ax.set_title("Effect Sizes Across Candidate Cohorts (label-free contrasts emphasized)",
                      fontsize=8.0, pad=6)
-        ax.legend(fontsize=6.2, loc="upper right", frameon=False)
+        ax.legend(handles=handles, fontsize=6.2, loc="upper right", frameon=False)
         ax.set_xlim(-0.05, max(max(deltas), max(gs)) * 1.38)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)

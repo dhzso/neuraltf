@@ -54,6 +54,7 @@ All selector logic is pure and unit-testable (no I/O).
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -67,6 +68,49 @@ from bioforge.projects.neuraltf.planmine import (
 BONUS_GO_NEURAL = 0.03
 BONUS_GO_TF = 0.02
 BONUS_HUMAN_ORTHOLOG = 0.02
+
+
+def load_mmc4_tf_catalog(path: str | Path) -> pd.DataFrame:
+    """Load the UNIFIED King mmc4 TF catalog (single source of truth).
+
+    2026-09-13 audit fix: the three prioritization methods previously
+    loaded different mmc4 views (the fixed method read the default
+    'All' sheet — 716 rows incl. 295 NoBB non-TF genes — while both
+    Dirichlet methods read the 'TF' sheet — 418 rows, missing eya/meis
+    from 'TF (additional)'). This made the shared-bonus/shared-gate
+    claim empirically false: 26 genes received the +0.02 ortholog bonus
+    only in the fixed method, and dd11372/dd15951 (eya-1/meis, TF-flagged
+    only in the unified view) were structurally excluded from Track B in
+    the Dirichlet methods.
+
+    The unified view: 'All' sheet filtered to ``TF? == 'TF'`` — 421 genes
+    (418 TF sheet + 3 TF-additional), carrying Human Best Blast Hit for
+    all TFs, excluding the 295 NoBB (no TF homology) genes. All four
+    consumers (fixed/centered/uniform/export_fstf) MUST use this loader.
+    """
+    p = Path(path)
+    raw = pd.read_excel(p, sheet_name="All", header=None)
+    header_row = None
+    for i in range(min(len(raw), 6)):
+        vals = [str(x) for x in raw.iloc[i].tolist()[:8]]
+        if "Gene ID" in vals and "Human Best Blast Hit" in vals:
+            header_row = i
+            break
+    if header_row is None:
+        raise ValueError(f"mmc4 header not found in {p}")
+    df = pd.DataFrame(raw.iloc[header_row + 1:].values,
+                      columns=raw.iloc[header_row].tolist())
+    df = df.dropna(subset=["Gene ID"]).reset_index(drop=True)
+    df["Gene ID"] = df["Gene ID"].astype(str).str.strip()
+    if "TF?" in df.columns:
+        df = df[df["TF?"].astype(str).str.strip().eq("TF")].reset_index(drop=True)
+    # Column-name normalization: the 'All' sheet calls the prior-FSTF flag
+    # "Prior FSTF?" while the 'TF' sheet calls it "FSTF?". Consumers use
+    # the TF-sheet name, so normalize (77 Yes = 74 TF-sheet + eya/meis/+1
+    # from TF (additional) — verified against both sheets).
+    if "Prior FSTF?" in df.columns and "FSTF?" not in df.columns:
+        df = df.rename(columns={"Prior FSTF?": "FSTF?"})
+    return df
 
 # Composite scores are NOT clipped at 1.0. The former MAX_COMPOSITE=1.0
 # clip saturated the top of all three rankings (6+ genes at exactly 1.0,

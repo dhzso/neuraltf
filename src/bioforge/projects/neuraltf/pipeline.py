@@ -827,7 +827,25 @@ class NeuralTFPipeline:
 
         king = pd.read_csv(self.king_atlas_path, sep="\t")
 
-        neural_mask = king["subcluster"].astype(str).str.startswith("neural")
+        # Neural-fate mask (2026-09-13 fix — the old rule was
+        # `subcluster.startswith('neural')`, which was wrong in both
+        # directions for X1):
+        #   * G0: subcluster names neural11_*, neural1_* ... ARE neural
+        #     (verified against the sheet's own cell-type column).
+        #   * X1 main: the neural subclusters are `0_*` and carry
+        #     cell_type 'Neural'; the `neural2_*` subclusters are
+        #     'sexual accessory' / 'eye neoblasts' — NOT part of the
+        #     paper's Neural fate annotation.
+        #   * X1 Major Tissue: the neural row is literally named 'Neural'
+        #     (capital N) with no cell_type column.
+        sub_lower = king["subcluster"].astype(str).str.lower().str.strip()
+        ct_lower = king["cell_type"].astype(str).str.lower().str.strip()
+        comp = king["compartment"].astype(str)
+        neural_mask = (
+            ((comp == "G0 Progenitor") & sub_lower.str.startswith("neural"))
+            | ((comp == "X1") & (ct_lower == "neural"))
+            | ((comp == "X1 Major Tissue") & (sub_lower == "neural"))
+        )
         neural_df = king[neural_mask & (king["log2fc"] >= _NEURAL_FC_THRESHOLD)]
 
         # Expression normalization uses the same 5.0 divisor as the atlas DE
@@ -1143,7 +1161,16 @@ class NeuralTFPipeline:
         carries; matching a bare dd#### to any isoform of that number
         is the documented King-table limitation, now confined to
         genuinely short-form rows).
+
+        2026-09-13 symbolic-row fix: rows that carry ONLY a gene symbol
+        ('GCM2', 'post2b', 'fer3l-1', 'pax2b') previously never matched
+        any v6 candidate — the target set held dead tokens. They are now
+        resolved through the curated SYMBOL_TO_V6 map (anchored to the
+        paper's own figure labels / mmc4 descriptions; see
+        bioforge.evidence.groundtruth) so the screened label covers the
+        phenotype-confirmed genes mmc5 encodes symbolically.
         """
+        from bioforge.evidence.groundtruth import SYMBOL_TO_V6
         targets: set[str] = set()
         for _, row in self.rnai_table.iterrows():
             val = str(row.iloc[0]).strip()
@@ -1155,6 +1182,10 @@ class NeuralTFPipeline:
             clean = val.split(" (")[0].strip()
             if clean and not clean.startswith("All"):
                 targets.add(clean)
+                # resolve symbolic rows to their curated v6 IDs
+                resolved = SYMBOL_TO_V6.get(clean.lower())
+                if resolved:
+                    targets.add(resolved)
             # structured form: keep the isoform-specific full key ONLY
             full = self._structured_isoform_key(val)
             if full:

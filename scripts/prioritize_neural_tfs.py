@@ -96,20 +96,17 @@ def load_supported(args: argparse.Namespace) -> dict:
 
 
 def read_mmc4(path: Path) -> pd.DataFrame:
-    raw = pd.read_excel(path, header=None)
-    header_row = None
-    for i in range(min(len(raw), 6)):
-        vals = [str(x) for x in raw.iloc[i].tolist()[:8]]
-        if "Gene ID" in vals and "Human Best Blast Hit" in vals:
-            header_row = i
-            break
-    if header_row is None:
-        raise ValueError(f"mmc4 header not found in {path}")
-    df = pd.DataFrame(raw.iloc[header_row + 1:].values,
-                      columns=raw.iloc[header_row].tolist())
-    df = df.dropna(subset=["Gene ID"]).reset_index(drop=True)
-    df["Gene ID"] = df["Gene ID"].astype(str).str.strip()
-    return df
+    """Load the UNIFIED King mmc4 TF catalog (2026-09-13 audit fix).
+
+    Previously this reader returned the full 'All' sheet (716 rows incl.
+    295 NoBB non-TF genes) while the Dirichlet methods read the 418-row
+    'TF' sheet — a mismatch that broke the shared-bonus/shared-gate
+    contract (26 genes got the +0.02 ortholog bonus only here; two
+    TF-additional genes were Track-B-gated only here). Now all methods
+    share ``load_mmc4_tf_catalog``: 'All' filtered to TF?=='TF' (421
+    genes incl. eya/meis, excluding NoBB)."""
+    from bioforge.projects.neuraltf.prioritize import load_mmc4_tf_catalog
+    return load_mmc4_tf_catalog(path)
 
 
 def read_mmc5(path: Path) -> pd.DataFrame:

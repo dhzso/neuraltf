@@ -79,6 +79,22 @@ CIRCULAR_STREAMS = {"rnai", "neural_enriched", "neural_specificity",
 # membership embeds King-neural-G0 hits; AUC 0.9078 alone). Reported as
 # the lower bound on true discrimination.
 CIRCULAR_STREAMS_STRICT = CIRCULAR_STREAMS | {"reproducibility"}
+# 2026-09-13 king_free variant: excludes EVERY stream that draws on King
+# 2024 data (mmc5/6/7). The audit found the honest/strict AUCs still
+# retain King-study evidence — binary King-atlas membership ALONE scores
+# AUC ~0.837 (screened) / ~0.808 (phenotype_confirmed), nearly the full
+# honest 0.846/0.875, because expression/specificity carry King-mmc7
+# floors and correlation is King mmc6. king_free keeps only streams
+# derived from OTHER studies:
+#   expression/specificity still contain King floors (they are max-fused
+#   per stream, so a per-stream exclusion is impossible without a
+#   pipeline re-run; noted as a residual caveat) — the reported king_free
+#   number is therefore still an UPPER bound, but with the pure King
+#   streams (rnai, correlation, neural_enriched, neural_specificity) and
+#   the King-membership reproducibility term removed, it isolates how
+#   much discrimination the non-King studies (Fincher, Plass, Cui,
+#   Perez-influence, Fincher-brain) provide on their own.
+KING_FREE_EXCLUDE = CIRCULAR_STREAMS_STRICT | {"correlation"}
 
 
 def load_candidates():
@@ -279,6 +295,22 @@ def main():
         for lname, y in labels.items()
     }
 
+    # 3b) King-free evaluation (2026-09-13): excludes ALL King-2024
+    #     streams (rnai, correlation, neural_enriched, neural_specificity,
+    #     + reproducibility). This is the study-of-origin control: the
+    #     ground truth is King 2024, and the honest/strict scores still
+    #     contained King evidence. Residual caveat: expression/specificity
+    #     are max-fused with King-mmc7 floors at pipeline time, so
+    #     king_free is still an upper bound on study-independent
+    #     discrimination — but it isolates the non-King-study signal.
+    df["_king_free_score"] = recompute_excluding_circular(df, KING_FREE_EXCLUDE)
+    king_free = {
+        lname: evaluate(df, "_king_free_score",
+                        f"king_free [label={lname}] "
+                        f"(all King-2024 streams excluded)", y)
+        for lname, y in labels.items()
+    }
+
     # 4) Per-stream leakage diagnosis (both labels, present-only variants)
     stream_aucs = per_stream_auc(df, labels)
 
@@ -293,7 +325,9 @@ def main():
             "circular": circular["phenotype_confirmed"],
             "honest": honest["phenotype_confirmed"],
             "honest_strict": strict["phenotype_confirmed"],
+            "king_free": king_free["phenotype_confirmed"],
         },
+        "king_free": king_free["screened"],
         "per_stream_auc": stream_aucs,
         "labels_note": (
             "Two labels are evaluated (2026-09-11): 'screened' = "
@@ -318,7 +352,14 @@ def main():
             "additionally excludes reproducibility (King-neural-G0 "
             "membership embedded via atlas_membership) and is the lower "
             "bound on true discrimination. Only honest/honest_strict are "
-            "publishable."
+            "publishable. The 'king_free' evaluation (2026-09-13) removes "
+            "every stream that draws on King 2024 (rnai, correlation, "
+            "neural_enriched, neural_specificity, reproducibility) — the "
+            "study-of-origin control. Residual caveat: expression/"
+            "specificity are max-fused with King-mmc7 floors at pipeline "
+            "time, so even king_free remains an upper bound; it isolates "
+            "how much discrimination the independent studies (Fincher, "
+            "Plass, Cui, Perez-influence, Fincher-brain) provide alone."
         ),
         "ground_truth_note": MMC5_GROUND_TRUTH_NOTE,
     }

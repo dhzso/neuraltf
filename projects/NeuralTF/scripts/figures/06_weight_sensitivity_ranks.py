@@ -31,6 +31,11 @@ def build():
     candidates = draws["gene_id"].unique()
     base = rank_all.set_index("gene_id")["integrated_score"]
     baseline_ranks = base.rank(ascending=False).to_dict()
+    # 2026-09-13: computed cohort sizes (the labels previously carried a
+    # stale hardcoded n=48 from an older challenger cohort — the CSV now
+    # holds 75 challengers + 10 baseline entrants = 85 rows).
+    n_challengers = int(len(sens) - sens["baseline_track"].notna().sum()
+                         if "baseline_track" in sens.columns else len(sens) - 10)
 
     fig, ax = plt.subplots(figsize=(W_15COL, 6.2))
     y_labels = []
@@ -70,9 +75,9 @@ def build():
     
     from matplotlib.lines import Line2D
     leg_handles = [
-        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=5.5, label="Tested (RNAi+)\u2020"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=5.5, label="RNAi-screened (King 2024)\u2020"),
         Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=5.5, label="Not tested"),
-        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=5.5, label="Top-10 challenger (n=48)"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=5.5, label=f"Top-10 challenger (n={n_challengers})"),
         Line2D([0],[0], color="#666666", lw=0.8, ls="--", label="Top-30 threshold (Rank = 30)"),
     ]
     ax.legend(handles=leg_handles, frameon=False, fontsize=6.2, loc="lower right",

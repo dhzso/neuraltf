@@ -163,20 +163,25 @@ def build_csv(top: pd.DataFrame) -> pd.DataFrame:
 
 
 def _load_mmc4() -> pd.DataFrame | None:
-    """Load King mmc4 (same table the fixed method uses) so the Dirichlet
-    methods receive IDENTICAL bonus inputs (human orthologs, TF flags) and
-    the same Track-B gate. Without it the fixed method had an extra +0.02
-    ortholog source and a domain-union-TF-flag gate the Dirichlet methods
-    lacked (dd10038/Zeb-1 lost its Track-B seat over exactly this gap)."""
+    """Load King mmc4 via the UNIFIED shared loader (2026-09-13 fix).
+
+    All three prioritization methods now consume the identical catalog
+    view: 'All' sheet filtered to TF?=='TF' (421 genes incl. eya/meis
+    from TF (additional)), so bonus inputs (human orthologs, TF flags)
+    and the Track-B gate are method-independent. Previously this script
+    read the 418-row 'TF' sheet while the fixed method read the 716-row
+    'All' sheet — a sheet mismatch that gave 26 genes the +0.02 ortholog
+    bonus in the fixed method only."""
     king_dir = REPO / "datasets" / "raw" / "Supplementary_Data_ King_2024"
     if not king_dir.exists():
         return None
+    from bioforge.projects.neuraltf.prioritize import load_mmc4_tf_catalog
     p = king_dir / "1-s2.0-S2211124724001712-mmc4.xlsx"
     if p.exists():
-        return pd.read_excel(p, sheet_name="TF")
+        return load_mmc4_tf_catalog(p)
     for q in sorted(king_dir.iterdir()):
         if q.suffix.lower() == ".xlsx" and q.stem.lower().endswith("mmc4"):
-            return pd.read_excel(q, sheet_name="TF")
+            return load_mmc4_tf_catalog(q)
     return None
 
 

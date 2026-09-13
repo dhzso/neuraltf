@@ -184,6 +184,49 @@ def roc_auc(y_true: np.ndarray, scores: np.ndarray) -> float:
     return float(np.trapezoid(tpr, fpr))
 
 
+def _auc_se_hanley(auc: float, n1: int, n2: int) -> float:
+    """Hanley-McNeil standard error of the AUC.
+
+    Q1 = AUC/(2-AUC), Q2 = 2*AUC^2/(1+AUC) (Hanley & McNeil 1982)."""
+    if not (0.0 < auc < 1.0):
+        return float("nan")
+    q1 = auc / (2.0 - auc)
+    q2 = 2.0 * auc * auc / (1.0 + auc)
+    return float(np.sqrt(
+        (auc * (1 - auc) + (n1 - 1) * (q1 - auc * auc)
+         + (n2 - 1) * (q2 - auc * auc)) / (n1 * n2)
+    ))
+
+
+def _honest_scores(rank: pd.DataFrame) -> pd.DataFrame:
+    """Add the honest score column (label-encoding streams excluded).
+
+    2026-09-13: mirrors precision_recall.recompute_excluding_circular —
+    the ortholog headline previously used integrated_score, which
+    contains rnai and perez_lineage, i.e. (near-)copies of the gold
+    standard's own neural-family classification.
+    """
+    STREAMS = ["expression", "specificity", "reproducibility", "rnai",
+               "correlation", "neural_enriched", "neural_specificity",
+               "perez_lineage", "perez_influence", "fincher_brain",
+               "cui_temporal"]
+    W = {"expression": 0.1, "specificity": 0.1, "reproducibility": 0.1,
+         "rnai": 0.05, "correlation": 0.05, "neural_enriched": 0.1,
+         "neural_specificity": 0.1, "perez_lineage": 0.1,
+         "perez_influence": 0.1, "fincher_brain": 0.1, "cui_temporal": 0.1}
+    excl = {"rnai", "neural_enriched", "neural_specificity", "perez_lineage"}
+    keep = [s for s in STREAMS if s in rank.columns and s not in excl]
+    S = rank[keep].to_numpy(dtype=float)
+    Wv = np.array([W[s] for s in keep])
+    valid = ~np.isnan(S)
+    num = np.nan_to_num(S, nan=0.0) @ Wv
+    den = valid.astype(float) @ Wv
+    den = np.where(den > 0, den, 1.0)
+    out = rank.copy()
+    out["_honest_score"] = num / den
+    return out
+
+
 def main() -> int:
     rank = pd.read_csv(RUN_DIR / "rank.csv").drop_duplicates(subset="gene_id", keep="first")
     gs = build_gold_standard()
@@ -196,6 +239,9 @@ def main() -> int:
     covered = sorted((pos | neg) & set(rank["gene_id"]))
     eval_df = rank[rank["gene_id"].isin(covered)].copy()
     eval_df["label"] = eval_df["gene_id"].isin(pos).astype(int)
+    # honest score (2026-09-13 circularity fix; see _honest_scores)
+    eval_df = _honest_scores(eval_df)
+    rank = _honest_scores(rank)
 
     tested_pos = pos & set(rank[rank["proof_status"] == "tested"]["gene_id"])
     conf_pos = pos & set(rank.loc[
@@ -209,32 +255,93 @@ def main() -> int:
           f"{len(tested_pos)}")
     print(f"  phenotype-confirmed overlap among positives: {len(conf_pos)}")
 
-    auc = roc_auc(eval_df["label"].to_numpy(), eval_df["integrated_score"].to_numpy())
-    print(f"  ROC-AUC (positive vs negative, integrated score): {auc:.3f}")
+    # 2026-09-13 circularity fix: the previous headline AUC was computed
+    # on integrated_score — the FULL 11-stream score including rnai (11/47
+    # positives carry the screened label itself) and perez_lineage (34/47
+    # positives carry 1.0 — nearly the same neural-family classification
+    # the gold standard encodes). That measured label re-encoding, not
+    # cross-species validation. The honest score (rnai/neural_*/
+    # perez_lineage excluded) is now the headline; the circular value is
+    # retained for transparency.
+    from scipy import stats as _st
 
-    # top-decile enrichment of positives
-    q = rank["integrated_score"].quantile(0.9)
-    top = rank[rank["integrated_score"] >= q]["gene_id"]
-    n_pos_top = len(pos & set(top))
-    prevalence = len(pos & set(rank["gene_id"])) / max(len(rank), 1)
-    print(f"  positives in top decile: {n_pos_top}/{len(pos & set(rank['gene_id']))} "
-          f"(prevalence {prevalence:.4f})")
+    def _midrank_auc(y: np.ndarray, s: np.ndarray) -> float:
+        r = _st.rankdata(s)
+        n_pos = int(y.sum())
+        n_neg = int(len(y) - n_pos)
+        return float((r[y == 1].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
+
+    y = eval_df["label"].to_numpy()
+    auc_circ = _midrank_auc(y, eval_df["integrated_score"].to_numpy())
+    auc_honest = _midrank_auc(y, eval_df["_honest_score"].to_numpy())
+
+    # Mann-Whitney on the honest score (one-sided, positives greater)
+    pos_scores = eval_df.loc[eval_df["label"] == 1, "_honest_score"].to_numpy()
+    neg_scores = eval_df.loc[eval_df["label"] == 0, "_honest_score"].to_numpy()
+    if len(pos_scores) and len(neg_scores):
+        mw = _st.mannwhitneyu(pos_scores, neg_scores, alternative="greater")
+        mw_u, mw_p = float(mw.statistic), float(mw.pvalue)
+    else:
+        mw_u, mw_p = float("nan"), float("nan")
+
+    # Hanley-McNeil 95% CI on the honest AUC (SE per Hanley & McNeil 1982)
+    n1, n2 = int(y.sum()), int(len(y) - y.sum())
+    if n1 > 0 and n2 > 0:
+        q1 = eval_df.loc[eval_df["label"] == 1, "_honest_score"]
+        q2 = eval_df.loc[eval_df["label"] == 0, "_honest_score"]
+        auc_v = auc_honest
+        se = _auc_se_hanley(auc_v, n1, n2)
+        ci = (max(0.0, auc_v - 1.96 * se), min(1.0, auc_v + 1.96 * se))
+    else:
+        se, ci = float("nan"), (float("nan"), float("nan"))
+
+    print(f"  ROC-AUC (honest score, label streams excluded): {auc_honest:.3f} "
+          f"95% CI {ci[0]:.3f}-{ci[1]:.3f}")
+    print(f"  ROC-AUC (circular integrated score, transparency only): {auc_circ:.3f}")
+    print(f"  Mann-Whitney U (honest, one-sided): {mw_u:.1f}  p={mw_p:.3e}")
+
+    # top-decile enrichment of positives (honest score), WITH the
+    # negative rate shown (previously suppressed — the printed
+    # positives-only rate read like enrichment evidence while negatives
+    # were also enriched).
+    q = rank["_honest_score"].quantile(0.9)
+    top = set(rank.loc[rank["_honest_score"] >= q, "gene_id"])
+    pos_in = pos & top
+    neg_in = neg & top
+    pos_cov = len(pos & set(rank["gene_id"]))
+    neg_cov = len(neg & set(rank["gene_id"]))
+    pos_rate = len(pos_in) / max(pos_cov, 1)
+    neg_rate = len(neg_in) / max(neg_cov, 1)
+    print(f"  top-decile rate (honest): positives {len(pos_in)}/{pos_cov} "
+          f"({pos_rate:.2f}) vs negatives {len(neg_in)}/{neg_cov} "
+          f"({neg_rate:.2f})")
 
     result = {
         "coverage_n_positive": int(len(pos)),
         "coverage_n_negative": int(len(neg)),
         "covered_in_rank": int(len(covered)),
-        "roc_auc": None if np.isnan(auc) else float(auc),
+        "roc_auc": None if np.isnan(auc_honest) else float(auc_honest),
+        "roc_auc_ci95": [None if np.isnan(ci[0]) else float(ci[0]),
+                         None if np.isnan(ci[1]) else float(ci[1])],
+        "roc_auc_circular_transparency": None if np.isnan(auc_circ) else float(auc_circ),
+        "mann_whitney_u": None if np.isnan(mw_u) else float(mw_u),
+        "mann_whitney_p_one_sided": None if np.isnan(mw_p) else float(mw_p),
+        "top_decile_positive_rate": pos_rate,
+        "top_decile_negative_rate": neg_rate,
         "note": (
             "Provisional, coverage-limited. Built from PlanMine Homo-sapiens BLAST "
             "descriptions only (~456 annotated genes); a full ortholog table "
-            "(Ensembl Compara / DIOPT) is required for a definitive benchmark."
+            "(Ensembl Compara / DIOPT) is required for a definitive benchmark. "
+            "2026-09-13: the headline AUC is computed on the honest score "
+            "(rnai/neural_enriched/neural_specificity/perez_lineage excluded); "
+            "the previous integrated-score AUC measured label re-encoding "
+            "(34/47 positives carried perez_lineage=1.0, 11/47 carried rnai=1)."
         ),
     }
     with open(RESULTS_DIR / "ortholog_benchmark.json", "w") as f:
         json.dump(result, f, indent=2)
     print(f"  saved: {RESULTS_DIR / 'ortholog_gold_standard.csv'}")
-    return 0 if not np.isnan(auc) else 1
+    return 0 if not np.isnan(auc_honest) else 1
 
 
 if __name__ == "__main__":

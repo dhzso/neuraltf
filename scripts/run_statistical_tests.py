@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Run all statistical tests for the NeuralTF pipeline.
 
-Runs all 14 statistical tests in dependency order, enforcing
+ Runs all 15 statistical tests in dependency order, enforcing
 prerequisites (the Dirichlet draw matrices several tests consume) and a
 UTF-8 child environment (Windows cp1252 consoles cannot encode the
 arrow/Greek characters the stats scripts print).

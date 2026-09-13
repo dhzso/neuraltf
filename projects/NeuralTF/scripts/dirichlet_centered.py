@@ -59,7 +59,12 @@ STREAMS = [
     "fincher_brain",
     "cui_temporal",
 ]
-W_DEFAULT = np.array([0.10, 0.10, 0.10, 0.05, 0.05, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10])
+# 2026-09-13: import the single-source-of-truth weights instead of
+# duplicating the vector (scoring.py:22-25 declares DEFAULT_WEIGHTS the
+# authority; a silent desync previously couldn't be detected).
+from bioforge.evidence.scoring import DEFAULT_WEIGHTS as _DW  # noqa: E402
+W_DEFAULT = np.array([_DW[s] for s in STREAMS])
+assert abs(W_DEFAULT.sum() - 1.0) < 1e-9, f"weights must sum to 1.0, got {W_DEFAULT.sum()}"
 N_DRAWS = 1000
 K_DIR = 40.0
 SEED = 2024
@@ -165,23 +170,27 @@ def build_csv(top: pd.DataFrame) -> pd.DataFrame:
 
 
 def _load_mmc4() -> pd.DataFrame | None:
-    """Load King mmc4 (same table the fixed method uses) so the Dirichlet
-    methods receive IDENTICAL bonus inputs (human orthologs, TF flags) and
-    the same Track-B gate. Without it the fixed method had an extra +0.02
-    ortholog source and a domain-union-TF-flag gate the Dirichlet methods
-    lacked (dd10038/Zeb-1 lost its Track-B seat over exactly this gap)."""
-    import pandas as pd
+    """Load King mmc4 via the UNIFIED shared loader (2026-09-13 fix).
+
+    All three prioritization methods now consume the identical catalog
+    view: 'All' sheet filtered to TF?=='TF' (421 genes incl. eya/meis
+    from TF (additional)), so bonus inputs (human orthologs, TF flags)
+    and the Track-B gate are method-independent. Previously this script
+    read the 418-row 'TF' sheet while the fixed method read the 716-row
+    'All' sheet — a sheet mismatch that gave 26 genes the +0.02 ortholog
+    bonus in the fixed method only."""
     king_dir = REPO / "datasets" / "raw" / "Supplementary_Data_ King_2024"
     if not king_dir.exists():
         return None
+    from bioforge.projects.neuraltf.prioritize import load_mmc4_tf_catalog
     for ext_name in ("1-s2.0-S2211124724001712-mmc4.xlsx",):
         p = king_dir / ext_name
         if p.exists():
-            return pd.read_excel(p, sheet_name="TF")
+            return load_mmc4_tf_catalog(p)
     # glob fallback (renamed downloads)
     for p in sorted(king_dir.iterdir()):
         if p.suffix.lower() == ".xlsx" and p.stem.lower().endswith("mmc4"):
-            return pd.read_excel(p, sheet_name="TF")
+            return load_mmc4_tf_catalog(p)
     return None
 
 

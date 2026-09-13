@@ -67,10 +67,12 @@ def main():
         except Exception:
             traceback.print_exc()
             fail.append(num)
-
     print(f"\n{'='*50}")
     print(f"  Done: {len(ok)} succeeded, {len(fail)} failed, {time.time()-t0:.1f}s")
-    if fail: print(f"  Failed (non-fatal): {fail}")
+    if fail:
+        print(f"  Failed: {fail}")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
