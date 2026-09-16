@@ -20,7 +20,7 @@ def build():
     # tested≠validated conflation the project's own audit corrected. The
     # group is the King mmc5 screening list; label reflects that.
     labels = [
-        "Neural TFs\n(King screen list, n=67)",
+        "Neural TFs\n(King screen list, n=68)",
         "Matched Non-TFs\n(n=100)",
         "Matched Non-neural TFs\n(n=100)",
     ]

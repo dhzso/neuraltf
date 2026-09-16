@@ -66,7 +66,7 @@ def build():
 
     df = pd.DataFrame(rows)
     # Order by track (A first, then B) and within track by composite descending
-    df = df.sort_values(["track", "composite"], ascending=[False, True]).reset_index(drop=True)
+    df = df.sort_values(["track", "composite"], ascending=[True, False]).reset_index(drop=True)
     y = np.arange(len(df))
 
     bonus_cols = ["GO neural", "GO TF", "Human ortholog"]

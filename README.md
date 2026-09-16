@@ -105,7 +105,7 @@ bioforge ui                                  # http://localhost:8501
 
 | File | Content |
 |------|---------|
-| `rank.csv` | All **11,695 candidates** with scores across all 11 evidence streams + `phenotype_confirmed` ground-truth flag |
+| `rank.csv` | All **11,696 candidates** with scores across all 11 evidence streams + `phenotype_confirmed` ground-truth flag |
 | `rank_neural.csv` | Neural-enriched candidates with proof status + `ground_truth_status` |
 | `evidence_cards.md` | Per-candidate markdown evidence summary |
 | `pipeline_results.json` | Machine-readable candidate metadata |

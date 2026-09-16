@@ -95,12 +95,16 @@ def build():
                     zorder=7,
                 )
 
-    # Inset correlation statistics (compact, non-intrusive)
+    # Inset correlation statistics (compact, non-intrusive).
+    # P-values underflow to 0.0 at this n; report the computed value when
+    # representable, otherwise state the precision floor honestly.
+    def _p_str(p):
+        return "P below double precision" if p == 0.0 else f"P = {p:.1e}"
     ax.text(
         0.05,
         0.94,
-        f"Spearman $r_s = {r_s:.2f}$ ($P < 10^{{-300}}$)\n"
-        f"Pearson $r = {r_p:.2f}$ ($P < 10^{{-300}}$)",
+        f"Spearman $r_s = {r_s:.2f}$ (${_p_str(p_s)}$, $n = {len(clean_lfc):,}$)\n"
+        f"Pearson $r = {r_p:.2f}$ (${_p_str(p_p)}$)",
         transform=ax.transAxes,
         fontsize=5.8,
         va="top",

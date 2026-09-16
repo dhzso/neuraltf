@@ -1,7 +1,7 @@
 """Precision-Recall (PR) curve with circularity control across benchmarks.
 
 Dual-panel evaluation comparing:
-- Panel a: RNAi-screened benchmark (King et al. 2024 mmc5 screening cohort, n=67)
+- Panel a: RNAi-screened benchmark (King et al. 2024 mmc5 screening cohort, n=68)
 - Panel b: FISH phenotype-confirmed benchmark (King et al. 2024, n=19)
 
 Each panel evaluates:
@@ -38,7 +38,7 @@ def build():
         ("honest_strict", C_B, "Strict label-free", 1.5, "-"),
     ]
 
-    # Panel a: RNAi-screened cohort (n = 67)
+    # Panel a: RNAi-screened cohort (n = 68)
     panel_tag(ax1, "a", x=-0.14, y=1.04)
     for key, color, label_str, lw, ls in specs:
         if key not in data:
@@ -59,7 +59,7 @@ def build():
 
     ax1.set_xlabel("Recall (Sensitivity)", fontsize=7.0)
     ax1.set_ylabel("Precision (Positive Predictive Value)", fontsize=7.0)
-    ax1.set_title("RNAi-Screened Benchmark (n = 67)", fontsize=7.8, pad=6)
+    ax1.set_title("RNAi-Screened Benchmark (n = 68)", fontsize=7.8, pad=6)
     ax1.legend(loc="upper right", fontsize=5.8, frameon=False)
     ax1.set_xlim([-0.02, 1.02])
     ax1.set_ylim([-0.02, 1.02])
