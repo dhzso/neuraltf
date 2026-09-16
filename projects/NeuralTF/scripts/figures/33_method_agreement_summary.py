@@ -88,17 +88,14 @@ def build():
 
     ax.set_title("Prioritization Method Agreement (Top 10 Candidates)", fontsize=8.0, fontweight="bold", pad=14)
     three_way = data.get("three_way", {})
-    n_three = three_way.get("overlap_count", 9)
-    p_three = three_way.get("binomial_three_set_p", None)
-    if p_three is not None:
-        if p_three < 1e-15:
-            base, exp = f"{p_three:.1e}".split("e")
-            p3_str = rf"P = {base} \times 10^{{{int(exp)}}}"
-        else:
-            p3_str = f"P = {p_three:.1e}"
-        sub_text = f"Pairwise hypergeometric overlap $P < 10^{{-29}}$; 3-way consensus ({n_three}/10 candidates, ${p3_str}$)"
+    n_three = three_way.get("overlap_count", 10)
+    p_strat = three_way.get("stratified_poisson_p", None)
+    if p_strat is not None:
+        base, exp = f"{p_strat:.1e}".split("e")
+        p_strat_str = rf"P = {base} \times 10^{{{int(exp)}}}"
+        sub_text = f"Pairwise hypergeometric $P < 10^{{-30}}$ (stratified ${p_strat_str}$); 3-way consensus ({n_three}/10)"
     else:
-        sub_text = f"Pairwise hypergeometric overlap $P < 10^{{-29}}$; 3-way consensus ({n_three}/10 candidates)"
+        sub_text = f"Pairwise overlap $P < 10^{{-30}}$; 3-way consensus ({n_three}/10 candidates)"
     ax.text(0.5, 1.02, sub_text, transform=ax.transAxes, fontsize=6.0, ha="center", va="bottom", color="#444444")
 
     # Colorbar

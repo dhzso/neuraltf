@@ -1,11 +1,11 @@
-"""Comprehensive evidence stream heatmap for all 134 neural-filtered transcription factors.
+"""Comprehensive evidence stream heatmap for all prioritized neural transcription factors.
 
 Publication-quality single-panel 500 DPI figure integrating:
 - Biological track categorization (Track A: RNAi-screened in King 2024, Track B: Untested candidates, Prior FSTFs)
 - 7 informative continuous & specialized evidence streams ordered to maintain visual coherence
 - Distinguishes missing/unmeasured values with neutral gray fill instead of false zeros
 - Integrated evidence score representation with clean scale and no text clutter
-- Standardized, unique gene symbols for all 134 candidates (with isoform disambiguation)
+- Standardized, unique gene symbols for all candidates (with isoform disambiguation)
 """
 from __future__ import annotations
 import sys, re
@@ -187,7 +187,7 @@ def build():
     fig.text(0.02, 0.075, f"Known FSTF (n={len(t_f)})\u2020", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_FSTF)
 
     fig.suptitle(
-        "Multi-Stream Evidence Landscape Across All 134 Prioritized Neural Transcription Factors",
+        f"Multi-Stream Evidence Landscape Across All {len(df)} Prioritized Neural Transcription Factors",
         fontweight="bold",
         fontsize=8.8,
         y=0.985,

@@ -1,9 +1,7 @@
-"""Figure 34: ANANSE Regulatory Network Topology and Target Architecture.
-
-Leverages chromatin accessibility and TF binding profiles across planarian cell fates.
-Panel a: Neural vs non-neural target capacity across lineage-defining TFs.
-Panel b: Target out-degree of master neural regulators annotated by validation status.
-Panel c: Key neural downstream targets shared across top regulators.
+"""Figure 34: ANANSE Regulatory Network Target Specificity.
+ 
+Leverages chromatin accessibility and TF binding profiles across planarian cell fates
+to evaluate neuron-specific vs total target capacity for master neural regulators.
 """
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
@@ -32,7 +30,7 @@ def build():
     fig, ax = plt.subplots(figsize=(W_1COL, 3.2))
 
     # Reference line: 100% neuron-specific targets (y = x) anchored along specific candidates
-    ax.plot([0, 260], [0, 260], color="#888888", ls="--", lw=0.9, zorder=1, label="100% neuron-specific ($y = x$)")
+    ax.plot([0, 520], [0, 520], color="#888888", ls="--", lw=0.9, zorder=1, label="100% neuron-specific ($y = x$)")
 
     # Non-neural lineage TFs (at y = 0)
     ax.scatter(

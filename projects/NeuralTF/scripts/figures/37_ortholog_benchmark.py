@@ -1,10 +1,11 @@
 """Cross-Species Ortholog Benchmark.
-
-Independent validation of the NeuralTF integrated prioritization scores against
+ 
+Independent validation of the NeuralTF label-free prioritization scores against
 conserved Homo sapiens transcription factors curated from PlanMine BLAST annotations:
 - Panel a: Receiver Operating Characteristic (ROC) curve separating conserved
-  neural-fate transcription factors (n=47) from non-neural transcription factors (n=54).
-- Panel b: Prioritization score distributions comparing neural-fate vs non-neural
+  neural-fate transcription factors (n=47) from non-neural transcription factors (n=54)
+  using the honest label-free score.
+- Panel b: Label-free score distributions comparing neural-fate vs non-neural
   ortholog classes with median annotations and Mann-Whitney U test significance.
 """
 from __future__ import annotations
@@ -27,13 +28,27 @@ def build():
 
     gs = pd.read_csv(gs_path)
     rank = pd.read_csv(rank_path).drop_duplicates(subset="gene_id", keep="first")
+
+    # 2026-09-13 circularity fix: headline AUC must be computed on the honest
+    # score (rnai/neural_enriched/neural_specificity/perez_lineage excluded).
+    excl = {"rnai", "neural_enriched", "neural_specificity", "perez_lineage"}
+    keep = [s for s in STREAM_COLS if s in rank.columns and s not in excl]
+    S = rank[keep].to_numpy(dtype=float)
+    Wv = np.array([W[STREAM_COLS.index(s)] for s in keep])
+    Wv = Wv / Wv.sum()
+    valid = ~np.isnan(S)
+    num = np.nan_to_num(S, nan=0.0) @ Wv
+    den = valid.astype(float) @ Wv
+    den = np.where(den > 0, den, 1.0)
+    rank["_honest_score"] = num / den
+
     m = rank.merge(gs, on="gene_id")
 
     pos_df = m[m["label"] == "positive"]
     neg_df = m[m["label"] == "negative"]
 
-    pos_scores = pos_df["integrated_score"].to_numpy()
-    neg_scores = neg_df["integrated_score"].to_numpy()
+    pos_scores = pos_df["_honest_score"].to_numpy()
+    neg_scores = neg_df["_honest_score"].to_numpy()
 
     # Binary labels: 1 for positive, 0 for negative
     y_true = np.concatenate([np.ones(len(pos_scores)), np.zeros(len(neg_scores))])
@@ -51,7 +66,7 @@ def build():
     # ------------------ PANEL A: ROC Curve ------------------
     panel_tag(ax1, "a", x=-0.14, y=1.04)
     ax1.plot(fpr, tpr, color=C_A, lw=1.8,
-             label=f"Neural-fate orthologs (AUC = {roc_auc:.3f})")
+             label=f"Label-free score (AUC = {roc_auc:.3f})")
     ax1.plot([0, 1], [0, 1], color="#888888", lw=0.8, linestyle=":",
              label="Random classifier (AUC = 0.500)")
 
@@ -96,7 +111,7 @@ def build():
              fontsize=6.0, fontweight="bold", color=C_A)
 
     # Significance bracket
-    y_bar = max(m["integrated_score"].max() + 0.04, 0.98)
+    y_bar = max(pos_scores.max(), neg_scores.max()) + 0.04
     h_tick = 0.02
     ax2.plot([0, 0, 1, 1], [y_bar - h_tick, y_bar, y_bar, y_bar - h_tick], color="#333333", lw=0.9)
     p_str = f"P = {pval:.2e}" if pval < 0.001 else f"P = {pval:.3f}"
@@ -106,10 +121,10 @@ def build():
     ax2.set_xticks([0, 1])
     ax2.set_xticklabels([f"Non-neural\n(n = {len(neg_scores)})", f"Neural-fate\n(n = {len(pos_scores)})"],
                         fontsize=6.8, fontweight="bold")
-    ax2.set_ylabel("Integrated Neural TF Score", fontsize=7.0)
+    ax2.set_ylabel("Label-Free Evidence Score", fontsize=7.0)
     ax2.set_title("Prioritization Score Distribution", fontsize=7.8, pad=6)
     ax2.set_xlim([-0.45, 1.55])
-    ax2.set_ylim([m["integrated_score"].min() - 0.05, y_bar + 0.08])
+    ax2.set_ylim([min(pos_scores.min(), neg_scores.min()) - 0.05, y_bar + 0.08])
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
 

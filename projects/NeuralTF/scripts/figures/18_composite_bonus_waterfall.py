@@ -102,16 +102,27 @@ def build():
     # Track dividing line
     ax.axhline(4.5, color="#888888", lw=0.6, ls="--")
 
-    # Gene names
+    # Gene names color-coded by track
     ax.set_yticks(y)
     ax.set_yticklabels(df["name"], fontsize=6.8)
+    for i, ticklabel in enumerate(ax.get_yticklabels()):
+        if df.iloc[i]["track"] == "A":
+            ticklabel.set_color(C_A)
+            ticklabel.set_fontweight("bold")
+        else:
+            ticklabel.set_color(C_B)
+            ticklabel.set_fontweight("bold")
+
+    # Explicit Track badges on right side
+    ax.text(1.15, 7.0, "Track A\n(Screened)\u2020", fontsize=6.5, fontweight="bold", color=C_A, va="center", ha="left")
+    ax.text(1.15, 2.0, "Track B\n(Unscreened)", fontsize=6.5, fontweight="bold", color=C_B, va="center", ha="left")
 
     ax.set_xlabel("Prioritization score (base score + additive bonuses)", fontsize=7.0)
     ax.set_ylabel("Candidate neural TF", fontsize=7.0)
     ax.set_title("Additive Bonus Contributions to Candidate Prioritization (Top 10 TFs)",
                  fontsize=8.0, fontweight="bold", pad=24)
     ax.legend(loc="lower left", bbox_to_anchor=(0.0, 1.02), ncol=4, frameon=False, fontsize=6.2)
-    ax.set_xlim(0, 1.25)
+    ax.set_xlim(0, 1.35)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()

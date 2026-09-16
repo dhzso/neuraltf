@@ -1,4 +1,4 @@
-"""Evidence stream correlation matrix — how streams correlate across 249 TFs."""
+"""Pairwise Spearman correlation matrix across all 11 evidence streams for the transcriptome."""
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 from style import *
@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt, numpy as np, pandas as pd
 from scipy.stats import spearmanr
 
 def build():
-    all249 = load_all()
-    mat = all249[STREAM_COLS].fillna(0).values
+    all_cand = load_all()
+    mat = all_cand[STREAM_COLS].fillna(0).values
     n = len(STREAM_COLS)
     labels = [STREAM_L[s] for s in STREAM_COLS]
     colors = [STREAM_C[s] for s in STREAM_COLS]
@@ -44,7 +44,7 @@ def build():
                 tc = "white" if (v > 0.48 or v < -0.3) else "#222222"
                 ax.text(j, i, f"{v:.2f}{sig}", ha="center", va="center", fontsize=5.5, color=tc)
 
-    ax.set_title(f"Pairwise Stream Correlation Across Transcriptome (Spearman $r_s$, $N = {len(all249):,})", fontsize=8.0, pad=6)
+    ax.set_title(f"Pairwise Stream Correlation Across Transcriptome (Spearman $r_s$, $N = {len(all_cand):,})", fontsize=8.0, pad=6)
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("Spearman $r_s$", fontsize=6.8)
     cbar.ax.tick_params(labelsize=6.0)

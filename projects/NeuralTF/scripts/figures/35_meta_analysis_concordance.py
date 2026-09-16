@@ -1,10 +1,7 @@
-"""Figure 35: Cross-Atlas Meta-Analysis and Effect Size Concordance.
+"""Figure 35: Cross-Atlas Neural Effect Size Concordance.
 
 Quantifies neural differential expression reproducibility across independent
-single-cell RNA-seq atlases (Fincher et al., Plass et al., Cui et al.).
-Panel a: Pairwise log2 fold change concordance between independent atlases.
-Panel b: Distribution of multi-atlas concordance (single vs recurrently observed).
-Panel c: Meta-analytic statistical power: Fisher combined -log10(p) by concordance degree.
+single-cell RNA-seq atlases (Fincher et al. and Plass et al.).
 """
 from __future__ import annotations
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
@@ -128,7 +125,8 @@ def build():
         columnspacing=1.2,
     )
 
-    fig.subplots_adjust(left=0.15, right=0.96, top=0.88, bottom=0.13)
+    ax.set_title("Cross-Atlas Neural Effect Size Concordance", fontsize=8.0, pad=22, fontweight="bold")
+    fig.subplots_adjust(left=0.15, right=0.96, top=0.84, bottom=0.13)
     save(fig, "35_meta_analysis_concordance")
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 PlanMine GO-term data - designed so a reader can infer the message in seconds.
 
 Figures (into ``projects/NeuralTF/figures/supplementary/``, 300 dpi):
-- ``fig_s1_go_gene_term_map.png`` - 97 neural TFs (rows, ordered by track then
+- ``fig_s1_go_gene_term_map.png`` - all neural TFs (rows, ordered by track then
   integrated score) vs the most informative GO terms (<= 20 columns). Blue =
   annotated, white = not. No dendrograms, legible labels, one color legend.
 - ``fig_s2_go_top10_dotmatrix.png`` - the final dual-track Top-10 x its key GO
@@ -357,7 +357,7 @@ def fig_s3_top_terms(go, neural, ids, labels, names, top, out: Path) -> None:
                        fontsize=7.5)
     for i, v in enumerate(top_terms.values):
         ax.text(v + 0.15, i, str(int(v)), va="center", fontsize=7.5)
-    ax.set_xlabel("Number of the 97 neural TF candidates")
+    ax.set_xlabel(f"Number of the {len(ids)} neural TF candidates")
     ax.set_xlim(0, max(top_terms) + 3)
     ax.tick_params(direction="out")
     ax.set_title("Top GO terms (orange = neural-related)", fontsize=9,
@@ -473,7 +473,7 @@ def write_go_term_reference(go, ids, top, out: Path) -> None:
             "neural_go": "yes" if neural_of[t] else "no",
             "tf_go": "yes" if tf_of[t] else "no",
             "composite_bonus": " + ".join(bonus),
-            "n_of_97_neural_candidates": int(cnt[t]),
+            f"n_of_{len(ids)}_neural_candidates": int(cnt[t]),
             "in_fig9_go_dotplot": "yes" if t in s9 else "no",
             "in_fig_s1_map": "yes" if t in s1 else "no",
             "in_fig_s2_top10_matrix": "yes" if t in s2 else "no",
