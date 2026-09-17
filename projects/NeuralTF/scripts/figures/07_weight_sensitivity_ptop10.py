@@ -56,10 +56,10 @@ def build():
     ax.set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     ax.set_xticklabels(["0%", "20%", "40%", "60%", "80%", "100%"], fontsize=6.2)
 
-    ax.set_title("Centered Dirichlet Prior Sensitivity: Top-10 Inclusion Probability",
+    ax.set_title("Uniform Dirichlet Prior Sensitivity: Top-10 Inclusion Probability",
                  fontsize=8.0, fontweight="bold", pad=14)
     ax.text(0.5, 1.02,
-            f"Empirical retention frequency across 1,000 Dirichlet draws (k=40) for prioritized candidates & challengers (N = {n_total})",
+            f"Empirical retention frequency across 1,000 uniform Dirichlet draws (alpha = 1) for prioritized candidates & challengers (N = {n_total})",
             transform=ax.transAxes, fontsize=6.2, ha="center", va="bottom", color="#444444")
 
     from matplotlib.lines import Line2D

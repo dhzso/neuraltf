@@ -67,10 +67,10 @@ def build():
     ax.set_yticklabels(y_labels, fontsize=5.8)
             
     ax.axvline(x=30, color="#666666", lw=0.8, ls="--", label="Top-30 candidate threshold")
-    ax.set_xlabel("Candidate rank across 1,000 centered Dirichlet weight draws", fontsize=7.0)
+    ax.set_xlabel("Candidate rank across 1,000 uniform Dirichlet weight draws", fontsize=7.0)
     ax.set_ylabel("Prioritized neural candidate / challenger", fontsize=7.0)
     ax.invert_yaxis()
-    ax.set_title("Rank Stability Under Centered Dirichlet Weight Uncertainty (k = 40, 1,000 Draws)",
+    ax.set_title("Rank Stability Under Uniform Dirichlet Weight Uncertainty (alpha = 1, 1,000 Draws)",
                  fontsize=8.0, pad=8)
     
     from matplotlib.lines import Line2D

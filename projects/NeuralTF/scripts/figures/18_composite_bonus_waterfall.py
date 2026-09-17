@@ -114,8 +114,8 @@ def build():
             ticklabel.set_fontweight("bold")
 
     # Explicit Track badges on right side
-    ax.text(1.15, 7.0, "Track A\n(Screened)\u2020", fontsize=6.5, fontweight="bold", color=C_A, va="center", ha="left")
-    ax.text(1.15, 2.0, "Track B\n(Unscreened)", fontsize=6.5, fontweight="bold", color=C_B, va="center", ha="left")
+    ax.text(1.15, 7.0, "Track B\n(Unscreened)", fontsize=6.5, fontweight="bold", color=C_B, va="center", ha="left")
+    ax.text(1.15, 2.0, "Track A\n(RNAi-screened)", fontsize=6.5, fontweight="bold", color=C_A, va="center", ha="left")
 
     ax.set_xlabel("Prioritization score (base score + additive bonuses)", fontsize=7.0)
     ax.set_ylabel("Candidate neural TF", fontsize=7.0)
