@@ -66,37 +66,52 @@ def build():
                 cell_text = f"$J = 1.00$\n(10/10)"
             else:
                 key = f"{methods[i]}_vs_{methods[j]}"
-                p_hyp = pairwise.get(key, {}).get("hypergeometric_p", None)
-                if p_hyp is not None:
-                    if p_hyp < 1e-15:
-                        p_str = r"P < 10^{-15}"
-                    else:
-                        base, exp = f"{p_hyp:.1e}".split("e")
-                        p_str = rf"P = {base} \times 10^{{{int(exp)}}}"
+                p_strat = pairwise.get(key, {}).get("stratified_poisson_p", None)
+                if p_strat is not None:
+                    base, exp = f"{p_strat:.1e}".split("e")
+                    p_str = rf"P = {base} \times 10^{{{int(exp)}}}"
                     cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)\n(${p_str}$)"
                 else:
-                    cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)"
+                    p_hyp = pairwise.get(key, {}).get("hypergeometric_p", None)
+                    if p_hyp is not None:
+                        if p_hyp < 1e-15:
+                            p_str = r"P < 10^{-15}"
+                        else:
+                            base, exp = f"{p_hyp:.1e}".split("e")
+                            p_str = rf"P = {base} \times 10^{{{int(exp)}}}"
+                        cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)\n(${p_str}$)"
+                    else:
+                        cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)"
             ax.text(
                 j,
                 i,
                 cell_text,
                 ha="center",
                 va="center",
-                fontsize=5.8,
+                fontsize=5.3,
                 color=text_color,
             )
 
     ax.set_title("Prioritization Method Agreement (Top 10 Candidates)", fontsize=8.0, fontweight="bold", pad=14)
     three_way = data.get("three_way", {})
     n_three = three_way.get("overlap_count", 10)
-    p_strat = three_way.get("stratified_poisson_p", None)
-    if p_strat is not None:
-        base, exp = f"{p_strat:.1e}".split("e")
+    p_3way = three_way.get("stratified_poisson_p", None)
+    # Correct pairwise stratified Poisson p (9.42e-12, from within-stratum null)
+    p_pair_strat = pairwise.get("fixed_vs_centered", {}).get("stratified_poisson_p", None)
+    
+    if p_pair_strat is not None and p_3way is not None:
+        b_p, e_p = f"{p_pair_strat:.1e}".split("e")
+        b_3, e_3 = f"{p_3way:.1e}".split("e")
+        p_pair_str = rf"P = {b_p} \times 10^{{{int(e_p)}}}"
+        p_3way_str = rf"P = {b_3} \times 10^{{{int(e_3)}}}"
+        sub_text = f"Pairwise stratified ${p_pair_str}$; 3-way consensus ({n_three}/10, stratified ${p_3way_str}$)"
+    elif p_3way is not None:
+        base, exp = f"{p_3way:.1e}".split("e")
         p_strat_str = rf"P = {base} \times 10^{{{int(exp)}}}"
-        sub_text = f"Pairwise hypergeometric $P < 10^{{-30}}$ (stratified ${p_strat_str}$); 3-way consensus ({n_three}/10)"
+        sub_text = f"3-way consensus ({n_three}/10 candidates, stratified ${p_strat_str}$)"
     else:
         sub_text = f"Pairwise overlap $P < 10^{{-30}}$; 3-way consensus ({n_three}/10 candidates)"
-    ax.text(0.5, 1.02, sub_text, transform=ax.transAxes, fontsize=6.0, ha="center", va="bottom", color="#444444")
+    ax.text(0.5, 1.02, sub_text, transform=ax.transAxes, fontsize=5.6, ha="center", va="bottom", color="#444444")
 
     # Colorbar
     cbar = fig.colorbar(im, ax=ax, shrink=0.82, pad=0.04)
