@@ -71,7 +71,7 @@ def build():
         Patch(facecolor=C_B, edgecolor="none", label=f"Not tested (n = {n_not_tested})"),
         Patch(facecolor=C_NEURAL, edgecolor="none", label=f"Challenger TF (n = {n_challengers})"),
     ]
-    ax.legend(handles=handles, frameon=True, facecolor="white", edgecolor="#D0D7DE",
+    ax.legend(handles=handles, frameon=False,
               fontsize=5.8, loc="lower right", bbox_to_anchor=(0.98, 0.03))
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

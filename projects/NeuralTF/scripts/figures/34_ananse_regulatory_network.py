@@ -105,13 +105,10 @@ def build():
     ax.set_xlim(-30, 950)
     ax.set_ylim(-20, 520)
 
-    # Position legend cleanly in upper left with solid white background to eliminate interference
+    # Unframed legend text in upper left so no data area is covered
     ax.legend(
         loc="upper left",
-        frameon=True,
-        facecolor="white",
-        framealpha=1.0,
-        edgecolor="#D0D7DE",
+        frameon=False,
         fontsize=6.0,
         handletextpad=0.4,
         borderpad=0.5,
