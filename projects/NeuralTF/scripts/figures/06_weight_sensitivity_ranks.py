@@ -1,0 +1,91 @@
+"""Weight sensitivity — rank distributions from 1000 random weight draws."""
+from __future__ import annotations
+import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+from style import *
+import matplotlib.pyplot as plt, numpy as np, pandas as pd
+
+def build():
+    draws = load_sens_draws()
+    sens = load_sens_top10()
+    rank_all = load_all()
+    top10 = load_top10()
+    top10_ids = set(top10["gene_id"].tolist())
+    track_map = dict(zip(top10["gene_id"], top10.get("track",[""]*len(top10))))
+
+    # 2026-09-06 audit fix: the draws CSV now persists FULL 1000-draw
+    # rank vectors for every entrant/top-30 gene (the old per-draw
+    # persistence filter kept only the good draws for oscillating genes,
+    # biasing these boxplots toward stability — e.g. Zeb-1's median read
+    # 49 vs the true 76). An in-script completeness check enforces it.
+    sens_ids = set(sens["gene_id"])
+    draws = draws[draws["gene_id"].isin(sens_ids)]
+    n_draws = draws["draw"].nunique()
+    counts = draws.groupby("gene_id").size()
+    bad = counts[counts != n_draws]
+    if len(bad) > 0:
+        raise AssertionError(
+            f"fig 06: truncated rank vectors for {len(bad)} genes "
+            f"(e.g. {dict(list(bad.items())[:3])}) — expected {n_draws} draws")
+
+    # Baseline ranks from the FULL universe (rank.csv), not the neural view
+    candidates = draws["gene_id"].unique()
+    base = rank_all.set_index("gene_id")["integrated_score"]
+    baseline_ranks = base.rank(ascending=False).to_dict()
+    # 2026-09-13: computed cohort sizes (the labels previously carried a
+    # stale hardcoded n=48 from an older challenger cohort — the CSV now
+    # holds 75 challengers + 10 baseline entrants = 85 rows).
+    n_challengers = int(len(sens) - sens["baseline_track"].notna().sum()
+                         if "baseline_track" in sens.columns else len(sens) - 10)
+
+    fig, ax = plt.subplots(figsize=(W_15COL, 6.2))
+    y_labels = []
+    y_pos = []
+    colors = []
+    for i, gid in enumerate(sorted(candidates, key=lambda g: baseline_ranks.get(g, 999))):
+        sub = draws[draws["gene_id"]==gid]
+        if sub.empty: continue
+        ranks = sub["rank"].values
+        entrant_track = ""
+        if "baseline_track" in sens.columns:
+            m = sens.loc[sens["gene_id"]==gid, "baseline_track"]
+            if len(m): entrant_track = str(m.iloc[0])
+        color = C_A if track_map.get(gid,"")== "A" or entrant_track=="A" \
+            else C_B if (gid in top10_ids and track_map.get(gid,"")=="B") or entrant_track=="B" \
+            else C_NEURAL
+        alpha = 0.85 if gid in top10_ids else 0.35
+        bp = ax.boxplot(ranks, vert=False, positions=[i], widths=0.6,
+                        patch_artist=True, showfliers=False,
+                        boxprops=dict(facecolor=color, alpha=alpha, edgecolor="none"),
+                        medianprops=dict(color="#111111", lw=1.2),
+                        whiskerprops=dict(color="#888888", lw=0.6),
+                        capprops=dict(color="#888888", lw=0.6))
+        y_labels.append(label(rank_all, gid))
+        y_pos.append(i)
+        colors.append(color)
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(y_labels, fontsize=5.8)
+            
+    ax.axvline(x=30, color="#666666", lw=0.8, ls="--", label="Top-30 candidate threshold")
+    ax.set_xlabel("Candidate rank across 1,000 uniform Dirichlet weight draws", fontsize=7.0)
+    ax.set_ylabel("Prioritized neural candidate / challenger", fontsize=7.0)
+    ax.invert_yaxis()
+    ax.set_title("Rank Stability Under Uniform Dirichlet Weight Uncertainty (alpha = 1, 1,000 Draws)",
+                 fontsize=8.0, pad=8)
+    
+    from matplotlib.lines import Line2D
+    leg_handles = [
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=5.5, label="RNAi-screened (King 2024)\u2020"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=5.5, label="Not tested"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=5.5, label=f"Top-10 challenger (n={n_challengers})"),
+        Line2D([0],[0], color="#666666", lw=0.8, ls="--", label="Top-30 threshold (Rank = 30)"),
+    ]
+    ax.legend(handles=leg_handles, frameon=False, fontsize=6.2, loc="lower right",
+              bbox_to_anchor=(0.98, 0.02))
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    fig.tight_layout()
+    save(fig, "06_weight_sensitivity_ranks")
+
+
+if __name__=="__main__": build()
