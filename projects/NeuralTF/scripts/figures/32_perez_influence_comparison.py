@@ -55,9 +55,9 @@ def build():
     med_u = np.median(unclass)
 
     labels = [
-        f"Neural Lineage\n(n={len(neural_cls):,}, med={med_n:.2f})",
-        f"Other Lineages\n(n={len(other_cls):,}, med={med_o:.2f})",
-        f"Unclassified\n(n={len(unclass):,}, med={med_u:.2f})",
+        f"Neural Lineage\n(n={len(neural_cls):,}, median={med_n:.2f})",
+        f"Other Lineages\n(n={len(other_cls):,}, median={med_o:.2f})",
+        f"Unclassified\n(n={len(unclass):,}, median={med_u:.2f})",
     ]
     colors = [C_A, C_B, "#B0BEC5"]
 
@@ -93,33 +93,39 @@ def build():
     p1_str = r"P < 10^{-15}" if pval1 < 1e-15 else f"P = {pval1:.1e}"
     p2_str = r"P < 10^{-15}" if pval2 < 1e-15 else f"P = {pval2:.1e}"
 
-    # Significance bracket 1: Neural vs Other (1 to 2)
-    y_bar1 = 1.04
-    h = 0.025
+    # Significance brackets — 2026-09-23 fix: the old hard-coded heights
+    # (0.855 / 0.935) sat inside the Neural group's upper whisker (~0.87)
+    # and its top jitter point (~0.93), so bracket lines cut through the
+    # whiskers/caps. Positions are now derived from the observed data
+    # maximum and stacked with fixed gaps so every bracket/text clears
+    # the whiskers, caps and points below it (ylim grows into
+    # annotation-only headroom above 1.0; the score itself stays 0–1).
+    h = 0.018
+    y_data_top = float(np.nanmax([np.max(g) for g in data if len(g)]))
+    y_bar1 = y_data_top + 0.028                 # bracket 1: Neural vs Other (1 → 2)
+    y_bar2 = y_bar1 + h + 0.070                 # bracket 2: Neural vs Unclassified (1 → 3)
+
     ax.plot([1, 1, 2, 2], [y_bar1, y_bar1 + h, y_bar1 + h, y_bar1], color="#333333", lw=0.7)
-    ax.text(1.5, y_bar1 + h + 0.015, f"Mann–Whitney: ${p1_str}$",
+    ax.text(1.5, y_bar1 + h + 0.010, f"Mann–Whitney: ${p1_str}$",
             ha="center", va="bottom", fontsize=6.2, color="#222222")
 
-    # Significance bracket 2: Neural vs Unclassified (1 to 3)
-    y_bar2 = 1.16
     ax.plot([1, 1, 3, 3], [y_bar2, y_bar2 + h, y_bar2 + h, y_bar2], color="#333333", lw=0.7)
-    ax.text(2.0, y_bar2 + h + 0.015, f"Mann–Whitney: ${p2_str}$",
+    ax.text(2.0, y_bar2 + h + 0.010, f"Mann–Whitney: ${p2_str}$",
             ha="center", va="bottom", fontsize=6.2, color="#222222")
 
     ax.set_xticks([1, 2, 3])
     ax.set_xticklabels(labels, fontsize=6.8)
-    ax.set_ylabel("Label-Free Evidence Score", fontsize=7.0, fontweight="bold")
-    ax.set_title("Evidence Score Stratification Across Single-Cell Lineage Classes",
-                 fontsize=8.0, pad=8, fontweight="bold")
-    ax.text(0.5, 1.005,
-            "Label-free score (perez_lineage, rnai and neural streams excluded) — "
-            "the compared score no longer contains the stream that defines the groups",
-            transform=ax.transAxes, fontsize=5.8, ha="center", va="bottom", color="#555555", style="italic")
-    ax.set_ylim(-0.02, 1.30)
+    ax.set_ylabel("Label-Free Evidence Score (0–1)", fontsize=7.0, fontweight="bold")
+    title_block(
+        fig,
+        "Evidence Score Stratification Across Single-Cell Lineage Classes",
+        "Label-free score excludes Perez lineage, RNAi, neural enriched & neural specificity; box = median + IQR",
+    )
+    ax.set_ylim(0, 1.15)  # annotation headroom above 1.0 for the significance brackets
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    fig.subplots_adjust(left=0.14, right=0.96, top=0.88, bottom=0.16)
+    fig.subplots_adjust(left=0.14, right=0.96, top=0.86, bottom=0.16)
     save(fig, "32_perez_influence_comparison")
 
 

@@ -58,13 +58,16 @@ def build():
                         capprops=dict(color="#444444", lw=0.8))
 
         median = np.median(scores)
-        final_labels.append(f"{label_str}\n(med = {median:.2f})")
+        final_labels.append(f"{label_str}\n(median = {median:.2f})")
 
     ax.set_xticks(positions)
     ax.set_xticklabels(final_labels, fontsize=6.8)
     ax.set_ylabel("Label-Free Evidence Score (0–1)", fontsize=7.0, fontweight="bold")
-    ax.set_title("Biological Specificity: Score Distribution vs Empirical Negative Controls",
-                 fontsize=8.0, pad=10, fontweight="bold")
+    title_block(
+        fig,
+        "Biological Specificity: Score Distribution vs Empirical Negative Controls",
+        "Violin + box plots; brackets annotate one-sided Mann-Whitney U tests with Cohen's $d$",
+    )
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.set_xlim(0.35, 3.65)
@@ -87,41 +90,24 @@ def build():
     p2 = s2.get("p_value", None)
     d2 = s2.get("cohens_d", None)
 
-    y_bar1 = 1.05
-    h = 0.025
+    y_bar1 = 0.87
+    h = 0.018
     if p1 is not None:
         ax.plot([1, 1, 2, 2], [y_bar1, y_bar1 + h, y_bar1 + h, y_bar1], color="#333333", lw=0.7)
         p1_str = _format_p(p1)
         d1_str = f", $d = {d1:.2f}$" if d1 else ""
-        ax.text(1.5, y_bar1 + h + 0.015, f"${p1_str}${d1_str}", ha="center", va="bottom", fontsize=6.2, color="#222222")
+        ax.text(1.5, 0.930, f"${p1_str}${d1_str}", ha="center", va="top", fontsize=6.2, color="#222222")
 
-    y_bar2 = 1.18
+    y_bar2 = 0.945
     if p2 is not None:
         ax.plot([1, 1, 3, 3], [y_bar2, y_bar2 + h, y_bar2 + h, y_bar2], color="#333333", lw=0.7)
         p2_str = _format_p(p2)
         d2_str = f", $d = {d2:.2f}$" if d2 else ""
-        ax.text(2.0, y_bar2 + h + 0.015, f"${p2_str}${d2_str}", ha="center", va="bottom", fontsize=6.2, color="#222222")
+        ax.text(2.0, 1.0, f"${p2_str}${d2_str}", ha="center", va="top", fontsize=6.2, color="#222222")
 
-    # Footnote note explaining test, effect size, circularity control & matching
-    # 2026-09-13: the U fallbacks previously printed hardcoded values
-    # ("5,577"/"5,236") when JSON keys changed — invented statistics. A
-    # missing stat now degrades to an explicit note, never a fake number.
-    if u1 is None or u2 is None:
-        u_note = ("U statistics unavailable in the stats JSON — "
-                  "regenerate negative_controls.py output")
-        u1_str = u2_str = "n/a"
-    else:
-        u1_str = f"{int(round(u1)):,}"
-        u2_str = f"{int(round(u2)):,}"
-        u_note = f"$U_1 = {u1_str}, U_2 = {u2_str}$"
-    ax.text(0.5, -0.16,
-            f"One-sided (greater) Mann–Whitney U test ({u_note}) and Cohen's d effect size.\n"
-            "Label-free score excludes RNAi, neural enrichment, neural specificity & neural lineage to eliminate circularity.\n"
-            "Control cohorts matched on number of available evidence streams.",
-            transform=ax.transAxes, ha="center", va="top", fontsize=5.8, color="#555555", style="italic")
 
-    ax.set_ylim(-0.02, 1.34)
-    fig.subplots_adjust(left=0.12, right=0.96, top=0.90, bottom=0.22)
+    ax.set_ylim(0, 1)
+    fig.subplots_adjust(left=0.12, right=0.96, top=0.86, bottom=0.22)
     save(fig, "24_negative_controls")
 
 if __name__ == "__main__":

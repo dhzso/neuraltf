@@ -8,6 +8,8 @@ def build():
     draws = load_sens_draws()
     sens = load_sens_top10()
     rank_all = load_all()
+    pheno_ids = (set(rank_all.loc[rank_all["phenotype_confirmed"].fillna(False).astype(bool), "gene_id"])
+                 if "phenotype_confirmed" in rank_all.columns else set())
     top10 = load_top10()
     top10_ids = set(top10["gene_id"].tolist())
     track_map = dict(zip(top10["gene_id"], top10.get("track",[""]*len(top10))))
@@ -37,7 +39,7 @@ def build():
     n_challengers = int(len(sens) - sens["baseline_track"].notna().sum()
                          if "baseline_track" in sens.columns else len(sens) - 10)
 
-    fig, ax = plt.subplots(figsize=(W_15COL, 6.2))
+    fig, ax = plt.subplots(figsize=(W_15COL, max(6.5, len(candidates) * 0.108 + 1.8)))
     y_labels = []
     y_pos = []
     colors = []
@@ -59,7 +61,8 @@ def build():
                         medianprops=dict(color="#111111", lw=1.2),
                         whiskerprops=dict(color="#888888", lw=0.6),
                         capprops=dict(color="#888888", lw=0.6))
-        y_labels.append(label(rank_all, gid))
+        nm = label(rank_all, gid)
+        y_labels.append(nm + ("\u2020" if gid in pheno_ids else ""))
         y_pos.append(i)
         colors.append(color)
 
@@ -67,24 +70,36 @@ def build():
     ax.set_yticklabels(y_labels, fontsize=5.8)
             
     ax.axvline(x=30, color="#666666", lw=0.8, ls="--", label="Top-30 candidate threshold")
-    ax.set_xlabel("Candidate rank across 1,000 uniform Dirichlet weight draws", fontsize=7.0)
+    ax.set_xlabel("Rank across 1,000 Dirichlet draws", fontsize=7.0)
     ax.set_ylabel("Prioritized neural candidate / challenger", fontsize=7.0)
     ax.invert_yaxis()
-    ax.set_title("Rank Stability Under Uniform Dirichlet Weight Uncertainty (alpha = 1, 1,000 Draws)",
-                 fontsize=8.0, pad=8)
+    sub_bot = title_block(
+        fig,
+        "Rank Stability Under Uniform Dirichlet Weight Uncertainty",
+        "1,000 Dirichlet weight draws; 1 draw = one sampled weight set; rank 1 = best; \u2020 = FISH-confirmed",
+    )
     
     from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
     leg_handles = [
-        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=5.5, label="RNAi-screened (King 2024)\u2020"),
-        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=5.5, label="Not tested"),
-        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=5.5, label=f"Top-10 challenger (n={n_challengers})"),
+        Line2D([0],[0], color="#111111", lw=1.2, label="median"),
+        Patch(facecolor="#AAAAAA", edgecolor="#888888", label="IQR (box)"),
+        Line2D([0],[0], color="#888888", lw=0.6, label="range (whiskers)"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=5.5, label="Track A: RNAi-screened"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=5.5, label="Track B: not tested"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=5.5, label=f"Challenger (n={n_challengers})"),
         Line2D([0],[0], color="#666666", lw=0.8, ls="--", label="Top-30 threshold (Rank = 30)"),
     ]
-    ax.legend(handles=leg_handles, frameon=False, fontsize=6.2, loc="lower right",
-              bbox_to_anchor=(0.98, 0.02))
+    # 2026-09-23: anchor legend + axes to the returned subtitle bottom so the
+    # 11 in-tall figure keeps a compact header instead of a ~1 in white band.
+    _pt = 1.0 / (72.0 * fig.get_size_inches()[1])
+    leg_y = sub_bot - 24 * _pt  # 6 pt gap below subtitle + 2-row legend (fs 5.8)
+    fig.legend(handles=leg_handles, frameon=False, fontsize=5.8, loc="lower center",
+               bbox_to_anchor=(0.5, leg_y), ncol=4)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()
+    fig.subplots_adjust(top=leg_y - 6 * _pt, bottom=0.06)
     save(fig, "06_weight_sensitivity_ranks")
 
 

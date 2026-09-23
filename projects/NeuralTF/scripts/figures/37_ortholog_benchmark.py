@@ -105,9 +105,9 @@ def build():
     )
 
     # Median text annotations
-    ax2.text(0 + 0.24, neg_med, f"Med={neg_med:.3f}", va="center", ha="left",
+    ax2.text(0 + 0.24, neg_med, f"Median = {neg_med:.3f}", va="center", ha="left",
              fontsize=6.0, fontweight="bold", color="#444444")
-    ax2.text(1 + 0.24, pos_med, f"Med={pos_med:.3f}", va="center", ha="left",
+    ax2.text(1 + 0.24, pos_med, f"Median = {pos_med:.3f}", va="center", ha="left",
              fontsize=6.0, fontweight="bold", color=C_A)
 
     # Significance bracket
@@ -121,16 +121,23 @@ def build():
     ax2.set_xticks([0, 1])
     ax2.set_xticklabels([f"Non-neural\n(n = {len(neg_scores)})", f"Neural-fate\n(n = {len(pos_scores)})"],
                         fontsize=6.8, fontweight="bold")
-    ax2.set_ylabel("Label-Free Evidence Score", fontsize=7.0)
+    ax2.set_ylabel("Label-Free Evidence Score (0–1)", fontsize=7.0)
     ax2.set_title("Prioritization Score Distribution", fontsize=7.8, pad=6)
     ax2.set_xlim([-0.45, 1.55])
     ax2.set_ylim([min(pos_scores.min(), neg_scores.min()) - 0.05, y_bar + 0.08])
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
 
-    fig.suptitle("Cross-Species Ortholog Benchmark: Conserved Human Neural TF Recovery",
-                 fontsize=8.5, fontweight="bold", y=0.99)
-    fig.subplots_adjust(left=0.08, right=0.98, top=0.88, bottom=0.14, wspace=0.25)
+    # 2026-09-23: header raised ~2.5 pt + subtitle pulled 3.5 pt closer to
+    # the title so the subtitle clears the panel tag "b" and panel titles
+    # below it (previously the bboxes overlapped by ~1.5 pt).
+    title_block(
+        fig,
+        "Cross-Species Ortholog Benchmark: Conserved Human Neural TF Recovery",
+        f"Label-free score; AUC = {roc_auc:.3f}; neural-fate median = {pos_med:.3f}, non-neural = {neg_med:.3f}",
+        y=0.9952, sub_y=0.9434,
+    )
+    fig.subplots_adjust(left=0.08, right=0.98, top=0.84, bottom=0.16, wspace=0.25)
     save(fig, "37_ortholog_benchmark")
 
 

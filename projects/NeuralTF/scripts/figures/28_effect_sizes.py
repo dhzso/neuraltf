@@ -85,20 +85,30 @@ def build():
                     fontsize=6.0, color=C_B)
 
         ax.set_yticks(y)
-        ytick_labels = [r[1] + (" †circ." if r[2] else "") for r in rows]
+        ytick_labels = [r[1] + (" (circ.)" if r[2] else "") for r in rows]
         ax.set_yticklabels(ytick_labels, fontsize=6.8)
         ax.invert_yaxis()
         ax.axvline(x=0, color="#555555", lw=0.6)
         ax.axvline(x=0.5, color="#999999", lw=0.6, linestyle=":", label="Reference (0.5)")
         ax.set_xlabel("Effect size (Cliff's δ and Hedges' g)", fontsize=7.0)
-        ax.set_title("Effect Sizes Across Candidate Cohorts (label-free contrasts emphasized)",
-                     fontsize=8.0, pad=6)
-        ax.legend(handles=handles, fontsize=6.2, loc="lower right", frameon=False)
+        sub_bot = title_block(
+            fig,
+            "Effect Sizes Across Candidate Cohorts (label-free contrasts emphasized)",
+            "Bars: Cliff's $\\delta$ and Hedges' $g$ (faded = circular/diagnostic)",
+        )
+        # 2026-09-23: stack the legend under the returned subtitle bottom (the
+        # old fixed 0.885 anchor / 0.86 axes top left the legend overlapping the
+        # subtitle) and give both a little more room above the axes.
+        _pt = 1.0 / (72.0 * fig.get_size_inches()[1])
+        leg_y = sub_bot - 17.75 * _pt  # 6 pt gap + 1-row legend (fs 6.2)
+        fig.legend(handles=handles, fontsize=6.2, loc="lower center",
+                   bbox_to_anchor=(0.5, leg_y), frameon=False, ncol=3)
         ax.set_xlim(-0.05, max(max(deltas), max(gs)) * 1.38)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
         fig.tight_layout()
+        fig.subplots_adjust(top=0.84, bottom=0.16)
         save(fig, "28_effect_sizes")
 
     except FileNotFoundError as e:

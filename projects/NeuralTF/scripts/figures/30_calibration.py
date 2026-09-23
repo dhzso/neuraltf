@@ -80,14 +80,26 @@ def build():
     ax.set_xticklabels(decile_labels, fontsize=6.2)
     ax.set_xlabel("Integrated Score Decile (Mean Score)", fontsize=7.0)
     ax.set_ylabel("RNAi-screened rate (%)", fontsize=7.0)
-    ax.set_title("Rank Discrimination and Score Calibration Across Transcriptome Deciles",
-                 fontsize=8.0, pad=6)
-    ax.legend(loc="upper left", frameon=False, fontsize=6.2)
+    # 2026-09-23: header raised ~2.5 pt + subtitle pulled 3.5 pt closer to
+    # the title; legend anchor dropped 0.864 -> 0.861 so the subtitle no
+    # longer touches the legend row (was a ~2.3 pt bbox overlap).
+    title_block(
+        fig,
+        "RNAi-Screened Enrichment Across Integrated-Score Deciles",
+        f"Genome prevalence = {prevalence*100:.2f}% (dashed); top decile = {top_rate:.1f}% ({enrichment:.1f}x enriched)",
+        y=0.9941, sub_y=0.9477,
+    )
+    from matplotlib.patches import Patch
+    h30, l30 = ax.get_legend_handles_labels()
+    h30.append(Patch(facecolor=C_A))
+    l30.append("Decile ≥ prevalence")
+    fig.legend(handles=h30, labels=l30, loc="lower center", bbox_to_anchor=(0.5, 0.861),
+               frameon=False, fontsize=5.8, ncol=3)
     ax.set_ylim(-0.2, max(observed * 100 + half * 100) * 1.32)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    fig.subplots_adjust(left=0.14, right=0.96, top=0.90, bottom=0.15)
+    fig.subplots_adjust(left=0.14, right=0.96, top=0.86, bottom=0.16)
     save(fig, "30_calibration")
 
 

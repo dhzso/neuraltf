@@ -49,7 +49,7 @@ def build():
 
     # 2. Tested (RNAi-screened benchmark; phenotype status tracked separately)
     ax.scatter(x_m[is_val], y_m[is_val], s=28, color=C_A, alpha=0.92,
-               edgecolors="white", lw=0.5, zorder=5, label=f"Tested (n={np.sum(is_val)})\u2020")
+               edgecolors="white", lw=0.5, zorder=5, label=f"Tested (n={np.sum(is_val)})")
 
     # 3. Not tested (no RNAi record)
     ax.scatter(x_m[is_nov], y_m[is_nov], s=28, color=C_B, alpha=0.92,
@@ -57,14 +57,18 @@ def build():
 
     # Identity reference line
     lo, hi = -0.02, 1.05
-    ax.plot([lo, hi], [lo, hi], "--", color="#666666", lw=0.8, label="y = x (identity)")
+    ax.plot([lo, hi], [lo, hi], "--", color="#666666", lw=0.8, label="y = x")
+
+    # Top-10 shortlist highlight (ring markers)
+    top10 = load_top10()
+    is_t10 = np.array([g in set(top10["gene_id"]) for g in df["gene_id"]])[mask]
+    ax.scatter(x_m[is_t10], y_m[is_t10], s=54, facecolors="none",
+               edgecolors="#222222", linewidths=0.9, zorder=7,
+               label=f"Top-10 (n={int(is_t10.sum())})")
 
     # Spearman correlation
     rho, p = spearmanr(x_m, y_m)
     p_str = "P < 10^{-300}" if p < 1e-300 else f"P = {p:.1e}"
-    ax.text(0.05, 0.93, f"Spearman $r_s = {rho:.3f}$\n${p_str}$\n$N = {len(x_m):,}$",
-            transform=ax.transAxes, fontsize=6.2, va="top", color="#222222",
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#DDDDDD", lw=0.5))
 
     ax.set_xlabel("Fixed weight integrated score", fontsize=7.0)
     ax.set_ylabel("Uniform Dirichlet median score (1,000 draws)", fontsize=7.0)
@@ -76,9 +80,12 @@ def build():
     # Legend cleanly positioned at lower right
     ax.legend(loc="lower right", frameon=False, fontsize=6.0)
 
-    fig.suptitle("Score concordance: Fixed weights vs Uniform Dirichlet prior",
-                 fontsize=8.0, y=0.98)
-    fig.subplots_adjust(left=0.14, right=0.96, top=0.90, bottom=0.14)
+    title_block(
+        fig,
+        "Score concordance: Fixed weights vs Uniform Dirichlet prior",
+        f"Spearman $r_s$ = {rho:.3f}, $N$ = {len(x_m):,}; dashed line = identity $y = x$ (1,000 uniform-prior draws)",
+    )
+    fig.subplots_adjust(left=0.14, right=0.96, top=0.86, bottom=0.15)
     save(fig, "13_uniform_scatter_all")
 
 

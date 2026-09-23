@@ -188,8 +188,14 @@ def load_sens_top10():
 
 
 def save(fig, name, dpi=500):
-    """Save figure in publication-quality 500 DPI PNG."""
-    fig.savefig(FIG / f"{name}.png", dpi=dpi, bbox_inches="tight", facecolor="white")
+    """Save figure in publication-quality 500 DPI PNG.
+
+    pad_inches keeps a small white margin between the tight artist bbox and the
+    PNG edge — without it the outermost element (e.g. fig 33's colorbar label
+    or fig 5's footnote) is flush against the border and reads as clipped.
+    """
+    fig.savefig(FIG / f"{name}.png", dpi=dpi, bbox_inches="tight",
+                pad_inches=0.03, facecolor="white")
     plt.close(fig)
 
 
@@ -280,4 +286,42 @@ def panel_tag(ax, letter: str, x: float = -0.12, y: float = 1.05, fontsize: floa
     """Add a Nature Communications standard bold lowercase panel tag (a, b, c, ...)."""
     ax.text(x, y, letter.lower(), transform=ax.transAxes,
             fontsize=fontsize, fontweight="bold", va="bottom", ha="right")
+def panel_tag(ax, letter: str, x: float = -0.12, y: float = 1.05, fontsize: float = 8.5):
+    """Add a Nature Communications standard bold lowercase panel tag (a, b, c, ...)."""
+    ax.text(x, y, letter.lower(), transform=ax.transAxes,
+            fontsize=fontsize, fontweight="bold", va="bottom", ha="right")
+
+
+def title_block(fig, title, subtitle=None, y=0.985, sub_y=None):
+    """Standard figure heading: main title on top, one-line subtitle just below.
+
+    The subtitle carries the key number(s) or legend-style context for the figure.
+
+    The subtitle sits a fixed 4.5 pt below the title instead of at a fixed
+    y-fraction: tall figures (e.g. the 11 in boxplot panels) used to show a huge
+    white band between the two lines, while short figures (< 4.5 in) had the
+    title's descenders nearly touching the subtitle. Returns the subtitle's
+    bottom edge (figure fraction) — or the title's bottom edge when there is no
+    subtitle — so callers can stack legends/axes directly beneath the header.
+    """
+    H = fig.get_size_inches()[1]
+    pt = 1.0 / (72.0 * H)  # one typographic point as a figure fraction
+    fig.text(0.5, y, title, ha="center", va="top",
+             fontsize=9.0, fontweight="bold", color="#1a1a1a")
+    bottom = y - 9.0 * 1.3 * pt  # rendered title height (incl. descenders)
+    if subtitle:
+        if sub_y is None:
+            sub_y = y - (9.0 * 1.3 + 4.5) * pt
+        fig.text(0.5, sub_y, subtitle, ha="center", va="top",
+                 fontsize=6.6, color="#555555")
+        bottom = sub_y - 6.6 * 1.3 * pt
+    return bottom
+
+
+def figure_footnote(fig, text, y=0.012):
+    """Footnote at the bottom of the figure defining symbols used in the plot
+    (e.g. dagger, asterisks, delta, rho)."""
+    fig.text(0.5, y, text, ha="center", va="bottom",
+             fontsize=5.6, color="#666666")
+
 

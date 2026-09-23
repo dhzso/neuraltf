@@ -43,13 +43,18 @@ def build():
         
     ax.set_yticks(y)
     ax.set_yticklabels([STREAM_L[s] for s in stats["stream"]], fontsize=6.5)
-    ax.set_xlabel("Median |Δrank| across candidates", fontsize=7.0)
+    ax.set_xlabel("Median |Δrank|", fontsize=7.0)
     ax.set_ylabel("Omitted stream", fontsize=7.0)
     ax.set_xlim(0, max(stats["median_abs"]) * 1.35)
-    ax.set_title(f"Stream Ablation Impact Across Prioritized Neural TFs (N = {len(neural)})", fontsize=8.0, pad=6)
+    title_block(
+        fig,
+        f"Stream Ablation Impact Across Prioritized Neural TFs (N = {len(neural)})",
+        "Each evidence stream removed in turn; |\u0394rank| = absolute rank change after stream removal",
+    )
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()
+    fig.subplots_adjust(top=0.84, bottom=0.16)
     save(fig, "08_stream_ablation_global")
 
 if __name__=="__main__": build()

@@ -42,7 +42,7 @@ def build():
     vmax = max(abs(pivot.values.min()), abs(pivot.values.max()), 1)
     norm = mcolors.TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
 
-    fig = plt.figure(figsize=(W_15COL, 3.8))
+    fig = plt.figure(figsize=(W_15COL, 4.4))
     gs = fig.add_gridspec(1, 3, width_ratios=[0.035, 0.925, 0.04], wspace=0.03)
     ax_track = fig.add_subplot(gs[0, 0])
     ax = fig.add_subplot(gs[0, 1])
@@ -53,7 +53,9 @@ def build():
     ax_track.imshow([[1] for _ in range(len(pivot))], aspect="auto", cmap="binary", vmin=0, vmax=1)
     for i, color in enumerate(track_colors):
         ax_track.add_patch(plt.Rectangle((-0.5, i - 0.5), 1, 1, color=color, ec="none"))
-    ylabels = [label(neural, g) for g in pivot.index]
+    pheno_ids = (set(neural.loc[neural["phenotype_confirmed"].fillna(False).astype(bool), "gene_id"])
+                 if "phenotype_confirmed" in neural.columns else set())
+    ylabels = [label(neural, g) + ("\u2020" if g in pheno_ids else "") for g in pivot.index]
     ax_track.set_xticks([])
     ax_track.set_yticks(range(len(pivot)))
     ax_track.set_yticklabels(ylabels, fontsize=6.5)
@@ -86,21 +88,25 @@ def build():
     
     # 3. Colorbar
     cbar = fig.colorbar(im, cax=ax_cbar)
-    cbar.set_label("Rank shift (Δrank)", fontsize=6.8)
+    cbar.set_label("Δrank", fontsize=6.8)
+    cbar.set_ticks([-int(vmax), 0, int(vmax)])
     cbar.ax.tick_params(labelsize=6.0)
 
     # Legend for track
     from matplotlib.patches import Patch
     leg_handles = [
-        Patch(facecolor=C_A, label="Tested\u2020"),
-        Patch(facecolor=C_B, label="Not tested")
+        Patch(facecolor=C_A, label="Track A: tested"),
+        Patch(facecolor=C_B, label="Track B: not tested")
     ]
-    ax.legend(handles=leg_handles, loc="upper right", bbox_to_anchor=(1.0, -0.06),
-              ncol=2, frameon=False, fontsize=6.2)
+    fig.legend(handles=leg_handles, loc="lower center", bbox_to_anchor=(0.5, 0.85),
+               ncol=2, frameon=False, fontsize=6.2)
 
-    fig.suptitle("Candidate stream sensitivity (Δrank)",
-                 fontsize=8.0, y=0.98)
-    fig.subplots_adjust(left=0.18, right=0.92, top=0.78, bottom=0.10)
+    title_block(
+        fig,
+        "Candidate Stream Sensitivity (Δrank)",
+        "Δrank = new rank − original rank (one stream removed); \u2020 = FISH-confirmed",
+    )
+    fig.subplots_adjust(left=0.18, right=0.92, top=0.70, bottom=0.16)
     save(fig, "09_stream_ablation_candidate")
 
 if __name__=="__main__": build()

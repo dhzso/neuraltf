@@ -66,26 +66,24 @@ def build():
     is_pinned = pvals >= 1.0
 
     fig, ax = plt.subplots(figsize=(7.08, 5.6), dpi=500)
-    fig.subplots_adjust(left=0.085, right=0.975, top=0.905, bottom=0.125)
+    fig.subplots_adjust(left=0.085, right=0.975, top=0.86, bottom=0.125)
     lo = min(scores.min(), ceilings.min()) - 0.03
     hi = max(scores.max(), ceilings.max()) + 0.05
 
     # design half-planes (very light tints) + identity diagonal
     ax.fill([lo, lo, hi], [lo, hi, hi], color=C_HL, alpha=0.035, zorder=0)
     ax.fill([lo, hi, hi], [lo, lo, hi], color=C_A, alpha=0.035, zorder=0)
-    ax.plot([lo, hi], [lo, hi], color="#9E9E9E", lw=0.9, ls="--", zorder=1)
-    ax.text(lo + 0.028, lo + 0.048, "identity (score = ceiling)",
-            rotation=45, rotation_mode="anchor", fontsize=5.2,
-            color="#8A8A8A", ha="left", va="bottom", zorder=2)
+    ax.plot([lo, hi], [lo, hi], color="#9E9E9E", lw=0.9, ls="--", zorder=1,
+            label="Dashed = design boundary (score = ceiling)")
 
     # population markers
     ax.scatter(scores[~is_short & ~untest], ceilings[~is_short & ~untest],
                s=12, c=C_TEST, edgecolors="none", zorder=3,
-               label=f"testable — BH-sig at floor p = 1.0e-3 (n = {n_test})")
+               label=f"Filled = testable (n = {n_test})")
     ax.scatter(scores[~is_short & untest & is_pinned],
                ceilings[~is_short & untest & is_pinned],
                s=14, facecolors="none", edgecolors="#8A97A3", linewidths=0.8,
-               zorder=3, label=f"saturated — null = real, pinned p = 1 (n = {n_pinned})")
+               zorder=3, label=f"Open = saturated / untestable (n = {n_pinned})")
     if n_bound > 0:
         ax.scatter(scores[~is_short & untest & ~is_pinned],
                    ceilings[~is_short & untest & ~is_pinned],
@@ -99,7 +97,7 @@ def build():
     sh_pin = short[short["empirical_p"] >= 1.0]
     ax.scatter(sh_test["real_integrated_score"], sh_test["label_independent_ceiling"],
                s=42, c=C_HL, edgecolors="white", linewidths=0.7, zorder=6,
-               label=f"dual-track shortlist top-10 ({len(sh_test)} resolve / {len(sh_pin)} pinned)")
+               label=f"Red = dual-track Top-10 ({len(sh_test)} resolve / {len(sh_pin)} pinned)")
     ax.scatter(sh_pin["real_integrated_score"], sh_pin["label_independent_ceiling"],
                s=42, facecolors="none", edgecolors=C_HL, linewidths=1.3, zorder=6)
     ring = short[short["untestable_by_permutation"] & (short["empirical_p"] <= p_floor + 1e-12)]
@@ -123,52 +121,25 @@ def build():
     leader_labels(sh_test, +1)
     leader_labels(sh_pin, -1)
 
-    # surplus gauge: perpendicular arrow from the largest-surplus testable
-    # gene to the diagonal — that distance is what the permutation resolves
-    cand = (~is_short & ~untest)
-    j = int(np.argmax(np.where(cand, scores - ceilings, -np.inf)))
-    fx = fy = (scores[j] + ceilings[j]) / 2.0
-    ax.annotate("", xy=(fx, fy), xytext=(scores[j], ceilings[j]),
-                arrowprops=dict(arrowstyle="<->", lw=0.7, color="#333333",
-                                shrinkA=0, shrinkB=0), zorder=6)
-    mx, my = (scores[j] + fx) / 2, (ceilings[j] + fy) / 2
-    ax.text(mx - 0.012, my - 0.012, "label-stream surplus" + NL + "(what the permutation resolves)",
-            rotation=45, rotation_mode="anchor", fontsize=5.0, color="#333333",
-            ha="right", va="top", zorder=6)
 
-    # corner annotation boxes in the empty half-plane corners
-    ax.text(0.02, 0.975,
-            ("SATURATED BY DESIGN (n = " + str(n_untest) + ") — null = real by construction" + NL +
-             "score ≤ label-independent ceiling + 1e-9: the permutation cannot exceed the null" + NL +
-             f"all {n_untest} receive p = 1.0 by enforcement (q = NaN, excluded from BH family)" + NL +
-             "→ rank rests on external table evidence; covered by the label-free honest/strict arms"),
-            transform=ax.transAxes, fontsize=5.5, ha="left", va="top", color="#222222",
-            bbox=dict(facecolor="white", edgecolor="none", alpha=0.85, pad=1.5))
-    ax.text(0.98, 0.02,
-            (f"GENUINE NULL SEPARATION (n = {n_test}) — BH-FDR over testable genes only" + NL +
-             f"{n_sig}/{n_test} testable genes significant; "
-             f"{n_mid} intermediate p-values" + NL +
-             f"add-one floor p = 1.0 × 10^-3 ({n_perm:,} draws/gene) → BH-FDR 0.05/0.01 resolved;"
-             + NL +
-             "Bonferroni 0.05/143 = 3.5 × 10^-4 would need n ≥ 2,860"),
-            transform=ax.transAxes, fontsize=5.5, ha="right", va="bottom", color="#222222",
-            bbox=dict(facecolor="white", edgecolor="none", alpha=0.85, pad=1.5))
 
-    ax.legend(loc="lower right", bbox_to_anchor=(0.985, 0.145), fontsize=5.2,
-              frameon=False, handletextpad=0.3, borderaxespad=0.2, labelspacing=0.35)
+    fig.legend(loc="lower center", bbox_to_anchor=(0.5, 0.878), fontsize=5.2,
+               frameon=False, handletextpad=0.3, borderaxespad=0.2, labelspacing=0.35, ncol=4)
     ax.set_xlim(lo, hi)
     ax.set_ylim(lo, hi)
     ax.set_aspect("equal")
     ax.set_xlabel("Real integrated evidence score", fontsize=7.5, fontweight="bold")
-    ax.set_ylabel("Label-independent King ceiling (permutation-null maximum)",
+    ax.set_ylabel("Label-independent King ceiling",
                   fontsize=7.5, fontweight="bold")
-    ax.set_title("Atlas-permutation significance map — the whole test in one graph "
-                 f"({n} neural TFs)", fontsize=8.5, pad=7)
+    title_block(
+        fig,
+        "Atlas-permutation significance map: the whole test in one graph",
+        f"$n$ = {n} neural TFs; {n_sig}/{n_test} testable genes significant after BH correction; {n_untest} saturated by design",
+    )
     ax.tick_params(labelsize=6.4)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    fig.suptitle("")
     save(fig, "43_permutation_map")
     print(f"Built 43_permutation_map.png ({n} genes; {n_sig} BH-sig; {n_test} testable; "
           f"{n_untest} saturated ({n_pinned} pinned + {n_bound} float-tie); {n_mid} intermediate; "

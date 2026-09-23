@@ -113,8 +113,8 @@ def build():
     # Legend above the axes indicating Track membership
     from matplotlib.patches import Patch
     legend_elements = [
-        Patch(facecolor=C_A, edgecolor="#222222", lw=0.5, label="Tested (RNAi-screened)\u2020"),
-        Patch(facecolor=C_B, edgecolor="#222222", lw=0.5, label="Not tested"),
+        Patch(facecolor=C_A, edgecolor="#222222", lw=0.5, label="Track A: RNAi-screened"),
+        Patch(facecolor=C_B, edgecolor="#222222", lw=0.5, label="Track B: not tested"),
     ]
     ax.legend(
         handles=legend_elements,
@@ -127,8 +127,12 @@ def build():
         columnspacing=1.0,
     )
 
-    ax.set_xlabel("Regeneration stage post-amputation", fontsize=7.0)
-    ax.set_title("Regeneration Temporal Dynamics (Cui et al. 2023)", fontsize=8.0, pad=18)
+    title_block(
+        fig,
+        "Regeneration Temporal Dynamics (Cui et al. 2023)",
+        "Expression z-scored per gene across regeneration stages (0d intact to 7d)",
+    )
+    ax.set_xlabel("Regeneration stage post-amputation", fontsize=7.0, labelpad=6)
 
     # Subtle cell borders
     ax.set_xticks(np.arange(-0.5, len(time_labels), 1), minor=True)
@@ -142,6 +146,8 @@ def build():
     cbar.ax.tick_params(labelsize=6.0)
 
     fig.tight_layout()
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.82, bottom=0.19)
     save(fig, "36_regeneration_temporal_dynamics")
 
 if __name__ == "__main__":

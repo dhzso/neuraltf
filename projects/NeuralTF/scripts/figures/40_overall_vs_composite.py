@@ -36,10 +36,12 @@ def build():
 
     # Background: all candidates
     ax.scatter(bg_df["integrated_score"], bg_df["composite_score"],
-               s=4, c="#D0D0D0", alpha=0.4, edgecolors="none", zorder=1)
+               s=4, c="#D0D0D0", alpha=0.4, edgecolors="none", zorder=1,
+               label=f"Other candidates (n = {len(bg_df):,})")
 
     # Diagonal reference
-    ax.plot([0, 1], [0, 1], color="#999999", lw=0.5, ls="--", zorder=0)
+    ax.plot([0, 1], [0, 1], color="#999999", lw=0.5, ls="--", zorder=0,
+            label="Composite = integrated (y = x)")
 
     # Top-10 by track
     track_colors = {"A": C_A, "B": C_HL}
@@ -47,7 +49,7 @@ def build():
         c = track_colors.get(track, "#888888")
         ax.scatter(grp["integrated_score"], grp["composite_score"],
                    s=45, c=c, edgecolors="white", linewidths=0.8, zorder=5,
-                   label=f"Track {track}")
+                   label=f"Track {track} (n = {len(grp)})")
 
     # Annotate top-10 in a clean right-side column with leader lines (no overlap)
     ann = top10_df.sort_values("composite_score", ascending=False).reset_index(drop=True)
@@ -67,17 +69,19 @@ def build():
     ax.set_ylabel("Composite score (+ bonuses)", fontsize=7, fontweight="bold")
     ax.set_xlim(-0.02, 1.02)
     ax.set_ylim(-0.02, 1.08)
-    ax.set_title("Bonus impact on candidate rankings", fontsize=8, fontweight="bold")
     ax.legend(fontsize=5.5, loc="upper left", frameon=False)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
     # Annotation: mean bonus shift
     delta = (top10_df["composite_score"] - top10_df["integrated_score"]).mean()
-    ax.text(0.95, 0.05, f"Mean bonus Δ = +{delta:.3f}",
-            transform=ax.transAxes, fontsize=5.5, ha="right", color="#555555")
+    title_block(
+        fig,
+        "Impact of Additive Bonuses on Candidate Scores",
+        f"Mean bonus $\\Delta$ = +{delta:.3f} (composite \u2212 integrated); dashed = identity $y = x$; $N$ = {len(merged):,} loci plotted",
+    )
 
-    fig.subplots_adjust(left=0.15, right=0.95, top=0.92, bottom=0.12)
+    fig.subplots_adjust(left=0.15, right=0.95, top=0.86, bottom=0.14)
     save(fig, "40_overall_vs_composite")
     print("Built 40_overall_vs_composite.png")
 

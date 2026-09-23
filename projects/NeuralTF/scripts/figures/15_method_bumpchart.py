@@ -56,12 +56,14 @@ def build():
 
     # ------------------ PANEL A: Tested (RNAi-screened benchmark) ------------------
     panel_tag(ax1, "a", x=-0.14, y=1.05)
-    ax1.set_title("Tested (RNAi-screened benchmark) regulators\u2020", fontsize=7.5, pad=8, fontweight="bold")
+    ax1.set_title("Track A — RNAi-screened regulators", fontsize=7.5, pad=8, fontweight="bold")
 
     # Union of Track A candidates across all 3 methods
     gid_col_f = "gene_id" if "gene_id" in top10_fixed.columns else "gene_id_v6"
     gid_col_c = "gene_id" if "gene_id" in top10_cen.columns else "gene_id_v6"
     gid_col_u = "gene_id" if "gene_id" in top10_uni.columns else "gene_id_v6"
+    same_top10 = (set(top10_fixed[gid_col_f]) == set(top10_cen[gid_col_c])
+                  == set(top10_uni[gid_col_u]))
 
     genes_a = list(dict.fromkeys(
         list(top10_fixed[top10_fixed["track"] == "A"][gid_col_f]) +
@@ -88,7 +90,9 @@ def build():
     ax1.set_ylim(0.5, 5.8)
     ax1.invert_yaxis()
     ax1.set_xlim(-0.75, 2.75)
-    ax1.tick_params(left=False, labelleft=False)
+    ax1.set_yticks([1, 2, 3, 4, 5])
+    ax1.tick_params(axis="y", left=False, labelsize=6.5)
+    ax1.axhline(1, color="#DDDDDD", lw=0.8, zorder=0)
     ax1.spines["top"].set_visible(False)
     ax1.spines["right"].set_visible(False)
     ax1.spines["left"].set_visible(False)
@@ -96,7 +100,7 @@ def build():
 
     # ------------------ PANEL B: Not tested ------------------
     panel_tag(ax2, "b", x=-0.14, y=1.05)
-    ax2.set_title("Not tested (no RNAi record) neural TF candidates", fontsize=7.5, pad=8, fontweight="bold")
+    ax2.set_title("Track B — not tested neural TF candidates", fontsize=7.5, pad=8, fontweight="bold")
 
     genes_b = list(dict.fromkeys(
         list(top10_fixed[top10_fixed["track"] == "B"][gid_col_f]) +
@@ -124,15 +128,22 @@ def build():
     ax2.set_ylim(0.5, 6.8)
     ax2.invert_yaxis()
     ax2.set_xlim(-0.75, 2.95)
-    ax2.tick_params(left=False, labelleft=False)
+    ax2.set_yticks([1, 2, 3, 4, 5, 6])
+    ax2.tick_params(axis="y", left=False, labelsize=6.5)
+    ax2.axhline(1, color="#DDDDDD", lw=0.8, zorder=0)
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
     ax2.spines["left"].set_visible(False)
     ax2.grid(axis="y", color="#EEEEEE", lw=0.6, ls=":")
 
-    fig.suptitle("Prioritization Rank Trajectories Across Dirichlet Prior Weighting Schemes",
-                 fontsize=8.5, fontweight="bold", y=0.98)
-    fig.subplots_adjust(left=0.10, right=0.88, top=0.84, bottom=0.14, wspace=0.42)
+    _sub = ("Top-10 set identical across all three weighting methods" if same_top10
+            else "Top-10 membership changes across weighting methods")
+    title_block(
+        fig,
+        "Prioritization Rank Trajectories Across Dirichlet Prior Weighting Schemes",
+        _sub,
+    )
+    fig.subplots_adjust(left=0.10, right=0.88, top=0.82, bottom=0.14, wspace=0.42)
     save(fig, "15_method_bumpchart")
 
 

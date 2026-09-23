@@ -56,10 +56,13 @@ def build():
 
     ax.set_yticks(y_positions)
     ax.set_yticklabels(labels, fontsize=6)
-    ax.set_xlabel("Integrated Evidence Score", fontsize=7, fontweight="bold")
+    ax.set_xlabel("Integrated evidence score (Δ = band width)", fontsize=7, fontweight="bold")
     ax.set_xlim(0.62, 1.17)
-    ax.set_title("Weight-Perturbation Bands (Dirichlet k=40)", fontsize=8,
-                 fontweight="bold", pad=16)
+    title_block(
+        fig,
+        "95% Weight-Perturbation Interval (Dirichlet k = 40)",
+        "Point = integrated score; interval = weight-perturbation range",
+    )
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
@@ -67,13 +70,13 @@ def build():
     from matplotlib.lines import Line2D
     legend_elements = [
         Line2D([0], [0], color=C_A, lw=2, label="Track A (RNAi-screened)"),
-        Line2D([0], [0], color=C_HL, lw=2, label="Track B (Unscreened)"),
+        Line2D([0], [0], color=C_HL, lw=2, label="Track B (not tested)"),
     ]
     ax.legend(handles=legend_elements, fontsize=5.5, loc="lower center",
               bbox_to_anchor=(0.5, 1.01), ncol=2, frameon=False,
               handletextpad=0.4, columnspacing=1.4)
 
-    fig.subplots_adjust(left=0.32, right=0.92, top=0.93, bottom=0.10)
+    fig.subplots_adjust(left=0.32, right=0.92, top=0.84, bottom=0.12)
     save(fig, "39_score_uncertainty_forest")
     print("Built 39_score_uncertainty_forest.png")
 

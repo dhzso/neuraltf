@@ -49,7 +49,7 @@ def build():
 
     specs = [
         ("circular", "#687787", "All 11 streams (circular)", 1.4, "--"),
-        ("honest", C_A, "Circularity-controlled", 1.8, "-"),
+        ("honest", C_A, "Circularity-controlled (label-free)", 1.8, "-"),
         ("honest_strict", C_B, "Strict label-free", 1.5, "-"),
     ]
 
@@ -71,7 +71,7 @@ def build():
     base_a = data.get("honest", data.get("circular", {})).get("pr", {}).get(
         "baseline", n_screened / n_total)
     ax1.axhline(y=base_a, color="#888888", lw=0.8, linestyle=":",
-                label=f"Baseline ({base_a:.4f})")
+                label=f"Prevalence baseline ({base_a:.4f})")
 
     ax1.set_xlabel("Recall (Sensitivity)", fontsize=7.0)
     ax1.set_ylabel("Precision (Positive Predictive Value)", fontsize=7.0)
@@ -98,7 +98,7 @@ def build():
     base_b = pheno_data.get("honest", pheno_data.get("circular", {})).get(
             "pr", {}).get("baseline", n_pheno / n_total)
     ax2.axhline(y=base_b, color="#888888", lw=0.8, linestyle=":",
-                label=f"Baseline ({base_b:.4f})")
+                label=f"Prevalence baseline ({base_b:.4f})")
 
     ax2.set_xlabel("Recall (Sensitivity)", fontsize=7.0)
     ax2.set_ylabel("Precision (Positive Predictive Value)", fontsize=7.0)
@@ -109,9 +109,16 @@ def build():
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
 
-    fig.suptitle("Precision–Recall: Neural TF Recovery Across Benchmarks",
-                 fontsize=8.5, fontweight="bold", y=0.99)
-    fig.subplots_adjust(left=0.08, right=0.98, top=0.88, bottom=0.14, wspace=0.22)
+    # 2026-09-23: header raised ~2.5 pt + subtitle pulled 3.5 pt closer to
+    # the title so the subtitle clears the panel tag "b" and panel titles
+    # below it (previously the bboxes overlapped by ~1.7 pt).
+    title_block(
+        fig,
+        "Precision–Recall: Neural TF Recovery Across Benchmarks",
+        f"Benchmarks: RNAi-screened ($n$ = {n_screened}) and FISH-confirmed ($n$ = {n_pheno}) cohorts",
+        y=0.9952, sub_y=0.9434,
+    )
+    fig.subplots_adjust(left=0.08, right=0.98, top=0.84, bottom=0.16, wspace=0.22)
     save(fig, "27_pr_curve")
 
 

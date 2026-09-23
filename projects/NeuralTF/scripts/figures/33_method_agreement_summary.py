@@ -60,7 +60,11 @@ def build():
     ax.set_yticks(range(3))
     ax.set_yticklabels(display_methods, fontsize=6.8)
 
-    # Cell annotations with Jaccard index, shared candidate count, and hypergeometric test P-value
+    # Cell annotations: Jaccard + shared-candidate counts (the identical
+    # stratified P-value is stated once in the subtitle, not per cell)
+    _keys = ["fixed_vs_centered", "fixed_vs_uniform", "centered_vs_uniform"]
+    pair_ps = {pairwise.get(k, {}).get("stratified_poisson_p") for k in _keys} - {None}
+    _single_p = next(iter(pair_ps)) if len(pair_ps) == 1 else None
     for i in range(3):
         for j in range(3):
             val = matrix[i, j]
@@ -75,14 +79,17 @@ def build():
                 # overstates significance by ~25 orders of magnitude and
                 # the previous "P < 10^-30" fallback was an invented
                 # statistic with no source in any artifact.
-                p_strat = pairwise.get(key, {}).get("stratified_poisson_p", None)
-                if p_strat is not None:
-                    if p_strat < 1e-15:
-                        p_str = r"P < 10^{-15}"
+                if _single_p is None:
+                    p_strat = pairwise.get(key, {}).get("stratified_poisson_p", None)
+                    if p_strat is not None:
+                        if p_strat < 1e-15:
+                            p_str = r"P < 10^{-15}"
+                        else:
+                            base, exp = f"{p_strat:.1e}".split("e")
+                            p_str = rf"P = {base} \times 10^{{{int(exp)}}}"
+                        cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)\n(${p_str}$)"
                     else:
-                        base, exp = f"{p_strat:.1e}".split("e")
-                        p_str = rf"P = {base} \times 10^{{{int(exp)}}}"
-                    cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)\n(${p_str}$)"
+                        cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)"
                 else:
                     cell_text = f"$J = {val:.2f}$\n({cnt}/10 shared)"
             ax.text(
@@ -95,28 +102,28 @@ def build():
                 color=text_color,
             )
 
-    ax.set_title("Prioritization Method Agreement (Top 10 Candidates)", fontsize=8.0, fontweight="bold", pad=14)
     three_way = data.get("three_way", {})
     n_three = three_way.get("overlap_count", 10)
     p_3way = three_way.get("stratified_poisson_p", None)
     # Correct pairwise stratified Poisson p (9.42e-12, from within-stratum null)
     p_pair_strat = pairwise.get("fixed_vs_centered", {}).get("stratified_poisson_p", None)
     
-    if p_pair_strat is not None and p_3way is not None:
+    if p_pair_strat is not None:
         b_p, e_p = f"{p_pair_strat:.1e}".split("e")
-        b_3, e_3 = f"{p_3way:.1e}".split("e")
         p_pair_str = rf"P = {b_p} \times 10^{{{int(e_p)}}}"
-        p_3way_str = rf"P = {b_3} \times 10^{{{int(e_3)}}}"
-        sub_text = f"Pairwise stratified ${p_pair_str}$; 3-way consensus ({n_three}/10, stratified ${p_3way_str}$)"
-    elif p_3way is not None:
-        base, exp = f"{p_3way:.1e}".split("e")
-        p_strat_str = rf"P = {base} \times 10^{{{int(exp)}}}"
-        sub_text = f"3-way consensus ({n_three}/10 candidates, stratified ${p_strat_str}$)"
+        # 2026-09-23: keep the one-line subtitle inside the 3.8 in canvas (the
+        # longer wording was the widest artist in the tight savefig bbox).
+        # 2026-09-23 (v2): "(k/10)" -> "(shared/10)" — k collides with the
+        # Dirichlet concentration (k = 40) used on this figure's own axes.
+        sub_text = (f"3-way consensus {n_three}/10; J = Jaccard, (shared/10); "
+                    f"stratified ${p_pair_str}$")
     else:
-        # 2026-09-19: the previous fallback printed an invented
-        # "P < 10^-30" with no artifact source — removed; counts only.
-        sub_text = f"3-way consensus ({n_three}/10 candidates)"
-    ax.text(0.5, 1.02, sub_text, transform=ax.transAxes, fontsize=5.6, ha="center", va="bottom", color="#444444")
+        sub_text = f"3-way consensus {n_three}/10; J = Jaccard, (shared/10)"
+    title_block(
+        fig,
+        "Prioritization Method Agreement (Top 10 Candidates)",
+        sub_text,
+    )
 
     # Colorbar
     cbar = fig.colorbar(im, ax=ax, shrink=0.82, pad=0.04)
@@ -130,6 +137,7 @@ def build():
     ax.tick_params(which="minor", bottom=False, left=False)
 
     fig.tight_layout()
+    fig.subplots_adjust(top=0.84, bottom=0.22)
     save(fig, "33_method_agreement_summary")
 
 if __name__ == "__main__":

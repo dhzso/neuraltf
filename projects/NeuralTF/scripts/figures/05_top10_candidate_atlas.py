@@ -23,6 +23,7 @@ TF_FAMILIES = {
     "Forkhead": "#D55E00",
     "T-box": "#CC79A7",
     "p53": "#56B4E9",
+    "HMG": "#8A4F8B",
 }
 
 
@@ -40,7 +41,34 @@ def tf_family_color(domains_str):
         return "T-box", TF_FAMILIES["T-box"]
     if "p53" in d:
         return "p53", TF_FAMILIES["p53"]
+    if "hmg" in d:
+        return "HMG", TF_FAMILIES["HMG"]
     return "Other", "#888888"
+
+
+def load_family_catalog():
+    """Gene -> annotated TF family fallback from the master TF catalog.
+
+    2026-09-23: the InterPro keyword table above only knows six families, so
+    any other family rendered a bare "Other" badge (e.g. dd34144/pan =
+    TCF7L2, whose domains are "HMG_box_dom; TCF/LEF"). When the keyword
+    match misses, look the v6 gene up in the King mmc4 / Perez MOESM5
+    annotations (tf_family_king -> tf_family_perez -> tf_class_perez) and
+    show that family name instead.
+    """
+    path = RES.parent / "data" / "master_tf_catalog.csv"
+    if not path.exists():
+        return {}
+    cat = pd.read_csv(path, usecols=["v6_id", "tf_family_king",
+                                     "tf_family_perez", "tf_class_perez"])
+    out = {}
+    for _, r in cat.iterrows():
+        for col in ("tf_family_king", "tf_family_perez", "tf_class_perez"):
+            v = r[col]
+            if pd.notna(v) and str(v).strip() and str(v).strip().lower() != "nan":
+                out[str(r["v6_id"])] = str(v).strip()
+                break
+    return out
 
 
 def clean_ortholog_symbol(orth_str):
@@ -70,6 +98,7 @@ def clean_ortholog_symbol(orth_str):
 def build():
     neural = load_neural()
     top10 = load_top10()
+    family_catalog = load_family_catalog()
 
     if top10.empty:
         fig, ax = plt.subplots(figsize=(7.5, 4.0))
@@ -93,6 +122,10 @@ def build():
         orth_sym = clean_ortholog_symbol(orth_raw)
         domains = str(row.get("interpro_domains", row.get("domains_all", "")))
         fam, fam_c = tf_family_color(domains)
+        if fam == "Other":
+            # Show the annotated family name instead of a bare "Other".
+            fam = family_catalog.get(str(gid), "") or fam
+            fam_c = TF_FAMILIES.get(fam, fam_c)
 
         # Extract all 11 stream values
         stream_vals = {}
@@ -145,12 +178,12 @@ def build():
     base_cmap.set_bad(color="#ECEFF1")
 
     # Figure setup: 9.6 x 4.8 inches at 500 DPI
-    fig = plt.figure(figsize=(9.6, 4.8), dpi=500)
+    fig = plt.figure(figsize=(9.6, 5.4), dpi=500)
 
     # Deterministic pixel-perfect axes layout accommodating all 11 streams
-    ax_track = fig.add_axes([0.035, 0.16, 0.012, 0.67])
-    ax_mat   = fig.add_axes([0.115, 0.16, 0.490, 0.67])
-    ax_score = fig.add_axes([0.655, 0.16, 0.320, 0.67], sharey=ax_mat)
+    ax_track = fig.add_axes([0.035, 0.16, 0.012, 0.63])
+    ax_mat   = fig.add_axes([0.115, 0.16, 0.490, 0.63])
+    ax_score = fig.add_axes([0.655, 0.16, 0.320, 0.63], sharey=ax_mat)
 
     div_y = 4.5  # Track A is 0..4, Track B is 5..9
     colors = [C_A] * len(sub_a) + [C_B] * len(sub_b)
@@ -164,13 +197,13 @@ def build():
     ax_track.axis("off")
 
     # Track labels to the left of the track strip
-    fig.text(0.025, 0.66, "Track A: RNAi-screened", rotation=90, va="center", ha="center",
+    fig.text(0.025, 0.63, "Track A: RNAi-screened", rotation=90, va="center", ha="center",
              fontsize=6.8, fontweight="bold", color=C_A)
-    fig.text(0.025, 0.33, "Track B: Unscreened", rotation=90, va="center", ha="center",
+    fig.text(0.025, 0.32, "Track B: not tested", rotation=90, va="center", ha="center",
              fontsize=6.8, fontweight="bold", color=C_B)
 
     # ------------------ PANEL A: Evidence Stream Matrix ------------------
-    panel_tag(ax_mat, "a", x=-0.14, y=1.12)
+    panel_tag(ax_mat, "a", x=-0.14, y=1.06)  # keep clear of the 0.878 legend band
     im = ax_mat.imshow(masked_mat, aspect="auto", cmap=base_cmap, vmin=0, vmax=1, interpolation="nearest")
     ax_mat.set_xticks(range(len(streams)))
     ax_mat.set_xticklabels(stream_names, fontsize=5.4, fontweight="bold", va="bottom")
@@ -196,7 +229,7 @@ def build():
     ax_mat.tick_params(axis="both", length=0, pad=5)
 
     # ------------------ PANEL B: Prioritization Scores & Annotations ------------------
-    panel_tag(ax_score, "b", x=-0.06, y=1.12)
+    panel_tag(ax_score, "b", x=-0.06, y=1.06)  # keep clear of the 0.878 legend band
     y_pos = np.arange(n_total)
 
     # Two-tone stacked horizontal bar chart: Base score + Composite bonus
@@ -209,11 +242,11 @@ def build():
     ax_score.barh(y_pos, bonus_scores, left=base_scores, height=0.56, color=C_BONUS, alpha=0.90, edgecolor="none")
 
     # Column headers above Panel B
-    x_score_col = 1.15
-    x_fam_col = 1.40
-    x_orth_col = 1.68
+    x_score_col = 1.12
+    x_fam_col = 1.50
+    x_orth_col = 1.80
 
-    ax_score.text(x_score_col, -0.75, "Score", fontsize=6.5, fontweight="bold", ha="center", va="bottom", color="#444444")
+    ax_score.text(x_score_col, -0.75, "Composite", fontsize=6.5, fontweight="bold", ha="center", va="bottom", color="#444444")
     ax_score.text(x_fam_col, -0.75, "TF Family", fontsize=6.5, fontweight="bold", ha="center", va="bottom", color="#444444")
     ax_score.text(x_orth_col, -0.75, "Human Ortholog", fontsize=6.5, fontweight="bold", ha="left", va="bottom", color="#444444")
 
@@ -229,9 +262,9 @@ def build():
                        fontstyle="italic", color="#333333")
 
     ax_score.axhline(div_y, color="#CCCCCC", lw=1.0, ls="--")
-    ax_score.set_xlim(0, 2.15)
+    ax_score.set_xlim(0, 2.40)
     ax_score.set_ylim(n_total - 0.5, -0.5)
-    ax_score.set_xlabel("Prioritization Score", fontsize=7.2, fontweight="bold")
+    ax_score.set_xlabel("Composite score (integrated + bonus)", fontsize=7.2, fontweight="bold")
     ax_score.set_xticks([0.0, 0.5, 1.0])
     ax_score.tick_params(axis="x", labelsize=6.8)
     ax_score.tick_params(left=False, labelleft=False)
@@ -242,7 +275,7 @@ def build():
     # Colorbar below Panel A
     cbar_ax = fig.add_axes([0.115, 0.048, 0.16, 0.016])
     cbar = fig.colorbar(im, cax=cbar_ax, orientation="horizontal")
-    cbar.set_label("Stream Score", fontsize=6.2, fontweight="bold")
+    cbar.set_label("Evidence score (0–1)", fontsize=6.2, fontweight="bold")
     cbar.set_ticks([0.0, 0.5, 1.0])
     cbar.ax.tick_params(labelsize=6)
     cbar.outline.set_linewidth(0.5)
@@ -250,33 +283,32 @@ def build():
     # Missing / N/A swatch below Panel A
     fig.patches.append(plt.Rectangle((0.300, 0.048), 0.012, 0.016, transform=fig.transFigure,
                                      facecolor="#ECEFF1", edgecolor="#CCCCCC", lw=0.5, clip_on=False))
-    fig.text(0.318, 0.054, "N/A", fontsize=6.0, va="center", color="#555555")
+    fig.text(0.318, 0.054, "Unassayed", fontsize=6.0, va="center", color="#555555")
 
     # Unified Legend below Panel B
     leg_handles = [
-        Patch(facecolor=C_A, label="Track A (RNAi-screened): base score"),
-        Patch(facecolor=C_B, label="Track B (Unscreened): base score"),
+        Patch(facecolor=C_A, label="Integrated score — Track A (RNAi-screened)"),
+        Patch(facecolor=C_B, label="Integrated score — Track B (not tested)"),
         Patch(facecolor=C_BONUS, label="Composite bonus"),
     ]
-    ax_score.legend(
+    fig.legend(
         handles=leg_handles,
-        loc="lower left",
-        bbox_to_anchor=(0.0, -0.22),
+        loc="lower center",
+        bbox_to_anchor=(0.5, 0.878),
         ncol=3,
         frameon=False,
         fontsize=6.2,
     )
 
     # Footnote explaining FISH phenotype confirmation
-    fig.text(0.045, 0.008,
-             "\u2020 FISH phenotype-confirmed neural regulator (King et al., 2024); other Track A candidates RNAi-screened without confirmed neural phenotype.",
+    fig.text(0.360, 0.008,
+             "† FISH-confirmed (King et al., 2024)   ·   — unassayed (not measured)",
              fontsize=5.8, fontstyle="italic", color="#555555")
 
-    fig.suptitle(
-        "Candidate Atlas: High-Confidence & Novel Neural Transcription Factor Regulators",
-        fontsize=8.5,
-        fontweight="bold",
-        y=0.98,
+    title_block(
+        fig,
+        "Candidate Atlas: Dual-Track Top-10 Neural Transcription Factors",
+        "Panel a: 11-stream evidence matrix; panel b: composite score = base + bonus (max +0.07)",
     )
 
     save(fig, "05_top10_candidate_atlas")

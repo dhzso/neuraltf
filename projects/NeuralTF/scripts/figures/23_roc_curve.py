@@ -59,7 +59,7 @@ def build():
 
     specs = [
         ("circular", "#687787", "All 11 streams (circular)", 1.4, "--"),
-        ("honest", C_A, "Circularity-controlled", 1.8, "-"),
+        ("honest", C_A, "Circularity-controlled (label-free)", 1.8, "-"),
         ("honest_strict", C_B, "Strict label-free", 1.5, "-"),
     ]
 
@@ -73,10 +73,10 @@ def build():
         tpr = np.array(d["roc"]["tpr"])
         roc_auc = auc(fpr, tpr)
         ax1.plot(fpr, tpr, color=color, lw=lw, linestyle=ls,
-                 label=f"{label_str} ({roc_auc:.3f})")
+                 label=f"{label_str} (AUC={roc_auc:.3f})")
 
     ax1.plot([0, 1], [0, 1], color="#888888", lw=0.8, linestyle=":",
-             label="Random (0.500)")
+             label="Random (AUC=0.500)")
     ax1.set_xlabel("False Positive Rate (1 - Specificity)", fontsize=7.0)
     ax1.set_ylabel("True Positive Rate (Sensitivity)", fontsize=7.0)
     ax1.set_title(f"RNAi-Screened Benchmark (n = {n_screened})", fontsize=7.8, pad=6)
@@ -97,10 +97,10 @@ def build():
         tpr = np.array(d["roc"]["tpr"])
         roc_auc = auc(fpr, tpr)
         ax2.plot(fpr, tpr, color=color, lw=lw, linestyle=ls,
-                 label=f"{label_str} ({roc_auc:.3f})")
+                 label=f"{label_str} (AUC={roc_auc:.3f})")
 
     ax2.plot([0, 1], [0, 1], color="#888888", lw=0.8, linestyle=":",
-             label="Random (0.500)")
+             label="Random (AUC=0.500)")
     ax2.set_xlabel("False Positive Rate (1 - Specificity)", fontsize=7.0)
     ax2.set_ylabel("True Positive Rate (Sensitivity)", fontsize=7.0)
     ax2.set_title(f"FISH Phenotype-Confirmed (n = {n_pheno})", fontsize=7.8, pad=6)
@@ -110,9 +110,16 @@ def build():
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
 
-    fig.suptitle("Receiver Operating Characteristic: Neural TF Recovery Across Benchmarks",
-                 fontsize=8.5, fontweight="bold", y=0.99)
-    fig.subplots_adjust(left=0.08, right=0.98, top=0.88, bottom=0.14, wspace=0.22)
+    # 2026-09-23: header raised ~2.5 pt + subtitle pulled 3.5 pt closer to
+    # the title so the subtitle clears the panel tag "b" and panel titles
+    # below it (previously the bboxes overlapped by ~1.7 pt).
+    title_block(
+        fig,
+        "Receiver Operating Characteristic: Neural TF Recovery Across Benchmarks",
+        f"Benchmarks: RNAi-screened ($n$ = {n_screened}) and FISH-confirmed ($n$ = {n_pheno}) cohorts",
+        y=0.9952, sub_y=0.9434,
+    )
+    fig.subplots_adjust(left=0.08, right=0.98, top=0.84, bottom=0.16, wspace=0.22)
     save(fig, "23_roc_curve")
 
 

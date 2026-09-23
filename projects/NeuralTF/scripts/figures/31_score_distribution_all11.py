@@ -51,25 +51,30 @@ def build():
         if len(vals) > 1:
             q25, med, q75 = np.percentile(vals, [25, 50, 75])
             ax.plot([q25, q75], [i, i], color="#222222", lw=1.5, zorder=3)
-            ax.plot(med, i, marker="o", markersize=4.0, color="#111111", zorder=4)
+            ax.plot(med, i, marker="o", markersize=4.0, color="#111111", zorder=4,
+                    clip_on=False)
         elif len(vals) == 1:
-            ax.plot(vals[0], i, marker="o", markersize=4.0, color="#111111", zorder=4)
+            ax.plot(vals[0], i, marker="o", markersize=4.0, color="#111111", zorder=4,
+                    clip_on=False)
 
         # Annotation of median score and non-zero count
-        ax.text(1.04, i, f"Med={medians[i]:.2f} (n={counts[i]:,})",
+        ax.text(1.015, i, f"Median = {medians[i]:.2f} (n={counts[i]:,})",
                 va="center", ha="left", fontsize=6.0, color="#333333")
 
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=6.5)
-    ax.set_xlabel("Normalized Evidence Score", fontsize=7.0)
-    ax.set_xlim(-0.02, 1.35)
-    ax.set_title("Empirical Score Distributions Across 11 Integrated Evidence Streams",
-                 fontsize=8.0, pad=6)
+    ax.set_xlabel("Normalized Evidence Score (0–1)", fontsize=7.0)
+    ax.set_xlim(0, 1.0)
+    title_block(
+        fig,
+        "Empirical Score Distributions Across 11 Integrated Evidence Streams",
+        "Violin = non-zero score density; bar = IQR (q25-q75); marker = median; n = non-zero-score candidates",
+    )
     ax.invert_yaxis()
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    fig.subplots_adjust(left=0.22, right=0.96, top=0.90, bottom=0.12)
+    fig.subplots_adjust(left=0.22, right=0.70, top=0.86, bottom=0.16)
     save(fig, "31_score_distribution_all11")
 
 

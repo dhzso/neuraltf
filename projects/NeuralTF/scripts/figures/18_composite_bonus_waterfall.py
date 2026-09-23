@@ -114,18 +114,22 @@ def build():
             ticklabel.set_fontweight("bold")
 
     # Explicit Track badges on right side
-    ax.text(1.15, 7.0, "Track B\n(Unscreened)", fontsize=6.5, fontweight="bold", color=C_B, va="center", ha="left")
+    ax.text(1.15, 7.0, "Track B\n(not tested)", fontsize=6.5, fontweight="bold", color=C_B, va="center", ha="left")
     ax.text(1.15, 2.0, "Track A\n(RNAi-screened)", fontsize=6.5, fontweight="bold", color=C_A, va="center", ha="left")
 
     ax.set_xlabel("Prioritization score (base score + additive bonuses)", fontsize=7.0)
     ax.set_ylabel("Candidate neural TF", fontsize=7.0)
-    ax.set_title("Additive Bonus Contributions to Candidate Prioritization (Top 10 TFs)",
-                 fontsize=8.0, fontweight="bold", pad=24)
+    title_block(
+        fig,
+        "Additive Bonus Contributions to Candidate Prioritization (Top 10 TFs)",
+        "Bonuses: GO neural +0.03, GO TF +0.02, human ortholog +0.02 (maximum +0.07)",
+    )
     ax.legend(loc="lower left", bbox_to_anchor=(0.0, 1.02), ncol=4, frameon=False, fontsize=6.2)
     ax.set_xlim(0, 1.05)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()
+    fig.subplots_adjust(top=0.80, bottom=0.14)
     save(fig, "18_composite_bonus_waterfall")
 
 

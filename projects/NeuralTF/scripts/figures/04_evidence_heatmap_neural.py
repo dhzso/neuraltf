@@ -78,14 +78,14 @@ def build():
     base_cmap.set_bad(color="#ECEFF1")
 
     # Dimensions: 8.2 x 12.0 inches at 500 DPI (crisp, balanced publication format)
-    fig = plt.figure(figsize=(8.2, 12.0), dpi=500)
+    fig = plt.figure(figsize=(8.2, 13.0), dpi=500)
     gs = fig.add_gridspec(
         1, 4,
         width_ratios=[0.022, 0.54, 0.18, 0.26],
         wspace=0.10,
         left=0.06,
         right=0.96,
-        top=0.87,
+        top=0.845,
         bottom=0.05
     )
     ax_track = fig.add_subplot(gs[0, 0])
@@ -151,12 +151,12 @@ def build():
     for y, (name, col) in enumerate(zip(gene_labels, colors)):
         # Key candidates bolded slightly
         weight = "bold" if y < 5 or (len(t_a) <= y < len(t_a) + 5) else "normal"
-        ax_labels.text(0.04, y, name, va="center", ha="left", fontsize=4.8, fontweight=weight, color="#222222")
+        ax_labels.text(0.04, y, name, va="center", ha="left", fontsize=5.0, fontweight=weight, color="#222222")
 
     # Colorbar and Missing Value Legend below heatmap
     cbar_ax = fig.add_axes([0.14, 0.022, 0.28, 0.009])
     cbar = fig.colorbar(im, cax=cbar_ax, orientation="horizontal")
-    cbar.set_label("Normalized Evidence Stream Score", fontsize=6.5, fontweight="bold")
+    cbar.set_label("Normalized evidence (0–1)", fontsize=6.5, fontweight="bold")
     cbar.set_ticks([0.0, 0.5, 1.0])
     cbar.ax.tick_params(labelsize=6)
     cbar.outline.set_linewidth(0.5)
@@ -164,33 +164,36 @@ def build():
     # Missing / Not evaluated swatch
     fig.patches.append(plt.Rectangle((0.44, 0.022), 0.015, 0.009, transform=fig.transFigure,
                                      facecolor="#ECEFF1", edgecolor="#CCCCCC", lw=0.5, clip_on=False))
-    fig.text(0.46, 0.025, "Not evaluated / N/A", fontsize=6.0, va="center", color="#555555")
+    fig.text(0.46, 0.025, "Unassayed", fontsize=6.0, va="center", color="#555555")
 
     # Track Legend below score bars
     leg_handles = [
-        Patch(facecolor=C_A, label=f"Tested (n={len(t_a)})"),
-        Patch(facecolor=C_B, label=f"Not tested (n={len(t_b)})"),
+        Patch(facecolor=C_A, label=f"Track A: tested (n={len(t_a)})"),
+        Patch(facecolor=C_B, label=f"Track B: not tested (n={len(t_b)})"),
         Patch(facecolor=C_FSTF, label=f"Known FSTF (n={len(t_f)})"),
     ]
     fig.legend(
         handles=leg_handles,
-        loc="lower right",
-        bbox_to_anchor=(0.96, 0.015),
-        ncol=1,
+        loc="lower center",
+        bbox_to_anchor=(0.5, 0.895),
+        ncol=3,
         frameon=False,
         fontsize=6.5,
     )
 
     # Track labels on far left margin
-    fig.text(0.02, 0.62, f"Tested (n={len(t_a)})\u2020", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_A)
-    fig.text(0.02, 0.25, f"Not tested (n={len(t_b)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_B)
-    fig.text(0.02, 0.075, f"Known FSTF (n={len(t_f)})\u2020", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_FSTF)
+    fig.text(0.02, 0.62, f"Track A: tested (n={len(t_a)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_A)
+    fig.text(0.02, 0.25, f"Track B: not tested (n={len(t_b)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_B)
+    fig.text(0.02, 0.075, f"Known FSTF (n={len(t_f)})", rotation=90, va="center", ha="center", fontsize=7.5, fontweight="bold", color=C_FSTF)
 
-    fig.suptitle(
+    # 2026-09-23: header lowered from y=0.985 so the title/subtitle sit
+    # ~12 pt above the track legend instead of ~47 pt (user feedback: the
+    # header floated far above the legend line).
+    title_block(
+        fig,
         f"Multi-Stream Evidence Landscape Across All {len(df)} Prioritized Neural Transcription Factors",
-        fontweight="bold",
-        fontsize=8.8,
-        y=0.985,
+        f"{len(df)} TFs x 11 evidence streams; rows grouped by track (A, B, known FSTF)",
+        y=0.947,
     )
 
     save(fig, "04_evidence_heatmap_neural")

@@ -42,9 +42,9 @@ def build():
     ax.scatter(x_m[is_bg], y_m[is_bg], s=8, color="#C8CED6", alpha=0.3,
                edgecolors="none", label=f"Transcriptome-wide (n={np.sum(is_bg):,})")
     ax.scatter(x_m[is_val], y_m[is_val], s=28, color=C_A, alpha=0.92,
-               edgecolors="white", lw=0.5, zorder=5, label=f"Tested (n={np.sum(is_val)})\u2020")
+               edgecolors="white", lw=0.5, zorder=5, label=f"Track A: RNAi-screened (n={np.sum(is_val)})")
     ax.scatter(x_m[is_nov], y_m[is_nov], s=28, color=C_B, alpha=0.92,
-               edgecolors="white", lw=0.5, zorder=6, label=f"Not tested (n={np.sum(is_nov)})")
+               edgecolors="white", lw=0.5, zorder=6, label=f"Track B: not tested (n={np.sum(is_nov)})")
 
     lo, hi = -0.02, 1.05
     ax.plot([lo, hi], [lo, hi], "--", color="#666666", lw=0.8, label="y = x (identity)")
@@ -54,11 +54,6 @@ def build():
     top10 = load_top10()
     t = df[df["gene_id"].isin(set(top10["gene_id"]))]
     dmax = float((t["integrated_score"] - t["dirichlet_median_score"]).abs().max())
-    ax.text(0.05, 0.93,
-            f"Spearman $r_s = {rho:.3f}$\n${p_str}$\n$N = {len(x_m):,}$\n"
-            f"Top-10 |$\u0394$score| \u2264 {dmax:.2f}",
-            transform=ax.transAxes, fontsize=6.2, va="top", color="#222222",
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#DDDDDD", lw=0.5))
 
     ax.set_xlabel("Fixed weight integrated score", fontsize=7.0)
     ax.set_ylabel("Centered Dirichlet median score (1,000 draws)", fontsize=7.0)
@@ -68,9 +63,12 @@ def build():
     ax.spines["right"].set_visible(False)
     ax.legend(loc="lower right", frameon=False, fontsize=6.0)
 
-    fig.suptitle("Score concordance: Fixed weights vs Centered Dirichlet prior (k = 40)",
-                 fontsize=8.0, y=0.98)
-    fig.subplots_adjust(left=0.14, right=0.96, top=0.90, bottom=0.14)
+    title_block(
+        fig,
+        "Score concordance: Fixed weights vs Centered Dirichlet prior (k = 40)",
+        f"Spearman $r_s$ = {rho:.3f}, $N$ = {len(x_m):,}; 1,000 concentrated-prior draws; dashed line = identity $y = x$",
+    )
+    fig.subplots_adjust(left=0.14, right=0.96, top=0.86, bottom=0.15)
     save(fig, "42_centered_scatter_all")
 
 

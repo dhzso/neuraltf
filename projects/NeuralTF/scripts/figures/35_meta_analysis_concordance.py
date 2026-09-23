@@ -36,7 +36,7 @@ def build():
     fig, ax = plt.subplots(figsize=(W_1COL, 3.6))
 
     # Identity and zero reference lines
-    ax.axhline(0, color="#D0D7DE", lw=0.6, ls=":", zorder=1)
+    ax.axhline(0, color="#D0D7DE", lw=0.6, ls=":", zorder=1, label="Zero (reference)")
     ax.axvline(0, color="#D0D7DE", lw=0.6, ls=":", zorder=1)
     ax.plot([-1, 9], [-1, 9], color="#888888", lw=0.8, ls="--", zorder=2, label="Identity ($y = x$)")
 
@@ -95,24 +95,6 @@ def build():
                     zorder=7,
                 )
 
-    # Inset correlation statistics (compact, non-intrusive).
-    # P-values underflow to 0.0 at this n; report the computed value when
-    # representable, otherwise state the precision floor honestly.
-    def _p_str(p):
-        return "P below double precision" if p == 0.0 else f"P = {p:.1e}"
-    ax.text(
-        0.05,
-        0.94,
-        f"Spearman $r_s = {r_s:.2f}$ (${_p_str(p_s)}$, $n = {len(clean_lfc):,}$)\n"
-        f"Pearson $r = {r_p:.2f}$ (${_p_str(p_p)}$)",
-        transform=ax.transAxes,
-        fontsize=5.8,
-        va="top",
-        ha="left",
-        bbox=dict(boxstyle="square,pad=0.3", fc="#FFFFFF", ec="#CCCCCC", lw=0.5, alpha=0.9),
-        zorder=8,
-    )
-
     ax.set_xlabel("Fincher et al. $\\log_2$ fold change", fontsize=7.0)
     ax.set_ylabel("Plass et al. $\\log_2$ fold change", fontsize=7.0)
     ax.set_xlim(-1.5, 9.5)
@@ -122,15 +104,19 @@ def build():
     ax.legend(
         loc="lower left",
         bbox_to_anchor=(0.0, 1.02),
-        ncol=2,
+        ncol=3,
         frameon=False,
         fontsize=5.8,
         handletextpad=0.3,
         columnspacing=1.2,
     )
 
-    ax.set_title("Cross-Atlas Neural Effect Size Concordance", fontsize=8.0, pad=22, fontweight="bold")
-    fig.subplots_adjust(left=0.15, right=0.96, top=0.84, bottom=0.13)
+    title_block(
+        fig,
+        "Cross-Atlas Neural Effect Size Concordance",
+        f"Spearman $r_s$ = {r_s:.2f}, Pearson $r$ = {r_p:.2f}, $n$ = {len(clean_lfc):,} genes",
+    )
+    fig.subplots_adjust(left=0.15, right=0.96, top=0.79, bottom=0.13)
     save(fig, "35_meta_analysis_concordance")
 
 if __name__ == "__main__":

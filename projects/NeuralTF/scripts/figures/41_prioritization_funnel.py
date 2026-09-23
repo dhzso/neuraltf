@@ -38,7 +38,7 @@ def build():
         ("Annotated planarian TF loci\n(PlanMine catalog)", n_all, "#8A9AA8"),
         (f"Neural-fate candidate universe\n(neural G0 progenitor mask, 73 subclusters)",
          n_neural, C_A),
-        (f"Dual-track Top-10 shortlist\n(Track A n = {n_a} screened  |  Track B n = {n_b} novel)",
+        (f"Dual-track Top-10 shortlist\n(Track A n = {n_a} screened  |  Track B n = {n_b} not tested)",
          n_top10, C_B),
     ]
 
@@ -81,22 +81,21 @@ def build():
 
     ax.text(-28, -0.42, "", fontsize=5.8)  # spacer keeps ylim breathing room
 
-    fig.text(0.31, 0.035,
-             f"Provenance at full universe: {n_tested} RNAi-screened (King 2024) · "
-             f"{n_fstf} previously-published FSTF · {n_untested:,} untested",
-             fontsize=5.8, color="#555555", style="italic")
 
     ax.set_xlim(-29, 112)
     ax.set_ylim(-0.75, len(stages) - 0.30)
     ax.set_yticks([])
     ax.set_xlabel("Share of annotated TF universe (%)  \u2014  bar width uses a log10 scale",
                   fontsize=7.0)
-    ax.set_title("Prioritization Funnel: 11,696 Loci to a 10-Gene Wet-Lab Shortlist",
-                 fontsize=8.5, fontweight="bold", pad=8)
+    title_block(
+        fig,
+        "Prioritization Funnel: 11,696 Loci to a 10-Gene Wet-Lab Shortlist",
+        f"Stage counts: {n_all:,} loci \u2192 {n_neural:,} neural-fate candidates \u2192 {n_top10} shortlist; brackets = retention",
+    )
     ax.spines[:].set_visible(False)
     ax.set_xticks([0, 25, 50, 75, 100])
 
-    fig.subplots_adjust(left=0.30, right=0.97, top=0.86, bottom=0.20)
+    fig.subplots_adjust(left=0.30, right=0.97, top=0.84, bottom=0.20)
     save(fig, "41_prioritization_funnel")
     print(f"Built 41_prioritization_funnel.png ({n_all:,} -> {n_neural} -> {n_top10})")
 

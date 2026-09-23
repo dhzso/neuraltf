@@ -52,8 +52,8 @@ def build():
         "known_fstf": "#706E65",  # 2026-09-19: unified Known-FSTF color
     }
     status_labels = {
-        "tested": "Tested",
-        "not_tested": "Not tested",
+        "tested": "RNAi-screened (Track A)",
+        "not_tested": "Not tested (Track B)",
         "known_fstf": "Known FSTF",
     }
 
@@ -91,7 +91,7 @@ def build():
             row = match.iloc[0]
             x_val = row["n_targets_total"]
             y_val = row["n_targets_neuron"]
-            txt = f"{name}\n({int(y_val)} / {int(x_val)})"
+            txt = f"{name}\n({int(y_val)}/{int(x_val)} neuron/total)"
             ax.annotate(
                 txt,
                 xy=(x_val, y_val),
@@ -106,20 +106,27 @@ def build():
 
     ax.set_xlabel("Total predicted target genes ($k_{\\mathrm{total}}$)", fontsize=7.0)
     ax.set_ylabel("Neuron target genes ($k_{\\mathrm{neuron}}$)", fontsize=7.0)
-    ax.set_title("ANANSE Regulatory Network Target Specificity", fontsize=8.0, pad=6)
+    # 2026-09-23: header raised ~2.5 pt + subtitle pulled 3.5 pt closer to
+    # the title so the subtitle no longer touches the legend row below it
+    # (was a ~1.4 pt bbox overlap).
+    title_block(
+        fig,
+        "ANANSE Regulatory Network Target Specificity",
+        f"Neural TFs $n$ = {len(neural_tfs)}; dashed line = $y = x$ (100% neuron-specific)",
+        y=0.9959, sub_y=0.941,
+    )
     ax.set_xlim(-30, 950)
     ax.set_ylim(-20, 520)
 
-    # Unframed legend text in upper left so no data area is covered
-    ax.legend(
-        loc="upper left",
-        frameon=False,
-        fontsize=6.0,
-        handletextpad=0.4,
-        borderpad=0.5,
-    )
+    # Compact header legend below the subtitle (outside the data area)
+    _h, _l = ax.get_legend_handles_labels()
+    _keep = [(hh, ll) for hh, ll in zip(_h, _l) if "neuron-specific" not in ll]
+    fig.legend(handles=[hh for hh, _ in _keep], labels=[ll for _, ll in _keep],
+               loc="lower center", bbox_to_anchor=(0.5, 0.800), ncol=2,
+               frameon=False, fontsize=5.8, handletextpad=0.4, columnspacing=1.0)
 
     fig.tight_layout()
+    fig.subplots_adjust(top=0.79, bottom=0.14)
     save(fig, "34_ananse_regulatory_network")
 
 if __name__ == "__main__":

@@ -25,30 +25,32 @@ def build():
     kde_a = gaussian_kde(a)
     kde_n = gaussian_kde(n)
     ax.plot(x_grid, kde_a(x_grid), color="#55606B", lw=1.2,
-            label=f"All candidates (n = {len(a):,}, med = {np.median(a):.2f})")
+            label=f"All TFs (N = {len(a):,}, med = {np.median(a):.2f})")
     ax.plot(x_grid, kde_n(x_grid), color=C_A, lw=1.5,
-            label=f"Neural TFs (n = {len(n):,}, med = {np.median(n):.2f})")
+            label=f"Neural subset (N = {len(n):,}, med = {np.median(n):.2f})")
 
     # Median lines
     ax.axvline(np.median(a), color="#55606B", ls=":", lw=0.9, alpha=0.6)
-    ax.axvline(np.median(n), color=C_A, ls=":", lw=0.9, alpha=0.6)
+    ax.axvline(np.median(n), color=C_A, ls=":", lw=0.9, alpha=0.6, label="median")
 
     ks, p = ks_2samp(a, n)
     p_str = "P < 10^{-30}" if p < 1e-30 else f"P = {p:.1e}"
 
     ax.set_xlabel("Integrated evidence score", fontsize=7.0)
     ax.set_ylabel("Probability density", fontsize=7.0)
-    ax.set_title("Integrated Evidence Score Separation: All TFs vs Neural Regulators",
-                 fontsize=8.0, fontweight="bold", pad=14)
-    ax.text(0.5, 1.02,
-            f"Two-sample Kolmogorov–Smirnov test: $D = {ks:.3f}$, ${p_str}$ (Background $n = {len(a):,}$, Neural $n = {len(n):,}$)",
-            transform=ax.transAxes, fontsize=6.3, ha="center", va="bottom", color="#444444")
+    title_block(
+        fig,
+        "Integrated Evidence Score Separation: All TFs vs Neural Regulators",
+        f"Kolmogorov-Smirnov $D = {ks:.3f}$, ${p_str}$; background $n = {len(a):,}$, neural $n = {len(n):,}$",
+    )
     ax.set_ylim(0, 4.3)
+    ax.set_xlim(0, 1.0)
 
     ax.legend(frameon=False, fontsize=6.2, loc="upper left")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()
+    fig.subplots_adjust(top=0.84, bottom=0.14)
     save(fig, "03_score_distribution_all_vs_neural")
 
 if __name__=="__main__": build()

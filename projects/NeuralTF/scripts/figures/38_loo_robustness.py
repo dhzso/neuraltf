@@ -34,8 +34,10 @@ def build():
     bars = ax1.barh(range(len(labels)), jaccard, color=colors, edgecolor="white", lw=0.5, height=0.7)
     ax1.set_yticks(range(len(labels)))
     ax1.set_yticklabels(labels, fontsize=6)
-    ax1.set_xlabel("Shortlist Jaccard overlap", fontsize=7, fontweight="bold")
+    ax1.set_xlabel("Shortlist Jaccard overlap  (in / out = gained / lost)", fontsize=7, fontweight="bold")
+    ax1.set_ylabel("Excluded evidence stream", fontsize=7, fontweight="bold")
     ax1.set_xlim(0, 1.42)
+    ax1.set_xticks([0.0, 0.25, 0.5, 0.75, 1.0])
     ax1.axvline(x=1.0, color="#999999", lw=0.5, ls=":", zorder=0)
     for i, (j, nn, nd) in enumerate(zip(jaccard, n_new, n_drop)):
         ax1.text(j + 0.03, i, f"{j:.2f}  ({nn} in / {nd} out)", va="center", fontsize=5.4)
@@ -60,8 +62,30 @@ def build():
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
 
-    fig.suptitle("Leave-One-Atlas-Out Robustness", fontsize=9, fontweight="bold", y=1.02)
-    fig.subplots_adjust(left=0.17, right=0.98, top=0.90, bottom=0.12, wspace=0.62)
+    sub_bot = title_block(
+        fig,
+        "Leave-One-Stream-Out Robustness",
+        "Each stream excluded once; shortlist and full-rank stability recomputed",
+    )
+    # 2026-09-23: single-row legends placed in a dedicated band between the
+    # subtitle and the panel titles (the old 3-row legends anchored at axes-frac
+    # 1.015 hung ~0.75 in above each axes and collided with title/subtitle).
+    _pt = 1.0 / (72.0 * fig.get_size_inches()[1])
+    _ax_b, _ax_t = 0.14, 0.74
+    _leg_bottom = sub_bot - (6.0 + 10.25) * _pt  # 6 pt gap + 1-row legend (fs 5.0)
+    _leg_y = (_leg_bottom - _ax_b) / (_ax_t - _ax_b)  # axes-fraction anchor
+    from matplotlib.patches import Patch
+    ax1.legend(handles=[Patch(facecolor=C_A, label="≥ 0.80"),
+                        Patch(facecolor="#8B7355", label="0.60–0.80"),
+                        Patch(facecolor=C_HL, label="< 0.60")],
+               frameon=False, fontsize=5.0, loc="lower right", ncol=3,
+               bbox_to_anchor=(1.0, _leg_y))
+    ax2.legend(handles=[Patch(facecolor=C_A, label="≥ 0.95"),
+                        Patch(facecolor="#8B7355", label="0.85–0.95"),
+                        Patch(facecolor=C_HL, label="< 0.85")],
+               frameon=False, fontsize=5.0, loc="lower right", ncol=3,
+               bbox_to_anchor=(1.0, _leg_y))
+    fig.subplots_adjust(left=0.17, right=0.98, top=_ax_t, bottom=_ax_b, wspace=0.62)
     save(fig, "38_loo_robustness")
     print("Built 38_loo_robustness.png")
 
