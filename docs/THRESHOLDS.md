@@ -8,6 +8,25 @@ This document records the biological, statistical, and mathematical justificatio
 
 ## 1. Multi-Atlas Evidence Stream Scoring Formulations
 
+### 1.0 Symbol Reference (how to read the formulas)
+
+| Symbol | Meaning | Section |
+|:---|:---|:---|
+| $n_{\text{sig clusters}}$ | number of Leiden clusters of one atlas in which the gene is *significantly* upregulated (BH $q \le 0.10$ and positive fold-change) | §1.5 (atlas component) |
+| $n_{\text{King pairs}}$ | number of distinct (compartment, subcluster) pairs with a King-atlas hit for the gene | §1.5 (King component) |
+| $N_{\text{King}} = 181$ | all King (compartment, subcluster) pairs (176 distinct subcluster names) | §1.5, §1.9 item 3 |
+| $n_{\text{neural pairs}}$, $N_{\text{neural}} = 80$ | the same pair count restricted to the neural mask | §1.5a |
+| $k = 40$ | Dirichlet concentration (pseudo-observation strength) — **unrelated to clusters** | §3.1 |
+| $k_{\text{clusters}}$ | number of clusters a gene was *tested* in; used only as the Sidak exponent $1-(1-p)^{k}$ when un-conditioning stored p-values | `scripts/stats/meta_analytic_pvalue.py` |
+
+**"Breadth"** means how many clusters/pairs the TF is (significantly) expressed in. Both specificity
+formulations invert it, but with different shapes: the principal-atlas component uses the reciprocal
+$1/n$ (a hard cliff: $n=1 \to 1.0$, $n=2 \to 0.5$), while the King/neural components use the linear
+rescaling $1-(n-1)/(N-1)$ ($n=1 \to 1.0$, $n=181 \to 0.0$; smooth, no cliff). The recorded stream score
+is the **maximum** over the components (§1.5), and evidence-card notes record only the **last** component
+written — so a card note can disagree with the value (e.g. `specificity: 1.00 — atlas=cui,n_sig_clusters=9`
+means another atlas already scored 1.0 and the note was then overwritten, not that cui contributed 1.0).
+
 ### 1.1 Expression Score Cap ($\text{Divisor} = 5.0$)
 
 $$\text{Score}_{\text{expression}} = \min\left(1.0, \frac{\max(\text{log}_2\text{FC})}{5.0}\right)$$
@@ -98,6 +117,8 @@ $$\text{Score}_{\text{perez-influence}} = \text{Influence}_{\text{neuron fate}}$
 
 - **Biological Rationale**: [Perez et al. (2025)](https://www.nature.com/articles/s41467-025-65712-0#Sec94) computed ANANSE regulatory influence scores across 9 cell fates (MOESM19). The neuron fate influence score represents the normalized rank of each TF's regulatory impact in neural differentiation. A score of 1.0 means the TF has the highest regulatory influence in neuron fate specification.
 - **Data Source**: `41467_2025_65712_MOESM19_ESM.xlsx`, sheet `infl_neuron_neoblast_250k` from [Nature Communications](https://www.nature.com/articles/s41467-025-65712-0#Sec94)
+- **What is actually scored**: the ANANSE *influence score* of the TF on the **neuron fate** — how strongly the TF's inferred enhancer-mediated regulatory network explains the neuron (vs neoblast) expression program. In that sheet the `influence_score` column is a **rank-scaled** quantity: across its 92 factors it equals exactly $1 - i/(n-1)$ (0-based rank $i$, $n = 92$, step $1/91 \approx 0.011$), so 1.0 = top-ranked neuron-fate regulator and 0.0 = lowest. The pipeline uses `influence_score` only; the raw network quantity (`influence_score_raw`) and its components (`target_score`, `G_score`, `direct_targets`, `factor_fc`) are not used.
+- **Coverage**: sheet factors are h1SMcG (h1 genome) IDs and are mapped to v6 by 1:1 reciprocal-best-hit pairs only (§1.9 item 10), so the stream is present on just **71 of 11,696** candidates in the current run (70 with a score > 0). A candidate without the stream is **not** penalised — the scorer renormalizes over present streams (§1.8).
 - **Location**: `src/bioforge/projects/neuraltf/pipeline.py:1030-1111` (`integrate_perez_influence`; the sheet is auto-discovered as the first MOESM19 sheet containing `neuron`)
 
 
@@ -228,8 +249,9 @@ The following refinements define the current behavior:
     `rank.csv` / `king_atlas.tsv` (the previous 289-candidate table
     predated the 5-atlas / 11-stream configuration); the Perez
     neural-family list in §1.6 is the exact `_PEREZ_NEURAL_CLASSES` set;
-    §1.9 item 12 describes the stratified consensus null; and all code
-    line references were refreshed.
+    §1.9 item 12 describes the stratified consensus null; §1.0 adds a
+    symbol reference and §1.7 states the rank-scaling and coverage of the
+    Perez influence stream; and all code line references were refreshed.
 
 ---
 
