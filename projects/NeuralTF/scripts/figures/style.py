@@ -286,10 +286,6 @@ def panel_tag(ax, letter: str, x: float = -0.12, y: float = 1.05, fontsize: floa
     """Add a Nature Communications standard bold lowercase panel tag (a, b, c, ...)."""
     ax.text(x, y, letter.lower(), transform=ax.transAxes,
             fontsize=fontsize, fontweight="bold", va="bottom", ha="right")
-def panel_tag(ax, letter: str, x: float = -0.12, y: float = 1.05, fontsize: float = 8.5):
-    """Add a Nature Communications standard bold lowercase panel tag (a, b, c, ...)."""
-    ax.text(x, y, letter.lower(), transform=ax.transAxes,
-            fontsize=fontsize, fontweight="bold", va="bottom", ha="right")
 
 
 def title_block(fig, title, subtitle=None, y=0.985, sub_y=None):
@@ -323,5 +319,3 @@ def figure_footnote(fig, text, y=0.012):
     (e.g. dagger, asterisks, delta, rho)."""
     fig.text(0.5, y, text, ha="center", va="bottom",
              fontsize=5.6, color="#666666")
-
-
