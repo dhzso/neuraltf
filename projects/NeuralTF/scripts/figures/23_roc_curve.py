@@ -21,18 +21,6 @@ import json
 from sklearn.metrics import auc
 
 # 2026-09-19: cohort sizes computed from the ground-truth module + rank
-# table (previously hard-coded "n = 68"/"n = 19" in titles).
-sys.path.insert(0, str(REPO / "src"))
-from bioforge.evidence.groundtruth import PHENOTYPE_CONFIRMED_V6  # noqa: E402
-
-
-def _cohort_sizes():
-    all_cand = load_all()
-    n_screened = int((all_cand["proof_status"] == "tested").sum())
-    n_pheno = int(all_cand["gene_id"].astype(str).isin(PHENOTYPE_CONFIRMED_V6).sum())
-    return n_screened, n_pheno
-
-# 2026-09-19: cohort sizes computed from the ground-truth module + rank
 # table (previously hard-coded "n = 68"/"n = 19" in titles and docstring).
 sys.path.insert(0, str(REPO / "src"))
 from bioforge.evidence.groundtruth import PHENOTYPE_CONFIRMED_V6  # noqa: E402
