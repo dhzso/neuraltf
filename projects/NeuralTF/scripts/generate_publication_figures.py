@@ -42,6 +42,7 @@ FIGURES = {
     41: ("41_prioritization_funnel.py",            "Prioritization funnel (11,696 -> 143 -> 10)"),
     42: ("42_centered_scatter_all.py",             "Fixed vs centered Dirichlet (all)"),
     43: ("43_permutation_map.py",                 "Atlas-permutation significance map — the whole test in one graph (single axes)"),
+    44: ("44_cross_atlas_pairwise_concordance.py", "All three pairwise atlas concordances (Fincher/Plass/Cui)"),
 }
 
 def _load(path, name):

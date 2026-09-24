@@ -285,7 +285,8 @@ STEPS = [
       ["projects", "NeuralTF", "figures", "39_score_uncertainty_forest.png"],
       ["projects", "NeuralTF", "figures", "40_overall_vs_composite.png"],
       ["projects", "NeuralTF", "figures", "41_prioritization_funnel.png"],
-      ["projects", "NeuralTF", "figures", "42_centered_scatter_all.png"]]),
+      ["projects", "NeuralTF", "figures", "42_centered_scatter_all.png"],
+      ["projects", "NeuralTF", "figures", "44_cross_atlas_pairwise_concordance.png"]]),
 ]
 
 
