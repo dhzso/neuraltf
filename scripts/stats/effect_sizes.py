@@ -11,7 +11,9 @@ plus Mann-Whitney U tests.
   CIRCULAR (the rnai stream IS the label): the honest variant recomputes
   the score excluding rnai/neural_enriched/neural_specificity.
 - Hedges' g (small-sample bias-corrected d, J = 1 - 3/(4(n1+n2)-9)) is
-  added alongside Cohen's d; at n1=10 the correction is ~4%.
+  added alongside Cohen's d. The J factor depends on n1+n2, so for the
+  actual contrasts here (n1=10 vs an n2 in the thousands) the correction
+  is negligible (~0.01-0.08%; ~4% only for a balanced 10-vs-10).
 
 2026-09-11 ground-truth correction: every contrast is additionally run
 against the FISH-phenotype-confirmed label (King 2024 Fig 3J/4E, S4,

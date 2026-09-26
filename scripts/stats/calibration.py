@@ -5,12 +5,14 @@ Bins integrated scores into deciles and computes the empirical positive
 rate per bin. NOTE (WS3): the integrated score is an evidence-weight
 score in [0,1], not a calibrated probability, so a classic "perfect
 calibration" diagonal is conceptually invalid. We report the honest
-discrimination metrics:
+discrimination metric:
 
-  - rank-discrimination error: mean |empirical positive rate - prevalence|
-    per decile (how far decile rates deviate from the base rate)
   - TOP-DECILE ENRICHMENT with an exact binomial CI and one-sided p-value
     (the quantity the selection funnel actually needs)
+
+(The per-decile positive-rate table itself is exported alongside, so
+any decile-level deviation from the base rate can be read directly from
+the CSV/JSON rather than through a retired summary statistic.)
 
 2026-09-11 ground-truth correction: deciles are computed for BOTH labels:
   - 'screened'  = proof_status == tested (King mmc5 RNAi screening list;
@@ -179,7 +181,9 @@ def main():
     top_enrichment = (k_top / n_top) / prevalence if prevalence > 0 else float("nan")
     top_p = float(_st.binomtest(k_top, n_top, prevalence,
                                 alternative="greater").pvalue) \
-        if hasattr(_st, "binomtest") else float(_st.binom_test(k_top, n_top, prevalence))
+        if hasattr(_st, "binomtest") \
+        else float(_st.binom_test(k_top, n_top, prevalence,
+                                  alternative="greater"))
 
     # ---- 2026-09-11: phenotype-confirmed arm (same machinery) ---------
     # Deciles are shared (defined by score rank); only the positive

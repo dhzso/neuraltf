@@ -76,44 +76,30 @@ def convergence_from_draws(mat: np.ndarray, sizes, rng, n_rep=20):
     draw and an independent size-N complement (both halves of the
     same budget), reporting Spearman between them. The size=1000 row
     is the full-budget split-half (500 vs 500).
+
+    2026-09-26 fix (labeling): ``n_draws`` reports the ACTUAL per-half
+    draw count. When the requested size exceeds half the budget, both
+    halves are clamped to the budget half (previously the row claimed
+    the requested size while comparing half-size halves — e.g. a
+    requested 750 actually compared 500 vs 500 out of 1000).
     """
     n_total = mat.shape[1]
     results = {}
     for size in sizes:
-        if size > n_total // 2:
-            # split-half: compare disjoint halves of 2*size draws when
-            # the budget allows, else compare disjoint halves of the
-            # full budget.
-            half = min(size, n_total // 2)
-            rhos = []
-            for _ in range(n_rep):
-                perm = rng.permutation(n_total)
-                a = mat[:, perm[:half]]
-                b = mat[:, perm[half:2 * half]]
-                ranks_a = _order_to_ranks(np.argsort(-np.median(a, axis=1), kind="stable"))
-                ranks_b = _order_to_ranks(np.argsort(-np.median(b, axis=1), kind="stable"))
-                rho = stats.spearmanr(ranks_a, ranks_b).statistic
-                rhos.append(0.0 if np.isnan(rho) else float(rho))
-            results[size] = {
-                "n_draws": size,
-                "design": "split-half (disjoint halves)",
-                "spearman_vs_full": float(np.mean(rhos)),
-                "spearman_std": float(np.std(rhos)),
-                "n_rep": n_rep,
-            }
-            continue
+        half = min(size, n_total // 2)   # disjoint halves of the budget
         rhos = []
         for _ in range(n_rep):
             perm = rng.permutation(n_total)
-            a = mat[:, perm[:size]]
-            b = mat[:, perm[size:2 * size]]
+            a = mat[:, perm[:half]]
+            b = mat[:, perm[half:2 * half]]
             ranks_a = _order_to_ranks(np.argsort(-np.median(a, axis=1), kind="stable"))
             ranks_b = _order_to_ranks(np.argsort(-np.median(b, axis=1), kind="stable"))
             rho = stats.spearmanr(ranks_a, ranks_b).statistic
             rhos.append(0.0 if np.isnan(rho) else float(rho))
         results[size] = {
-            "n_draws": size,
-            "design": "split-half (disjoint halves)",
+            "n_draws": half,
+            "n_draws_requested": size,
+            "design": "split-half (disjoint halves, per-half draw count)",
             "spearman_vs_full": float(np.mean(rhos)),
             "spearman_std": float(np.std(rhos)),
             "n_rep": n_rep,
@@ -211,10 +197,21 @@ def main():
     res_path = RESULTS_DIR / "permutation_resolution.csv"
     res_df.to_csv(res_path, index=False)
     print(f"\nPermutation resolution (add-one p-value granularity):")
+    # 2026-09-26 fix: iterate the family keys actually present in the row
+    # — the previous unconditional ['resolves_bonferroni_neural_candidates']
+    # raised KeyError whenever rank_neural.csv was absent (that family's
+    # column is only created when the artifact exists).
     for _, r in res_df.iterrows():
+        fam_bits = "; ".join(
+            f"{col.replace('resolves_bonferroni_', '')}: "
+            f"{'Y' if bool(r[col]) else 'N'}"
+            for col in r.index
+            if col.startswith("resolves_bonferroni_")
+        )
         print(f"  n_perm={int(r['n_perm']):>4}: min p={r['min_detectable_p']:.5f} "
-              f"(nominal 0.05: {r['resolves_p05']}; "
-              f"Bonf-neural family: {r['resolves_bonferroni_neural_candidates']})")
+              f"(nominal 0.05: {r['resolves_p05']}"
+              + (f"; Bonferroni families — {fam_bits}" if fam_bits else "")
+              + ")")
     print(f"Saved: {res_path}")
 
     # Retire the tautological panel's file so no consumer reads stale

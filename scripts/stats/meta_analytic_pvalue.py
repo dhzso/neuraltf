@@ -135,11 +135,20 @@ def fishers_method(pvalues):
     Tail via chi2.sf — 1-cdf underflows to exactly 0.0 for the large
     chi2 statistics this data produces (observed: 5,986 zero p's under
     the old form; true values as small as ~1e-33).
+
+    2026-09-26 boundary fix: a zero/negative p (maximally significant
+    input) saturates the combined p at 0 — the previous ``p[p > 0]``
+    filter silently DROPPED zero p's, discarding the strongest evidence
+    and shrinking the dof. NaN inputs (a test not performed) are the
+    only values excluded, and only explicitly.
     """
-    p = np.array(pvalues)
-    p = p[p > 0]
+    p = np.asarray(pvalues, dtype=float)
+    p = p[~np.isnan(p)]
     if len(p) == 0:
         return 0.0, 1.0
+    if np.any(p <= 0.0):
+        # chi2 = -2*sum(log(p)) -> inf; the combined p is 0.
+        return float("inf"), 0.0
     chi2_stat = -2.0 * np.sum(np.log(p))
     combined_p = float(stats.chi2.sf(chi2_stat, 2 * len(p)))
     return float(chi2_stat), combined_p
@@ -149,11 +158,23 @@ def stouffers_method(pvalues, weights=None):
     """Combine p-values using Stouffer's method. Returns z statistic and combined p-value.
 
     Tail via norm.sf (see fishers_method note).
+
+    2026-09-26 boundary fix: a zero/negative p (z = isf(0) = +inf)
+    saturates the combined p at 0 instead of being silently dropped
+    (the old ``p[p > 0]`` filter discarded the strongest evidence);
+    p >= 1 (z = -inf) is clamped to 1-1e-16 so one exhausted input
+    cannot poison the whole weighted z. NaN inputs are excluded
+    explicitly (a test not performed).
     """
-    p = np.array(pvalues)
-    p = p[p > 0]
+    p = np.asarray(pvalues, dtype=float)
+    if weights is not None:
+        weights = np.asarray(weights, dtype=float)[~np.isnan(p)]
+    p = p[~np.isnan(p)]
     if len(p) == 0:
         return 0.0, 1.0
+    if np.any(p <= 0.0):
+        return float("inf"), 0.0
+    p = np.minimum(p, 1.0 - 1e-16)
     z_scores = stats.norm.isf(p)
     if weights is None:
         weights = np.ones(len(p))
@@ -178,11 +199,18 @@ def load_de_pvalues() -> pd.DataFrame | None:
         return None
     df = pd.read_parquet(path) if path.suffix == ".parquet" else pd.read_csv(path)
     df = df.drop_duplicates(subset="v6_id", keep="first")
-    has_raw = all(f"{a}_p_raw" in df.columns for a in ATLAS_P_COLS
-                  if f"{a}_p" in df.columns)
+    # 2026-09-26 fix: has_raw is False (not vacuously True) when the
+    # checkpoint has no <atlas>_p columns at all — the old all(...) over
+    # an empty generator printed the misleading "Using UNCONDITIONED"
+    # message before the >=2-atlas check could reject the file.
+    p_cols = [a for a in ATLAS_P_COLS if f"{a}_p" in df.columns]
+    raw_cols = [a for a in ATLAS_P_COLS if f"{a}_p_raw" in df.columns]
+    has_raw = bool(p_cols) and all(a in raw_cols for a in p_cols)
     if has_raw:
-        # Use the unconditioned min-p's directly; k_eff columns carry the
-        # per-atlas cluster-test counts for the (optional) Sidak bound.
+        # Use the unconditioned min-p's directly. The per-atlas cluster-
+        # test counts k used by the Sidak un-conditioning come from
+        # checkpoint_02_post_qc via cluster_counts_from_checkpoint()
+        # (the pipeline writes no per-gene k_eff columns).
         print("Using UNCONDITIONED per-atlas min-p's (<atlas>_p_raw) — "
               "valid Fisher/Stouffer inputs.")
         rename = {}

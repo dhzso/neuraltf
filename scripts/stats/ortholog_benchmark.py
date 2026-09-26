@@ -52,6 +52,21 @@ RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
 PLANMINE = REPO / "datasets" / "processed" / "planmine_annotations.parquet"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
+# 2026-09-26 fix: import the canonical stream order AND weights instead
+# of the previously hand-copied vector (this was the only remaining file
+# that hardcoded DEFAULT_WEIGHTS — any weight change would silently
+# diverge this "honest score" from precision_recall.py's identically-
+# named score, which does import them).
+import os
+import sys
+sys.path.insert(0, os.environ.get("BIOFORGE_SRC", str(REPO / "src")))
+from bioforge.evidence.scoring import (  # noqa: E402
+    DEFAULT_WEIGHTS as _DW,
+    STREAM_ORDER,
+)
+_ALL_STREAMS = [s.value for s in STREAM_ORDER]
+_W_BY_NAME = {getattr(k, "value", k): float(v) for k, v in _DW.items()}
+
 # --- curated description-fragment classification ---------------------------------
 POSITIVE_FRAGMENTS = [
     "atonal",                          # ATOH proneural bHLH
@@ -165,25 +180,6 @@ def build_gold_standard() -> pd.DataFrame:
     return pd.DataFrame(dedup)
 
 
-def roc_auc(y_true: np.ndarray, scores: np.ndarray) -> float:
-    order = np.argsort(-scores, kind="stable")
-    y = y_true[order]
-    n_pos = int(y.sum())
-    n_neg = int(len(y) - n_pos)
-    if n_pos == 0 or n_neg == 0:
-        return float("nan")
-    tpr, fpr = [0.0], [0.0]
-    tp = fp = 0
-    for lbl in y:
-        if lbl:
-            tp += 1
-        else:
-            fp += 1
-        tpr.append(tp / n_pos)
-        fpr.append(fp / n_neg)
-    return float(np.trapezoid(tpr, fpr))
-
-
 def _auc_se_hanley(auc: float, n1: int, n2: int) -> float:
     """Hanley-McNeil standard error of the AUC.
 
@@ -205,19 +201,14 @@ def _honest_scores(rank: pd.DataFrame) -> pd.DataFrame:
     the ortholog headline previously used integrated_score, which
     contains rnai and perez_lineage, i.e. (near-)copies of the gold
     standard's own neural-family classification.
+
+    2026-09-26: stream list and weights imported from
+    bioforge.evidence.scoring (previously hand-copied here).
     """
-    STREAMS = ["expression", "specificity", "reproducibility", "rnai",
-               "correlation", "neural_enriched", "neural_specificity",
-               "perez_lineage", "perez_influence", "fincher_brain",
-               "cui_temporal"]
-    W = {"expression": 0.1, "specificity": 0.1, "reproducibility": 0.1,
-         "rnai": 0.05, "correlation": 0.05, "neural_enriched": 0.1,
-         "neural_specificity": 0.1, "perez_lineage": 0.1,
-         "perez_influence": 0.1, "fincher_brain": 0.1, "cui_temporal": 0.1}
     excl = {"rnai", "neural_enriched", "neural_specificity", "perez_lineage"}
-    keep = [s for s in STREAMS if s in rank.columns and s not in excl]
+    keep = [s for s in _ALL_STREAMS if s in rank.columns and s not in excl]
     S = rank[keep].to_numpy(dtype=float)
-    Wv = np.array([W[s] for s in keep])
+    Wv = np.array([_W_BY_NAME[s] for s in keep])
     valid = ~np.isnan(S)
     num = np.nan_to_num(S, nan=0.0) @ Wv
     den = valid.astype(float) @ Wv
@@ -287,8 +278,6 @@ def main() -> int:
     # Hanley-McNeil 95% CI on the honest AUC (SE per Hanley & McNeil 1982)
     n1, n2 = int(y.sum()), int(len(y) - y.sum())
     if n1 > 0 and n2 > 0:
-        q1 = eval_df.loc[eval_df["label"] == 1, "_honest_score"]
-        q2 = eval_df.loc[eval_df["label"] == 0, "_honest_score"]
         auc_v = auc_honest
         se = _auc_se_hanley(auc_v, n1, n2)
         ci = (max(0.0, auc_v - 1.96 * se), min(1.0, auc_v + 1.96 * se))

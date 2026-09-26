@@ -63,15 +63,14 @@ LIMITATIONS AND EXCHANGEABILITY GAPS:
 
 2026-09-06 --candidates mode (targeted resolution):
 The production n=30 full-universe run is resolution-floored at p=1/31
-(96.8% of genes pinned at the floor — no per-gene claim possible). The
+(96.8% of genes pinned at the floor - no per-gene claim possible). The
 --candidates flag restricts the test to the neural-candidate family
 (rank_neural.csv, 143 genes) so n=1000 draws resolve p ~ 1e-3 with honest
 BH WITHIN that family (Bonferroni alpha = 0.05/143 = 3.5e-4 needs
 n>=2,860 for full family control; n=1000 resolves BH-q at the 143-gene
 scale). The permutation machinery is unchanged — same atlas permutation,
-same BH-FDR DE gate, same King floors and testability flags; only the
-p-value aggregation family shrinks to the genes that matter for the
-shortlist.
+same King floors and testability flags; only the p-value aggregation
+family shrinks to the genes that matter for the shortlist.
 
 2026-09-21 AUDIT FIX (float-tie artifacts + BH family):
 The previous version used >= counting for ALL genes, so untestable genes
@@ -82,6 +81,22 @@ including two in the top-10 shortlist (dd38342, dd16466).  BH was also
 computed over all 143 genes, including untestable ones, deflating q for
 everyone.  Fixed: untestable genes get p=1.0 by enforcement; BH runs
 only over testable genes; untestable genes get q=NaN.
+
+2026-09-26 AUDIT FIX (BH DE-gate family mismatch):
+The pipeline gates atlas DE hits with BH over the FULL atlas family
+(all atlas genes x clusters; pipeline._score_one_atlas).  This script
+previously ran that BH over the panel-restricted p-value family only.
+The Wilcoxon p-values are per-gene (identical under panel
+restriction), but BH q-values scale with the family size m, so the
+panel-only gate was far more permissive than the pipeline's (m shrank
+~2x in full mode, ~100x in --candidates mode) — the null DE gate was
+not the same function of the data as the real one.  Fixed by
+emulating the full-family BH (_emulated_full_family_q): the expected
+full-family rank of the i-th smallest panel p is
+i + (m_full - m_panel) * p (non-panel p's are exchangeable with panel
+p's under label permutation, so a uniform non-panel p' falls below p
+with probability ~p).  Residual approximation error is <1% (rank-count
+concentration) versus the previous ~40x family-size error.
 
 Usage:
     python scripts/stats/permutation_test_full.py --n-perm 1000 --candidates
@@ -104,14 +119,21 @@ RAW_DIR = REPO / "datasets" / "raw"
 RESULTS_DIR = REPO / "projects" / "NeuralTF" / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-STREAMS = ["expression", "specificity", "reproducibility", "rnai",
-           "correlation", "neural_enriched", "neural_specificity",
-           "perez_lineage", "perez_influence", "fincher_brain", "cui_temporal"]
-# 2026-09-19: import the single-source-of-truth weights (previously a
-# hand-copied vector).
+# 2026-09-26 fix: import the canonical stream order AND the
+# single-source-of-truth weights (scoring.py declares both authoritative;
+# a hard-coded list is exactly how the 8- vs 9-stream drift arose, and
+# positional S[0]/S[1] accesses below silently misalign under a reorder).
 import os
 sys.path.insert(0, os.environ.get("BIOFORGE_SRC", str(REPO / "src")))
-from bioforge.evidence.scoring import DEFAULT_WEIGHTS as _DW  # noqa: E402
+from bioforge.evidence.scoring import (  # noqa: E402
+    DEFAULT_WEIGHTS as _DW,
+    STREAM_ORDER,
+)
+STREAMS = [s.value for s in STREAM_ORDER]
+# Positional consumers index the per-gene stream vector BY NAME, so a
+# canonical reorder can never silently misalign expression/specificity.
+EXPR_IDX = STREAMS.index("expression")
+SPEC_IDX = STREAMS.index("specificity")
 W_BY_NAME = {getattr(k, "value", k): float(v) for k, v in _DW.items()}
 W_DEFAULT = np.array([W_BY_NAME[s] for s in STREAMS])
 assert abs(W_DEFAULT.sum() - 1.0) < 1e-9
@@ -214,14 +236,63 @@ def prepare_atlas(adata, name: str, tf_ids_king: set[str]):
     return adata
 
 
+def _emulated_full_family_q(all_p: list[float], n_clusters: int,
+                            n_genes_full: int | None) -> np.ndarray:
+    """BH q-values emulating the pipeline's FULL-atlas DE family.
+
+    The pipeline gates DE hits with BH over every atlas gene x cluster
+    (pipeline.py _score_one_atlas); restricting Wilcoxon to the TF panel
+    keeps the per-gene p-values identical but shrinks the BH family m,
+    which made the panel-only gate far more permissive (q ~ p*m/rank).
+    Under label permutation the non-panel genes' p-values are
+    exchangeable with the panel's, so the expected full-family rank of
+    the i-th smallest panel p is
+
+        E[rank_i] = i + (m_full - m_panel) * p_i
+
+    (a uniform non-panel p' falls below p_i with probability ~p_i).
+    The emulated q is p_i * m_full / E[rank_i], BH step-up
+    monotonized.  The rank-count variance makes this underestimate q by
+    <1% in practice — versus the previous ~40x family-size error.
+    Falls back to plain panel BH when ``n_genes_full`` is unknown.
+    """
+    m_panel = len(all_p)
+    if m_panel == 0:
+        return np.array([])
+    if not n_genes_full or int(n_genes_full) <= 0:
+        from statsmodels.stats.multitest import multipletests
+        _, q, _, _ = multipletests(all_p, alpha=FDR_THRESHOLD,
+                                   method="fdr_bh")
+        return np.asarray(q)
+    p_arr = np.asarray(all_p, dtype=float)
+    p_arr = np.where(np.isnan(p_arr), 1.0, p_arr)
+    m_full = int(n_genes_full) * max(int(n_clusters), 1)
+    order = np.argsort(p_arr, kind="stable")
+    p_sorted = p_arr[order]
+    e_rank = np.arange(1, m_panel + 1, dtype=float) \
+        + (m_full - m_panel) * p_sorted
+    q_sorted = p_sorted * m_full / e_rank
+    # BH step-up monotonicity: q_i = min over all j >= i
+    q_sorted = np.minimum.accumulate(q_sorted[::-1])[::-1]
+    q_sorted = np.minimum(q_sorted, 1.0)
+    q = np.empty(m_panel)
+    q[order] = q_sorted
+    return q
+
+
 def permuted_atlas_streams(adata, atlas_name: str, tf_ids: set[str],
-                           bridge, rng) -> dict:
+                           bridge, rng,
+                           n_genes_full: int | None = None) -> dict:
     """One permutation: permute leiden labels, rerun Wilcoxon DE on the
     TF gene panel, and return {v6_id: (expr, spec)} derived from the
     permuted structure alone.
 
     expr = min(1, true_log2FC_best_cluster / 5)   (one-tailed)
     spec = 1 / n_sig_clusters                     (permuted breadth)
+
+    ``n_genes_full`` is the atlas's post-QC gene count BEFORE panel
+    restriction (the pipeline's per-cluster DE family size); it drives
+    the full-family BH gate emulation in _emulated_full_family_q.
     """
     a = adata
     perm_labels = rng.permutation(a.obs["leiden"].astype(str).values)
@@ -234,8 +305,6 @@ def permuted_atlas_streams(adata, atlas_name: str, tf_ids: set[str],
     result = a.uns["rank_genes_groups"]
     clusters = list(result["names"].dtype.names)
 
-    # Global BH over genes x clusters (matches pipeline._score_one_atlas)
-    from statsmodels.stats.multitest import multipletests
     all_p, keys, idxs = [], [], []
     for cl in clusters:
         names = [str(g) for g in result["names"][cl]]
@@ -244,7 +313,10 @@ def permuted_atlas_streams(adata, atlas_name: str, tf_ids: set[str],
             keys.append((g, cl))
             idxs.append(i)
 
-    _, qvals, _, _ = multipletests(all_p, alpha=FDR_THRESHOLD, method="fdr_bh")
+    # 2026-09-26 fix: BH-FDR at the pipeline's FULL-atlas family size
+    # (the panel-only family made the null DE gate far more permissive
+    # than the pipeline's; see the module docstring).
+    qvals = _emulated_full_family_q(all_p, len(clusters), n_genes_full)
 
     gene_best: dict[str, tuple[float, str]] = {}
     gene_sig: dict[str, set] = {}
@@ -333,6 +405,15 @@ def main():
     # fixed under the null; expression/specificity are recomputed from
     # permuted atlases + the King floors.
     stream_cols = [c for c in STREAMS if c in real_rank.columns]
+    missing_streams = [c for c in STREAMS if c not in real_rank.columns]
+    if missing_streams:
+        # Latent-drift guard: the real integrated_score in rank.csv was
+        # computed over ALL canonical streams; silently dropping a missing
+        # column from the null vector breaks null/real exchangeability.
+        print(f"WARNING: rank.csv lacks stream column(s) {missing_streams}; "
+              "they are excluded from the null statistic while the real "
+              "integrated_score still includes them (null/real not "
+              "exchangeable for those streams)")
     stream_idx = {c: STREAMS.index(c) for c in stream_cols}
     observed = {}
     for _, row in real_rank.iterrows():
@@ -358,8 +439,8 @@ def main():
         S = S_obs.copy()
         ke = king_expr_floor.get(gid)
         ks = king_spec_floor.get(gid)
-        S[0] = ke if ke is not None else np.nan   # strip atlas part
-        S[1] = ks if ks is not None else np.nan
+        S[EXPR_IDX] = ke if ke is not None else np.nan   # strip atlas part
+        S[SPEC_IDX] = ks if ks is not None else np.nan
         label_independent[gid] = integrated_score_with_renorm(S, W_DEFAULT)
     n_untestable = sum(
         1 for gid in real_scores
@@ -374,6 +455,7 @@ def main():
     bridge = load_bridge()
 
     atlases = []
+    full_gene_counts: dict[str, int] = {}
     for path, name in ((FINCHER_PATH, "fincher"), (PLASS_PATH, "plass"),
                        (CUI_PATH, "cui")):
         if not path.exists():
@@ -381,6 +463,9 @@ def main():
             continue
         adata = ad.read_h5ad(path)
         adata = prepare_atlas(adata, name, tf_ids_king)
+        # Post-QC gene count BEFORE panel restriction: the pipeline's
+        # per-cluster DE family size (drives the full-family BH gate).
+        full_gene_counts[name] = int(adata.n_vars)
         atlases.append((adata, name))
         print(f"  {name}: {adata.n_obs} cells x {adata.n_vars} genes, "
               f"leiden={adata.obs['leiden'].nunique()}")
@@ -423,18 +508,23 @@ def main():
         # present, so every permutation silently ran Wilcoxon over the
         # FULL gene matrix despite the 100x smaller panel — the targeted
         # n=1000 run could not finish. The panel's DE inputs are
-        # per-gene, so restricting raw to the panel changes nothing
-        # statistically (identical p-values for the kept genes).
+        # per-gene, so restricting raw to the panel leaves the p-values
+        # of the kept genes unchanged; the BH q-gate is re-inflated to
+        # the full-atlas family via _emulated_full_family_q (2026-09-26).
         panel.raw = panel
         panels.append((panel, name))
-        print(f"  TF panel {name}: {len(keep)} genes")
+        print(f"  TF panel {name}: {len(keep)} genes "
+              f"(BH family emulated at {full_gene_counts[name]} genes x clusters)")
 
     null_scores = {v6: [] for v6 in candidate_ids}
     for perm in range(args.n_perm):
         perm_expr = {}
         perm_spec = {}
         for apanel, name in panels:
-            scores = permuted_atlas_streams(apanel, name, tf_ids, bridge, rng)
+            scores = permuted_atlas_streams(
+                apanel, name, tf_ids, bridge, rng,
+                n_genes_full=full_gene_counts.get(name),
+            )
             for v6, (e, s) in scores.items():
                 perm_expr[v6] = max(perm_expr.get(v6, 0.0), e)
                 perm_spec[v6] = max(perm_spec.get(v6, 0.0), s)
@@ -449,14 +539,14 @@ def main():
             # Expression: stream PRESENT iff permuted atlas hit OR King
             # floor (mirrors the pipeline); value = max(atlas, King).
             if pe is not None or ke is not None:
-                S[0] = max(pe or 0.0, ke or 0.0)
+                S[EXPR_IDX] = max(pe or 0.0, ke or 0.0)
             else:
-                S[0] = np.nan
+                S[EXPR_IDX] = np.nan
             # Specificity: same presence rule with the King breadth floor.
             if ps is not None or ks is not None:
-                S[1] = max(ps or 0.0, ks or 0.0)
+                S[SPEC_IDX] = max(ps or 0.0, ks or 0.0)
             else:
-                S[1] = np.nan
+                S[SPEC_IDX] = np.nan
 
             null_scores[v6].append(integrated_score_with_renorm(S, W_DEFAULT))
 

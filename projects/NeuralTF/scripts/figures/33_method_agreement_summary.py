@@ -63,7 +63,16 @@ def build():
     # Cell annotations: Jaccard + shared-candidate counts (the identical
     # stratified P-value is stated once in the subtitle, not per cell)
     _keys = ["fixed_vs_centered", "fixed_vs_uniform", "centered_vs_uniform"]
-    pair_ps = {pairwise.get(k, {}).get("stratified_poisson_p") for k in _keys} - {None}
+
+    def _strat_p(info):
+        # 2026-09-26: prefer the exact convolution p; fall back to the
+        # legacy Poisson p for JSONs produced before the exact null.
+        for _k in ("stratified_exact_p", "stratified_poisson_p"):
+            if info.get(_k) is not None:
+                return info.get(_k)
+        return None
+
+    pair_ps = {_strat_p(pairwise.get(k, {})) for k in _keys} - {None}
     _single_p = next(iter(pair_ps)) if len(pair_ps) == 1 else None
     for i in range(3):
         for j in range(3):
@@ -80,7 +89,7 @@ def build():
                 # the previous "P < 10^-30" fallback was an invented
                 # statistic with no source in any artifact.
                 if _single_p is None:
-                    p_strat = pairwise.get(key, {}).get("stratified_poisson_p", None)
+                    p_strat = _strat_p(pairwise.get(key, {}))
                     if p_strat is not None:
                         if p_strat < 1e-15:
                             p_str = r"P < 10^{-15}"
@@ -104,9 +113,9 @@ def build():
 
     three_way = data.get("three_way", {})
     n_three = three_way.get("overlap_count", 10)
-    p_3way = three_way.get("stratified_poisson_p", None)
-    # Correct pairwise stratified Poisson p (9.42e-12, from within-stratum null)
-    p_pair_strat = pairwise.get("fixed_vs_centered", {}).get("stratified_poisson_p", None)
+    p_3way = _strat_p(three_way)
+    # Correct pairwise stratified exact p (within-stratum null)
+    p_pair_strat = _strat_p(pairwise.get("fixed_vs_centered", {}))
     
     if p_pair_strat is not None:
         b_p, e_p = f"{p_pair_strat:.1e}".split("e")

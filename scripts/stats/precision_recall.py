@@ -47,6 +47,12 @@ massive tie groups). Exported curve arrays are now one point per
 distinct score threshold. ROC-AUC is now exactly the tie-correct
 midrank (Mann-Whitney) AUC.
 
+2026-09-26: precision@k is tie-aware as well — when the k-th row falls
+inside a tie group, the reported value is the expectation over a
+uniformly random ordering of that group (hypergeometric mean of the
+positives inside the cut), matching the grouped-threshold convention
+instead of a file-order slice.
+
 Usage:
     python scripts/stats/precision_recall.py
 """
@@ -223,12 +229,30 @@ def evaluate(df, score_col, label, y_true):
     pr_auc = _trapezoid(precisions, recalls) if len(recalls) > 1 else 0.0
     roc_auc = _trapezoid(tpr, fpr) if len(fpr) > 1 else 0.5
 
+    # 2026-09-26 tie-aware precision@k: slicing the first k rows of a
+    # stable sort cuts INSIDE tie groups in arbitrary file order (the
+    # documented massive tie groups make precision@{5..20} row-order
+    # dependent). Report the expectation over a uniformly random ordering
+    # of each tie group — positives inside the cut follow the
+    # hypergeometric mean — consistent with the grouped-threshold
+    # curves/AP above. With no cut tie this reduces exactly to the plain
+    # top-k precision.
     prec_at_k = {}
     order = np.argsort(-y_scores, kind="stable")
+    y_sorted = np.asarray(y_true)[order]
+    s_sorted = y_scores[order]
+    ends = np.flatnonzero(np.diff(s_sorted) != 0) + 1      # tie-group ends
+    ends = np.concatenate([ends, [len(s_sorted)]])
+    starts = np.concatenate([[0], ends[:-1]])
+    cum_tp = np.cumsum(y_sorted)
     for k in (5, 10, 15, 20):
         if k <= len(y_true):
-            top_k_true = y_true[order[:k]]
-            prec_at_k[f"precision@{k}"] = float(top_k_true.sum() / k)
+            gi = int(np.searchsorted(ends, k - 1, side="right"))
+            a, b = int(starts[gi]), int(ends[gi])
+            tp_before = int(cum_tp[a - 1]) if a > 0 else 0
+            tp_group = int(cum_tp[b - 1]) - tp_before
+            exp_tp = tp_before + (k - a) * tp_group / (b - a)
+            prec_at_k[f"precision@{k}"] = float(exp_tp / k)
 
     print(f"\n[{label}] n={len(y_true)}, positives={n_pos}")
     print(f"  PR-AUC: {pr_auc:.4f}  ROC-AUC: {roc_auc:.4f}  AP: {ap:.4f}")

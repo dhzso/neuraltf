@@ -40,17 +40,17 @@ FIG_DIR = REPO / "projects" / "NeuralTF" / "figures"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
-STREAMS = [
-    "expression", "specificity", "reproducibility", "rnai",
-    "correlation", "neural_enriched", "neural_specificity",
-    "perez_lineage", "perez_influence", "fincher_brain", "cui_temporal",
-]
-# 2026-09-19: import the single-source-of-truth weights (the previous
-# hand-copied vector carried a "must match exactly" comment but no check;
-# the old perez_lineage=0.2 made "real" scores differ from rank.csv).
+# 2026-09-26 fix: import the canonical stream order AND the
+# single-source-of-truth weights (scoring.py declares both authoritative;
+# a hard-coded list is exactly how the 8- vs 9-stream drift arose, and a
+# canonical stream addition/rename would silently shrink this null).
 import os
 sys.path.insert(0, os.environ.get("BIOFORGE_SRC", str(REPO / "src")))
-from bioforge.evidence.scoring import DEFAULT_WEIGHTS as _DW  # noqa: E402
+from bioforge.evidence.scoring import (  # noqa: E402
+    DEFAULT_WEIGHTS as _DW,
+    STREAM_ORDER,
+)
+STREAMS = [s.value for s in STREAM_ORDER]
 W_BY_NAME = {getattr(k, "value", k): float(v) for k, v in _DW.items()}
 W_DEFAULT = np.array([W_BY_NAME[s] for s in STREAMS])
 assert abs(W_DEFAULT.sum() - 1.0) < 1e-9
