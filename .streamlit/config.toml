@@ -1,0 +1,13 @@
+# BioForge Streamlit config — suppresses the email prompt on first launch
+# and disables usage telemetry so the app starts cleanly in one shot.
+
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true
+address = "localhost"
+port = 8501
+
+[global]
+developmentMode = false

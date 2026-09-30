@@ -1,0 +1,42 @@
+description: >
+  NeuralTF demo pipeline — runs end-to-end with synthetic TF candidates
+  to verify the workflow engine + evidence framework + AI stub are wired
+  together. No raw datasets required.
+
+inputs: {}
+
+steps:
+  - id: build_demo_records
+    target: evidence.demo_rank
+    inputs: {}
+    params: {}
+
+  - id: build_cards
+    target: evidence.build_cards
+    inputs:
+      records: "$build_demo_records.records"
+    params:
+      atlas_membership:
+        dd_Smed_v6_x1: ["fincher", "plass", "king"]
+        dd_Smed_v6_x2: ["king"]
+      prior_fstf_ids: []
+
+  - id: write_rank
+    target: evidence.write_rank_csv
+    inputs:
+      records: "$build_demo_records.records"
+    params:
+      path: rank.csv
+
+  - id: write_cards
+    target: report.write_cards_md
+    inputs:
+      cards: "$build_cards.cards"
+    params:
+      path: evidence_cards.md
+
+  - id: summarise
+    target: ai.summarize_candidates
+    inputs:
+      cards: "$build_cards.cards"
+    params: {}

@@ -1,0 +1,15 @@
+description: >
+  Alias entrypoint pointing at the real-data NeuralTF pipeline (workflows/real.yaml).
+  Kept as a stable filename so the README snippet stays valid; only real.yaml
+  needs to be edited when dataset paths change.
+
+steps: []  # See workflows/real.yaml. To run:
+
+  #   bioforge run projects/NeuralTF/workflows/real.yaml \
+  #     --input fincher=<path/to/Fincher.dge.txt.gz> \
+  #     --input plass=<path/to/plass.h5ad> \
+  #     --input king_catalog=<path/to/1-s2.0-...-mmc4.xlsx> \
+  #     --input king_rnai=<path/to/...-mmc5.xlsx> \
+  #     --input king_corr=<path/to/...-mmc6.xlsx> \
+  #     --input king_atlas=<path/to/...-mmc7.xlsx> \
+  #     --input bridge=<path/to/bridge.csv>

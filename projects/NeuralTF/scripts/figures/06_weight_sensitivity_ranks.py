@@ -1,0 +1,135 @@
+"""Weight sensitivity — rank distributions from 1000 random weight draws.
+
+The rank axis is kinked at rank 300 (see ``style.kinked_axis``): 49 of the 87
+rows never leave that range, while 12 unstable challengers swing out to rank
+8,112 — on a single linear scale the stable half of the cohort rendered as dots
+at the origin.
+"""
+from __future__ import annotations
+import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+from style import *
+import matplotlib.pyplot as plt, numpy as np, pandas as pd
+
+# kinked rank axis. [0, 300] keeps full data resolution; draws above
+# it are compressed. 300 is the natural break in this cohort — 49 of 87 rows
+# (63 below rank 600) keep *every* draw inside it, and only the 12 challengers
+# that reach out to rank 8,112 live beyond. KINK_FRAC = share of the axis length
+# given to the linear segment below the kink.
+KINK_RANK, KINK_FRAC = 300.0, 0.5
+
+def build():
+    draws = load_sens_draws()
+    sens = load_sens_top10()
+    rank_all = load_all()
+    pheno_ids = (set(rank_all.loc[rank_all["phenotype_confirmed"].fillna(False).astype(bool), "gene_id"])
+                 if "phenotype_confirmed" in rank_all.columns else set())
+    top10 = load_top10()
+    top10_ids = set(top10["gene_id"].tolist())
+    track_map = dict(zip(top10["gene_id"], top10.get("track",[""]*len(top10))))
+
+    # The draws CSV carries full 1000-draw rank vectors for every
+    # entrant/top-30 gene, so the boxplots are not biased toward
+    # stability (an oscillating gene such as Zeb-1 has a true median rank
+    # of 76, not 49). The completeness check below enforces this.
+    sens_ids = set(sens["gene_id"])
+    draws = draws[draws["gene_id"].isin(sens_ids)]
+    n_draws = draws["draw"].nunique()
+    counts = draws.groupby("gene_id").size()
+    bad = counts[counts != n_draws]
+    if len(bad) > 0:
+        raise AssertionError(
+            f"fig 06: truncated rank vectors for {len(bad)} genes "
+            f"(e.g. {dict(list(bad.items())[:3])}) — expected {n_draws} draws")
+
+    # Baseline ranks from the FULL universe (rank.csv), not the neural view
+    candidates = draws["gene_id"].unique()
+    base = rank_all.set_index("gene_id")["integrated_score"]
+    baseline_ranks = base.rank(ascending=False).to_dict()
+    # Cohort sizes are computed from the CSV (75 challengers + 10
+    # baseline entrants = 85 rows), so the labels cannot drift from the data.
+    n_challengers = int(len(sens) - sens["baseline_track"].notna().sum()
+                         if "baseline_track" in sens.columns else len(sens) - 10)
+
+    fig, ax = plt.subplots(figsize=(W_15COL, max(6.5, len(candidates) * 0.108 + 1.8)))
+    y_labels = []
+    y_pos = []
+    colors = []
+    for i, gid in enumerate(sorted(candidates, key=lambda g: baseline_ranks.get(g, 999))):
+        sub = draws[draws["gene_id"]==gid]
+        if sub.empty: continue
+        ranks = sub["rank"].values
+        entrant_track = ""
+        if "baseline_track" in sens.columns:
+            m = sens.loc[sens["gene_id"]==gid, "baseline_track"]
+            if len(m): entrant_track = str(m.iloc[0])
+        color = C_A if track_map.get(gid,"")== "A" or entrant_track=="A" \
+            else C_B if (gid in top10_ids and track_map.get(gid,"")=="B") or entrant_track=="B" \
+            else C_NEURAL
+        alpha = 0.85 if gid in top10_ids else 0.35
+        bp = ax.boxplot(ranks, vert=False, positions=[i], widths=0.6,
+                        patch_artist=True, showfliers=False,
+                        boxprops=dict(facecolor=color, alpha=alpha, edgecolor="none"),
+                        medianprops=dict(color="#111111", lw=1.2),
+                        whiskerprops=dict(color="#888888", lw=0.6),
+                        capprops=dict(color="#888888", lw=0.6))
+        nm = label(rank_all, gid)
+        y_labels.append(nm + ("\u2020" if gid in pheno_ids else ""))
+        y_pos.append(i)
+        colors.append(color)
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(y_labels, fontsize=5.8)
+
+    # kink the rank axis (was one linear 0-8,300 scale on which 44
+    # of 87 rows had their whole box+whisker inside rank 250 -> ~2 px dots at
+    # the origin, and the 12 swinging challengers alone set the scale).
+    # A kink rather than a two-panel break with a gap: the rank axis is dense,
+    # so a 300-1,200 break would have swallowed dd5529 / dd3012 / dd6536 /
+    # dd6778, whose boxes and whiskers all live inside that band.
+    axis_hi = float(np.ceil(draws["rank"].max() * 1.03 / 100.0) * 100.0)
+    kink_fac = kinked_axis(ax, "x", 0.0, KINK_RANK, axis_hi, frac_below=KINK_FRAC)
+    xt = [t for t in (0, 50, 100, 150, 200, 250, KINK_RANK, 2000, 4000, 6000, 8000)
+          if t <= axis_hi]
+    ax.set_xlim(0, axis_hi)
+    ax.set_xticks(xt)
+    ax.set_xticklabels([f"{t:g}" for t in xt])
+    ax.text(KINK_FRAC + 0.008, 0.995,
+            f"x-axis kinked at rank {int(KINK_RANK)}: {kink_fac:.0f}x compressed beyond",
+            transform=ax.transAxes, fontsize=5.4, color="#666666",
+            ha="left", va="top")
+
+    ax.axvline(x=30, color="#666666", lw=0.8, ls="--", label="Top-30 candidate threshold")
+    ax.set_xlabel("Rank across 1,000 Dirichlet draws", fontsize=7.0)
+    ax.set_ylabel("Prioritized neural candidate / challenger", fontsize=7.0)
+    ax.invert_yaxis()
+    sub_bot = title_block(
+        fig,
+        "Rank Stability Under Uniform Dirichlet Weight Uncertainty",
+        "1,000 Dirichlet weight draws; 1 draw = one sampled weight set; rank 1 = best; \u2020 = FISH-confirmed",
+    )
+    
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
+    leg_handles = [
+        Line2D([0],[0], color="#111111", lw=1.2, label="median"),
+        Patch(facecolor="#AAAAAA", edgecolor="#888888", label="IQR (box)"),
+        Line2D([0],[0], color="#888888", lw=0.6, label="range (whiskers)"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_A, markersize=5.5, label="Track A: RNAi-screened"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_B, markersize=5.5, label="Track B: not tested"),
+        Line2D([0],[0], marker="s", color="w", markerfacecolor=C_NEURAL, markersize=5.5, label=f"Challenger (n={n_challengers})"),
+        Line2D([0],[0], color="#666666", lw=0.8, ls="--", label="Top-30 threshold (Rank = 30)"),
+    ]
+    # anchor legend + axes to the returned subtitle bottom so the
+    # 11 in-tall figure keeps a compact header instead of a ~1 in white band.
+    _pt = 1.0 / (72.0 * fig.get_size_inches()[1])
+    leg_y = sub_bot - 24 * _pt  # 6 pt gap below subtitle + 2-row legend (fs 5.8)
+    fig.legend(handles=leg_handles, frameon=False, fontsize=5.8, loc="lower center",
+               bbox_to_anchor=(0.5, leg_y), ncol=4)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    fig.tight_layout()
+    fig.subplots_adjust(top=leg_y - 6 * _pt, bottom=0.06)
+    save(fig, "06_weight_sensitivity_ranks")
+
+
+if __name__=="__main__": build()
